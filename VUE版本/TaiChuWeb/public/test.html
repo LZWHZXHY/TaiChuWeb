@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>太初寰宇世界观</title>
+  <link rel="stylesheet" href="/static/css/worldview.css">
+</head>
+<body>
+  <div class="world-container">
+    <!-- 世界观内容 -->
+    <h1>太初寰宇世界观</h1>
+    
+    <!-- 交互式地图 -->
+    <div id="interactive-map"></div>
+    
+    <!-- 返回按钮 -->
+    <button id="back-to-forum" class="world-button">
+      <span class="icon">←</span> 返回论坛
+    </button>
+  </div>
+
+  <script>
+    // 返回按钮功能
+    document.getElementById('back-to-forum').addEventListener('click', function() {
+      // 使用 history API 返回论坛
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = '/';
+      }
+    });
+    
+    // 其他世界观交互逻辑
+    // ...
+  </script>
+</body>
+</html>
