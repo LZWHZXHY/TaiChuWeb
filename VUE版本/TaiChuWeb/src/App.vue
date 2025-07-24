@@ -23,10 +23,10 @@
           <p>中转站</p>
           <div class="underline"></div>
         </RouterLink>
-        <RouterLink to="/HelloWorld" class="topBarOption">
-          <p>测试</p>
+        <a href="../LoginMain.html" class="topBarOption">
+          <p>登录</p>
           <div class="underline"></div>
-        </RouterLink>
+        </a>
       </div>
     </nav>
 
