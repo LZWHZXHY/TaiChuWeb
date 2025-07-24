@@ -1,9 +1,18 @@
 import { createApp } from 'vue'
+
+import { createPinia } from 'pinia'
+
 import App from './App.vue'
 import{createRouter, createWebHistory} from 'vue-router'
 import AboutUS from "/src/components/AboutUS.vue"
 import transfer from "/src/components/Transfer.vue"
 import HW from "/src/components/HelloWorld.vue"
+
+
+
+
+
+
 //1.配置路由规则
 
 const routes = [
@@ -25,6 +34,9 @@ const router = createRouter({
 
 //3.加载路由器
 const app = createApp(App)
+
+app.use(createPinia())
+
 app.use(router)
 
 app.mount('#app')
