@@ -1,63 +1,252 @@
-/* 导航栏整体样式 */
-.topBar {
-    background-color: rgb(47, 47, 47);
-    position: absolute;
-    top: 0;
-    width: 100%;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    left: 0;
-    right: 0;
-    width: 100% !important;
-    position: fixed !important; /* 替换 absolute，防止滚动错位 */
-    top: 0;
-    
-}
-
-
-/* 标题样式 */
-.topBarTitle {
-    font-size: 1.8rem;
-    display: flex;
-    align-items: center;
-    color: #3498db;
-    text-shadow: 0 0 10px rgba(52, 152, 219, 0.7);
-    height: 100%;
-    padding-left: 3%;
-    flex-grow: 1; /* 占据左侧空间 */
-}
-
- /* 导航选项样式 */
-.topBarOption {
-    position: relative;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    padding: 0 25px;
-    color: #4dc1df;
-    text-decoration: none;
-    font-size: 1.1rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    
-}
-
-/* 新增的选项容器 - 关键部分 */
-.optionsContainer {
-    display: flex;
-    height: 100%;
-    margin-left: auto; /* 靠右的关键属性 */
-}
-
-.main-content {
-    margin-top:90px;
-  background-color: #42b983;
+/* 容器样式 */
+.container {
+  background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+  min-height: 100vh;
   width: 100%;
-  height: 100%;
-  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
+
+/* 导航栏样式 */
+.topBar {
+  background: rgba(30, 30, 46, 0.8);
+  backdrop-filter: blur(10px);
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  padding: 0 5%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.topBarLogo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-icon {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(45deg, #4fc3f7, #2196f3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  color: white;
+  margin-right: 15px;
+  box-shadow: 0 0 15px rgba(79, 195, 247, 0.5);
+}
+
+.topBarTitle {
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  color: #4fc3f7;
+  text-shadow: 0 0 10px rgba(79, 195, 247, 0.7);
+  height: 100%;
+  padding-left: 1%;
+}
+
+.topBarTitle h1 {
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* 导航选项样式 */
+.optionsContainer {
+  display: flex;
+  height: 100%;
+  margin-left: auto;
+}
+
+.topBarOption {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 25px;
+  color: #e0e0e0;
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.topBarOption p {
+  transition: transform 0.3s ease;
+}
+
+.topBarOption:hover p {
+  color: #4fc3f7;
+  transform: translateY(-3px);
+}
+
+.underline {
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #4fc3f7, transparent);
+  position: absolute;
+  bottom: 20px;
+  transition: width 0.3s ease;
+}
+
+.topBarOption:hover .underline {
+  width: 70%;
+}
+
+/* 主内容区样式 */
+.main-content {
+  margin-top: 80px;
+  width: 100%;
+  min-height: calc(100vh - 160px);
+  padding: 30px 5%;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.content-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 40px;
+}
+
+.serve-people {
+  font-size: 4rem;
+  text-align: center;
+  margin-top: 40px;
+  background: linear-gradient(
+    45deg,
+    #00a2ff,
+    #0066ff,
+    #229ab2,
+    #004f8b,
+    #00ffff
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background-size: 300% 300%;
+  animation: gradientAnimation 8s ease infinite;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes gradientAnimation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 底部区域样式 */
+.bottomArea {
+  width: 100%;
+  height: 80px;
+  background: rgba(20, 20, 35, 0.9);
+  position: relative;
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 5%;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bottomArea a {
+  text-decoration: none;
+  color: #e0e0e0;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.bottomArea a:hover {
+  color: #4fc3f7;
+  transform: translateY(-2px);
+}
+
+.social-links {
+  display: flex;
+  gap: 20px;
+}
+
+.social-links a {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.social-links a:hover {
+  background: rgba(79, 195, 247, 0.2);
+  transform: translateY(-5px);
+}
+
+
+
+
+@media (max-width: 768px) {
+
+  .topBar {
+    height: 70px;
+    padding: 10px;
+  }
+  
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+  
+  .topBarTitle h1 {
+    font-size: 1.1rem;
+  }
+  
+  .topBarOption p {
+    font-size: 15px;
+    
+  }
+  
+  .serve-people {
+    font-size: 2.5rem;
+  }
+  
+  .main-content {
+    margin-top: 70px;
+    padding: 20px 3%;
+  }
+  
+  .topBarOption{
+    padding: 0 9px;
+  }
+
+}
+
+
+
+

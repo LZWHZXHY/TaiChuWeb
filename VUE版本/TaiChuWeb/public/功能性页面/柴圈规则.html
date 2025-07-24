@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>柴圈规则</title>
+  <link rel="stylesheet" href="/static/css/worldview.css">
+</head>
+<body>
+    
+    <h1>柴圈规则初稿V1.0</h1>
+    
+    <p>柴圈是一个很大但也很小的圈子，问题在于柴圈的范围并不明确</p>
+    <p>有人可能觉得柴圈不应该被定义，但我们并不这么认为，我们认为柴圈应该有一个明确的规则来定义具体到哪里就是柴圈的范围，已经一些柴圈内部的规则</p>
+    
+    <button id="back-to-forum" class="world-button">
+      <span class="icon">←</span> 返回论坛
+    </button>
+
+
+  <script>
+    // 返回按钮功能
+    document.getElementById('back-to-forum').addEventListener('click', function() {
+      // 使用 history API 返回论坛
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = '/';
+      }
+    });
+    
+    // 其他世界观交互逻辑
+    // ...
+  </script>
+</body>
+</html>

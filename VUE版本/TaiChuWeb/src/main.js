@@ -2,14 +2,14 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import{createRouter, createWebHistory} from 'vue-router'
 import AboutUS from "/src/components/AboutUS.vue"
-import ContactUS from "/src/components/ContactUS.vue"
+import transfer from "/src/components/Transfer.vue"
 import HW from "/src/components/HelloWorld.vue"
 
 //1.配置路由规则
 
 const routes = [
   {path:"/about", component: AboutUS},
-  {path:"/contact", component:ContactUS},
+  {path:"/transfer", component:transfer},
   {path:"/HelloWorld", component:HW},
 ]
 

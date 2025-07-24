@@ -1,41 +1,57 @@
 <template>
   <div class="container">
-    <!-- 导航 -->
+    <!-- 导航栏 -->
     <nav class="topBar">
-      <div class="topBarLogo"></div>
+      <div class="topBarLogo">
+        <div class="logo-icon">
+          <i class="fas fa-infinity"></i>
+        </div>
+      </div>
 
       <div class="topBarTitle">
-        <p>太初寰宇</p>
+        <RouterLink to="/" class="topBarOption">
+          <h1>太初寰宇</h1>
+        </RouterLink>
       </div>
 
       <div class="optionsContainer">
-       <RouterLink to="/about" class = "topBarOption"><p>关于我们</p></RouterLink>
-       <RouterLink to="/contact" class = "topBarOption"><p>联系我们</p></RouterLink>
-       <RouterLink to="/HelloWorld" class = "topBarOption"><p>测试</p></RouterLink>
-       <a href="/test.html" class="topBarOption">测试2</a>
+        <RouterLink to="/about" class="topBarOption">
+          <p>关于我们</p>
+          <div class="underline"></div>
+        </RouterLink>
+        <RouterLink to="/Transfer" class="topBarOption">
+          <p>中转站</p>
+          <div class="underline"></div>
+        </RouterLink>
+        <RouterLink to="/HelloWorld" class="topBarOption">
+          <p>测试</p>
+          <div class="underline"></div>
+        </RouterLink>
       </div>
     </nav>
 
     <!-- 路由视图 -->
     <main class="main-content">
-      <router-view></router-view>
+      <div class="content-wrapper">
+        <router-view></router-view>
+      </div>
+      <h1 class="serve-people">水可载舟亦可覆舟</h1>
     </main>
+
+    <!-- 底部区域 -->
+    <div class="bottomArea">
+      <a href="https://beian.miit.gov.cn/" target="_blank">京ICP备2022020268号</a>
+      
+    </div>
   </div>
 </template>
 
+<script setup>
+import { RouterLink } from 'vue-router';
+</script>
+
 <style scoped>
-@import url('/static/css/general.css');
-@import url('/static/css/index.css');
-/* 确保有基本样式 */
-
-/* 添加路由链接样式 */
-
-
+  @import url('/static/css/general.css');
+  @import url('/static/css/index.css');
 
 </style>
-
-<script setup>
-
-import { RouterLink } from 'vue-router';
-
-</script>
