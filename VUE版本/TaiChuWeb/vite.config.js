@@ -15,7 +15,8 @@ export default defineConfig({
       input:{
         index:resolve(__dirname, "index.html"),
         LoginMain:resolve(__dirname, "LoginMain.html"),
-        彼岸宇宙:resolve(__dirname,"彼岸宇宙.html")
+        彼岸宇宙:resolve(__dirname,"彼岸宇宙.html"),
+        柴圈社区:resolve(__dirname,"ChaiQuan.html")
       }
     }
   }

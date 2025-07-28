@@ -5,7 +5,39 @@
       <p>请随意探索各种不同的社区板块~</p>
     </div>
     
+
+
+
+
+
+
+
+
+
+
+
     <div class="communities">
+
+
+
+        <div class="community-card FeedBckCommunity">
+        <div class="card-content">
+          <div class="icon">
+            <i class="fas fa-lightbulb"></i>
+          </div>
+          <h2>反馈社区</h2>
+          <p>就你有意见啊！速速进来！</p>
+          <div class="links">
+            <a href="https://qm.qq.com/q/DQ6fkPgd2w" target="_blank" class="link-btn">可以进！</a>
+
+          </div>
+        </div>
+      </div>
+
+
+
+
+
       <div class="community-card ChaiquanCommunity">
         <div class="card-content">
           <div class="icon">
@@ -14,8 +46,9 @@
           <h2>柴圈社区</h2>
           <p>这里是火柴人圣地，你可以在这里交流和分享关于火柴人的内容，包括联合，借力，企划等</p>
           <div class="links">
-            <a href="#" class="link-btn">柴柴柴！</a>
+            <a href="../../ChaiQuan.html" class="link-btn">柴柴柴！</a>
             <a href="/功能性页面/柴圈规则.html" class="link-btn">柴圈规则</a>
+            <a href="/功能性页面/柴圈相关.html" class="link-btn">柴圈相关</a>
           </div>
         </div>
       </div>
@@ -31,7 +64,7 @@
           <p>太初寰宇的游戏社区, 这里会根据用户的数量和喜欢适当的开辟不同的游戏板块</p>
           <div class="links">
             <a href="#" class="link-btn">Let's Play!</a>
-            
+            <a href="/功能性页面/游戏相关.html" class="link-btn">点这个</a>
           </div>
         </div>
       </div>
@@ -65,6 +98,51 @@
           </div>
         </div>
       </div>
+
+      <div class="community-card DrawingCommunity">
+        <div class="card-content">
+          <div class="icon">
+            <i class="fas fa-lightbulb"></i>
+          </div>
+          <h2>绘画社区</h2>
+          <p>这种怎么画都是屎的感觉真是太令我着迷了</p>
+          <div class="links">
+            <a href="#" class="link-btn">大触请进！</a>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="community-card SourceCommunity">
+        <div class="card-content">
+          <div class="icon">
+            <i class="fas fa-lightbulb"></i>
+          </div>
+          <h2>资源社区</h2>
+          <p>分享一些有用的资源推荐</p>
+          <div class="links">
+            <a href="#" class="link-btn">白嫖使人快乐！</a>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="community-card PersonalCommunity">
+        <div class="card-content">
+          <div class="icon">
+            <i class="fas fa-lightbulb"></i>
+          </div>
+          <h2>腾蛇的个人社区</h2>
+          <p>里面放了一下个人主观倾向比较多的内容，也有好东西</p>
+          <div class="links">
+            <a href="#" class="link-btn">欸！现在不给你看</a>
+
+          </div>
+        </div>
+      </div>
+
+
+  
 
       <div class="community-card UnKnownCommunity">
         <div class="card-content">

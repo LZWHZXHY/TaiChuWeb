@@ -8,7 +8,7 @@ import AboutUS from "/src/components/AboutUS.vue"
 import transfer from "/src/components/Transfer.vue"
 import HW from "/src/components/HelloWorld.vue"
 
-
+import ChaiQuanIndex from './components/ChaiQuan/ChaiQuanIndex.vue'
 
 
 
@@ -19,7 +19,7 @@ const routes = [
   {path:"/about", component: AboutUS},
   {path:"/transfer", component:transfer},
   {path:"/HelloWorld", component:HW},
-
+  {path:"/ChaiQuanIndex", component:ChaiQuanIndex}
 ]
 
 
