@@ -17,7 +17,7 @@ const dbConfig = {
   host: 'bj-cynosdbmysql-grp-j3ff1zck.sql.tencentcdb.com',
   port: 20379,
   user: 'dev_admin',
-  password: 'TestPassword', // 替换为实际密码
+  password: 'TestPassword2', // 替换为实际密码
   database: 'your_database',
   waitForConnections: true,
   connectionLimit: 10
