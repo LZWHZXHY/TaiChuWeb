@@ -1,3 +1,8 @@
 {
-    "livePreview.defaultPreviewPath": "/VUE版本/TaiChuWeb/index.html"
+    "vscode_custom_css.imports": [
+    "file:///C:/Users/太初寰宇工作站/.vscode/extensions/coltwillcox.synthwave-x-fluoromachine-contrast-3.1.1/logo.css",
+    "file:///C:/Users/太初寰宇工作站/.vscode/extensions/coltwillcox.synthwave-x-fluoromachine-contrast-3.1.1/synthwave.css"
+  ],
+  "editor.cursorBlinking": "smooth"
 }
+
