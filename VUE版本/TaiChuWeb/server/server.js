@@ -12,7 +12,7 @@ const app = express();
 const configPath = path.join(__dirname, 'config.json');
 
 
-// 加载数据库配置
+// 加载数据库配置......
 const dbConfig = {
   host: 'bj-cynosdbmysql-grp-j3ff1zck.sql.tencentcdb.com',
   port: 20379,
