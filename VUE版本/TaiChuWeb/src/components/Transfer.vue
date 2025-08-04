@@ -8,14 +8,6 @@
 
 
 
-
-
-
-
-
-
-
-
     <div class="communities">
 
 
@@ -35,7 +27,19 @@
       </div>
 
 
+      <div class="community-card TaichuCommunity">
+        <div class="card-content">
+          <div class="icon">
+            <i class="fas fa-lightbulb"></i>
+          </div>
+          <h2>太初社区</h2>
+          <p>太初寰宇社区！</p>
+          <div class="links">
+            <a href="/功能性页面/太初社区.html" target="_blank" class="link-btn">暂时的网页！</a>
 
+          </div>
+        </div>
+      </div>
 
 
       <div class="community-card ChaiquanCommunity">

@@ -35,7 +35,11 @@
       <div class="content-wrapper">
         <router-view></router-view>
       </div>
-      <h1 class="serve-people">水可载舟亦可覆舟</h1>
+      <h2 class="serve-people">水可载舟亦可覆舟</h2>
+      
+
+      
+
     </main>
 
     <!-- 底部区域 -->
@@ -53,5 +57,6 @@ import { RouterLink } from 'vue-router';
 <style scoped>
   @import url('/static/css/general.css');
   @import url('/static/css/index.css');
+
 
 </style>
