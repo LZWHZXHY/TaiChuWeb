@@ -12,7 +12,16 @@
         <span class="arrow">{{ openThirdMenus.ThirdMenu1 ? '▼' : '▶' }}</span>
         </div>
 
-        <div class="submenu third" :class="{ show: openThirdMenus.ThirdMenu1 }"><a href="#">补天规则</a></div>
+        <div class="submenu third" :class="{ show: openThirdMenus.ThirdMenu1 }">
+  <div class="parent sub" @click.stop="toggleFourthMenu('FourthMenu1')">
+    详细条款
+    <span class="arrow">{{ openFourthMenus.FourthMenu1 ? '▼' : '▶' }}</span>
+  </div>
+  <div class="submenu fourth" :class="{ show: openFourthMenus.FourthMenu1 }">
+    <a href="#">条款A</a>
+    <a href="#">条款B</a>
+  </div>
+</div>
 
         <a href="#" class="parent sub">零点星设定</a>
 
@@ -37,9 +46,9 @@
         </div>
 
         <div class="submenu third" :class="{ show: openThirdMenus.中立善良 }"><a href="#">塔罗牌密教</a></div>
+
+        <div class="submenu third" :class="{ show: openThirdMenus.中立善良 }"><a href="#">各种公会</a></div>
       </div>
-
-
 
 
 
@@ -47,6 +56,23 @@
       <div class="parent sub" @click.stop="toggleSubMenu('职业')">职业
         <span class="arrow">{{ openSubMenus.职业 ? '▼' : '▶' }}</span>
       </div>
+
+
+
+      <div class="parent sub" @click.stop="toggleSubMenu('技术分支')">技术分支
+        <span class="arrow">{{ openSubMenus.技术分支 ? '▼' : '▶' }}</span>
+      </div>
+
+
+
+      <div class="submenu sub" :class="{ show: openSubMenus.技术分支 }">
+        <div class="parent sub" @click.stop="toggleThirdMenu('工业技术')">工业技术
+        <span class="arrow">{{ openThirdMenus.工业技术 ? '▼' : '▶' }}</span>
+        </div>
+      </div>
+
+      
+
     </div>
 
     <!-- 一级菜单2 -->
@@ -77,6 +103,10 @@ const openThirdMenus = reactive({
   ThirdMenu1: false,
 })
 
+const openFourthMenus = reactive({
+  FourthMenu1: false,
+})
+
 // 切换一级菜单
 function toggleMenu(name) {
   openMenus[name] = !openMenus[name]
@@ -89,9 +119,20 @@ function toggleSubMenu(name) {
 function toggleThirdMenu(name) {
   openThirdMenus[name] = !openThirdMenus[name]
 }
+function toggleFourthMenu(name) {
+  openFourthMenus[name] = !openFourthMenus[name]
+}
+
 </script>
 
 <style>
+.submenu.fourth {
+  padding-left: 40px;
+  display: none;
+}
+.submenu.fourth.show {
+  display: block;
+}
 .sidebar {
   background: #2c3e50;
   color: #fff;
