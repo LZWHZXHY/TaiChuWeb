@@ -1,14 +1,16 @@
 import { createApp } from 'vue'
-
 import { createPinia } from 'pinia'
-
 import App from './App.vue'
 import{createRouter, createWebHistory} from 'vue-router'
-import AboutUS from "/src/components/AboutUS.vue"
-import transfer from "/src/components/Transfer.vue"
-import HW from "/src/components/HelloWorld.vue"
 
-import ChaiQuanIndex from './components/ChaiQuan/ChaiQuanIndex.vue'
+
+import { useUserStore } from '/src/store/user'
+
+
+import Login from "/src/components/login.vue"
+
+import Register from './components/Register.vue'
+
 
 
 
@@ -16,10 +18,12 @@ import ChaiQuanIndex from './components/ChaiQuan/ChaiQuanIndex.vue'
 //1.配置路由规则
 
 const routes = [
-  {path:"/about", component: AboutUS},
-  {path:"/transfer", component:transfer},
-  {path:"/HelloWorld", component:HW},
-  {path:"/ChaiQuanIndex", component:ChaiQuanIndex}
+  
+  {path:"/", component: () => import('./components/login.vue')},
+  {path:"/login", component:Login},
+  
+  {path:"/Register", component:Register}
+  
 ]
 
 
@@ -32,11 +36,20 @@ const router = createRouter({
 
 
 
+
+
 //3.加载路由器
 const app = createApp(App)
+const pinia = createPinia()
 
-app.use(createPinia())
 
+
+app.use(pinia)
 app.use(router)
+
+
+
+const userStore = useUserStore()
+userStore.initialize()
 
 app.mount('#app')

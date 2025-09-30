@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TCserver_Backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+398c48060a07ba189513c89798bd7ed3570acf79")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a628ef1eaa2bb1237ea187f9e1c5adfd26b4cf58")]
 [assembly: System.Reflection.AssemblyProductAttribute("TCserver_Backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TCserver_Backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

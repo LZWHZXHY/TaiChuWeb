@@ -1,0 +1,131 @@
+/* ====== 现有样式基础上的手机端优化，建议添加到你的样式最后 ====== */
+
+/* 适配窄屏（手机等） */
+@media (max-width: 768px) {
+
+  .container {
+    min-height: 100vh;
+    width: 100vw;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  .topBar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 56px;
+    padding: 0 10px;
+    z-index: 100;
+  }
+  .logo-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.3rem;
+    margin-right: 10px;
+  }
+  .topBarTitle h1 {
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    margin-left: 0;
+  }
+  .topBarOption {
+    padding: 0 10px;
+    font-size: 0.98rem;
+  }
+
+  /* 右侧导航变为顶部横向导航 */
+  .rightBar {
+    width: 100vw;
+    height: 56px;
+    position: fixed;
+    top: 56px;    /* 紧随topBar */
+    left: 0;
+    z-index: 101;
+    background: rgb(15, 15, 23);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+  }
+  .rightBar ul {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  .rightBarOption {
+    font-size: 1.05rem;
+    margin: 0 6px;
+    padding: 6px 8px;
+    text-align: center;
+  }
+  .underline {
+    display: none; /* 手机端可隐藏下划线，或可简化样式 */
+  }
+
+  /* 主内容区适应手机 */
+  .main-content {
+    margin: 120px 0 0 0;    /* 留出顶部导航空间 */
+    width: 100vw;
+    height: auto;
+    min-height: 60vh;
+    padding: 10px 2vw 60px 2vw;
+    position: relative;
+    border-radius: 0;
+  }
+  .content-wrapper {
+    width: 100%;
+    height: auto;
+    padding: 10px 2vw;
+    border-radius: 8px;
+    float: none;
+  }
+
+  /* 底部区域适配 */
+  .bottomArea {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    min-height: 44px;
+    font-size: 0.93rem;
+    padding: 0 2vw;
+    border-radius: 0;
+    z-index: 200;
+  }
+  .bottomArea a {
+    font-size: 0.93rem;
+    padding: 2px 0;
+  }
+}
+
+/* ====== 超小屏（如 430px 以下）进一步优化 ====== */
+@media (max-width: 430px) {
+  .topBar, .rightBar {
+    height: 44px;
+  }
+  .logo-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
+    margin-right: 6px;
+  }
+  .topBarTitle h1 {
+    font-size: 0.96rem;
+  }
+  .rightBarOption {
+    font-size: 0.98rem;
+    padding: 4px 5px;
+  }
+  .main-content {
+    margin-top: 94px;
+    padding: 8px 1vw 44px 1vw;
+    position: relative;
+    height: 100vh;
+  }
+}
