@@ -30,6 +30,16 @@ const routes = [
             path:'/inventory',
             name:'仓库',
             component: () => import('./user_components/inventory.vue'),
+            meta: { requiresAuth: true }  
+          },{
+            path:'/myPost',
+            name:'我的帖子',
+             component: () => import('./user_components/myPost.vue'),
+            meta: { requiresAuth: true }
+          },{
+            path:'/myFriends',
+            name:'我的帖子',
+             component: () => import('./user_components/friends.vue'),
             meta: { requiresAuth: true }
           }
         ]
@@ -140,6 +150,12 @@ const routes = [
         component: () => import('./components/Rank.vue'),
         meta: { requiresAuth: true }
       },
+      {
+        path:"resource",
+        name:'资源板块',
+        component: () => import('./components/Resource.vue'),
+        meta: { requiresAuth: true, requireLevel: 8}
+      },
       
       // 意见箱
       {
@@ -236,6 +252,18 @@ router.beforeEach(async (to, from, next) => {
       return;
     }
   }
+
+
+  // 检查页面是否有 requireLevel 限制
+if (to.meta.requireLevel !== undefined) {
+  const userLevel = userStore.user?.level ?? 0;
+  if (userLevel < to.meta.requireLevel) {
+    alert(`该资源板块需要等级 Lv.${to.meta.requireLevel} 以上才能访问`);
+    next('/'); // 跳转到首页或其他页面
+    return;
+  }
+}
+
 
   next()
 })

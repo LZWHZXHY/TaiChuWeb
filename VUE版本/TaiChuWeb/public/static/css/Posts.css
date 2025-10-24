@@ -133,16 +133,15 @@
 .btn-primary { background: #3498db; color: #fff; }
 .btn-primary:disabled { background: #8ecfff; cursor: not-allowed; }
 .posts-window {
-  flex: 1;
-  min-height: 0;
+  /* flex: 1;        <-- 去掉这个 */
   background: #fff;
   border-radius: 8px;
   padding: 14px 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  max-height: 70vh;    /* 或 height: 600px; */
   overflow-y: auto;
   margin-top: 12px;
-  display: flex;
-  flex-direction: column;
+  /* 不要加 display: flex 或 flex-direction */
 }
 .loading, .no-posts { text-align: center; padding: 18px; color: #666; }
 .post-list { display: flex; flex-direction: column; gap: 18px; }

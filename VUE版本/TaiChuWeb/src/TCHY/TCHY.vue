@@ -62,7 +62,7 @@
               <span class="menu-text">游戏板块</span>
             </li>
           </router-link>
-          <router-link to="/game" class="menu-item">
+          <router-link to="/Resource" class="menu-item">
             <li>
               <i class="fas fa-gamepad"></i>
               <span class="menu-text">资源板块</span>

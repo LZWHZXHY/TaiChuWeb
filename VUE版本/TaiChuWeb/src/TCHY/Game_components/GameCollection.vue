@@ -37,6 +37,16 @@
           <template v-if="selected === 'conway'">
             <ConwayGame />
           </template>
+          <template v-else-if="selected === 'single'">
+            <div class="single-game-list">
+              <div v-for="game in singleGames" :key="game.name" class="game-card">
+                <div class="game-title">{{ game.name }}</div>
+                <div class="game-desc">{{ game.description }}</div>
+                <div class="game-creater">作者：{{ game.creater }}</div>
+                <a :href="game.download" download class="game-download">下载</a>
+              </div>
+            </div>
+          </template>
           <template v-else>
             <slot :category="selected"></slot>
           </template>
@@ -53,14 +63,60 @@ const selected = ref("web");
 const select = (type) => { selected.value = type; };
 const reload = () => {
   if (selected.value === "conway") {
-    // 触发子组件重载（可用 key 或 emit 实现）
-    location.reload(); // 简单方式
+    location.reload();
   }
   // 其它游戏刷新逻辑
 };
+
+
+const baseApiUrl = import.meta.env.DEV
+  ? "https://localhost:44321"
+  : "https://bianyuzhou.com";
+
+
+
+const getFileName = (downloadUrl) => {
+  const match = downloadUrl.match(/path=([^&]+)/);
+  if (match) {
+    return decodeURIComponent(match[1].split('/').pop());
+  }
+  return "downloaded_file";
+};
+// 单机游戏数据
+const singleGames = [
+  {
+    name: "实验性游戏0.152",
+    description: "早期对技术进行研究和实验性质的游戏。",
+    creater:"太初寰宇-游戏制作部门",
+    download: `${baseApiUrl}/api/UserInfo/fileproxy?path=games/UnrealSkillTestGame.7z`
+  },
+  {
+    name: "充电小球",
+    description: "一个充电小球游戏，是学校的作业",
+    creater:"腾蛇",
+    download: `${baseApiUrl}/api/UserInfo/fileproxy?path=games/Maze1.1.7z`
+  },
+  {
+    name: "未完成的屠杀室Rouglike",
+    description: "学校作业+1",
+    creater:"腾蛇",
+    download: `${baseApiUrl}/api/UserInfo/fileproxy?path=games/屠杀室测试版v1.41.7z`
+  }
+  
+];
 </script>
 
 <style scoped>
+.game-creater {
+  color: #2897c8;
+  font-size: 0.93rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+  background: linear-gradient(90deg, #eaf6ff 0%, #f9fcff 100%);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
 .dashboard-root {
   display: flex;
   min-height: 100vh;
@@ -219,6 +275,53 @@ const reload = () => {
   /* For embedded game styles, can be overridden by slot */
 }
 
+/* 单机游戏卡片样式 */
+.single-game-list {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  padding: 10px 0;
+}
+
+.game-card {
+  background: #eaf6ff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px #5abaff22;
+  padding: 22px 18px;
+  width: 250px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.game-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2897c8;
+  margin-bottom: 8px;
+}
+
+.game-desc {
+  color: #3a5e7c;
+  font-size: 0.98rem;
+  margin-bottom: 14px;
+}
+
+.game-download {
+  background: #5abaff;
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.game-download:hover {
+  background: #2897c8;
+}
+
 @media (max-width: 900px) {
   .sidebar {
     width: 60px;
@@ -260,5 +363,4 @@ const reload = () => {
     min-height: 200px;
   }
 }
-
 </style>

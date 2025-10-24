@@ -271,6 +271,8 @@ export default {
       const el = document.getElementById('post-' + postId);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        
       }
     }
 

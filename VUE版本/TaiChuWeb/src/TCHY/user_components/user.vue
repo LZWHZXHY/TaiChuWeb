@@ -39,11 +39,11 @@
             <div class="functionPanel">
                 <ul>
                     <li><button><router-link to='/daka'>签到</router-link></button></li>
-                    <li><button>我的帖子</button></li>
+                    <li><button><router-link to='/myPost'>我的帖子</router-link></button></li>
                     <li><button><router-link to='/inventory'>仓库</router-link></button></li>
                     <li><button>活动</button></li>
                     <li><button>私信</button></li>
-                    <li><button>好友</button></li>
+                    <li><button><router-link to='/myFriends'>好友</router-link></button></li>
                     <li><button>黑名单</button></li>
                     <li><button>设置</button></li>
                     <li>
