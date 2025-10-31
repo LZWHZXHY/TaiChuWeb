@@ -229,10 +229,15 @@ const sendVerificationCode = async () => {
       }
     }, 10000);
   } catch (error) {
-    console.error('发送验证码出错:', error);
+    console.error('发送验证码出错详情:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      headers: error.response?.headers
+    });
     
-    if (error.response) {
-      uiState.value.apiError = error.response.data?.message || '发送验证码失败';
+    if (error.response?.data) {
+      // 详细显示后端返回的错误信息
+      uiState.value.apiError = `错误 ${error.response.status}: ${JSON.stringify(error.response.data)}`;
     } else {
       uiState.value.apiError = '网络错误，请检查您的网络连接';
     }

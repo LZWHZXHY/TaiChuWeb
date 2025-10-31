@@ -150,23 +150,18 @@ export const useUserStore = defineStore('user', {
     
     validateToken(token) {
   try {
-    //console.log('校验token:', token)
     if (!token || !token.includes('.') || token.split('.').length !== 3) {
       console.error('token分段异常', token)
       return false;
     }
     const payloadPart = token.split('.')[1];
     const paddedPayload = payloadPart.padEnd(payloadPart.length + (4 - payloadPart.length % 4) % 4, '=');
-    //console.log('payloadPart:', payloadPart, 'padded:', paddedPayload)
-    // base64url转base64
     const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
     const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
     const decodedPayload = atob(padded);
-    //console.log('decodedPayload:', decodedPayload)
     JSON.parse(decodedPayload);
     return true;
   } catch (e) {
-    //console.error('token解析异常:', e)
     return false;
   }
 }
