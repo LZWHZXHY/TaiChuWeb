@@ -39,12 +39,6 @@ const routes = [
             
           },
           {
-            path:'/myOwnPost',
-            name:'我的帖子',
-            component: () => import('./user_components/myOwnPost.vue'),
-            meta: { requiresAuth: true}
-          },
-          {
             path:'/myFriends',
             name:'我的帖子',
              component: () => import('./user_components/friends.vue'),
@@ -162,7 +156,7 @@ const routes = [
         path:"resource",
         name:'资源板块',
         component: () => import('./components/Resource.vue'),
-        meta: { requiresAuth: true, requireLevel: 8}
+        meta: { requiresAuth: true, requireLevel: 3}
       },
       
       // 意见箱

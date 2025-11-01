@@ -109,8 +109,8 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import axios from "axios";
-import WorldRules from './components/WorldRules.vue';
-import Partical from './components/Particle.vue'; // 记得新建并完善这个组件
+//import WorldRules from './components/WorldRules.vue';
+//import Partical from './components/Particle.vue'; // 记得新建并完善这个组件
 
 const baseApiUrl = import.meta.env.DEV
   ? "https://localhost:44321"

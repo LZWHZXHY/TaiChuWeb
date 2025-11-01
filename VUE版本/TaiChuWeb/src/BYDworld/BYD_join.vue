@@ -1,216 +1,259 @@
 <template>
-  <div class="BigContainer">
-    <nav class="TopBar">
-      <ul>
-        <li><span>协议！必看</span></li>
-        <li><span>周报</span></li>
-        <li><span>参与成员</span></li>
-        <li><span>项目管理</span></li>
-        <li><span>链接合集</span></li>
-      </ul>
-    </nav>
+  <div class="BydPortal">
+    <!-- 顶部：品牌 + 当前模块标题（不再放导航项） -->
+    <header class="TopBar">
+      <div class="TopBarInner">
+        <div class="Brand">BYD Portal</div>
+        <div class="Current">{{ currentLabel }}</div>
+      </div>
+    </header>
 
-    <div class="MainContent">
-      <aside class="SidePanel leftPanel">
+    <!-- 主体布局 -->
+    <main class="MainGrid">
+      <!-- 左侧功能列表：唯一的导航入口 -->
+      <aside class="SidePanel">
         <div class="PanelTitle">功能选项</div>
         <ul class="OptionList">
           <li
-            v-for="opt in options"
-            :key="opt.key"
-            @click="activeOption = opt.key"
-            :class="{active: activeOption === opt.key}"
+            v-for="item in sections"
+            :key="item.key"
+            :class="{ active: activeKey === item.key }"
+            @click="select(item.key)"
           >
-            <span>{{ opt.label }}</span>
+            <span>{{ item.label }}</span>
           </li>
         </ul>
       </aside>
-      <section class="viewWindow">
-        <!-- 这里显示主内容区域 -->
-        <component :is="viewWindowMap[activeOption] || DefaultContent" />
+
+      <!-- 中间内容窗口：动态渲染当前组件 -->
+      <section class="ViewWindow">
+        <keep-alive>
+          <component :is="currentComponent" />
+        </keep-alive>
       </section>
-      <aside class="SidePanel rightPanel">
-        <!-- 右侧面板内容 -->
+
+      <!-- 右侧：仅展示公告等信息（去掉快速入口，避免重复） -->
+      <aside class="RightPanel">
+        <div class="RightCard">
+          <h3>公告</h3>
+          <p>这里可以放置制作须知、里程碑、常用链接等。</p>
+        </div>
+        <!-- <div v-if="activeKey === 'project'" class="RightCard">项目提示...</div> -->
       </aside>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, defineComponent } from "vue";
-import UploadChannelInfo from './BYD_production/UploadInfo.vue';
+import { ref, computed, defineAsyncComponent, onMounted } from 'vue'
 
-// 可扩展选项列表
-const options = [
-  { key: "upload", label: "上传通道" },
-  { key: "another", label: "其它功能" },
-  // 继续添加更多选项
-];
+// 子模块按需加载（保持原路径即可）
+const SectionAgreement = defineAsyncComponent(() => import('./components/Agreement.vue'))
+const SectionWeekly    = defineAsyncComponent(() => import('./components/WeeklyReport.vue'))
+const SectionMembers   = defineAsyncComponent(() => import('./components/Participants.vue'))
+const SectionProject   = defineAsyncComponent(() => import('./components/ProjectManagement.vue'))
+const SectionLinks     = defineAsyncComponent(() => import('./components/Links.vue'))
+const SectionUpload    = defineAsyncComponent(() => import('./BYD_production/UploadInfo.vue'))
 
-const activeOption = ref("upload");
+// 单一数据源：导航项（唯一的真相来源）
+const sections = [
+  { key: 'agreement', label: '协议（必看）', component: SectionAgreement },
+  { key: 'weekly',    label: '周报',        component: SectionWeekly },
+  { key: 'members',   label: '参与成员',    component: SectionMembers },
+  { key: 'project',   label: '项目管理',    component: SectionProject },
+  { key: 'links',     label: '链接合集',    component: SectionLinks },
+  { key: 'upload',    label: '上传通道',    component: SectionUpload },
+]
 
-// 中间窗口内容映射
-const viewWindowMap = {
-  upload: UploadChannelInfo, // 直接赋值组件
-  another: defineComponent({
-    template: `<div class="placeholder" style="color: #fff;">这里是其它功能内容区域（可扩展）</div>`
-  }),
-  // 更多内容可以继续添加
-};
+// 当前激活模块
+const activeKey = ref('agreement')
 
-// 默认内容组件
-const DefaultContent = defineComponent({
-  template: `<div class="placeholder" style="color: #fff;">请选择左侧功能选项</div>`
-});
+// 当前组件与标题
+const currentComponent = computed(() => {
+  return sections.find(s => s.key === activeKey.value)?.component ?? SectionAgreement
+})
+const currentLabel = computed(() => {
+  return sections.find(s => s.key === activeKey.value)?.label ?? ''
+})
+
+// 切换并把 key 写入 URL hash，刷新/分享可保持
+function select(key) {
+  if (!sections.some(s => s.key === key)) return
+  activeKey.value = key
+  writeKeyToHash(key)
+}
+
+function readKeyFromHash() {
+  try {
+    const hash = window.location.hash || ''
+    const idx = hash.indexOf('?')
+    if (idx >= 0) {
+      const params = new URLSearchParams(hash.substring(idx + 1))
+      const tab = params.get('tab')
+      if (tab && sections.some(s => s.key === tab)) {
+        activeKey.value = tab
+      }
+    }
+  } catch { /* ignore */ }
+}
+
+function writeKeyToHash(key) {
+  try {
+    const hash = window.location.hash || '#'
+    const [pathPart, queryPart] = hash.split('?')
+    const params = new URLSearchParams(queryPart || '')
+    params.set('tab', key)
+    const next = `${pathPart}?${params.toString()}`
+    if (next !== hash) {
+      history.replaceState(null, '', next)
+    }
+  } catch { /* ignore */ }
+}
+
+onMounted(() => {
+  readKeyFromHash()
+})
 </script>
 
 <style scoped>
-.BigContainer {
-  background-color: aliceblue;
-  width: 100vw;
-  min-height: 100vh;
-  position: absolute;
+.BydPortal {
+  --bg: #f7f9fc;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --brand: #2563eb;
+  --brand-weak: #dbeafe;
+
+  background: var(--bg);
+
+  /* 高度上下文：保证中间区域可以滚动 */
+  height: 100dvh; /* 或 100vh */
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
 }
 
+/* 顶部：仅展示品牌与当前模块标题 */
 .TopBar {
-  width: 100%;
-  background: linear-gradient(90deg, #616161 0%, #505050 100%);
-  box-shadow: 0 2px 8px #cfd8dc;
-  padding: 0;
   position: sticky;
   top: 0;
   z-index: 100;
+  background: linear-gradient(90deg, #616161 0%, #505050 100%);
+  box-shadow: 0 2px 8px rgba(31, 41, 55, 0.18);
 }
-
-.TopBar ul {
-  display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0 4vw;
+.TopBarInner {
   height: 56px;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 36px;
+  gap: 16px;
 }
-
-.TopBar li {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  transition: background 0.18s, color 0.18s;
-  cursor: pointer;
-  border-radius: 8px;
-  padding: 0 16px;
-  user-select: none;
+.Brand {
+  color: #ffe082;
+  font-weight: 800;
+  letter-spacing: .6px;
 }
-
-.TopBar li:active,
-.TopBar li:focus,
-.TopBar li:hover {
-  background: #ffe082;
-}
-
-.TopBar span {
-  font-size: 17px;
-  font-weight: 600;
+.Current {
   color: #f5f5f5;
-  letter-spacing: 1px;
-  transition: color 0.18s;
+  opacity: .9;
+  font-weight: 600;
 }
 
-.TopBar li:hover span,
-.TopBar li:active span,
-.TopBar li:focus span {
-  color: #424242;
+/* 三列布局 */
+.MainGrid {
+  display: grid;
+  grid-template-columns: 240px 1fr 300px;
+  gap: 16px;
+  padding: 20px;
+
+  /* 占据 TopBar 之外的剩余空间 */
+  flex: 1;
+
+  /* 关键：允许子项在剩余空间内收缩，保证内部滚动生效 */
+  min-height: 0;
 }
 
-.MainContent {
-  display: flex;
-  width: 100vw;
-  height: 80vh;
-  margin-top: 36px;
-  justify-content: center;
-  align-items: stretch;
-}
-
-.SidePanel {
-  width: 10vw;
-  min-width: 120px;
-  background: #f6f7fb;
+.SidePanel,
+.RightPanel {
+  background: var(--card);
   border-radius: 16px;
-  margin: 0 1vw;
-  box-shadow: 0 1px 6px #e0e7ef;
+  box-shadow: 0 1px 6px rgba(31, 41, 55, 0.08);
+  padding: 14px 12px;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  padding: 18px 0;
+
+  /* 允许在父容器中收缩，避免挤压中间滚动 */
+  min-height: 0;
+  overflow: hidden; /* 如需侧栏也可滚动，改为 overflow-y: auto; */
 }
 
 .PanelTitle {
   text-align: center;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  color: #2563eb;
-  margin-bottom: 12px;
-  letter-spacing: 1px;
+  color: var(--brand);
+  margin-bottom: 10px;
+  letter-spacing: .5px;
 }
 
 .OptionList {
   list-style: none;
+  margin: 0;
   padding: 0;
-  margin: 0 0 12px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
 }
 
 .OptionList li {
-  padding: 10px 16px;
+  padding: 10px 12px;
   border-radius: 8px;
-  font-size: 15px;
-  color: #424242;
+  font-size: 14px;
+  color: var(--text);
   cursor: pointer;
-  transition: background 0.18s, color 0.18s;
-  display: flex;
-  align-items: center;
+  transition: background .18s, color .18s;
 }
 
-.OptionList li.active,
-.OptionList li:hover,
-.OptionList li:focus {
-  background: #dbeafe;
-  color: #2563eb;
+.OptionList li:hover { background: var(--brand-weak); color: var(--brand); }
+.OptionList li.active { background: var(--brand-weak); color: var(--brand); font-weight: 700; }
+
+/* 中间视图窗口：作为唯一滚动容器 */
+.ViewWindow {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(31, 41, 55, 0.10);
+  padding: 20px;
+
+  /* 关键两行：允许在父容器空间内收缩 + 开启垂直滚动 */
+  min-height: 0;
+  overflow-y: auto;
 }
 
-.OptionList li span {
-  font-weight: 600;
-}
-
-.SidePanelContent {
-  margin: 10px 16px 0 16px;
+/* 右侧卡片 */
+.RightCard {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 8px rgba(31, 41, 55, 0.08);
   padding: 12px;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 2px 8px #e0e7ef;
+  margin-bottom: 12px;
+}
+.RightCard h3 {
+  margin: 0 0 8px 0;
   font-size: 15px;
-  min-height: 80px;
+  color: var(--text);
 }
 
-.placeholder {
-  color: #888;
-  text-align: center;
-  font-size: 15px;
-  padding: 8px 0;
+/* 响应式 */
+@media (max-width: 1100px) {
+  .MainGrid { grid-template-columns: 220px 1fr; }
+  .RightPanel { display: none; }
 }
 
-.viewWindow {
-  width: 80vw;
-  background-color: #424242;
-  border-radius: 18px;
-  box-shadow: 0 2px 12px #cfd8dc;
-  padding: 26px;
-  min-height: 360px;
-  margin: 0 1vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+@media (max-width: 768px) {
+  .MainGrid {
+    grid-template-columns: 1fr;
+    min-height: 0; /* 继续保证内部可滚动 */
+  }
+  .SidePanel { order: 1; }
+  .ViewWindow { order: 2; min-height: 0; }
 }
 </style>
