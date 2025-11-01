@@ -31,12 +31,20 @@ const routes = [
             name:'仓库',
             component: () => import('./user_components/inventory.vue'),
             meta: { requiresAuth: true }  
-          },{
-            path:'/myPost',
+          },
+          {
+            path:'myPost',
+            name:'myPost',
+            component: () => import('./user_components/myPost.vue')
+            
+          },
+          {
+            path:'/myOwnPost',
             name:'我的帖子',
-             component: () => import('./user_components/myPost.vue'),
-            meta: { requiresAuth: true }
-          },{
+            component: () => import('./user_components/myOwnPost.vue'),
+            meta: { requiresAuth: true}
+          },
+          {
             path:'/myFriends',
             name:'我的帖子',
              component: () => import('./user_components/friends.vue'),
