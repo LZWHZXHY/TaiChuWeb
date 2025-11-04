@@ -199,6 +199,11 @@ const routes = [
             name: "活动",
             component: () => import('./Chai_components/activity.vue'),
             meta: { requiresAuth: true }
+          },{
+            path:"taichuBF",
+            name:"约战场",
+            component: () => import('./Chai_components/TaiChuBattlefield.vue'),
+            meta: { requiresAuth: true, requireLevel: 7}
           }
         ]
       }

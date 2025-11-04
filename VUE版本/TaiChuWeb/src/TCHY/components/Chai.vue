@@ -31,6 +31,13 @@
                 <i class="fas fa-comment-alt"></i>
                 <span>话题发布</span>
             </RouterLink>
+
+            <router-link class="top-bar-option" :to="{ name: '约战场' }">
+                <i class="fas fa-comment-alt"></i>
+                <span>太初约战场</span>
+            </router-link>
+
+
         </div>
 
         <!-- 内容区域保持不变 -->
