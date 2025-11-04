@@ -3,7 +3,7 @@
     <header class="taichu__header">
       <div class="title-row">
         <h1>太初约战场</h1>
-        <small class="beta">BETA</small>
+        <small class="beta">BETA v0.1</small>
       </div>
       <p class="taichu__subtitle">企划介绍 · 上传角色 · 角色列表与约战 · 战绩</p>
 
@@ -211,7 +211,7 @@ watch(
 )
 </script>
 
-<!-- 保持非 scoped + .taichu 前缀，确保样式可作用到子组件 -->
+<!-- 修改：添加 .taichu 前缀，避免与子组件冲突 -->
 <style>
 .taichu { color: #fff; min-height: 100%; display: flex; flex-direction: column; gap: 12px; }
 .taichu .title-row { display: flex; align-items: center; gap: 8px; }
@@ -227,12 +227,12 @@ watch(
 .taichu .panel { border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; background: rgba(255,255,255,0.04); }
 .taichu .tip { margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.75); display: flex; align-items: center; gap: 6px; }
 
-/* 过滤条和搜索（供 OC_Gallery 使用） */
+/* 过滤条和搜索（供 OC_Gallery 使用）- 添加特异性 */
 .taichu .filter-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
 .taichu .search { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); padding: 6px 10px; border-radius: 8px; }
 .taichu .search input { background: transparent; border: none; outline: none; color: #fff; width: 240px; }
 
-/* 标签 chips */
+/* 标签 chips - 添加特异性 */
 .taichu .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .taichu .chip { font-size: 12px; padding: 4px 8px; border-radius: 999px; cursor: pointer; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); color: #fff; }
 .taichu .chip.filled { background: rgba(255,255,255,0.18); }
@@ -240,9 +240,9 @@ watch(
 .taichu .spacer { flex: 1; }
 .taichu .view-tip { color: rgba(255,255,255,0.7); font-size: 12px; }
 
-/* 卡片网格与卡片 */
-.taichu .grid { display: grid; grid-template-columns: repeat( auto-fill, minmax(280px, 1fr) ); gap: 12px; }
-.taichu .card { border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; display: grid; grid-template-columns: 72px 1fr; gap: 12px; background: rgba(255,255,255,0.04); }
+/* 卡片网格与卡片 - 添加特异性，但避免与OC_Gallery冲突 */
+.taichu .grid:not(.oc-persona-list .grid) { display: grid; grid-template-columns: repeat( auto-fill, minmax(280px, 1fr) ); gap: 12px; }
+.taichu .card:not(.oc-persona-list .card) { border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; display: grid; grid-template-columns: 72px 1fr; gap: 12px; background: rgba(255,255,255,0.04); }
 .taichu .avatar { width: 72px; height: 72px; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.08); display: grid; place-items: center; }
 .taichu .avatar img { width: 100%; height: 100%; object-fit: cover; }
 .taichu .placeholder { color: rgba(255,255,255,0.8); font-size: 20px; }
@@ -265,7 +265,7 @@ watch(
 .taichu .btn.primary:hover { filter: brightness(1.05); }
 .taichu .btn.danger { background: #e24a4a; border-color: #e24a4a; }
 
-/* 战绩列表 */
+/* 战绩列表 - 添加特异性 */
 .taichu .battle-filter { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
 .taichu .list { display: flex; flex-direction: column; gap: 10px; }
 .taichu .battle-item { display: grid; grid-template-columns: 1fr auto; gap: 10px; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px; background: rgba(255,255,255,0.04); }

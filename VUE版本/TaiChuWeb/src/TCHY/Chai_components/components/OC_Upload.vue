@@ -355,10 +355,20 @@ async function uploadFilesAndAssociate(ocId: number) {
   return resp.data
 }
 
+// 辅助：把用户输入解析为数字数组
+function parseExperienceInput(input: string): number[] {
+  if (!input) return []
+  const parts = input.split(/[,;\s]+/).map(s => s.trim()).filter(Boolean)
+  const nums = parts.map(s => {
+    const n = Number(s)
+    return Number.isFinite(n) ? n : NaN
+  }).filter(n => !Number.isNaN(n))
+  return nums
+}
+
 async function onSubmit() {
   submitError.value = null
   if (!validate()) {
-    // focus first error (simple)
     const first = Object.keys(errors)[0]
     submitError.value = errors[first]
     return
@@ -366,56 +376,60 @@ async function onSubmit() {
 
   isSubmitting.value = true
   try {
-    // 1) create metadata (authorName included as user requested)
-    const meta = {
-      Name: form.name,
-      Gender: form.gender,
-      Age: form.age,
-      Species: form.species,
-      POO: form.POO,
-      OC_Current_Time: form.OC_Current_Time,
-      ability: JSON.stringify({ freeText: form.ability.freeText }), // backend expects string
-      Colors: form.colors,
-      Experience: form.experience,
-      Character: form.character,
-      Background: form.background,
-      OC_WeapenDesc: form.OC_WeapenDesc,
-      ExtraDesc: form.ExtraDesc,
-      // include authorName from front-end (backend should still validate/override if required)
-      AuthorName: form.authorName
-    }
+    // 确保 parseExperienceInput 已存在并且 Experience 为 number[]
+      const meta = {
+        Name: form.name || '',
+        Gender: form.gender ?? 2,
+        Age: Number.isFinite(form.age) ? form.age : 0,
+        Species: form.species || '',
+        POO: form.POO || '',
+        OC_Current_Time: Number.isFinite(form.OC_Current_Time) ? form.OC_Current_Time : 0,
+        // 关键：使用 ability（小写）字段名
+        // 如果后端存为字符串（存 JSON 文本），使用 JSON.stringify；若只要纯文本，使用 form.ability.freeText
+        ability: JSON.stringify({ freeText: form.ability.freeText || '' }), // or ability: form.ability.freeText || ''
+        colors: form.colors || '',
+        Experience: parseExperienceInput(form.experience as unknown as string),
+        Character: form.character || '',
+        Background: form.background || '',
+        OC_WeapenDesc: form.OC_WeapenDesc || '',
+        ExtraDesc: form.ExtraDesc || '',
+        AuthorName: form.authorName || ''
+      }
+
+console.log('POST /api/OCBattle/create body:', meta)
+
+    // Debug: 在发送前打印最终 body，确保 Experience 是数组
+    console.log('POST /api/OCBattle/create body:', JSON.stringify(meta))
 
     const createResp = await request.post('/api/OCBattle/create', meta)
-    const createdId = createResp.data.id ?? createResp.data.Id ?? createResp.data.Id
+    const createdId = createResp.data.id ?? createResp.data.Id
     if (!createdId) throw new Error('创建失败：未返回 id')
 
-    // 2) upload files
+    // 上传文件的逻辑照常
     const uploadResult = await uploadFilesAndAssociate(createdId)
-
-    // success - you can emit or navigate
     emit('submit', { ocId: createdId, uploaded: uploadResult })
-    // reset UI
     onReset()
   } catch (err: any) {
-    console.error('请求错误：', err)
-    const data = err?.response?.data
-    if (data) {
-      // Prefer human-readable message if provided, otherwise stringify details
-      if (data.message) {
-        submitError.value = data.message + (data.errors ? '\n' + JSON.stringify(data.errors, null, 2) : '')
-      } else if (data.errors) {
-        submitError.value = JSON.stringify(data.errors, null, 2)
-      } else {
-        submitError.value = JSON.stringify(data, null, 2)
-      }
-      console.error('后端响应 body:', data)
+  console.error('请求失败原始错误：', err)
+  const data = err?.response?.data
+  if (data) {
+    console.error('后端返回 body:', data)
+    // 显示 ModelState errors（可读化）
+    if (data.errors) {
+      submitError.value = JSON.stringify(data.errors, null, 2)
+    } else if (data.message) {
+      submitError.value = data.message
     } else {
-      submitError.value = err.message || '提交失败'
+      submitError.value = JSON.stringify(data, null, 2)
     }
+  } else {
+    submitError.value = err.message || '提交失败'
+  }
   } finally {
     isSubmitting.value = false
     uploadProgress.value = null
   }
+  
 }
 </script>
 
