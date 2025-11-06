@@ -1,5 +1,4 @@
 # 忽略整个 TCserver_Backend 目录
-/TCserver_Backend/
-
-# 忽略整个 TCserver_Backend 目录
-TCserver_Backend/
+TCserver_Backend/appsettings.Development.json
+TCserver_Backend/appsettings.json
+TCserver_Backend/appsettings.Production.json

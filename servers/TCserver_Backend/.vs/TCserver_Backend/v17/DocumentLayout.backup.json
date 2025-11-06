@@ -1,0 +1,398 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\controllers\\ocbattlecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\controllers\\ocbattlecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\dtos\\createocrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\dtos\\createocrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\controllers\\userinfocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\controllers\\userinfocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\models\\ocbattle\\oc_info.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\models\\ocbattle\\oc_info.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\controllers\\worldbasicrulescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\controllers\\worldbasicrulescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\controllers\\tradecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\controllers\\tradecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\data\\functiondbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\data\\functiondbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\models\\userdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\models\\userdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\controllers\\resourcecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\controllers\\resourcecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\models\\resources\\download_logs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\models\\resources\\download_logs.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\pages\\_viewstart.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\pages\\_viewstart.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\controllers\\logincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\controllers\\logincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\services\\refreshtokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\services\\refreshtokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\models\\resources\\resource_categories.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\models\\resources\\resource_categories.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\services\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\services\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\controllers\\postscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\controllers\\postscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\models\\resources\\resources.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\models\\resources\\resources.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\dtos\\sendcodedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\dtos\\sendcodedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\models\\posts.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\models\\posts.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\tcserver_backend\\tcserver_backend\\models\\postreport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2FD4D08-583D-434D-B048-FECA654D9607}|TCserver_Backend\\TCserver_Backend.csproj|solutionrelative:tcserver_backend\\models\\postreport.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 246,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "TradeController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\TradeController.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Controllers\\TradeController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\TradeController.cs",
+              "RelativeToolTip": "TCserver_Backend\\Controllers\\TradeController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-04T01:20:03.779Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "WorldBasicRulesController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\WorldBasicRulesController.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Controllers\\WorldBasicRulesController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\WorldBasicRulesController.cs",
+              "RelativeToolTip": "TCserver_Backend\\Controllers\\WorldBasicRulesController.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABAAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-04T01:20:01.893Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "CreateOCRequest.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Dtos\\CreateOCRequest.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Dtos\\CreateOCRequest.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Dtos\\CreateOCRequest.cs",
+              "RelativeToolTip": "TCserver_Backend\\Dtos\\CreateOCRequest.cs",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAzwCoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-04T01:09:21.333Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "OCBattleController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\OCBattleController.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Controllers\\OCBattleController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\OCBattleController.cs",
+              "RelativeToolTip": "TCserver_Backend\\Controllers\\OCBattleController.cs",
+              "ViewState": "AgIAAHoAAAAAAAAAAADwv4cAAAAvAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-03T23:33:16.565Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "_ViewStart.cshtml",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Pages\\_ViewStart.cshtml",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Pages\\_ViewStart.cshtml",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Pages\\_ViewStart.cshtml",
+              "RelativeToolTip": "TCserver_Backend\\Pages\\_ViewStart.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-11-03T19:40:04.842Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "RefreshTokenService.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Services\\RefreshTokenService.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Services\\RefreshTokenService.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Services\\RefreshTokenService.cs",
+              "RelativeToolTip": "TCserver_Backend\\Services\\RefreshTokenService.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-01T16:34:52.056Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "JwtService.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Services\\JwtService.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Services\\JwtService.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Services\\JwtService.cs",
+              "RelativeToolTip": "TCserver_Backend\\Services\\JwtService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-01T16:34:53.143Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "UserController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\UserController.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Controllers\\UserController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\UserController.cs",
+              "RelativeToolTip": "TCserver_Backend\\Controllers\\UserController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-30T14:36:29.646Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "FunctionDbContext.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Data\\FunctionDbContext.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Data\\FunctionDbContext.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Data\\FunctionDbContext.cs",
+              "RelativeToolTip": "TCserver_Backend\\Data\\FunctionDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-29T17:29:10.335Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\appsettings.json",
+              "RelativeDocumentMoniker": "TCserver_Backend\\appsettings.json",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\appsettings.json",
+              "RelativeToolTip": "TCserver_Backend\\appsettings.json",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAAACAAAAA3AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-10-30T19:42:44.926Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "SendCodeDto.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Dtos\\SendCodeDto.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Dtos\\SendCodeDto.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Dtos\\SendCodeDto.cs",
+              "RelativeToolTip": "TCserver_Backend\\Dtos\\SendCodeDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-30T14:24:02.857Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Controllers\\AuthController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "TCserver_Backend\\Controllers\\AuthController.cs",
+              "ViewState": "AgIAAOcAAAAAAAAAAAAAAC0AAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-29T17:33:40.311Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "Resources.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\Resources\\Resources.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Models\\Resources\\Resources.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\Resources\\Resources.cs",
+              "RelativeToolTip": "TCserver_Backend\\Models\\Resources\\Resources.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-29T16:45:47.186Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "LoginController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\LoginController.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Controllers\\LoginController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\LoginController.cs",
+              "RelativeToolTip": "TCserver_Backend\\Controllers\\LoginController.cs",
+              "ViewState": "AgIAACUAAAAAAAAAAAAQwC0AAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-29T18:44:18.429Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "Resource_categories.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\Resources\\Resource_categories.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Models\\Resources\\Resource_categories.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\Resources\\Resource_categories.cs",
+              "RelativeToolTip": "TCserver_Backend\\Models\\Resources\\Resource_categories.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-29T16:42:57.052Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "PostReport.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\PostReport.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Models\\PostReport.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\PostReport.cs",
+              "RelativeToolTip": "TCserver_Backend\\Models\\PostReport.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-29T16:49:35.222Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "Posts.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\Posts.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Models\\Posts.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\Posts.cs",
+              "RelativeToolTip": "TCserver_Backend\\Models\\Posts.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-29T16:43:04.793Z"
+            }
+          ]
+        },
+        {
+          "DockedWidth": 176,
+          "SelectedChildIndex": 5,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "OC_Info.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\OCBattle\\OC_Info.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Models\\OCBattle\\OC_Info.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\OCBattle\\OC_Info.cs",
+              "RelativeToolTip": "TCserver_Backend\\Models\\OCBattle\\OC_Info.cs",
+              "ViewState": "AgIAAB0AAAAAAAAAAAAIwEAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-03T19:43:22.776Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "Download_logs.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\Resources\\Download_logs.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Models\\Resources\\Download_logs.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\Resources\\Download_logs.cs",
+              "RelativeToolTip": "TCserver_Backend\\Models\\Resources\\Download_logs.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-29T16:55:22.652Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "PostsController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\PostsController.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Controllers\\PostsController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\PostsController.cs",
+              "RelativeToolTip": "TCserver_Backend\\Controllers\\PostsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-31T12:18:54.501Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "ResourceController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\ResourceController.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Controllers\\ResourceController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\ResourceController.cs",
+              "RelativeToolTip": "TCserver_Backend\\Controllers\\ResourceController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-29T17:32:01.047Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "userdata.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\userdata.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Models\\userdata.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Models\\userdata.cs",
+              "RelativeToolTip": "TCserver_Backend\\Models\\userdata.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-29T16:49:38.728Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "UserInfoController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\UserInfoController.cs",
+              "RelativeDocumentMoniker": "TCserver_Backend\\Controllers\\UserInfoController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\servers\\TCserver_Backend\\TCserver_Backend\\Controllers\\UserInfoController.cs",
+              "RelativeToolTip": "TCserver_Backend\\Controllers\\UserInfoController.cs",
+              "ViewState": "AgIAAEMBAAAAAAAAAADwv0sBAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-29T18:44:30.409Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
