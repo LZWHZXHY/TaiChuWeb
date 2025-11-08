@@ -12,7 +12,7 @@ namespace TCserver_Backend.Models
 
         [Required]
         public int UserId { get; set; }  // 主体用户ID
-
+        [Required]
         public int? FriendId { get; set; }  // 好友ID（允许为空）
 
         [Column("CreateTime")]

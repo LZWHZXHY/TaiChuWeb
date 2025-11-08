@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Security.Claims;
 using TCserver_Backend.Data;
 using TCserver_Backend.Models;
-using System.Security.Claims;
 
 namespace TCserver_Backend.Controllers
 {
@@ -30,7 +31,6 @@ namespace TCserver_Backend.Controllers
             return userId;
         }
 
-        // ========== 新增：获取好友列表 ==========
         [HttpGet]
         public async Task<IActionResult> GetFriends()
         {
@@ -38,20 +38,34 @@ namespace TCserver_Backend.Controllers
             {
                 var currentUserId = GetCurrentUserId();
 
-                var friends = await _functionDb.Friends
-                    .Include(f => f.Friend)
-                    .ThenInclude(u => u.useraccount)
-                    .Where(f => f.UserId == currentUserId && f.status == 0)
-                    .OrderByDescending(f => f.CreateTime)
-                    .Select(f => new
+                // 获取所有好友ID（去重）
+                var friendIds = await _functionDb.Friends
+                    .Where(f => f.status == 0 &&
+                               (f.UserId == currentUserId || f.FriendId == currentUserId))
+                    .Select(f => f.UserId == currentUserId ? f.FriendId : f.UserId)
+                    .Distinct()
+                    .ToListAsync();
+
+                // 获取好友详细信息
+                var friends = await _functionDb.userdata
+                    .Include(u => u.useraccount)
+                    .Where(u => friendIds.Contains(u.id))
+                    .Select(u => new
                     {
-                        id = f.FriendId,
-                        username = f.Friend.useraccount.username,
-                        logo = f.Friend.logo,
-                        level = f.Friend.level,
-                        remark = f.Remark,
-                        addedTime = f.CreateTime
+                        id = u.id,
+                        username = u.useraccount.username,
+                        logo = u.logo,
+                        level = u.level,
+                        remark = _functionDb.Friends
+                            .Where(f => f.UserId == currentUserId && f.FriendId == u.id && f.status == 0)
+                            .Select(f => f.Remark)
+                            .FirstOrDefault() ?? "",
+                        addedTime = _functionDb.Friends
+                            .Where(f => (f.UserId == currentUserId && f.FriendId == u.id && f.status == 0) ||
+                                       (f.UserId == u.id && f.FriendId == currentUserId && f.status == 0))
+                            .Min(f => f.CreateTime)
                     })
+                    .OrderByDescending(f => f.addedTime)
                     .ToListAsync();
 
                 return Ok(friends);
@@ -62,7 +76,7 @@ namespace TCserver_Backend.Controllers
             }
         }
 
-        // ========== 新增：获取黑名单 ==========
+        // ========== 获取黑名单 ==========
         [HttpGet("blocked")]
         public async Task<IActionResult> GetBlockedUsers()
         {
@@ -228,27 +242,38 @@ namespace TCserver_Backend.Controllers
 
                 if (processDto.Action == 1) // 同意
                 {
-                    // 创建双向好友关系
-                    var friendRelation1 = new Friends
-                    {
-                        UserId = friendRequest.FromUserId,
-                        FriendId = friendRequest.ToUserId,
-                        CreateTime = DateTime.Now,
-                        status = 0,
-                        Remark = ""
-                    };
+                    // 检查是否已存在关系
+                    var existingRelation1 = await _functionDb.Friends
+                        .AnyAsync(f => f.UserId == currentUserId && f.FriendId == friendRequest.FromUserId && f.status == 0);
 
-                    var friendRelation2 = new Friends
-                    {
-                        UserId = friendRequest.ToUserId,
-                        FriendId = friendRequest.FromUserId,
-                        CreateTime = DateTime.Now,
-                        status = 0,
-                        Remark = friendRequest.Remark
-                    };
+                    var existingRelation2 = await _functionDb.Friends
+                        .AnyAsync(f => f.UserId == friendRequest.FromUserId && f.FriendId == currentUserId && f.status == 0);
 
-                    _functionDb.Friends.Add(friendRelation1);
-                    _functionDb.Friends.Add(friendRelation2);
+                    if (!existingRelation1)
+                    {
+                        var friendRelation1 = new Friends
+                        {
+                            UserId = currentUserId,
+                            FriendId = friendRequest.FromUserId,
+                            CreateTime = DateTime.Now,
+                            status = 0,
+                            Remark = friendRequest.Remark
+                        };
+                        _functionDb.Friends.Add(friendRelation1);
+                    }
+
+                    if (!existingRelation2)
+                    {
+                        var friendRelation2 = new Friends
+                        {
+                            UserId = friendRequest.FromUserId,
+                            FriendId = currentUserId,
+                            CreateTime = DateTime.Now,
+                            status = 0,
+                            Remark = ""
+                        };
+                        _functionDb.Friends.Add(friendRelation2);
+                    }
                 }
 
                 await _functionDb.SaveChangesAsync();
@@ -368,18 +393,28 @@ namespace TCserver_Backend.Controllers
             {
                 var currentUserId = GetCurrentUserId();
 
-                var friendRelation = await _functionDb.Friends
-                    .FirstOrDefaultAsync(f => f.UserId == currentUserId && f.FriendId == friendId && f.status == 0);
+                // 查找所有相关的好友关系
+                var friendRelations = await _functionDb.Friends
+                    .Where(f =>
+                        (f.UserId == currentUserId && f.FriendId == friendId && f.status == 0) ||
+                        (f.UserId == friendId && f.FriendId == currentUserId && f.status == 0)
+                    )
+                    .ToListAsync();
 
-                if (friendRelation == null)
+                if (friendRelations.Count == 0)
                 {
                     return NotFound(new { message = "好友关系不存在" });
                 }
 
-                friendRelation.status = 1;
+                // 软删除所有关系
+                foreach (var relation in friendRelations)
+                {
+                    relation.status = 1;
+                }
+
                 await _functionDb.SaveChangesAsync();
 
-                return Ok(new { message = "好友删除成功" });
+                return Ok(new { message = "好友删除成功", deletedCount = friendRelations.Count });
             }
             catch (Exception ex)
             {
@@ -411,6 +446,140 @@ namespace TCserver_Backend.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new { message = "取消拉黑失败", error = ex.Message });
+            }
+        }
+
+        // ========== 清理重复好友关系 ==========
+        [HttpPost("cleanup-duplicates")]
+        public async Task<IActionResult> CleanupDuplicateFriends()
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+
+                // 查找重复的好友关系
+                var duplicates = await _functionDb.Friends
+                    .Where(f => f.UserId == currentUserId && f.status == 0)
+                    .GroupBy(f => f.FriendId)
+                    .Where(g => g.Count() > 1)
+                    .Select(g => new
+                    {
+                        FriendId = g.Key,
+                        Count = g.Count(),
+                        Relations = g.OrderByDescending(f => f.CreateTime).ToList()
+                    })
+                    .ToListAsync();
+
+                var deletedCount = 0;
+
+                foreach (var duplicate in duplicates)
+                {
+                    // 保留最新的关系，删除其他重复的
+                    var relationsToDelete = duplicate.Relations.Skip(1);
+
+                    foreach (var relation in relationsToDelete)
+                    {
+                        relation.status = 1; // 软删除
+                        deletedCount++;
+                    }
+                }
+
+                await _functionDb.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    message = "清理完成",
+                    deletedCount,
+                    duplicateGroups = duplicates.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "清理重复好友失败", error = ex.Message });
+            }
+        }
+
+        // ========== 检查好友关系 ==========
+        [HttpGet("check/{friendId}")]
+        public async Task<IActionResult> CheckFriendship(int friendId)
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+
+                var isMyFriend = await _functionDb.Friends
+                    .AnyAsync(f => f.UserId == currentUserId && f.FriendId == friendId && f.status == 0);
+
+                var isTheirFriend = await _functionDb.Friends
+                    .AnyAsync(f => f.UserId == friendId && f.FriendId == currentUserId && f.status == 0);
+
+                return Ok(new
+                {
+                    isMyFriend,
+                    isTheirFriend,
+                    isMutualFriendship = isMyFriend && isTheirFriend
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "检查好友关系失败", error = ex.Message });
+            }
+        }
+
+        // ========== 修复单向好友关系 ==========
+        [HttpPost("fix-oneway/{friendId}")]
+        public async Task<IActionResult> FixOneWayFriendship(int friendId)
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+
+                // 检查是否已经是双向好友
+                var isMyFriend = await _functionDb.Friends
+                    .AnyAsync(f => f.UserId == currentUserId && f.FriendId == friendId && f.status == 0);
+
+                var isTheirFriend = await _functionDb.Friends
+                    .AnyAsync(f => f.UserId == friendId && f.FriendId == currentUserId && f.status == 0);
+
+                if (isMyFriend && isTheirFriend)
+                {
+                    return Ok(new { message = "已经是双向好友关系" });
+                }
+
+                // 补充缺失的关系
+                if (!isMyFriend)
+                {
+                    var relation1 = new Friends
+                    {
+                        UserId = currentUserId,
+                        FriendId = friendId,
+                        CreateTime = DateTime.Now,
+                        status = 0,
+                        Remark = ""
+                    };
+                    _functionDb.Friends.Add(relation1);
+                }
+
+                if (!isTheirFriend)
+                {
+                    var relation2 = new Friends
+                    {
+                        UserId = friendId,
+                        FriendId = currentUserId,
+                        CreateTime = DateTime.Now,
+                        status = 0,
+                        Remark = ""
+                    };
+                    _functionDb.Friends.Add(relation2);
+                }
+
+                await _functionDb.SaveChangesAsync();
+
+                return Ok(new { message = "好友关系已修复为双向" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "修复好友关系失败", error = ex.Message });
             }
         }
     }
