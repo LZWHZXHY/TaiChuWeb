@@ -1,5 +1,11 @@
 # 忽略整个 TCserver_Backend 目录
-/servers/TCserver_Backend/appsettings*.json
+# 忽略项目中所有以 appsettings 开头的 json（匹配 TCserver_Backend/TCserver_Backend 下的文件）
+/servers/TCserver_Backend/**/appsettings*.json
+
+# 你可能还想继续忽略 VS 和构建产物（按需）
+/servers/TCserver_Backend/.vs/
+/servers/TCserver_Backend/**/bin/
+/servers/TCserver_Backend/**/obj/
 
 /VUE版本/TaiChuWeb/.env
 
