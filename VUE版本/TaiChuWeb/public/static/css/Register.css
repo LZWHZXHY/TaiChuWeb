@@ -1,0 +1,101 @@
+.BigContainer{
+    background-image: url('/static/image/老班素材1.webp');
+    position: absolute;
+    width: 100%;
+    height: 100vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 8px;
+    padding: 3%;
+}
+
+
+.register-container{
+    background-color: rgba(114, 117, 116, 0.38);
+    width: 60%;
+    border-radius: 8px;
+    padding: 1% 0 0 1%;
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1.5px solid rgba(255, 255, 255, 0.21);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.14);
+    font-family: "WDXL Lubrifont SC", sans-serif;
+    color: whitesmoke;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.18), 0 1px 1px #333;
+}
+
+.register-container h2{
+    font-size: 45px;
+    font-family: 'Font1' !important;
+}
+
+.register-container p{
+    font-size: 30px;
+    font-family: 'Font1' !important;
+}
+
+.form-group{
+    margin-top: 10px;
+    font-size: 25px;
+}
+
+.backToLogin{
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+.backToLogin a{
+      color: inherit;            /* 继承父元素颜色 */
+  background: none;          /* 无背景 */
+  outline: none;             /* 去掉点击时的外轮廓 */
+  box-shadow: none;          /* 去掉可能的阴影 */
+  border: none;              /* 去掉边框 */
+}
+
+#Register{
+    margin-top: 15px;
+    margin-bottom: 15px;
+    border-radius: 2px;
+    border: none;
+    padding: 4px;
+    font-size: large;
+    font-family: 'Font1';
+    background-color: rgb(255, 255, 255);
+}
+
+
+
+
+
+.form-group input {
+  width: 30%;
+  
+  padding: 8px 0 0 0;
+  margin-top: 8px;
+  margin-left:8px;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  background: rgba(112, 11, 11, 0);
+  outline: none;
+  border: none;
+}
+
+
+.code-btn{
+    border: none;
+    border-radius: 2px;
+    padding: 2px;
+    
+}
+
+
+@media (max-width: 768px) {
+    .register-container{
+        width: 100%;
+        height: 100%;
+    }
+}
+
+
+

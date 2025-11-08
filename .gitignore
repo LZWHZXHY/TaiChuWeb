@@ -1,0 +1,28 @@
+# 忽略整个 TCserver_Backend 目录
+/servers/TCserver_Backend/appsettings*.json
+
+/VUE版本/TaiChuWeb/.env
+
+# 忽略 TCserver_Backend 下的 appsettings 文件
+/servers/TCserver_Backend/appsettings*.json
+
+# 忽略 Visual Studio 缓存/索引
+/servers/TCserver_Backend/.vs/
+/servers/TCserver_Backend/.vs/**
+
+# 忽略构建产物
+/servers/TCserver_Backend/**/bin/
+/servers/TCserver_Backend/**/obj/
+/servers/TCserver_Backend/**/TestResults/
+
+# 常见个人/IDE 文件
+.vscode/
+.idea/
+*.user
+*.suo
+
+# 前端/通用
+node_modules/
+dist/
+.env
+*.log

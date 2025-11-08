@@ -1,0 +1,202 @@
+
+
+.container {
+  background-color: rgb(37, 36, 36);
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.topBar {
+  background: rgba(0, 0, 0, 0);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  padding: 0 5%;
+  z-index: 10;
+}
+
+.logo-icon {
+  width: 50px;
+  height: 50px;
+  background-color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.1rem;
+  color: #fff;
+  margin-right: 15px;
+  box-shadow: 0 0 16px 2px rgba(79, 195, 247, 0.15);
+  border: 1px solid rgba(79, 195, 247, 0.20);
+}
+
+.topBarTitle h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(79,195,247,0.28);
+  margin: 0 0 0 3px;
+  transition: color 0.2s;
+  user-select: none;
+}
+.topBarLogo {
+  display: flex;
+  align-items: center;
+}
+
+.topBarOption {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 25px;
+  color: #e0e0e0;
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  transition: color 0.3s, background 0.3s;
+  cursor: pointer;
+  outline: none;
+}
+
+.topBarOption p {
+  transition: color 0.3s, transform 0.3s;
+}
+
+.topBarOption:hover p,
+.topBarOption.router-link-active p {
+  color: #4fc3f7;
+  transform: translateY(-3px);
+  font-weight: 700;
+}
+
+.underline {
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #4fc3f7, transparent);
+  position: absolute;
+  bottom: 18px;
+  left: 16%;
+  border-radius: 2px;
+  transition: width 0.32s cubic-bezier(.55,.06,.68,.19);
+  pointer-events: none;
+}
+
+.topBarOption:hover .underline,
+.topBarOption.router-link-active .underline {
+  width: 70%;
+}
+.rightBar{
+  background: rgb(15, 15, 23);
+  right: 0;
+  height: 100%;
+  position: absolute;
+  z-index: 12;
+  width: 20%;
+  display: flex;
+  justify-content: center;   /* 水平居中 */
+  align-items: center;       /* 垂直居中 */
+
+}
+
+.rightBarOption{
+  font-size: 1.6rem;
+  text-decoration: none;
+  justify-content: center;
+  color: #ffffff;
+  margin:5%;
+  padding: 10%;
+  font-family: 'Font1';
+}
+
+
+/* 主内容区样式 */
+.main-content {
+  background-color: #00a2ff00;
+  margin-top: 100px;
+  margin-left: 100px;
+  width: 70%;
+  height: 85%;
+  
+  position: absolute;
+  z-index: 3;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.content-wrapper {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(80, 177, 149, 0);
+
+}
+
+
+.bottomArea {
+  width: 100%;
+  min-height: 60px;
+  background: rgba(15, 15, 23, 0.82);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 5%;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-size: 1rem;
+  color: #bdbdbd;
+  position: absolute;
+  z-index: 4;
+  bottom: 0;
+
+}
+
+.bottomArea a {
+  text-decoration: none;
+  color: #bdbdbd;
+  font-size: 1rem;
+  padding: 6px 0;
+  transition: color 0.22s;
+}
+
+.bottomArea a:hover {
+  color: #4fc3f7;
+  text-decoration: underline;
+}
+
+/* 隐藏滚动条（所有主流浏览器） */
+.container::-webkit-scrollbar,
+.content-wrapper::-webkit-scrollbar {
+  display: none;
+}
+.container,
+.content-wrapper {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.fade-up-enter-active, .fade-up-leave-active {
+  transition: 
+    opacity 1.1s cubic-bezier(.65, .05, .36, 1),
+    transform 1.1s cubic-bezier(.65, .05, .36, 1);
+}
+.fade-up-enter-from, .fade-up-leave-to {
+  opacity: 0;
+  transform: translateY(40px);
+}
+.fade-up-enter-to, .fade-up-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
