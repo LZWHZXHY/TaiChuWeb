@@ -401,6 +401,248 @@ namespace TCserver_Backend.Controllers
             }
         }
 
+        // 发送系统通知给所有用户
+        [HttpPost("send-to-all")]
+        public async Task<IActionResult> SendNotificationToAll([FromBody] SendNotificationToAllDto dto)
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+
+                // 获取所有活跃用户ID
+                var activeUserIds = await _functionDb.userdata
+                    .Where(u => u.last_active_time >= DateTime.Now.AddDays(-30)) // 最近30天活跃的用户
+                    .Select(u => u.id)
+                    .ToListAsync();
+
+                var sentCount = 0;
+                var errors = new List<string>();
+
+                // 批量发送通知（分批处理避免内存溢出）
+                var batchSize = 100;
+                for (int i = 0; i < activeUserIds.Count; i += batchSize)
+                {
+                    var batchUserIds = activeUserIds.Skip(i).Take(batchSize).ToList();
+
+                    foreach (var userId in batchUserIds)
+                    {
+                        try
+                        {
+                            var notification = new Notification
+                            {
+                                UserId = userId,
+                                type = 1, // 系统通知
+                                title = dto.Title,
+                                content = dto.Content,
+                                senderID = currentUserId, // 发送者为当前管理员
+                                IsRead = false,
+                                IsDeleted = false,
+                                ExpireTime = dto.ExpireTime,
+                                CreateTime = DateTime.Now
+                            };
+
+                            _functionDb.Notifications.Add(notification);
+                            sentCount++;
+                        }
+                        catch (Exception ex)
+                        {
+                            errors.Add($"用户 {userId}: {ex.Message}");
+                            _logger.LogError(ex, $"为用户 {userId} 创建通知失败");
+                        }
+                    }
+
+                    // 每批保存一次
+                    await _functionDb.SaveChangesAsync();
+                }
+
+                _logger.LogInformation($"系统通知发送完成: 成功 {sentCount} 条，失败 {errors.Count} 条");
+
+                var result = new
+                {
+                    message = "系统通知发送完成",
+                    sentCount,
+                    errorCount = errors.Count,
+                    errors = errors.Take(10).ToList() // 只返回前10个错误
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "发送系统通知失败");
+                return BadRequest(new { message = "发送系统通知失败", error = ex.Message });
+            }
+        }
+
+        // 发送通知给选定用户
+        [HttpPost("send-to-users")]
+        public async Task<IActionResult> SendNotificationToUsers([FromBody] SendNotificationToUsersDto dto)
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+                var sentCount = 0;
+                var errors = new List<string>();
+
+                foreach (var userId in dto.UserIds)
+                {
+                    try
+                    {
+                        // 检查用户是否存在
+                        var userExists = await _functionDb.userdata.AnyAsync(u => u.id == userId);
+                        if (!userExists)
+                        {
+                            errors.Add($"用户 {userId} 不存在");
+                            continue;
+                        }
+
+                        var notification = new Notification
+                        {
+                            UserId = userId,
+                            type = dto.Type,
+                            title = dto.Title,
+                            content = dto.Content,
+                            senderID = currentUserId,
+                            IsRead = false,
+                            IsDeleted = false,
+                            ExpireTime = dto.ExpireTime,
+                            CreateTime = DateTime.Now
+                        };
+
+                        _functionDb.Notifications.Add(notification);
+                        sentCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        errors.Add($"用户 {userId}: {ex.Message}");
+                        _logger.LogError(ex, $"为用户 {userId} 创建通知失败");
+                    }
+                }
+
+                await _functionDb.SaveChangesAsync();
+
+                var result = new
+                {
+                    message = "通知发送完成",
+                    sentCount,
+                    errorCount = errors.Count,
+                    errors = errors.Take(10).ToList()
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "发送用户通知失败");
+                return BadRequest(new { message = "发送用户通知失败", error = ex.Message });
+            }
+        }
+
+        // 发送通知给用户组
+        [HttpPost("send-to-group")]
+        public async Task<IActionResult> SendNotificationToGroup([FromBody] SendNotificationToGroupDto dto)
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+
+                // 根据用户组类型获取用户ID
+                IQueryable<int> userQuery = dto.GroupType switch
+                {
+                    "vip" => _functionDb.userdata.Where(u => u.level >= 10).Select(u => u.id), // VIP用户（等级≥10）
+                    "new" => _functionDb.userdata.Where(u => u.lastlogin >= DateTime.Now.AddDays(-7)).Select(u => u.id), // 新用户（7天内注册）
+                    "active" => _functionDb.userdata.Where(u => u.last_active_time >= DateTime.Now.AddDays(-7)).Select(u => u.id), // 活跃用户（7天内有活动）
+                    "inactive" => _functionDb.userdata.Where(u => u.last_active_time < DateTime.Now.AddDays(-30)).Select(u => u.id), // 非活跃用户
+                    _ => _functionDb.userdata.Select(u => u.id) // 所有用户
+                };
+
+                var userIds = await userQuery.ToListAsync();
+                var sentCount = 0;
+                var errors = new List<string>();
+
+                // 批量处理
+                var batchSize = 100;
+                for (int i = 0; i < userIds.Count; i += batchSize)
+                {
+                    var batchUserIds = userIds.Skip(i).Take(batchSize).ToList();
+
+                    foreach (var userId in batchUserIds)
+                    {
+                        try
+                        {
+                            var notification = new Notification
+                            {
+                                UserId = userId,
+                                type = dto.Type,
+                                title = dto.Title,
+                                content = dto.Content,
+                                senderID = currentUserId,
+                                IsRead = false,
+                                IsDeleted = false,
+                                ExpireTime = dto.ExpireTime,
+                                CreateTime = DateTime.Now
+                            };
+
+                            _functionDb.Notifications.Add(notification);
+                            sentCount++;
+                        }
+                        catch (Exception ex)
+                        {
+                            errors.Add($"用户 {userId}: {ex.Message}");
+                        }
+                    }
+
+                    await _functionDb.SaveChangesAsync();
+                }
+
+                var result = new
+                {
+                    message = $"用户组通知发送完成 ({dto.GroupType})",
+                    sentCount,
+                    errorCount = errors.Count,
+                    groupType = dto.GroupType,
+                    totalUsers = userIds.Count
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "发送用户组通知失败");
+                return BadRequest(new { message = "发送用户组通知失败", error = ex.Message });
+            }
+        }
+
+        // 获取发送统计信息
+        [HttpGet("send-stats")]
+        public async Task<IActionResult> GetSendStats()
+        {
+            try
+            {
+                var totalUsers = await _functionDb.userdata.CountAsync();
+                var activeUsers = await _functionDb.userdata
+                    .CountAsync(u => u.last_active_time >= DateTime.Now.AddDays(-30));
+                var newUsers = await _functionDb.userdata
+                    .CountAsync(u => u.lastlogin >= DateTime.Now.AddDays(-7));
+                var vipUsers = await _functionDb.userdata
+                    .CountAsync(u => u.level >= 10);
+
+                return Ok(new
+                {
+                    totalUsers,
+                    activeUsers,
+                    newUsers,
+                    vipUsers,
+                    inactiveUsers = totalUsers - activeUsers
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取发送统计失败");
+                return BadRequest(new { message = "获取发送统计失败", error = ex.Message });
+            }
+        }
+
         // 静态方法：获取类型名称
         private static string GetTypeNameStatic(int type)
         {
@@ -458,6 +700,33 @@ namespace TCserver_Backend.Controllers
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public int SenderId { get; set; } = 1;
+        public DateTime? ExpireTime { get; set; }
+    }
+
+    public class SendNotificationToAllDto
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+        public DateTime? ExpireTime { get; set; }
+        public bool Important { get; set; }
+        public bool RequiresAck { get; set; }
+    }
+
+    public class SendNotificationToUsersDto
+    {
+        public List<int> UserIds { get; set; } = new List<int>();
+        public int Type { get; set; } = 1;
+        public string Title { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+        public DateTime? ExpireTime { get; set; }
+    }
+
+    public class SendNotificationToGroupDto
+    {
+        public string GroupType { get; set; } = "all"; // all, vip, new, active, inactive
+        public int Type { get; set; } = 1;
+        public string Title { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
         public DateTime? ExpireTime { get; set; }
     }
 }

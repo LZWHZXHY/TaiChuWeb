@@ -6,13 +6,15 @@
         <button class="seg-btn" :class="{ active: section === 'review' }" @click="section = 'review'">内容审核</button>
         <button class="seg-btn" :class="{ active: section === 'activity' }" @click="section = 'activity'">活动配置</button>
         <button class="seg-btn" :class="{ active: section === 'site' }" @click="section = 'site'">站点设置</button>
+        <button class="seg-btn" :class="{ active: section === 'notification' }" @click="section = 'notification'">系统通知</button>
       </div>
     </header>
 
     <main class="main">
       <ContentReview v-if="section === 'review'" />
       <ActivityConfig v-else-if="section === 'activity'" />
-      <SiteSettings v-else />
+      <SiteSettings v-else-if="section === 'site'" />
+      <NotificationManager v-else />
     </main>
   </div>
 </template>
@@ -22,6 +24,7 @@ import { ref } from 'vue'
 import ContentReview from '../Review_components/ContentReview.vue'
 import ActivityConfig from '../Review_components/ActivityConfig.vue'
 import SiteSettings from '../Review_components/SiteSettings.vue'
+import NotificationManager from '../Review_components/NotificationManager.vue'
 
 const section = ref('review') // review | activity | site
 </script>
