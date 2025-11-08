@@ -42,6 +42,7 @@
                     <router-link class="btn" :to="{ name: 'myPost' }">我的帖子</router-link>
                     <li><button><router-link to='/inventory'>仓库</router-link></button></li>
                     <li><button>私信</button></li>
+                    <router-link class="btn" :to="{ name: '我的通知' }">信息</router-link>
                     <li><button><router-link to='/myFriends'>好友</router-link></button></li>
                     <li><button>黑名单</button></li>
                     <li><button>设置</button></li>

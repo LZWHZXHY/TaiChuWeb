@@ -38,5 +38,13 @@ namespace TCserver_Backend.Data
 
         public DbSet<OC_Info> OC_info { get; set; }
 
+        public DbSet<Friends> Friends { get; set; }
+
+        public DbSet<BlockUsers> BlockUsers { get; set; }
+        
+        public DbSet<Notification> Notifications { get; set; }
+
+        public DbSet<FriendRequest> FriendRequests { get; set; }
+
     }
 }

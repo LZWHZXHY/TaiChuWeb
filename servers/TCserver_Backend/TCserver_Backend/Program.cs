@@ -10,6 +10,7 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using TCserver_Backend.Controllers;
 using TCserver_Backend.Data;
 using TCserver_Backend.Models;
 using TCserver_Backend.Services;
@@ -198,6 +199,12 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddMemoryCache();
+
+
+// 确保这两个控制器都已注册
+builder.Services.AddScoped<FriendsController>();
+builder.Services.AddScoped<NotificationController>();
+
 
 
 builder.Services.AddEndpointsApiExplorer();

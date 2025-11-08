@@ -17,7 +17,7 @@
             :key="item.title + idx"
             class="log-item"
           >
-            <span class="item-title">{{ item.title }}：</span>
+            <span class="item-title">{{ item.title }}</span>
             <span class="item-content">{{ item.content }}</span>
           </li>
         </ul>

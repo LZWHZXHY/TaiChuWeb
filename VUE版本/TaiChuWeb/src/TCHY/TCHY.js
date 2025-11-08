@@ -43,6 +43,11 @@ const routes = [
             name:'我的帖子',
              component: () => import('./user_components/friends.vue'),
             meta: { requiresAuth: true }
+          },{
+            path:'/myNotify',
+            name:'我的通知',
+            component: () => import('./user_components/notification.vue'),
+            meta: { requiresAuth: true }
           }
         ]
       },
@@ -203,7 +208,7 @@ const routes = [
             path:"taichuBF",
             name:"约战场",
             component: () => import('./Chai_components/TaiChuBattlefield.vue'),
-            meta: { requiresAuth: true, requireLevel: 7}
+            meta: { requiresAuth: true, requireLevel: 3}
           }
         ]
       }
