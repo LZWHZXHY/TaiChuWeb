@@ -1,2 +1,0 @@
-# 忽略整个 TCserver_Backend 目录
-/servers/TCserver_Backend/appsettings*.json
