@@ -12,6 +12,10 @@
 # 忽略 TCserver_Backend 下的 appsettings 文件
 /servers/TCserver_Backend/appsettings*.json
 
+
+
+/5.0TCHY_Web/BackEnd/THCY_BE/appsettings*.json
+
 # 忽略 Visual Studio 缓存/索引
 /servers/TCserver_Backend/.vs/
 /servers/TCserver_Backend/.vs/**
