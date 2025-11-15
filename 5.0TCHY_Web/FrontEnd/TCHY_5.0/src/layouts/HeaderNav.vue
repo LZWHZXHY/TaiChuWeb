@@ -31,7 +31,7 @@
         </template>
       </nav>
 
-       <!-- 右侧功能区 -->
+      <!-- 右侧功能区 -->
       <div class="nav-actions">
         <!-- 用户数量显示 -->
         <div class="user-count" v-if="userCount > 0">
@@ -42,42 +42,55 @@
           </div>
         </div>
         
-        
-        
-      <!-- 登录状态显示 -->
-      <div v-if="authStore.isAuthenticated" class="user-menu">
-        <div class="user-info">
-          <img :src="authStore.user?.avatar" :alt="authStore.user?.username" class="user-avatar" />
-          <span class="username">{{ authStore.user?.username }}</span>
+        <!-- 登录状态显示 -->
+        <div v-if="authStore.isAuthenticated" class="user-menu">
+          <div class="user-info" @click="toggleUserMenu">
+            <div class="avatar-placeholder">
+              {{ authStore.user?.username?.charAt(0) || 'U' }}
+            </div>
+            <span class="username">{{ authStore.user?.username }}</span>
+            <div class="dropdown-arrow">▼</div>
+          </div>
+          
+          <!-- 用户下拉菜单 -->
+          <div v-if="showUserMenu" class="user-dropdown">
+            <div class="dropdown-item" @click="goToProfile">
+              <span>个人资料</span>
+            </div>
+            <div class="dropdown-item" @click="goToSettings">
+              <span>账户设置</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item logout-item" @click="handleLogout">
+              <span>退出登录</span>
+            </div>
+          </div>
         </div>
-        <button @click="handleLogout" class="logout-btn">退出</button>
+        
+        <!-- 未登录状态 -->
+        <div v-else class="auth-buttons">
+          <button @click="handleLogin" class="login-btn">登录</button>
+          <button @click="handleRegister" class="register-btn">注册</button>
+        </div>
       </div>
-      
-      <!-- 未登录状态 -->
-      <div v-else class="auth-buttons">
-        <AppButton variant="outline" @click="handleLogin">登录</AppButton>
-        <AppButton @click="handleRegister">注册</AppButton>
-      </div>
-    </div>
     </div>
   </header>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNavigation, useRouteActive } from '@/composables/useNavigation'
 import DropdownMenu from './DropdownMenu.vue'
-import AppButton from './AppButton.vue'
 import apiClient from '@/utils/api'
 import { useAuthStore } from '@/utils/auth'
 
 const authStore = useAuthStore()
-
+const router = useRouter()
 
 const userCount = ref(0)
 const isLoading = ref(false)
-
+const showUserMenu = ref(false)
 
 const props = defineProps({
   navItems: {
@@ -85,16 +98,15 @@ const props = defineProps({
     required: true
   }
 })
+
 const emit = defineEmits(['nav-change', 'user-action'])
 
-const router = useRouter()
 const { isScrolled } = useNavigation()
 const { isActive: checkActive } = useRouteActive()
 
 const currentPath = computed(() => router.currentRoute.value.path)
 
 const isActive = (path) => checkActive(currentPath.value, path)
-
 
 // 格式化数字显示
 const formattedCount = computed(() => {
@@ -108,8 +120,8 @@ const formattedCount = computed(() => {
 
 // 直接获取用户数量
 const loadUserCount = async () => {
-  isLoading.value = true
   try {
+    isLoading.value = true
     const response = await apiClient.get('/default/users/count')
     userCount.value = response.data.count
   } catch (error) {
@@ -120,18 +132,14 @@ const loadUserCount = async () => {
   }
 }
 
-
 const handleNavClick = (item) => {
   emit('nav-change', item)
-  // 添加路由跳转
   if (item.path) {
     router.push(item.path)
   }
 }
 
-const handleUserAction = () => emit('user-action')
 const navigateToHome = () => router.push('/')
-
 
 const handleLogin = () => {
   router.push('/login')
@@ -141,17 +149,55 @@ const handleRegister = () => {
   router.push('/register')
 }
 
-const handleLogout = async () => {
-  await authStore.logout()
-  router.push('/')
+const toggleUserMenu = () => {
+  showUserMenu.value = !showUserMenu.value
 }
 
+const goToProfile = () => {
+  showUserMenu.value = false
+  router.push('/profile')
+}
+
+const goToSettings = () => {
+  showUserMenu.value = false
+  router.push('/settings')
+}
+
+const handleLogout = async () => {
+  try {
+    showUserMenu.value = false
+    await authStore.logout()
+    router.push('/')
+  } catch (error) {
+    console.error('退出登录失败:', error)
+  }
+}
+
+const closeUserMenu = (event) => {
+  if (!event.target.closest('.user-menu')) {
+    showUserMenu.value = false
+  }
+}
+
+// 监听路由变化关闭用户菜单
+watch(() => router.currentRoute.value.path, () => {
+  showUserMenu.value = false
+})
 
 // 组件挂载时加载数据
 onMounted(() => {
-  loadUserCount()
+  try {
+    loadUserCount()
+    document.addEventListener('click', closeUserMenu)
+  } catch (error) {
+    console.error('组件初始化失败:', error)
+  }
 })
 
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+  document.removeEventListener('click', closeUserMenu)
+})
 </script>
 
 <style scoped>
@@ -239,13 +285,186 @@ onMounted(() => {
   width: 60%;
 }
 
-.nav-dropdown {
-  position: relative;
-}
-
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
+}
+
+/* 用户数量样式 */
+.user-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(52, 152, 219, 0.1);
+  border-radius: 8px;
+  color: #2c3e50;
+}
+
+.count-icon {
+  font-size: 16px;
+}
+
+.count-text {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.count-number {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.count-label {
+  font-size: 12px;
+  color: #666;
+}
+
+/* 登录注册按钮样式 */
+.auth-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.login-btn, .register-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.login-btn {
+  background: transparent;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+.login-btn:hover {
+  border-color: #3498db;
+  color: #3498db;
+}
+
+.register-btn {
+  background: #3498db;
+  color: white;
+}
+
+.register-btn:hover {
+  background: #2980b9;
+}
+
+/* 用户菜单样式 */
+.user-menu {
+  position: relative;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.user-info:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.username {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  color: #666;
+  transition: transform 0.3s ease;
+}
+
+.user-info:hover .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* 用户下拉菜单 */
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  min-width: 150px;
+  z-index: 1001;
+}
+
+.dropdown-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  color: #2c3e50;
+}
+
+.dropdown-item:hover {
+  background: #f8f9fa;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #e0e0e0;
+  margin: 4px 0;
+}
+
+.logout-item {
+  color: #e74c3c;
+}
+
+.logout-item:hover {
+  background: #fee;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .nav-container {
+    padding: 0 16px;
+  }
+  
+  .desktop-nav {
+    display: none;
+  }
+  
+  .user-count {
+    display: none;
+  }
+  
+  .auth-buttons {
+    gap: 8px;
+  }
+  
+  .login-btn, .register-btn {
+    padding: 6px 16px;
+    font-size: 13px;
+  }
 }
 </style>

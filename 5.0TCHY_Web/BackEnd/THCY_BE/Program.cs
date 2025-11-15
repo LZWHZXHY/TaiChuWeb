@@ -1,6 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using THCY_BE.DataBase;
+using THCY_BE.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +19,37 @@ builder.Services.AddDbContext<BasicInfoDbContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// 直接从配置中读取JWT设置
+var jwtSecretKey = builder.Configuration["Jwt:SecretKey"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+if (!string.IsNullOrEmpty(jwtSecretKey))
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
+                ValidateIssuer = !string.IsNullOrEmpty(jwtIssuer),
+                ValidIssuer = jwtIssuer,
+                ValidateAudience = !string.IsNullOrEmpty(jwtAudience),
+                ValidAudience = jwtAudience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+}
+
+builder.Services.AddAuthorization();
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IVerificationCodeService, VerificationCodeService>();
+
 
 // 配置CORS
 builder.Services.AddCors(options =>
@@ -61,5 +96,11 @@ catch (ReflectionTypeLoadException ex)
     // 提供友好的错误页面
     app.Map("/error", () => "应用程序启动失败，请检查控制台日志");
 }
+
+
+app.UseAuthentication();
+
+
+
 
 app.Run();

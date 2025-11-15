@@ -22,7 +22,7 @@ var environment = builder.Environment;
 // ==== ��־�������׶δ���ϸ����� ====
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
-//builder.Logging.AddDebug(); // ����Visual Studio�������
+
 builder.Logging.SetMinimumLevel(LogLevel.Trace);
 
 

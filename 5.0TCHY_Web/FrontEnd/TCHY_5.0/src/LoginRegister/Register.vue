@@ -26,18 +26,45 @@
 
         <div class="form-group">
           <label for="email">邮箱地址</label>
-          <input
-            id="email"
-            v-model="registerForm.email"
-            type="email"
-            name="email"
-            required
-            placeholder="请输入邮箱地址"
-            autocomplete="email"
-            :class="{ 'error': errors.email }"
-            @input="clearError('email')"
-          />
+          <div class="email-input-group">
+            <input
+              id="email"
+              v-model="registerForm.email"
+              type="email"
+              name="email"
+              required
+              placeholder="请输入邮箱地址"
+              autocomplete="email"
+              :class="{ 'error': errors.email }"
+              @input="onEmailInput"
+            />
+            <button
+              type="button"
+              class="send-code-btn"
+              :disabled="!canSendCode || isSendingCode"
+              @click="sendVerificationCode"
+            >
+              <span v-if="isSendingCode" class="loading-spinner"></span>
+              <span v-else>{{ countdown > 0 ? `${countdown}秒后重发` : '发送验证码' }}</span>
+            </button>
+          </div>
           <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="verificationCode">邮箱验证码</label>
+          <input
+            id="verificationCode"
+            v-model="registerForm.verificationCode"
+            type="text"
+            maxlength="6"
+            required
+            placeholder="请输入6位验证码"
+            autocomplete="off"
+            :class="{ 'error': errors.verificationCode }"
+            @input="clearError('verificationCode')"
+          />
+          <span v-if="errors.verificationCode" class="error-text">{{ errors.verificationCode }}</span>
         </div>
 
         <div class="form-group">
@@ -102,9 +129,10 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/utils/auth'
+import apiClient from '@/utils/api'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -112,6 +140,7 @@ const authStore = useAuthStore()
 const registerForm = reactive({
   username: '',
   email: '',
+  verificationCode: '',
   password: '',
   confirmPassword: '',
   agreeTerms: false
@@ -120,27 +149,87 @@ const registerForm = reactive({
 const errors = reactive({
   username: '',
   email: '',
+  verificationCode: '',
   password: '',
   confirmPassword: ''
 })
 
 const isLoading = ref(false)
+const isSendingCode = ref(false)
+const countdown = ref(0)
 const error = ref('')
+let countdownTimer = null
+
+// 计算属性：是否可以发送验证码
+const canSendCode = computed(() => {
+  return registerForm.email && isValidEmail(registerForm.email) && countdown.value === 0
+})
+
+const onEmailInput = () => {
+  clearError('email')
+  error.value = ''
+}
+
+// 发送验证码 - 修改API路径
+// 在 Register.vue 的 script setup 中修改发送验证码方法
+const sendVerificationCode = async () => {
+  if (!isValidEmail(registerForm.email)) {
+    errors.email = '请输入有效的邮箱地址'
+    return
+  }
+
+  isSendingCode.value = true
+  error.value = ''
+
+  try {
+    // 使用 authStore 的 sendVerificationCode 方法
+    const result = await authStore.sendVerificationCode(registerForm.email)
+    
+    if (result.success) {
+      startCountdown()
+      error.value = result.message || '验证码已发送到您的邮箱，请查收'
+    } else {
+      error.value = result.error
+    }
+  } catch (err) {
+    console.error('验证码发送错误:', err)
+    error.value = '发送验证码失败，请稍后重试'
+  } finally {
+    isSendingCode.value = false
+  }
+}
+
+// 开始倒计时
+const startCountdown = () => {
+  countdown.value = 60 // 60秒倒计时
+  countdownTimer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      clearInterval(countdownTimer)
+    }
+  }, 1000)
+}
 
 const validateForm = () => {
   let isValid = true
   
   // 清空错误信息
   Object.keys(errors).forEach(key => errors[key] = '')
+  error.value = ''
   
+  // 验证用户名
   if (!registerForm.username.trim()) {
     errors.username = '请输入用户名'
     isValid = false
   } else if (registerForm.username.length < 3) {
     errors.username = '用户名至少3个字符'
     isValid = false
+  } else if (registerForm.username.length > 20) {
+    errors.username = '用户名不能超过20个字符'
+    isValid = false
   }
   
+  // 验证邮箱
   if (!registerForm.email.trim()) {
     errors.email = '请输入邮箱地址'
     isValid = false
@@ -149,6 +238,16 @@ const validateForm = () => {
     isValid = false
   }
   
+  // 验证验证码
+  if (!registerForm.verificationCode) {
+    errors.verificationCode = '请输入验证码'
+    isValid = false
+  } else if (registerForm.verificationCode.length !== 6) {
+    errors.verificationCode = '验证码必须是6位数字'
+    isValid = false
+  }
+  
+  // 验证密码
   if (!registerForm.password) {
     errors.password = '请输入密码'
     isValid = false
@@ -157,6 +256,7 @@ const validateForm = () => {
     isValid = false
   }
   
+  // 验证确认密码
   if (!registerForm.confirmPassword) {
     errors.confirmPassword = '请确认密码'
     isValid = false
@@ -165,6 +265,7 @@ const validateForm = () => {
     isValid = false
   }
   
+  // 验证条款
   if (!registerForm.agreeTerms) {
     error.value = '请同意服务条款和隐私政策'
     isValid = false
@@ -190,11 +291,22 @@ const handleRegister = async () => {
   error.value = ''
   
   try {
-    const result = await authStore.register(registerForm)
+    const result = await authStore.register({
+      username: registerForm.username,
+      email: registerForm.email,
+      password: registerForm.password,
+      verificationCode: registerForm.verificationCode
+    })
     
     if (result.success) {
-      // 注册成功，跳转到首页
-      router.push('/')
+      // 注册成功，跳转到登录页
+      router.push({ 
+        path: '/login', 
+        query: { 
+          message: `注册成功！欢迎 ${result.username} 加入太初寰宇`,
+          username: result.username 
+        }
+      })
     } else {
       error.value = result.error
     }
@@ -211,14 +323,19 @@ const switchToLogin = () => {
 }
 
 const showTerms = () => {
-  // 显示服务条款
   alert('服务条款功能开发中...')
 }
 
 const showPrivacy = () => {
-  // 显示隐私政策
   alert('隐私政策功能开发中...')
 }
+
+// 组件卸载时清除定时器
+onUnmounted(() => {
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+  }
+})
 </script>
 
 <style scoped>
@@ -296,6 +413,43 @@ input.error {
   color: #e53e3e;
   font-size: 0.8rem;
   margin-top: 0.25rem;
+}
+
+/* 邮箱输入组样式 */
+.email-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.email-input-group input {
+  flex: 1;
+}
+
+.send-code-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 0 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  min-width: 120px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.send-code-btn:hover:not(:disabled) {
+  background: #5a6fd8;
+  transform: translateY(-1px);
+}
+
+.send-code-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .form-options {
@@ -398,6 +552,15 @@ input.error {
   
   .register-header h1 {
     font-size: 1.5rem;
+  }
+  
+  .email-input-group {
+    flex-direction: column;
+  }
+  
+  .send-code-btn {
+    min-width: auto;
+    height: 40px;
   }
 }
 </style>

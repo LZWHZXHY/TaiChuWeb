@@ -3,32 +3,64 @@
   "WorkspaceRootPath": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\defaultcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\defaultcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\loginregistercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\loginregistercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\resource\\resource_categories.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\resource\\resource_categories.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\database\\basicinfodbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\basicinfodbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\utils\\passwordhasher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:utils\\passwordhasher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\services\\emailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:services\\emailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\thcy_be.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:thcy_be.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\userdate\\userdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\userdate\\userdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\loginregister\\emailverification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\loginregister\\emailverification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\services\\verificationcodeservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:services\\verificationcodeservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\requests\\loginregisterrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:requests\\loginregisterrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\database\\basicinfodbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\basicinfodbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\defaultcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\defaultcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\resource\\resources.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\resource\\resources.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\userdate\\useraccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\userdate\\useraccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\resource\\resource_categories.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\resource\\resource_categories.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\resource\\download_log.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -43,10 +75,6 @@
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\userdate\\usercheckin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\resource\\resources.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\resource\\resources.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\posts\\comment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\posts\\comment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
@@ -57,64 +85,116 @@
       "VerticalTabListWidth": 256,
       "DocumentGroups": [
         {
-          "DockedWidth": 246,
-          "SelectedChildIndex": 0,
+          "DockedWidth": 259,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "DefaultController.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\DefaultController.cs",
-              "RelativeDocumentMoniker": "Controller\\DefaultController.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\DefaultController.cs",
-              "RelativeToolTip": "Controller\\DefaultController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAA8AAAAAAAAAA==",
+              "DocumentIndex": 3,
+              "Title": "EmailService.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Services\\EmailService.cs",
+              "RelativeDocumentMoniker": "Services\\EmailService.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Services\\EmailService.cs",
+              "RelativeToolTip": "Services\\EmailService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-14T17:45:24.8Z",
+              "WhenOpened": "2025-11-15T08:07:19.532Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\appsettings.json",
-              "RelativeDocumentMoniker": "appsettings.json",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\appsettings.json",
-              "RelativeToolTip": "appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-11-14T17:32:09.327Z",
+              "Title": "PasswordHasher.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Utils\\PasswordHasher.cs",
+              "RelativeDocumentMoniker": "Utils\\PasswordHasher.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Utils\\PasswordHasher.cs",
+              "RelativeToolTip": "Utils\\PasswordHasher.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAA+AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-15T04:26:10.617Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 9,
+              "Title": "LoginRegisterRequest.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Requests\\LoginRegisterRequest.cs",
+              "RelativeDocumentMoniker": "Requests\\LoginRegisterRequest.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Requests\\LoginRegisterRequest.cs",
+              "RelativeToolTip": "Requests\\LoginRegisterRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAA3AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-15T07:10:03.576Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "Program.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
               "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAABkAAAAAAAAAAAAmwCIAAAAwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-14T17:32:09.723Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-11-14T17:32:09.327Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "DefaultController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\DefaultController.cs",
+              "RelativeDocumentMoniker": "Controller\\DefaultController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\DefaultController.cs",
+              "RelativeToolTip": "Controller\\DefaultController.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAA4AAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-14T17:45:24.8Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "UserData.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserData.cs",
+              "RelativeDocumentMoniker": "Models\\UserDate\\UserData.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserData.cs",
+              "RelativeToolTip": "Models\\UserDate\\UserData.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-14T16:44:52.443Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
               "Title": "BasicInfoDbContext.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\BasicInfoDbContext.cs",
               "RelativeDocumentMoniker": "DataBase\\BasicInfoDbContext.cs",
               "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\BasicInfoDbContext.cs",
               "RelativeToolTip": "DataBase\\BasicInfoDbContext.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAA2AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-14T17:28:34.944Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 14,
               "Title": "Resource_categories.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Resource\\Resource_categories.cs",
               "RelativeDocumentMoniker": "Models\\Resource\\Resource_categories.cs",
@@ -122,25 +202,24 @@
               "RelativeToolTip": "Models\\Resource\\Resource_categories.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-14T17:25:22.748Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-14T17:25:22.748Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 12,
               "Title": "Resources.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Resource\\Resources.cs",
               "RelativeDocumentMoniker": "Models\\Resource\\Resources.cs",
               "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Resource\\Resources.cs",
               "RelativeToolTip": "Models\\Resource\\Resources.cs",
-              "ViewState": "AgIAABIAAAAAAAAAAAAqwCkAAAAmAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-14T17:23:17.586Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 15,
               "Title": "Download_log.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Resource\\Download_log.cs",
               "RelativeDocumentMoniker": "Models\\Resource\\Download_log.cs",
@@ -148,12 +227,11 @@
               "RelativeToolTip": "Models\\Resource\\Download_log.cs",
               "ViewState": "AgIAABEAAAAAAAAAAAAgwAkAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-14T17:22:24.419Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-14T17:22:24.419Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 16,
               "Title": "Post.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Posts\\Post.cs",
               "RelativeDocumentMoniker": "Models\\Posts\\Post.cs",
@@ -161,12 +239,11 @@
               "RelativeToolTip": "Models\\Posts\\Post.cs",
               "ViewState": "AgIAABsAAAAAAAAAAAAowC8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-14T16:53:02.004Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-14T16:53:02.004Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 17,
               "Title": "UserCheckIn.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserCheckIn.cs",
               "RelativeDocumentMoniker": "Models\\UserDate\\UserCheckIn.cs",
@@ -174,25 +251,11 @@
               "RelativeToolTip": "Models\\UserDate\\UserCheckIn.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-14T16:47:32.306Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-14T16:47:32.306Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "UserData.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserData.cs",
-              "RelativeDocumentMoniker": "Models\\UserDate\\UserData.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserData.cs",
-              "RelativeToolTip": "Models\\UserDate\\UserData.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-14T16:44:52.443Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 18,
               "Title": "Comment.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Posts\\Comment.cs",
               "RelativeDocumentMoniker": "Models\\Posts\\Comment.cs",
@@ -200,20 +263,77 @@
               "RelativeToolTip": "Models\\Posts\\Comment.cs",
               "ViewState": "AgIAAAYAAAAAAAAAAAAAABQAAABCAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-14T16:54:09.976Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-14T16:54:09.976Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 13,
               "Title": "UserAccount.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserAccount.cs",
               "RelativeDocumentMoniker": "Models\\UserDate\\UserAccount.cs",
               "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserAccount.cs",
               "RelativeToolTip": "Models\\UserDate\\UserAccount.cs",
-              "ViewState": "AgIAABQAAAAAAAAAAAAYwBEAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAABwAAAAAAAAAAAA/wC0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-14T16:46:08.999Z",
+              "EditorCaption": ""
+            }
+          ]
+        },
+        {
+          "DockedWidth": 233,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "THCY_BE",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\THCY_BE.csproj",
+              "RelativeDocumentMoniker": "THCY_BE.csproj",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\THCY_BE.csproj",
+              "RelativeToolTip": "THCY_BE.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-11-15T12:46:57.878Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "VerificationCodeService.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Services\\VerificationCodeService.cs",
+              "RelativeDocumentMoniker": "Services\\VerificationCodeService.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Services\\VerificationCodeService.cs",
+              "RelativeToolTip": "Services\\VerificationCodeService.cs",
+              "ViewState": "AgIAAEEAAAAAAAAAAAAkwE8AAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-15T08:08:36.913Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "LoginRegisterController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\LoginRegisterController.cs",
+              "RelativeDocumentMoniker": "Controller\\LoginRegisterController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\LoginRegisterController.cs",
+              "RelativeToolTip": "Controller\\LoginRegisterController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-15T05:18:02.614Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "EmailVerification.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\LoginRegister\\EmailVerification.cs",
+              "RelativeDocumentMoniker": "Models\\LoginRegister\\EmailVerification.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\LoginRegister\\EmailVerification.cs",
+              "RelativeToolTip": "Models\\LoginRegister\\EmailVerification.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-15T02:05:37.333Z",
               "EditorCaption": ""
             }
           ]

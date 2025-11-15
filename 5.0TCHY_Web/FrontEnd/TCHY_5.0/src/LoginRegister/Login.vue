@@ -6,6 +6,11 @@
         <p>欢迎回来！请登录您的账户</p>
       </div>
 
+      <!-- 测试按钮 -->
+      <button @click="testConnection" class="test-btn">
+        测试API连接
+      </button>
+
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
           <label for="username">用户名或邮箱</label>
@@ -70,6 +75,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/utils/auth'
+import apiClient from '@/utils/api'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -88,12 +94,20 @@ const errors = reactive({
 const isLoading = ref(false)
 const error = ref('')
 
+// 清除错误信息
+const clearError = (field) => {
+  errors[field] = ''
+  error.value = ''
+}
+
+// 表单验证
 const validateForm = () => {
   let isValid = true
   
   // 清空错误信息
   errors.username = ''
   errors.password = ''
+  error.value = ''
   
   if (!loginForm.username.trim()) {
     errors.username = '请输入用户名或邮箱'
@@ -111,11 +125,7 @@ const validateForm = () => {
   return isValid
 }
 
-const clearError = (field) => {
-  errors[field] = ''
-  error.value = ''
-}
-
+// 登录处理
 const handleLogin = async () => {
   if (!validateForm()) return
   
@@ -123,32 +133,55 @@ const handleLogin = async () => {
   error.value = ''
   
   try {
+    console.log('🔐 开始登录:', { 
+      username: loginForm.username,
+      password: '***'
+    })
+    
     const result = await authStore.login({
       username: loginForm.username,
       password: loginForm.password
     })
     
+    console.log('登录结果:', result)
+    
     if (result.success) {
       // 登录成功，跳转到首页或原页面
       const redirect = router.currentRoute.value.query.redirect || '/'
+      console.log('✅ 登录成功，跳转到:', redirect)
       router.push(redirect)
     } else {
       error.value = result.error
+      console.error('❌ 登录失败:', result.error)
     }
   } catch (err) {
     error.value = '登录失败，请稍后重试'
-    console.error('登录错误:', err)
+    console.error('❌ 登录异常:', err)
   } finally {
     isLoading.value = false
   }
 }
 
+// 测试连接
+const testConnection = async () => {
+  try {
+    console.log('🧪 开始测试API连接...')
+    const response = await apiClient.get('/loginregister/check-email?email=test@example.com')
+    console.log('✅ 连接测试成功:', response.data)
+    alert('API连接正常！服务器响应: ' + JSON.stringify(response.data))
+  } catch (err) {
+    console.error('❌ 连接测试失败:', err)
+    alert('API连接失败: ' + err.message)
+  }
+}
+
+// 跳转到注册页面
 const switchToRegister = () => {
   router.push('/register')
 }
 
+// 跳转到忘记密码页面
 const handleForgotPassword = () => {
-  // 跳转到找回密码页面
   router.push('/forgot-password')
 }
 </script>
@@ -323,6 +356,24 @@ input.error {
 
 .login-footer a:hover {
   text-decoration: underline;
+}
+
+.test-btn {
+  background: #48bb78;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.test-btn:hover {
+  background: #38a169;
 }
 
 @media (max-width: 480px) {

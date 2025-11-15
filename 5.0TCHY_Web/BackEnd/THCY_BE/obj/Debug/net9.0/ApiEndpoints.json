@@ -28,5 +28,101 @@
     "Order": 0,
     "Parameters": [],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.LoginRegisterController",
+    "Method": "CheckEmail",
+    "RelativePath": "api/LoginRegister/check-email",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "email",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.LoginRegisterController",
+    "Method": "CheckUsername",
+    "RelativePath": "api/LoginRegister/check-username",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "username",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.LoginRegisterController",
+    "Method": "Login",
+    "RelativePath": "api/LoginRegister/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "THCY_BE.Controller.LoginRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.LoginRegisterController",
+    "Method": "Register",
+    "RelativePath": "api/LoginRegister/register",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "THCY_BE.Requests.RegisterRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.LoginRegisterController",
+    "Method": "SendVerificationCode",
+    "RelativePath": "api/LoginRegister/send-verification-code",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "THCY_BE.Requests.SendCodeRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.LoginRegisterController",
+    "Method": "VerifyCode",
+    "RelativePath": "api/LoginRegister/verify-code",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "THCY_BE.Requests.VerifyCodeRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   }
 ]
