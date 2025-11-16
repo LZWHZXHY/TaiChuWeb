@@ -23,10 +23,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted} from 'vue'
 import HeaderNav from './layouts/HeaderNav.vue'
 import { NAV_ITEMS } from './constants/navigation.js'
+import { useAuthStore } from '@/utils/auth'
 
+const authStore = useAuthStore()
 const navItems = ref(NAV_ITEMS)
 
 const handleNavChange = (item) => {
@@ -36,6 +38,12 @@ const handleNavChange = (item) => {
 const handleUserAction = () => {
   console.log('用户操作')
 }
+onMounted(() => {
+  console.log('🚀 App 组件挂载完成')
+  console.log('🔐 当前认证状态:', authStore.isAuthenticated)
+  console.log('👤 当前用户:', authStore.user)
+})
+
 </script>
 
 <style>

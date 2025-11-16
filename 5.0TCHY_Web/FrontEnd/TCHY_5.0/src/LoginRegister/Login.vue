@@ -6,9 +6,10 @@
         <p>欢迎回来！请登录您的账户</p>
       </div>
 
-      <!-- 测试按钮 -->
+      <!-- 测试连接按钮 -->
       <button @click="testConnection" class="test-btn">
-        测试API连接
+        <span v-if="testingConnection" class="loading-spinner"></span>
+        <span v-else>测试API连接</span>
       </button>
 
       <form @submit.prevent="handleLogin" class="login-form">
@@ -72,12 +73,13 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/utils/auth'
 import apiClient from '@/utils/api'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const loginForm = reactive({
@@ -92,12 +94,36 @@ const errors = reactive({
 })
 
 const isLoading = ref(false)
+const testingConnection = ref(false)
 const error = ref('')
+
+// 检查是否已登录
+const isLoggedIn = computed(() => authStore.isAuthenticated)
+
+// 组件挂载时检查登录状态
+onMounted(() => {
+  // 如果用户已登录，重定向到首页或目标页面
+  if (isLoggedIn.value) {
+    const redirect = route.query.redirect || '/'
+    console.log('用户已登录，重定向到:', redirect)
+    router.push(redirect)
+    return
+  }
+
+  // 检查是否有注册成功消息
+  if (route.query.registered === 'true' || route.query.message) {
+    error.value = route.query.message || '注册成功！请登录您的账户'
+  }
+})
 
 // 清除错误信息
 const clearError = (field) => {
-  errors[field] = ''
-  error.value = ''
+  if (errors[field]) {
+    errors[field] = ''
+  }
+  if (error.value) {
+    error.value = ''
+  }
 }
 
 // 表单验证
@@ -125,6 +151,55 @@ const validateForm = () => {
   return isValid
 }
 
+// 测试API连接
+const testConnection = async () => {
+  testingConnection.value = true
+  error.value = ''
+  
+  try {
+    console.log('🧪 开始测试API连接...')
+    
+    // 尝试多个可能的测试端点
+    const testEndpoints = [
+      '/default/health',
+      '/default/users/count',
+      '/loginregister/health',
+      '/api/health'
+    ]
+    
+    let success = false
+    let result = null
+    let workingEndpoint = ''
+    
+    for (const endpoint of testEndpoints) {
+      try {
+        console.log(`尝试连接: ${endpoint}`)
+        const response = await apiClient.get(endpoint)
+        success = true
+        result = response.data
+        workingEndpoint = endpoint
+        console.log(`✅ ${endpoint} 连接成功:`, result)
+        break
+      } catch (err) {
+        console.log(`❌ ${endpoint} 连接失败:`, err.message)
+        continue
+      }
+    }
+    
+    if (success) {
+      error.value = `✅ API连接正常！\n端点: ${workingEndpoint}\n响应: ${JSON.stringify(result, null, 2)}`
+    } else {
+      error.value = '❌ 所有API端点连接失败，请检查后端服务状态'
+    }
+  } catch (err) {
+    console.error('❌ 连接测试失败:', err)
+    error.value = '连接测试失败: ' + err.message
+  } finally {
+    testingConnection.value = false
+  }
+}
+
+// 登录处理
 // 登录处理
 const handleLogin = async () => {
   if (!validateForm()) return
@@ -135,9 +210,10 @@ const handleLogin = async () => {
   try {
     console.log('🔐 开始登录:', { 
       username: loginForm.username,
-      password: '***'
+      password: '***' 
     })
     
+    // 使用authStore的login方法
     const result = await authStore.login({
       username: loginForm.username,
       password: loginForm.password
@@ -146,44 +222,52 @@ const handleLogin = async () => {
     console.log('登录结果:', result)
     
     if (result.success) {
-      // 登录成功，跳转到首页或原页面
-      const redirect = router.currentRoute.value.query.redirect || '/'
+      // 登录成功，显示成功消息
+      error.value = '✅ 登录成功！正在跳转...'
+      
+      // 确保状态完全更新后再跳转
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      const redirect = route.query.redirect || '/'
       console.log('✅ 登录成功，跳转到:', redirect)
+      
+      // 直接跳转，不使用 setTimeout
       router.push(redirect)
     } else {
-      error.value = result.error
+      error.value = result.error || '登录失败'
       console.error('❌ 登录失败:', result.error)
     }
   } catch (err) {
-    error.value = '登录失败，请稍后重试'
     console.error('❌ 登录异常:', err)
+    error.value = '登录失败: ' + (err.message || '未知错误')
   } finally {
     isLoading.value = false
   }
 }
 
-// 测试连接
-const testConnection = async () => {
-  try {
-    console.log('🧪 开始测试API连接...')
-    const response = await apiClient.get('/loginregister/check-email?email=test@example.com')
-    console.log('✅ 连接测试成功:', response.data)
-    alert('API连接正常！服务器响应: ' + JSON.stringify(response.data))
-  } catch (err) {
-    console.error('❌ 连接测试失败:', err)
-    alert('API连接失败: ' + err.message)
-  }
-}
-
 // 跳转到注册页面
 const switchToRegister = () => {
-  router.push('/register')
+  router.push({
+    path: '/register',
+    query: { 
+      redirect: route.query.redirect 
+    }
+  })
 }
 
 // 跳转到忘记密码页面
 const handleForgotPassword = () => {
   router.push('/forgot-password')
 }
+
+// 监听路由变化，处理注册成功后的消息
+const unwatch = router.afterEach((to, from) => {
+  if (to.name === 'Login' && from.name === 'Register') {
+    if (to.query.registered === 'true' || to.query.message) {
+      error.value = to.query.message || '注册成功！请登录您的账户'
+    }
+  }
+})
 </script>
 
 <style scoped>
@@ -220,6 +304,36 @@ const handleForgotPassword = () => {
 .login-header p {
   color: #666;
   font-size: 1rem;
+  line-height: 1.5;
+}
+
+.test-btn {
+  width: 100%;
+  background: #48bb78;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.test-btn:hover:not(:disabled) {
+  background: #38a169;
+  transform: translateY(-1px);
+}
+
+.test-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .login-form {
@@ -245,12 +359,14 @@ input {
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
+  font-family: inherit;
 }
 
 input:focus {
   outline: none;
   border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 input.error {
@@ -261,6 +377,7 @@ input.error {
   color: #e53e3e;
   font-size: 0.8rem;
   margin-top: 0.25rem;
+  min-height: 1rem;
 }
 
 .form-options {
@@ -275,15 +392,18 @@ input.error {
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
+  color: #4a5568;
 }
 
 .remember-me input {
   margin: 0;
+  width: auto;
 }
 
 .forgot-password {
   color: #667eea;
   text-decoration: none;
+  font-weight: 500;
 }
 
 .forgot-password:hover {
@@ -304,6 +424,7 @@ input.error {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
 }
 
 .login-btn:hover:not(:disabled) {
@@ -315,13 +436,14 @@ input.error {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .loading-spinner {
   width: 20px;
   height: 20px;
   border: 2px solid transparent;
-  border-top: 2px solid white;
+  border-top: 2px solid currentColor;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -338,6 +460,12 @@ input.error {
   border-radius: 6px;
   text-align: center;
   font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
+.error-message:empty {
+  display: none;
 }
 
 .login-footer {
@@ -358,22 +486,14 @@ input.error {
   text-decoration: underline;
 }
 
-.test-btn {
-  background: #48bb78;
-  color: white;
-  border: none;
+.success-message {
+  background: #c6f6d5;
+  color: #2f855a;
   padding: 0.75rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.9rem;
   margin-bottom: 1rem;
-  width: 100%;
-  transition: background-color 0.3s ease;
-}
-
-.test-btn:hover {
-  background: #38a169;
 }
 
 @media (max-width: 480px) {
@@ -387,6 +507,26 @@ input.error {
   
   .login-header h1 {
     font-size: 1.5rem;
+  }
+  
+  .form-options {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .forgot-password {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 360px) {
+  .login-card {
+    padding: 1.5rem;
+  }
+  
+  .login-header h1 {
+    font-size: 1.25rem;
   }
 }
 </style>

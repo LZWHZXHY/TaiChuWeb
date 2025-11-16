@@ -8,12 +8,23 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 添加数据库上下文
+// 1) 只用一个连接串：DefaultConnection（你的腾讯云 CynosDB MySQL）
+var defaultConn = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// 建议：为云数据库加上超时配置，避免卡住（可选）
+// 也可以直接在 appsettings.json 的连接串后追加：";Connection Timeout=5;Default Command Timeout=8;"
+var serverVersion = new MySqlServerVersion(new Version(8, 0, 30));
+
+// 2) 注册你项目所有用到的 DbContext，全部使用同一个 DefaultConnection
 builder.Services.AddDbContext<BasicInfoDbContext>(options =>
-    options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 30))
-    ));
+    options.UseMySql(defaultConn, serverVersion));
+
+builder.Services.AddDbContext<ChaiDbContext>(options =>
+    options.UseMySql(defaultConn, serverVersion));
+
+builder.Services.AddDbContext<UserDataDbContext>(options =>
+    options.UseMySql(defaultConn, serverVersion));
+
 
 // 添加控制器和API支持
 builder.Services.AddControllers();
@@ -52,13 +63,15 @@ builder.Services.AddScoped<IVerificationCodeService, VerificationCodeService>();
 
 
 // 配置CORS
+// Program.cs
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVueApp", policy =>
     {
         policy.WithOrigins("http://localhost:5173", "https://bianyuzhou.com")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials(); // 添加这一行
     });
 });
 
@@ -72,7 +85,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseCors("AllowVueApp");
+app.UseAuthentication();
 app.UseAuthorization();
 
 // 添加错误处理
@@ -98,7 +113,7 @@ catch (ReflectionTypeLoadException ex)
 }
 
 
-app.UseAuthentication();
+
 
 
 
