@@ -11,6 +11,15 @@ const routes = [
     }
   },
   {
+    path: '/404',
+    name: '404',
+    component: () => import('@/views/Forbidden.vue'),
+    meta: { 
+      title: '404',
+      public: true
+    }
+  },
+  {
     path: '/login',
     name: '登录',
     component: () => import('@/LoginRegister/Login.vue'),
@@ -203,7 +212,7 @@ router.beforeEach(async (to, from, next) => {
         if (!ok) {
           // 无权限：重定向（你也可以跳到 /forbidden）
           console.warn('⛔ Rank 不足，禁止访问')
-          next({ path: '/', query: { noAccess: 1 } })
+          next({ path: '/404', query: { noAccess: 1 } })
           return
         }
       } catch (e) {

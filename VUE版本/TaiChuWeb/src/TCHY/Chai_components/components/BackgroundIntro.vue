@@ -1,25 +1,26 @@
 <template>
-  <section class="background-intro">
+  <section class="background-intro" aria-labelledby="intro-title">
     <!-- 顶部说明 -->
     <header class="intro-header">
-      <h2>企划背景与设定</h2>
+      <h2 id="intro-title">企划背景与设定</h2>
       <p class="subtitle">
         这是由太初寰宇社区为火柴人圈所提供的一个会长期运营和维护的新型混合成长性企划。<br />
         未来这个企划的内容和要求会随着发展和经历进行调整，所以请以最新的要求为主。<br />
         如果有意见或者想法，欢迎在太虚绘院或者八卦反馈群进行反馈！
-
-        注意！目前该版本尚未实现实际的约战功能，仅实现了人设上传，下个版本才会实现实际的约战，另外可能还存在着小BUG，若有发现，欢迎及时反馈<br>
-        
       </p>
+      <div class="notice warn" role="note" aria-label="版本提示">
+        <strong>注意</strong>
+        <span>目前该版本尚未实现实际的约战功能，仅实现了人设上传；下个版本将实现实际的约战。另外可能还存在小 BUG，若有发现，欢迎及时反馈。</span>
+      </div>
     </header>
 
     <!-- 三栏：企划介绍 / 为什么做这个 / 企划目标 -->
     <div class="grid-3">
-      <div class="panel">
-        <div class="panel-title">
-          <i class="fas fa-scroll"></i>
-          企划介绍
-        </div>
+      <article class="panel">
+        <h3 class="panel-title">
+          <i aria-hidden="true" class="fas fa-scroll"></i>
+          <span>企划介绍</span>
+        </h3>
         <ul class="kv-list">
           <li>
             <span class="key">基本概念：</span>
@@ -58,13 +59,13 @@
             </span>
           </li>
         </ul>
-      </div>
+      </article>
 
-      <div class="panel">
-        <div class="panel-title">
-          <i class="fas fa-lightbulb"></i>
-          为什么要做这个
-        </div>
+      <article class="panel">
+        <h3 class="panel-title">
+          <i aria-hidden="true" class="fas fa-lightbulb"></i>
+          <span>为什么要做这个</span>
+        </h3>
         <ul class="kv-list">
           <li>
             <span class="key">活跃圈子：</span>
@@ -81,13 +82,13 @@
             </span>
           </li>
         </ul>
-      </div>
+      </article>
 
-      <div class="panel">
-        <div class="panel-title">
-          <i class="fas fa-bullseye"></i>
-          企划目标
-        </div>
+      <article class="panel">
+        <h3 class="panel-title">
+          <i aria-hidden="true" class="fas fa-bullseye"></i>
+          <span>企划目标</span>
+        </h3>
         <ul class="kv-list">
           <li>
             <span class="key">形成一个稳定的固定活动：</span>
@@ -115,15 +116,15 @@
             </span>
           </li>
         </ul>
-      </div>
+      </article>
     </div>
 
     <!-- 规则与约定（概要） -->
-    <div class="panel">
-      <div class="panel-title">
-        <i class="fas fa-gavel"></i>
-        规则与约定（概要）
-      </div>
+    <article class="panel">
+      <h3 class="panel-title">
+        <i aria-hidden="true" class="fas fa-gavel"></i>
+        <span>规则与约定（概要）</span>
+      </h3>
       <ul class="bullet">
         <li>尊重原创与署名：上传人设需为本人可授权之内容，引用素材需注明来源。</li>
         <li>公平对战：遵循双方约定的能力边界与场景限制，禁止“无解设定”破坏平衡（暂定）。</li>
@@ -133,14 +134,14 @@
         <li>以上部分为基础模板，后续会根据运营经验持续调整与完善。</li>
       </ul>
       <p class="tip">以上为概要，详细条款以平台正式规则与活动细则为准（后续将以独立页面呈现）。</p>
-    </div>
+    </article>
 
     <!-- 参与方式 -->
-    <div class="panel">
-      <div class="panel-title">
-        <i class="fas fa-route"></i>
-        参与方式
-      </div>
+    <article class="panel">
+      <h3 class="panel-title">
+        <i aria-hidden="true" class="fas fa-route"></i>
+        <span>参与方式</span>
+      </h3>
       <ol class="steps">
         <li>
           <strong>上传人设：</strong>准备头像、简介、能力、标签与自定义规则，提交后进入人设广场。
@@ -152,14 +153,14 @@
           <strong>完成与记录：</strong>按约定形式提交作品，经审核后归档为“战绩”，支持后续检索与展示。
         </li>
       </ol>
-    </div>
+    </article>
 
     <!-- FAQ -->
-    <div class="panel">
-      <div class="panel-title">
-        <i class="fas fa-question-circle"></i>
-        常见问答（FAQ）
-      </div>
+    <article class="panel">
+      <h3 class="panel-title">
+        <i aria-hidden="true" class="fas fa-question-circle"></i>
+        <span>常见问答（FAQ）</span>
+      </h3>
       <div class="faq">
         <details>
           <summary>一定要公开人设吗？</summary>
@@ -174,162 +175,242 @@
           <p>仅在提交作品后才会启动审核与记录；未完成状态下，双方角色默认保持在约战中，直至完成或取消上一场对战。</p>
         </details>
       </div>
-    </div>
+    </article>
 
     <!-- 行动按钮 -->
     <div class="action-bar">
-      <button class="btn" @click="$emit('go-upload')">
-        <i class="fas fa-upload"></i>
-        立即上传人设
+      <button class="btn" type="button" @click="$emit('go-upload')">
+        <i aria-hidden="true" class="fas fa-upload"></i>
+        <span>立即上传人设</span>
       </button>
-      <button class="btn primary" @click="$emit('go-gallery')">
-        <i class="fas fa-id-card"></i>
-        浏览人设与约战
+      <button class="btn primary" type="button" @click="$emit('go-gallery')">
+        <i aria-hidden="true" class="fas fa-id-card"></i>
+        <span>浏览人设与约战</span>
       </button>
     </div>
   </section>
 </template>
 
-<script setup lang="ts">
-defineEmits<{
-  (e: 'go-upload'): void
-  (e: 'go-gallery'): void
-}>()
+<script setup>
+// 便于父组件导航：go-upload / go-gallery
+defineEmits(['go-upload', 'go-gallery'])
 </script>
 
 <style scoped>
-/* 强对比毛玻璃容器（无文字描边） */
+:root {
+  --bg: #f7f9fc;
+  --ink: #0f172a;
+  --muted: #5a6478;
+  --card: #ffffff;
+  --ring: #e6ebf3;
+  --ring-strong: #d6deea;
+  --brand: #2563eb;
+  --warn: #f59e0b;
+  --warn-bg: #fff7ed;
+  --warn-ring: #fde68a;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --shadow-sm: 0 2px 10px rgba(2,6,23,.06);
+  --shadow-md: 0 12px 34px rgba(2,6,23,.08);
+}
+
 .background-intro {
-  position: relative;
-  border-radius: 14px;
-  padding: 16px;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-
-  background: rgba(0, 0, 0, 0.6); /* 深色半透明底，保证可读性 */
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-
-  /* 文字渲染优化 */
-  text-rendering: optimizeLegibility;
+  --maxw: 1100px;
+  margin: 0 auto;
+  padding: clamp(14px, 3vw, 20px);
+  color: var(--ink);
 }
 
-/* 支持时启用轻度模糊（仍保持较深底色） */
-@supports ((-webkit-backdrop-filter: blur(0)) or (backdrop-filter: blur(0))) {
-  .background-intro {
-    -webkit-backdrop-filter: blur(8px) saturate(110%);
-    backdrop-filter: blur(8px) saturate(110%);
-    background: rgba(0, 0, 0, 0.48);
-  }
-}
-
-/* 不使用任何 text-stroke 或重阴影；仅用高对比色与行高保证可读性 */
-.intro-header h2 {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 800;
-}
-.subtitle {
-  margin: 8px 0 0;
-  color: #fff;                /* 提高对比 */
-  font-size: 15px;
-  line-height: 1.9;           /* 提升行高更易读 */
-}
-
-/* 三列网格（自适应） */
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-}
-@media (max-width: 1100px) { .grid-3 { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 760px)  { .grid-3 { grid-template-columns: 1fr; } }
-
-/* 面板：更深底色与边框，帮助文本可读 */
-.panel {
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 12px;
-  padding: 12px 14px;
-  background: rgba(0,0,0,0.4);
-}
-.panel-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 800;
-  margin-bottom: 8px;
-  color: #fff;
-}
-
-/* 文本与列表：加大行高与对比，无阴影/描边 */
-.kv-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/* 顶部说明 */
+.intro-header {
   display: grid;
   gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--ring);
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
-.kv-list .key { color: #fff; font-weight: 700; }
-.kv-list .val { color: #fff; line-height: 1.9; letter-spacing: 0.2px; }
+.intro-header h2 {
+  margin: 0;
+  font-size: clamp(18px, 2.2vw, 22px);
+  font-weight: 900;
+}
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.8;
+}
 
+/* 版本提示 */
+.notice {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--ring);
+  background: #f8fafc;
+}
+.notice.warn {
+  border-color: var(--warn-ring);
+  background: var(--warn-bg);
+}
+.notice strong {
+  display: inline-block;
+  color: #7c2d12;
+  background: #ffedd5;
+  border: 1px solid #fed7aa;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* 三列栅格（响应式自动折行） */
+.grid-3 {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 14px 0;
+}
+@media (max-width: 1024px) {
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 680px) {
+  .grid-3 { grid-template-columns: 1fr; }
+}
+
+/* 卡片面板 */
+.panel {
+  background: var(--card);
+  border: 1px solid var(--ring);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 12px;
+}
+.panel-title {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content 1fr;
+  gap: 10px;
+  align-items: center;
+  font-weight: 900;
+  font-size: 16px;
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ring);
+}
+.panel-title i {
+  width: 22px;
+  text-align: center;
+  color: #334155;
+}
+
+/* Key-Value 列表（标题+正文） */
+.kv-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.kv-list .key {
+  display: inline-block;
+  min-width: 6em;
+  font-weight: 800;
+  color: #0f1e3a;
+}
+.kv-list .val {
+  color: #334155;
+  line-height: 1.8;
+}
+
+/* 规则要点 */
 .bullet {
   margin: 0;
-  padding-left: 18px;
+  padding-left: 1.1em;
+  color: #334155;
+  line-height: 1.8;
   display: grid;
-  gap: 8px;
-  color: #fff;
-  line-height: 1.9;
-}
-.tip {
-  margin-top: 8px;
-  font-size: 13px;
-  color: #f0f0f0;
+  gap: 6px;
 }
 
 /* 步骤 */
 .steps {
   margin: 0;
-  padding-left: 18px;
+  padding-left: 1.1em;
   display: grid;
-  gap: 10px;
-  color: #fff;
-  line-height: 1.9;
+  gap: 8px;
+  color: #334155;
+  line-height: 1.8;
+}
+.steps strong {
+  color: #0f1e3a;
 }
 
-/* FAQ */
-.faq { display: grid; gap: 10px; }
-.faq details {
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 10px;
-  padding: 10px 12px;
-  background: rgba(0,0,0,0.38);
+/* FAQ 折叠 */
+.faq {
+  display: grid;
+  gap: 10px;
 }
-.faq summary { cursor: pointer; color: #fff; }
-.faq p { margin: 8px 0 0; color: #fff; line-height: 1.9; }
+details {
+  border: 1px solid var(--ring);
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 12px;
+}
+summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: #0f1e3a;
+  outline: none;
+}
+details p {
+  margin: 6px 0 0;
+  color: #334155;
+  line-height: 1.8;
+}
 
 /* 行动按钮 */
 .action-bar {
   display: flex;
   gap: 10px;
-  justify-content: flex-end;
+  justify-content: center;
+  margin-top: 16px;
   flex-wrap: wrap;
 }
 .btn {
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.22);
-  padding: 9px 14px;
-  border-radius: 10px;
+  appearance: none;
+  border: 1px solid var(--ring);
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #fff;
+  color: #0f172a;
+  font-weight: 800;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .12s ease;
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content 1fr;
   gap: 8px;
-  transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+  align-items: center;
 }
-.btn:hover   { background: rgba(255,255,255,0.18); transform: translateY(-1px); }
-.btn:active  { transform: translateY(0); }
-.btn.primary { background: #2b7cff; border-color: #2b7cff; }
-.btn.primary:hover { filter: brightness(1.05); }
+.btn:hover {
+  background: #f7faff;
+  border-color: var(--ring-strong);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+.btn.primary {
+  background: var(--brand);
+  color: #fff;
+  border-color: transparent;
+}
+.btn i {
+  width: 18px;
+  text-align: center;
+}
 </style>
