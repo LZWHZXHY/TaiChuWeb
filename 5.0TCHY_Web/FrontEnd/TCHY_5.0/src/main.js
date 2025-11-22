@@ -9,6 +9,9 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 
+
+
+
 const initApp = async () => {
   try {
     console.log('🚀 开始初始化应用...')

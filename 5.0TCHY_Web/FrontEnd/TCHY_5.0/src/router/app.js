@@ -40,9 +40,19 @@ const routes = [
     }
   },
   {
-    path: '/art',
+    path:'/forgetPassword',
+    name:'密码找回',
+    component: () => import('@/LoginRegister/ForgetPassword.vue'),
+    meta: { 
+      requiresGuest: true,
+      title: '密码找',
+      public: true
+    }
+  },
+  {
+    path: '/drawing',
     name: '绘画板块',
-    component: () => import('@/views/Art.vue'),
+    component: () => import('@/views/Drawing.vue'),
     meta: { 
       requiresAuth: true,
       title: '绘画作品'
@@ -56,6 +66,15 @@ const routes = [
       requiresAuth: true,
       title: '管理员页面',
       minRank: 1 // 新增：需要后端校验 rank >= 1
+    }
+  },
+  {
+    path:'/suggest',
+    name:'意见箱',
+    component: () => import('@/feedbackComponents/FeedbackBox.vue'),
+    meta: { 
+      requiresAuth: true,
+      title: '意见箱'
     }
   },
   {

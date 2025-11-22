@@ -18,7 +18,7 @@
 import { ref, computed } from 'vue'
 
 import AdminLayout from '@/adminComponents/AdminLayout.vue'
-import ReviewSocieties from '@/adminComponents/ReviewSocieties.vue'
+import ReviewSocieties from '@/adminComponents/ReviewContent.vue'
 import UsersManagement from '@/adminComponents/UserManagement.vue'
 import ReportsPanel from '@/adminComponents/ReportsPanel.vue'
 import SettingsPanel from '@/adminComponents/SettingsPanel.vue'

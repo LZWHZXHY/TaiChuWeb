@@ -215,3 +215,7 @@ E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\zh-Hant
 E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\BouncyCastle.Cryptography.dll
 E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\MailKit.dll
 E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\MimeKit.dll
+E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\SixLabors.Fonts.dll
+E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\SixLabors.ImageSharp.dll
+E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\SixLabors.ImageSharp.Drawing.dll
+E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\appsettings.Production.json

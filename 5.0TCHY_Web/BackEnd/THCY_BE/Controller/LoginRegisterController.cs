@@ -7,7 +7,6 @@ using System.Text;
 using THCY_BE.DataBase;
 using THCY_BE.Models.LoginRegister;
 using THCY_BE.Models.UserDate;
-using THCY_BE.Requests;
 using THCY_BE.Services;
 using THCY_BE.Utils;
 
@@ -34,13 +33,27 @@ namespace THCY_BE.Controller
             _configuration = configuration;
         }
 
+        // 小型 DTOs 直接放在控制器内（可被模型绑定与 Swagger 识别）
+        public record SendCodeRequest(string Email);
+        public record VerifyCodeRequest(string Email, string Code);
+        public record RegisterRequest(string Username, string Email, string Password, string VerificationCode);
+        public record LoginRequestDto(string UsernameOrEmail, string Password);
+        public record ForgotPasswordRequest(string Email);
+        public record ResetPasswordRequest(string Email, string Code, string NewPassword);
+
+        // 枚举替代魔法数字
+        private enum VerificationPurpose { Register = 1, PasswordReset = 2 }
+        private enum VerificationUsed { Unused = 0, Used = 1 }
+
+        // ---------------------------
+        // 发送注册验证码（保留原路由）
         // POST: api/loginregister/send-verification-code
+        // ---------------------------
         [HttpPost("send-verification-code")]
         public async Task<ActionResult> SendVerificationCode([FromBody] SendCodeRequest request)
         {
             try
             {
-                // 验证邮箱格式
                 if (string.IsNullOrEmpty(request.Email) || !IsValidEmail(request.Email))
                 {
                     return BadRequest(new { error = "请输入有效的邮箱地址" });
@@ -55,23 +68,36 @@ namespace THCY_BE.Controller
                     return BadRequest(new { error = "该邮箱已被注册" });
                 }
 
-                // 生成6位随机验证码
+                // 简单频率限制：60秒内不重复发
+                var oneMinuteAgo = DateTime.UtcNow.AddSeconds(-60);
+                var recent = await _context.EmailVerifications
+                    .Where(v => v.Email == request.Email && v.purpose == (int)VerificationPurpose.Register && v.used == (int)VerificationUsed.Unused && v.createTime >= oneMinuteAgo)
+                    .OrderByDescending(v => v.createTime)
+                    .FirstOrDefaultAsync();
+                if (recent != null)
+                {
+                    return Ok(new { message = "验证码已发送，请稍后再试。" });
+                }
+
+                // 生成6位验证码
                 var random = new Random();
                 var code = random.Next(100000, 999999).ToString();
 
-                // 保存验证码到数据库
+                // 保存验证码到数据库（purpose = Register, used = Unused）
                 var emailVerification = new EmailVerification
                 {
                     Email = request.Email,
                     Code = code,
-                    createTime = DateTime.Now,
-                    ExpireTime = DateTime.Now.AddMinutes(3)
+                    createTime = DateTime.UtcNow,
+                    ExpireTime = DateTime.UtcNow.AddMinutes(3),
+                    purpose = (int)VerificationPurpose.Register,
+                    used = (int)VerificationUsed.Unused
                 };
 
                 _context.EmailVerifications.Add(emailVerification);
                 await _context.SaveChangesAsync();
 
-                // 发送邮件
+                // 发送邮件（生产环境不要把 code 返回给前端）
                 var emailSent = await _emailService.SendVerificationCodeAsync(request.Email, code);
 
                 if (!emailSent)
@@ -80,13 +106,9 @@ namespace THCY_BE.Controller
                     return StatusCode(500, new { error = "发送验证码失败，请检查邮箱配置" });
                 }
 
-                _logger.LogInformation($"验证码生成并发送成功: {request.Email}");
+                _logger.LogInformation($"验证码生成并发送成功（注册）: {request.Email}");
 
-                return Ok(new
-                {
-                    message = "验证码已发送到您的邮箱，请查收",
-                    code = code // 测试用
-                });
+                return Ok(new { message = "验证码已发送到您的邮箱，请查收" });
             }
             catch (Exception ex)
             {
@@ -95,7 +117,10 @@ namespace THCY_BE.Controller
             }
         }
 
+        // ---------------------------
+        // 注册时验证验证码（旧的 verify-code 路径用于注册）
         // POST: api/loginregister/verify-code
+        // ---------------------------
         [HttpPost("verify-code")]
         public async Task<ActionResult> VerifyCode([FromBody] VerifyCodeRequest request)
         {
@@ -112,7 +137,10 @@ namespace THCY_BE.Controller
                 }
 
                 var verification = await _context.EmailVerifications
-                    .Where(v => v.Email == request.Email && v.Code == request.Code)
+                    .Where(v => v.Email == request.Email
+                                && v.Code == request.Code
+                                && v.purpose == (int)VerificationPurpose.Register
+                                && v.used == (int)VerificationUsed.Unused)
                     .OrderByDescending(v => v.createTime)
                     .FirstOrDefaultAsync();
 
@@ -121,18 +149,14 @@ namespace THCY_BE.Controller
                     return BadRequest(new { error = "验证码无效" });
                 }
 
-                if (verification.ExpireTime < DateTime.Now)
+                if (verification.ExpireTime < DateTime.UtcNow)
                 {
                     return BadRequest(new { error = "验证码已过期" });
                 }
 
-                _logger.LogInformation($"验证码验证成功: {request.Email}");
+                _logger.LogInformation($"注册验证码验证成功: {request.Email}");
 
-                return Ok(new
-                {
-                    success = true,
-                    message = "验证码验证成功"
-                });
+                return Ok(new { success = true, message = "验证码验证成功" });
             }
             catch (Exception ex)
             {
@@ -141,7 +165,10 @@ namespace THCY_BE.Controller
             }
         }
 
+        // ---------------------------
+        // 注册接口（使用 purpose=Register）
         // POST: api/loginregister/register
+        // ---------------------------
         [HttpPost("register")]
         public async Task<ActionResult> Register([FromBody] RegisterRequest request)
         {
@@ -168,9 +195,12 @@ namespace THCY_BE.Controller
                     return BadRequest(new { error = "验证码必须是6位数字" });
                 }
 
-                // 1. 验证验证码
+                // 1. 验证验证码（仅用于注册）
                 var verification = await _context.EmailVerifications
-                    .Where(v => v.Email == request.Email && v.Code == request.VerificationCode)
+                    .Where(v => v.Email == request.Email
+                                && v.Code == request.VerificationCode
+                                && v.purpose == (int)VerificationPurpose.Register
+                                && v.used == (int)VerificationUsed.Unused)
                     .OrderByDescending(v => v.createTime)
                     .FirstOrDefaultAsync();
 
@@ -179,7 +209,7 @@ namespace THCY_BE.Controller
                     return BadRequest(new { error = "验证码无效" });
                 }
 
-                if (verification.ExpireTime < DateTime.Now)
+                if (verification.ExpireTime < DateTime.UtcNow)
                 {
                     return BadRequest(new { error = "验证码已过期" });
                 }
@@ -191,22 +221,18 @@ namespace THCY_BE.Controller
                 if (existingUser != null)
                 {
                     if (existingUser.username == request.Username)
-                    {
                         return BadRequest(new { error = "用户名已被注册" });
-                    }
                     else
-                    {
                         return BadRequest(new { error = "邮箱已被注册" });
-                    }
                 }
 
-                // 3. 创建用户账户 - 直接使用byte[]存储到VARBINARY
+                // 3. 创建用户账户
                 var newUser = new UserAccount
                 {
                     username = request.Username,
                     email_address = request.Email,
-                    password_hash = PasswordHasher.HashPassword(request.Password), // 直接使用byte[]
-                    date = DateTime.Now,
+                    password_hash = PasswordHasher.HashPassword(request.Password),
+                    date = DateTime.UtcNow,
                     state = 1,
                     rank = 0,
                     is_verified = true,
@@ -224,11 +250,11 @@ namespace THCY_BE.Controller
                     level = 1,
                     exp = 0,
                     title = "新晋成员",
-                    lastlogin = DateTime.Now,
+                    lastlogin = DateTime.UtcNow,
                     logo = "",
                     background = "",
                     likes = 0,
-                    last_active_time = DateTime.Now,
+                    last_active_time = DateTime.UtcNow,
                     byd = 0,
                     creater = 0
                 };
@@ -236,8 +262,9 @@ namespace THCY_BE.Controller
                 _context.UserDatas.Add(userData);
                 await _context.SaveChangesAsync();
 
-                // 5. 验证成功后删除验证码记录
-                _context.EmailVerifications.Remove(verification);
+                // 5. 验证成功后标记验证码为已使用（而不是删除）
+                verification.used = (int)VerificationUsed.Used;
+                _context.EmailVerifications.Update(verification);
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation($"用户注册成功: {request.Username} ({request.Email})");
@@ -257,9 +284,173 @@ namespace THCY_BE.Controller
             }
         }
 
+        // ---------------------------
+        // 密码找回：发送重置验证码
+        // POST: api/loginregister/password/forgot
+        // ---------------------------
+        [HttpPost("password/forgot")]
+        public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Email) || !IsValidEmail(request.Email))
+                {
+                    // 不暴露邮箱是否存在，统一返回
+                    return Ok(new { message = "如果该邮箱存在，将会收到验证码，请查收。" });
+                }
+
+                // 检查用户是否存在（不暴露结果）
+                var user = await _context.UserAccounts.FirstOrDefaultAsync(u => u.email_address == request.Email);
+                if (user == null)
+                {
+                    return Ok(new { message = "如果该邮箱存在，将会收到验证码，请查收。" });
+                }
+
+                // 频控：60s
+                var oneMinuteAgo = DateTime.UtcNow.AddSeconds(-60);
+                var recent = await _context.EmailVerifications
+                    .Where(v => v.Email == request.Email && v.purpose == (int)VerificationPurpose.PasswordReset && v.used == (int)VerificationUsed.Unused && v.createTime >= oneMinuteAgo)
+                    .OrderByDescending(v => v.createTime)
+                    .FirstOrDefaultAsync();
+                if (recent != null)
+                {
+                    return Ok(new { message = "验证码已发送，请稍后再试。" });
+                }
+
+                var random = new Random();
+                var code = random.Next(100000, 999999).ToString();
+
+                var emailVerification = new EmailVerification
+                {
+                    Email = request.Email,
+                    Code = code,
+                    createTime = DateTime.UtcNow,
+                    ExpireTime = DateTime.UtcNow.AddMinutes(10), // 密码重置建议更长的过期时间（例如 10 分钟）
+                    purpose = (int)VerificationPurpose.PasswordReset,
+                    used = (int)VerificationUsed.Unused
+                };
+
+                _context.EmailVerifications.Add(emailVerification);
+                await _context.SaveChangesAsync();
+
+                var emailSent = await _emailService.SendVerificationCodeAsync(request.Email, code);
+                if (!emailSent)
+                {
+                    _logger.LogWarning($"密码重置邮件发送失败: {request.Email}");
+                    // 为安全仍返回相同信息
+                    return Ok(new { message = "如果该邮箱存在，将会收到验证码，请查收。" });
+                }
+
+                _logger.LogInformation($"密码重置验证码发送成功: {request.Email}");
+                return Ok(new { message = "如果该邮箱存在，将会收到验证码，请查收。" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "发送密码重置验证码失败");
+                return Ok(new { message = "如果该邮箱存在，将会收到验证码，请查收。" });
+            }
+        }
+
+        // ---------------------------
+        // 密码找回：验证验证码（专用于密码找回）
+        // POST: api/loginregister/password/verify-code
+        // ---------------------------
+        [HttpPost("password/verify-code")]
+        public async Task<ActionResult> VerifyResetCode([FromBody] VerifyCodeRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Email) || !IsValidEmail(request.Email))
+                    return BadRequest(new { error = "请输入有效的邮箱地址" });
+
+                if (string.IsNullOrEmpty(request.Code) || request.Code.Length != 6)
+                    return BadRequest(new { error = "验证码必须是6位数字" });
+
+                var verification = await _context.EmailVerifications
+                    .Where(v => v.Email == request.Email
+                                && v.Code == request.Code
+                                && v.purpose == (int)VerificationPurpose.PasswordReset
+                                && v.used == (int)VerificationUsed.Unused)
+                    .OrderByDescending(v => v.createTime)
+                    .FirstOrDefaultAsync();
+
+                if (verification == null)
+                    return BadRequest(new { error = "验证码无效" });
+
+                if (verification.ExpireTime < DateTime.UtcNow)
+                    return BadRequest(new { error = "验证码已过期" });
+
+                _logger.LogInformation($"密码重置验证码验证成功: {request.Email}");
+                return Ok(new { success = true, message = "验证码验证成功" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "密码重置验证码验证失败");
+                return StatusCode(500, new { error = "验证码验证失败，请稍后重试" });
+            }
+        }
+
+        // ---------------------------
+        // 密码找回：重置密码
+        // POST: api/loginregister/password/reset
+        // ---------------------------
+        [HttpPost("password/reset")]
+        public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Email) || !IsValidEmail(request.Email))
+                    return BadRequest(new { error = "请输入有效的邮箱地址" });
+
+                if (string.IsNullOrEmpty(request.Code) || request.Code.Length != 6)
+                    return BadRequest(new { error = "验证码必须是6位数字" });
+
+                if (string.IsNullOrEmpty(request.NewPassword) || request.NewPassword.Length < 6)
+                    return BadRequest(new { error = "新密码长度至少6位" });
+
+                var verification = await _context.EmailVerifications
+                    .Where(v => v.Email == request.Email
+                                && v.Code == request.Code
+                                && v.purpose == (int)VerificationPurpose.PasswordReset
+                                && v.used == (int)VerificationUsed.Unused)
+                    .OrderByDescending(v => v.createTime)
+                    .FirstOrDefaultAsync();
+
+                if (verification == null)
+                    return BadRequest(new { error = "验证码无效" });
+
+                if (verification.ExpireTime < DateTime.UtcNow)
+                    return BadRequest(new { error = "验证码已过期" });
+
+                var user = await _context.UserAccounts.FirstOrDefaultAsync(u => u.email_address == request.Email);
+                if (user == null)
+                    return BadRequest(new { error = "重置失败，请稍后重试" });
+
+                // 更新密码（使用现有的 PasswordHasher）
+                user.password_hash = PasswordHasher.HashPassword(request.NewPassword);
+
+                // 标记验证码为已使用
+                verification.used = (int)VerificationUsed.Used;
+                _context.EmailVerifications.Update(verification);
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"用户密码重置成功: {request.Email}");
+                return Ok(new { success = true, message = "密码重置成功，请使用新密码登录" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "密码重置失败");
+                return StatusCode(500, new { error = "密码重置失败，请稍后重试" });
+            }
+        }
+
+        // ---------------------------
+        // 登录接口（保持不变，但小改动 DTO 名称）
         // POST: api/loginregister/login
+        // ---------------------------
         [HttpPost("login")]
-        public async Task<ActionResult> Login([FromBody] LoginRequest request)
+        public async Task<ActionResult> Login([FromBody] LoginRequestDto request)
         {
             try
             {
@@ -307,8 +498,8 @@ namespace THCY_BE.Controller
                 var userData = await _context.UserDatas.FindAsync(user.Id);
                 if (userData != null)
                 {
-                    userData.lastlogin = DateTime.Now;
-                    userData.last_active_time = DateTime.Now;
+                    userData.lastlogin = DateTime.UtcNow;
+                    userData.last_active_time = DateTime.UtcNow;
                     await _context.SaveChangesAsync();
                 }
 
@@ -323,7 +514,7 @@ namespace THCY_BE.Controller
                     message = "登录成功",
                     userId = user.Id,
                     username = user.username,
-                    token = token // 返回token
+                    token = token
                 });
             }
             catch (Exception ex)
@@ -333,14 +524,13 @@ namespace THCY_BE.Controller
             }
         }
 
-        // 生成JWT Token的方法
+        // 生成JWT Token的方法（保持不变）
         private string GenerateJwtToken(UserAccount user)
         {
             try
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
 
-                // 从配置中获取JWT设置
                 var secretKey = _configuration["Jwt:SecretKey"];
                 var issuer = _configuration["Jwt:Issuer"];
                 var audience = _configuration["Jwt:Audience"];
@@ -446,11 +636,5 @@ namespace THCY_BE.Controller
                 return false;
             }
         }
-    }
-
-    public class LoginRequest
-    {
-        public string UsernameOrEmail { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
     }
 }

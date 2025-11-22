@@ -1,6 +1,200 @@
 [
   {
-    "ContainingType": "THCY_BE.Controllers.ChaiSheTuanController",
+    "ContainingType": "THCY_BE.Controller.BiliBiliController",
+    "Method": "Get",
+    "RelativePath": "api/BiliBili",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "bvid",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "aid",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "url",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.BiliBiliController",
+    "Method": "Cover",
+    "RelativePath": "api/BiliBili/cover",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "url",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "w",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "h",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "q",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiLianHeController",
+    "Method": "Get",
+    "RelativePath": "api/ChaiLianHe/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiLianHeController",
+    "Method": "Update",
+    "RelativePath": "api/ChaiLianHe/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "req",
+        "Type": "THCY_BE.Controller.Chai.ChaiLianHeController\u002BUpdateChaiLianHeRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiLianHeController",
+    "Method": "Delete",
+    "RelativePath": "api/ChaiLianHe/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiLianHeController",
+    "Method": "Create",
+    "RelativePath": "api/ChaiLianHe/create",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "THCY_BE.Controller.Chai.ChaiLianHeController\u002BCreateChaiLianHeRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiLianHeController",
+    "Method": "List",
+    "RelativePath": "api/ChaiLianHe/list",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "verify",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "q",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "type",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiLianHeController",
+    "Method": "Approve",
+    "RelativePath": "api/ChaiLianHe/moderation/approve",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "THCY_BE.Controller.Chai.ChaiLianHeController\u002BModerationActionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiLianHeController",
+    "Method": "Reject",
+    "RelativePath": "api/ChaiLianHe/moderation/reject",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "THCY_BE.Controller.Chai.ChaiLianHeController\u002BModerationActionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiSheTuanController",
     "Method": "List",
     "RelativePath": "api/ChaiSheTuan/list",
     "HttpMethod": "GET",
@@ -30,7 +224,7 @@
     ],
     "ReturnTypes": [
       {
-        "Type": "System.Collections.Generic.IEnumerable\u00601[[THCY_BE.Controllers.ChaiSheTuanBasicDto, THCY_BE, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[THCY_BE.Controller.Chai.ChaiSheTuanController\u002BChaiSheTuanBasicDto, THCY_BE, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -39,6 +233,190 @@
         "StatusCode": 200
       }
     ]
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiSheTuanController",
+    "Method": "ModerationApprove",
+    "RelativePath": "api/ChaiSheTuan/moderation/approve",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "THCY_BE.Controller.Chai.ChaiSheTuanController\u002BModerationActionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiSheTuanController",
+    "Method": "ModerationList",
+    "RelativePath": "api/ChaiSheTuan/moderation/list",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "entity",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "status",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "q",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[THCY_BE.Controller.Chai.ChaiSheTuanController\u002BModerationItemDto, THCY_BE, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiSheTuanController",
+    "Method": "ModerationReject",
+    "RelativePath": "api/ChaiSheTuan/moderation/reject",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "THCY_BE.Controller.Chai.ChaiSheTuanController\u002BModerationActionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiSheTuanController",
+    "Method": "Submit",
+    "RelativePath": "api/ChaiSheTuan/submit",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "THCY_BE.Controller.Chai.ChaiSheTuanController\u002BSubmitChaiRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiVideoRecommendController",
+    "Method": "GetAllRecommendations",
+    "RelativePath": "api/ChaiVideoRecommend",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiVideoRecommendController",
+    "Method": "CreateRecommendation",
+    "RelativePath": "api/ChaiVideoRecommend",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "THCY_BE.Controller.Chai.ChaiVideoRecommendController\u002BCreateVideoRecommendRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiVideoRecommendController",
+    "Method": "GetRecommendationById",
+    "RelativePath": "api/ChaiVideoRecommend/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiVideoRecommendController",
+    "Method": "GetBestOfYear",
+    "RelativePath": "api/ChaiVideoRecommend/bestyear/{year}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "year",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiVideoRecommendController",
+    "Method": "GetMonthRecommendations",
+    "RelativePath": "api/ChaiVideoRecommend/month/{yearMonth}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "yearMonth",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.ChaiVideoRecommendController",
+    "Method": "GetRecommendationsByType",
+    "RelativePath": "api/ChaiVideoRecommend/type/{type}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "type",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "THCY_BE.Controllers.DefaultController",
@@ -87,6 +465,182 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "Program\u002B\u003C\u003Ec__DisplayClass0_0",
+    "Method": "\u003C\u003CMain\u003E$\u003Eb__9",
+    "RelativePath": "api/environment",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "\u003C\u003Ef__AnonymousType58\u00608[[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Boolean, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "MediaTypes": [
+          "application/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "THCY_BE.Controllers.FileUploadController",
+    "Method": "DeleteFile",
+    "RelativePath": "api/FileUpload/{filePath}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "filePath",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controllers.FileUploadController",
+    "Method": "UploadAvatar",
+    "RelativePath": "api/FileUpload/avatar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "file",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controllers.FileUploadController",
+    "Method": "UploadBattleRecord",
+    "RelativePath": "api/FileUpload/battle-record",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "file",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      },
+      {
+        "Name": "battleId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controllers.FileUploadController",
+    "Method": "UploadGallery",
+    "RelativePath": "api/FileUpload/gallery",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "files",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile[]",
+        "IsRequired": false
+      },
+      {
+        "Name": "ocId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controllers.FileUploadController",
+    "Method": "UploadGeneralFile",
+    "RelativePath": "api/FileUpload/general",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "file",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      },
+      {
+        "Name": "folder",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "customId",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controllers.FileUploadController",
+    "Method": "UploadOCBattleImage",
+    "RelativePath": "api/FileUpload/oc-battle-image",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "file",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      },
+      {
+        "Name": "ocId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controllers.FileUploadController",
+    "Method": "UploadOCMainImage",
+    "RelativePath": "api/FileUpload/oc-main-image",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "file",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      },
+      {
+        "Name": "ocId",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controllers.FileUploadController",
+    "Method": "GetFileUrl",
+    "RelativePath": "api/FileUpload/url",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "filePath",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "THCY_BE.Controller.LoginRegisterController",
     "Method": "CheckEmail",
     "RelativePath": "api/LoginRegister/check-email",
@@ -128,7 +682,55 @@
     "Parameters": [
       {
         "Name": "request",
-        "Type": "THCY_BE.Controller.LoginRequest",
+        "Type": "THCY_BE.Controller.LoginRegisterController\u002BLoginRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.LoginRegisterController",
+    "Method": "ForgotPassword",
+    "RelativePath": "api/LoginRegister/password/forgot",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "THCY_BE.Controller.LoginRegisterController\u002BForgotPasswordRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.LoginRegisterController",
+    "Method": "ResetPassword",
+    "RelativePath": "api/LoginRegister/password/reset",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "THCY_BE.Controller.LoginRegisterController\u002BResetPasswordRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.LoginRegisterController",
+    "Method": "VerifyResetCode",
+    "RelativePath": "api/LoginRegister/password/verify-code",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "THCY_BE.Controller.LoginRegisterController\u002BVerifyCodeRequest",
         "IsRequired": true
       }
     ],
@@ -144,7 +746,7 @@
     "Parameters": [
       {
         "Name": "request",
-        "Type": "THCY_BE.Requests.RegisterRequest",
+        "Type": "THCY_BE.Controller.LoginRegisterController\u002BRegisterRequest",
         "IsRequired": true
       }
     ],
@@ -160,7 +762,7 @@
     "Parameters": [
       {
         "Name": "request",
-        "Type": "THCY_BE.Requests.SendCodeRequest",
+        "Type": "THCY_BE.Controller.LoginRegisterController\u002BSendCodeRequest",
         "IsRequired": true
       }
     ],
@@ -176,8 +778,158 @@
     "Parameters": [
       {
         "Name": "request",
-        "Type": "THCY_BE.Requests.VerifyCodeRequest",
+        "Type": "THCY_BE.Controller.LoginRegisterController\u002BVerifyCodeRequest",
         "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.OCBattleFieldController",
+    "Method": "GetOCDetail",
+    "RelativePath": "api/OCBattleField/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.OCBattleFieldController",
+    "Method": "GetOCImagesByAge",
+    "RelativePath": "api/OCBattleField/{ocId}/images-by-age",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "ocId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "age",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.OCBattleFieldController",
+    "Method": "UpdateOCAge",
+    "RelativePath": "api/OCBattleField/{ocId}/update-age",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "ocId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "THCY_BE.Controller.Chai.UpdateOCAgeDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.OCBattleFieldController",
+    "Method": "UpdateOCImage",
+    "RelativePath": "api/OCBattleField/{ocId}/update-image",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "ocId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "characterImage",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.OCBattleFieldController",
+    "Method": "GetOCList",
+    "RelativePath": "api/OCBattleField/list",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Chai.OCBattleFieldController",
+    "Method": "UploadContent",
+    "RelativePath": "api/OCBattleField/upload",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "OCName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "gender",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "age",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "species",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "ability",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "authorName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "currentTime",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "Background",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "POO",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "CharacterImage",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
@@ -242,6 +994,38 @@
           "application/json"
         ],
         "StatusCode": 401
+      }
+    ]
+  },
+  {
+    "ContainingType": "Program\u002B\u003C\u003Ec",
+    "Method": "\u003C\u003CMain\u003E$\u003Eb__0_10",
+    "RelativePath": "error",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Program\u002B\u003C\u003Ec__DisplayClass0_0",
+    "Method": "\u003C\u003CMain\u003E$\u003Eb__8",
+    "RelativePath": "health",
+    "HttpMethod": "GET",
+    "IsController": false,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Void",
+        "MediaTypes": [],
+        "StatusCode": 200
       }
     ]
   }

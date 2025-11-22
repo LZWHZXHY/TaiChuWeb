@@ -257,7 +257,7 @@ const switchToRegister = () => {
 
 // 跳转到忘记密码页面
 const handleForgotPassword = () => {
-  router.push('/forgot-password')
+  router.push('/forgetPassword')
 }
 
 // 监听路由变化，处理注册成功后的消息

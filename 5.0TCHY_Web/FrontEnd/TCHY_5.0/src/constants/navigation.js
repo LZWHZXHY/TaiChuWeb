@@ -9,7 +9,7 @@ export const NAV_ITEMS = [
     name: '社区', 
     type: 'dropdown',
     children: [
-      { name: '绘画社区', path: '/art' },
+      { name: '绘画社区', path: '/drawing' },
       { name: '编程技术', path: '/community/programming' },
       { name: '火柴人板块', path: '/chai' },
       { name: '游戏交流', path: '/community/gaming' },
