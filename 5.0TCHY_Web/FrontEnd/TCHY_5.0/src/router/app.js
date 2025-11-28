@@ -28,6 +28,14 @@ const routes = [
       title: '用户登录',
       public: true
     }
+  },{
+    path:'/trade',
+    name:'交易站',
+    component:()=>import('@/views/交易站.vue'),
+    meta: { 
+      requiresAuth: true,
+      title: '交易站'
+    }
   },
   {
     path: '/register',
@@ -45,7 +53,7 @@ const routes = [
     component: () => import('@/LoginRegister/ForgetPassword.vue'),
     meta: { 
       requiresGuest: true,
-      title: '密码找',
+      title: '密码找回',
       public: true
     }
   },
@@ -56,6 +64,15 @@ const routes = [
     meta: { 
       requiresAuth: true,
       title: '绘画作品'
+    }
+  },
+  {
+    path:'/taixutan',
+    name:'太虚坛',
+    component:()=>import('@/views/TaiXuTan.vue'),
+    meta:{
+      requiresAuth:true,
+      title:'太虚坛'
     }
   },
   {

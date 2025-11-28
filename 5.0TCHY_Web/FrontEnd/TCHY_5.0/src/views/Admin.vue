@@ -22,6 +22,8 @@ import ReviewSocieties from '@/adminComponents/ReviewContent.vue'
 import UsersManagement from '@/adminComponents/UserManagement.vue'
 import ReportsPanel from '@/adminComponents/ReportsPanel.vue'
 import SettingsPanel from '@/adminComponents/SettingsPanel.vue'
+import NotificationPanel from '@/adminComponents/NotificationPanel.vue'
+import UpdatePanel from '@/adminComponents/UpdatePanel.vue'
 
 const activeTab = ref('review') // review | users | reports | settings
 
@@ -29,7 +31,9 @@ const map = {
   review: ReviewSocieties,
   users: UsersManagement,
   reports: ReportsPanel,
-  settings: SettingsPanel
+  settings: SettingsPanel,
+  notifications: NotificationPanel,
+  updates:UpdatePanel
 }
 
 const currentComponent = computed(() => map[activeTab.value] || ReviewSocieties)
@@ -48,6 +52,6 @@ function handleGlobalRefresh() {
   flex-direction: column;
 }
 .admin-panel {
-  width: 100%;
+  width: 80%;
 }
 </style>

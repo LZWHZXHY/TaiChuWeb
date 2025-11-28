@@ -17,5 +17,7 @@ namespace TCserver_Backend.Models
         public int status { get; set; }
         [Required]
         public DateTime createTime { get; set; }
+
+        public string? imagesUrl { get; set; }
     }
 }

@@ -1,7 +1,5 @@
 <template>
   <div class="profile-page">
-    
-
     <!-- 加载状态 -->
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
@@ -48,7 +46,7 @@
       <div class="function-panel">
         <div class="panel-tabs">
           <button v-for="tab in tabs" :key="tab.id"
-                  @click="activeTab = tab.id"
+                  @click="switchTab(tab.id)"
                   :class="['tab-btn', { active: activeTab === tab.id }]">
             <span class="tab-icon">{{ tab.icon }}</span>
             <span>{{ tab.name }}</span>
@@ -61,6 +59,7 @@
           <FriendsPanel       v-if="activeTab === 'friends'"       :user="user" :isMe="isMe"/>
           <AchievementsPanel  v-if="activeTab === 'achievements'"  :user="user" :isMe="isMe"/>
           <MessagesPanel      v-if="activeTab === 'messages'"       :user="user" :isMe="isMe"/>
+          <NotificationPanel  v-if="activeTab === 'notification'"  :user="user" :isMe="isMe"/>
         </div>
       </div>
     </div>
@@ -79,6 +78,7 @@ import CheckinPanel       from './CheckinPanel.vue'
 import FriendsPanel       from './FriendsPanel.vue'
 import AchievementsPanel  from './AchievementsPanel.vue'
 import MessagesPanel      from './MessagesPanel.vue'
+import NotificationPanel  from './notificationPanel.vue'
 
 const route = useRoute(); 
 const router = useRouter(); 
@@ -96,12 +96,6 @@ const error = ref('')
 const user = ref(null)
 const activeTab = ref('settings')
 
-// 通知区数据（可替换为API获取，这里写死为举例）
-const notices = ref([
-  { content: "系统将在11月20日凌晨2:00-2:30进行维护升级。", time: "2025-11-16T11:00:00" },
-  { content: "新功能「账号安全中心」已上线，欢迎体验！", time: "2025-11-15T10:30:00" }
-])
-
 // 选项卡定义
 const tabs = [
   { id: 'settings', name: '设置',      icon: '⚙️' },
@@ -109,8 +103,29 @@ const tabs = [
   { id: 'checkin',    name: '签到',    icon: '📅' },
   { id: 'friends',    name: '好友',    icon: '👥' },
   { id: 'achievements', name: '成就',  icon: '🏆' },
-  { id: 'messages', name: '信息', icon: '💬' }
+  { id: 'messages', name: '信息', icon: '💬' },
+  { id: 'notification', name:'通知', icon:'🔔'}
 ]
+
+// 切换标签页并更新URL
+const switchTab = (tabId) => {
+  activeTab.value = tabId
+  // 更新URL参数但不触发页面刷新
+  router.push({ 
+    path: route.path, 
+    query: { ...route.query, tab: tabId }
+  })
+}
+
+// 根据URL参数设置活动标签页
+const setActiveTabFromQuery = () => {
+  const tabFromQuery = route.query.tab
+  if (tabFromQuery && tabs.some(tab => tab.id === tabFromQuery)) {
+    activeTab.value = tabFromQuery
+  } else {
+    activeTab.value = 'settings' // 默认标签页
+  }
+}
 
 function formatDate(dt) {
   if (!dt) return '暂无'
@@ -126,11 +141,6 @@ function getStateText(s) {
 }
 function getStateClass(s) {
   return s === 1 ? 'online' : s === 0 ? 'offline' : s === 2 ? 'banned' : ''
-}
-function formatNoticeTime(dt) {
-  if (!dt) return ''
-  try { return new Date(dt).toLocaleString('zh-CN', { hour12: false }) }
-  catch { return dt }
 }
 
 async function fetchUser() {
@@ -153,31 +163,31 @@ async function fetchUser() {
   loading.value = false
 }
 
-onMounted(fetchUser)
-watch(userId, () => { activeTab.value = 'settings'; fetchUser() })
+onMounted(() => {
+  setActiveTabFromQuery()
+  fetchUser()
+})
+
+// 监听路由参数变化
+watch(() => route.query.tab, (newTab) => {
+  if (newTab && tabs.some(tab => tab.id === newTab)) {
+    activeTab.value = newTab
+  }
+})
+
+// 监听用户ID变化
+watch(userId, () => { 
+  setActiveTabFromQuery()
+  fetchUser() 
+})
 </script>
 
 <style scoped>
 .profile-page {
-  max-width: 1000px;
+  max-width: 100%;
   margin: 20px auto;
   padding: 20px;
 }
-
-/* 通知区样式 */
-.system-notice {
-  background: #fff9e5;
-  color: #c77e12;
-  border: 1.5px solid #ffe0a3;
-  border-radius: 8px;
-  padding: 15px 22px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 12px rgba(255, 211, 80, 0.06);
-}
-.notice-title { font-weight: bold; margin-bottom: 8px; color: #784400; }
-.notice-list { padding-left: 16px; margin: 0; }
-.notice-item { margin-bottom: 2px; font-size: 15px; line-height: 1.7; }
-.notice-time { font-size: 12px; color: #b27917; margin-right: 10px; }
 
 .loading-state {
   text-align: center;
@@ -213,10 +223,11 @@ watch(userId, () => { activeTab.value = 'settings'; fetchUser() })
 }
 .retry-btn:hover { background: #2980b9; }
 .profile-content {
-  background: white;
+  background: rgb(255, 255, 255);
   border-radius: 12px;
   padding: 30px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  width: 100%;
 }
 .user-header { display: flex; align-items: center; gap: 20px; margin-bottom: 30px; }
 .avatar { width: 100px; height: 100px; border-radius: 50%; border: 4px solid #e9ecef; object-fit: cover; }

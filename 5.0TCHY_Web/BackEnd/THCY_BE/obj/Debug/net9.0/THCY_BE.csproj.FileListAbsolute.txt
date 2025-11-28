@@ -1,5 +1,3 @@
-E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\appsettings.Development.json
-E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\appsettings.json
 E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\THCY_BE.staticwebassets.runtime.json
 E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\THCY_BE.staticwebassets.endpoints.json
 E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\THCY_BE.exe
@@ -218,4 +216,4 @@ E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\MimeKit
 E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\SixLabors.Fonts.dll
 E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\SixLabors.ImageSharp.dll
 E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\SixLabors.ImageSharp.Drawing.dll
-E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\appsettings.Production.json
+E:\太初寰宇官网开发\5.0TCHY_Web\BackEnd\THCY_BE\bin\Debug\net9.0\appsettings.json

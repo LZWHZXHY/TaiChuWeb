@@ -8,33 +8,41 @@ using THCY_BE.DataBase;
 using THCY_BE.Dto.Chai;
 using THCY_BE.Models.Chai;
 using THCY_BE.Services;
+using System.IO;
 
 namespace THCY_BE.Controller.Chai
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // 必须携带 Bearer token
+    [Authorize]
     public class OCBattleFieldController : ControllerBase
     {
         private readonly ChaiDbContext _db;
         private readonly IFileUploadService _fileUploadService;
         private readonly ILogger<OCBattleFieldController> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _environment;
+
+        // 本地存储路径配置
+        private const string BASE_PHYSICAL_PATH = "/www/wwwroot/bianyuzhou.com/uploads";
+        private const string BASE_WEB_PATH = "/uploads";
 
         public OCBattleFieldController(
             ChaiDbContext db,
             IFileUploadService fileUploadService,
             ILogger<OCBattleFieldController> logger,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IWebHostEnvironment environment)
         {
             _db = db;
             _fileUploadService = fileUploadService;
             _logger = logger;
             _configuration = configuration;
+            _environment = environment;
         }
 
         /// <summary>
-        /// 创建OC角色并上传立绘图片
+        /// 创建OC角色并上传立绘图片 - 使用本地存储
         /// </summary>
         [HttpPost("upload")]
         public async Task<ActionResult> UploadContent([FromForm] OCBattleDto dto)
@@ -91,6 +99,7 @@ namespace THCY_BE.Controller.Chai
                     });
                 }
 
+                var userId = GetCurrentUserId();
                 var newOC_info = new OC_Info
                 {
                     name = dto.OCName.Trim(),
@@ -108,8 +117,8 @@ namespace THCY_BE.Controller.Chai
                     status = 1,
                     dueling = 0,
                     version = 1,
-                    authorID = GetCurrentUserId(),
-                    OC_image_url = null, // 数据库字段名：OC_image_url
+                    authorID = userId,
+                    OC_image_url = null,
                     createTime = DateTime.UtcNow,
                     updateTime = DateTime.UtcNow
                 };
@@ -117,11 +126,12 @@ namespace THCY_BE.Controller.Chai
                 _db.OC_Infos.Add(newOC_info);
                 await _db.SaveChangesAsync();
 
-                _logger.LogInformation("OC记录创建成功，ID: {OCId}, 年龄: {OCAge}", newOC_info.id, newOC_info.age);
+                _logger.LogInformation("OC记录创建成功，ID: {OCId}", newOC_info.id);
 
-                var uploadResult = await _fileUploadService.UploadFileAsync(
+                // 使用本地存储上传图片
+                var uploadResult = await UploadImageToLocalStorageAsync(
                     dto.CharacterImage,
-                    "OC_Battle_Picture",
+                    userId,
                     newOC_info.id
                 );
 
@@ -138,11 +148,11 @@ namespace THCY_BE.Controller.Chai
                     });
                 }
 
-                newOC_info.OC_image_url = uploadResult.FilePath; // 存储相对路径到数据库
+                newOC_info.OC_image_url = uploadResult.FilePath;
                 newOC_info.updateTime = DateTime.UtcNow;
                 await _db.SaveChangesAsync();
 
-                _logger.LogInformation("✅ OC角色创建成功，ID: {Id}, 文件名: {FileName}", newOC_info.id, uploadResult.FileName);
+                _logger.LogInformation("✅ OC角色创建成功，ID: {Id}", newOC_info.id);
 
                 return Ok(new
                 {
@@ -160,9 +170,9 @@ namespace THCY_BE.Controller.Chai
                         currentTime = newOC_info.OC_Current_Time,
                         imageInfo = new
                         {
-                            relativePath = uploadResult.FilePath, // 相对路径
+                            relativePath = uploadResult.FilePath,
                             fileName = uploadResult.FileName,
-                            fullUrl = BuildNasImageUrl(uploadResult.FilePath), // 直接使用NAS地址
+                            fullUrl = BuildLocalImageUrl(uploadResult.FilePath),
                             fileSize = uploadResult.FileSize
                         },
                         timestamps = new
@@ -252,6 +262,9 @@ namespace THCY_BE.Controller.Chai
             }
         }
 
+        /// <summary>
+        /// 更新OC角色立绘
+        /// </summary>
         [HttpPost("{ocId}/update-image")]
         public async Task<ActionResult> UpdateOCImage(int ocId, IFormFile characterImage)
         {
@@ -278,11 +291,12 @@ namespace THCY_BE.Controller.Chai
                     });
                 }
 
+                // 删除旧图片（如果存在）
                 if (!string.IsNullOrEmpty(ocInfo.OC_image_url))
                 {
                     try
                     {
-                        await _fileUploadService.DeleteFileAsync(ocInfo.OC_image_url);
+                        await DeleteLocalImageAsync(ocInfo.OC_image_url);
                         _logger.LogInformation("旧图片删除成功: {FilePath}", ocInfo.OC_image_url);
                     }
                     catch (Exception ex)
@@ -291,9 +305,10 @@ namespace THCY_BE.Controller.Chai
                     }
                 }
 
-                var uploadResult = await _fileUploadService.UploadFileAsync(
+                // 使用本地存储上传新图片
+                var uploadResult = await UploadImageToLocalStorageAsync(
                     characterImage,
-                    "OC_Battle_Picture",
+                    ocInfo.authorID,
                     ocId
                 );
 
@@ -307,11 +322,11 @@ namespace THCY_BE.Controller.Chai
                 }
 
                 var oldImagePath = ocInfo.OC_image_url;
-                ocInfo.OC_image_url = uploadResult.FilePath; // 更新数据库中的相对路径
+                ocInfo.OC_image_url = uploadResult.FilePath;
                 ocInfo.updateTime = DateTime.UtcNow;
                 await _db.SaveChangesAsync();
 
-                _logger.LogInformation("✅ OC角色立绘更新成功: ID={OCId}, 新文件: {FileName}", ocId, uploadResult.FileName);
+                _logger.LogInformation("✅ OC角色立绘更新成功: ID={OCId}", ocId);
 
                 return Ok(new
                 {
@@ -327,7 +342,7 @@ namespace THCY_BE.Controller.Chai
                             oldFilePath = oldImagePath,
                             newFilePath = uploadResult.FilePath,
                             fileName = uploadResult.FileName,
-                            fullUrl = BuildNasImageUrl(uploadResult.FilePath), // 直接使用NAS地址
+                            fullUrl = BuildLocalImageUrl(uploadResult.FilePath),
                             fileSize = uploadResult.FileSize
                         },
                         updateTime = ocInfo.updateTime.ToString("yyyy-MM-dd HH:mm:ss")
@@ -345,11 +360,8 @@ namespace THCY_BE.Controller.Chai
             }
         }
 
-        /// <summary>
-        /// 获取OC角色列表
-        /// </summary>
         [HttpGet("list")]
-        [AllowAnonymous] // 允许匿名访问
+        [AllowAnonymous]
         public async Task<ActionResult> GetOCList()
         {
             try
@@ -371,7 +383,8 @@ namespace THCY_BE.Controller.Chai
                         o.loseCount,
                         o.OC_Current_Time,
                         o.updateTime,
-                        o.OC_image_url // 数据库字段：OC_image_url
+                        o.OC_image_url,
+                        o.authorID
                     })
                     .ToListAsync();
 
@@ -387,8 +400,8 @@ namespace THCY_BE.Controller.Chai
                     o.loseCount,
                     o.OC_Current_Time,
                     o.updateTime,
-                    imageUrl = !string.IsNullOrEmpty(o.OC_image_url) ?
-                        BuildNasImageUrl(o.OC_image_url) : null // 直接构建NAS地址
+                    o.authorID,
+                    imageUrl = !string.IsNullOrEmpty(o.OC_image_url) ? BuildLocalImageUrl(o.OC_image_url) : null
                 }).ToList();
 
                 _logger.LogInformation("获取到 {Count} 个OC角色", ocList.Count);
@@ -441,7 +454,8 @@ namespace THCY_BE.Controller.Chai
                         o.version,
                         o.createTime,
                         o.updateTime,
-                        o.OC_image_url // 数据库字段：OC_image_url
+                        o.OC_image_url,
+                        o.authorID
                     })
                     .FirstOrDefaultAsync();
 
@@ -455,8 +469,7 @@ namespace THCY_BE.Controller.Chai
                     });
                 }
 
-                var imageUrl = !string.IsNullOrEmpty(raw.OC_image_url) ?
-                    BuildNasImageUrl(raw.OC_image_url) : null; // 直接构建NAS地址
+                var imageUrl = !string.IsNullOrEmpty(raw.OC_image_url) ? BuildLocalImageUrl(raw.OC_image_url) : null;
 
                 _logger.LogInformation("成功获取OC角色详情: {OCName}", raw.name);
 
@@ -481,6 +494,7 @@ namespace THCY_BE.Controller.Chai
                         raw.version,
                         raw.createTime,
                         raw.updateTime,
+                        raw.authorID,
                         imageUrl
                     }
                 });
@@ -496,11 +510,8 @@ namespace THCY_BE.Controller.Chai
             }
         }
 
-        /// <summary>
-        /// 按年龄检索OC角色的图片历史
-        /// </summary>
         [HttpGet("{ocId}/images-by-age")]
-        [AllowAnonymous] // 允许匿名访问
+        [AllowAnonymous]
         public async Task<ActionResult> GetOCImagesByAge(int ocId, [FromQuery] int? age = null)
         {
             try
@@ -528,7 +539,7 @@ namespace THCY_BE.Controller.Chai
                         o.id,
                         o.name,
                         o.age,
-                        o.OC_image_url, // 数据库字段：OC_image_url
+                        o.OC_image_url,
                         o.updateTime
                     })
                     .ToListAsync();
@@ -536,8 +547,7 @@ namespace THCY_BE.Controller.Chai
                 var result = rawImages.Select(i => new
                 {
                     age = i.age,
-                    imageUrl = !string.IsNullOrEmpty(i.OC_image_url) ?
-                        BuildNasImageUrl(i.OC_image_url) : null, // 直接构建NAS地址
+                    imageUrl = !string.IsNullOrEmpty(i.OC_image_url) ? BuildLocalImageUrl(i.OC_image_url) : null,
                     period = $"{i.age}岁时期",
                     updateTime = i.updateTime.ToString("yyyy-MM-dd HH:mm:ss"),
                     fileName = !string.IsNullOrEmpty(i.OC_image_url) ? Path.GetFileName(i.OC_image_url) : "暂无图片"
@@ -569,7 +579,178 @@ namespace THCY_BE.Controller.Chai
             }
         }
 
-        #region 私有辅助方法
+        #region 本地存储核心方法
+
+        /// <summary>
+        /// 上传图片到服务器本地存储 - 包含年龄信息格式（推荐版本）
+        /// 格式：oc_{ocId}_{年龄}yo_{时间戳}_{随机数}
+        /// </summary>
+        private async Task<LocalUploadResult> UploadImageToLocalStorageAsync(IFormFile file, int userId, int ocId)
+        {
+            try
+            {
+                if (!ValidateImageFile(file))
+                {
+                    return new LocalUploadResult { Success = false, ErrorMessage = "文件格式不支持或文件过大" };
+                }
+
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+                // 获取OC角色的年龄和名称信息
+                var ocInfo = await _db.OC_Infos
+                    .Where(o => o.id == ocId)
+                    .Select(o => new { o.age, o.name })
+                    .FirstOrDefaultAsync();
+
+                if (ocInfo == null)
+                {
+                    return new LocalUploadResult { Success = false, ErrorMessage = "未找到指定的OC角色" };
+                }
+
+                // 生成文件名：oc_{ocId}_{年龄}yo_{时间戳}_{随机数}
+                var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+                var random = new Random().Next(1000, 9999); // 避免时间戳重复
+                var fileName = $"oc_{ocId}_{ocInfo.age}yo_{timestamp}_{random}{fileExtension}";
+
+                var userFolder = userId.ToString();
+                var ocFolder = $"oc_{ocId}";
+
+                // 构建路径
+                var physicalPath = Path.Combine(BASE_PHYSICAL_PATH, "柴圈板块", "太初约战场", "人设图", userFolder, ocFolder, fileName);
+                var relativePath = Path.Combine("柴圈板块", "太初约战场", "人设图", userFolder, ocFolder, fileName)
+                    .Replace("\\", "/");
+
+                // 确保目录存在
+                var directory = Path.GetDirectoryName(physicalPath);
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                    _logger.LogInformation("创建目录: {Directory}", directory);
+                }
+
+                // 保存文件
+                using var stream = new FileStream(physicalPath, FileMode.Create);
+                await file.CopyToAsync(stream);
+
+                _logger.LogInformation("✅ 图片保存成功: {FileName}", fileName);
+                _logger.LogInformation("📝 OC角色信息: {OCName} (ID: {OCId}, 年龄: {Age}岁)",
+                    ocInfo.name, ocId, ocInfo.age);
+
+                return new LocalUploadResult
+                {
+                    Success = true,
+                    FileName = fileName,
+                    FilePath = relativePath,
+                    FileSize = file.Length,
+                    PhysicalPath = physicalPath
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ 本地图片上传失败");
+                return new LocalUploadResult { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        /// <summary>
+        /// 删除本地图片
+        /// </summary>
+        private async Task<bool> DeleteLocalImageAsync(string relativePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(relativePath))
+                    return false;
+
+                // 相对路径转换为物理路径
+                var physicalPath = Path.Combine(BASE_PHYSICAL_PATH, relativePath);
+
+                if (System.IO.File.Exists(physicalPath))
+                {
+                    System.IO.File.Delete(physicalPath);
+                    _logger.LogInformation("删除本地图片: {PhysicalPath}", physicalPath);
+                    return true;
+                }
+
+                _logger.LogWarning("图片文件不存在: {PhysicalPath}", physicalPath);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "删除本地图片失败: {RelativePath}", relativePath);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 验证图片文件
+        /// </summary>
+        private bool ValidateImageFile(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return false;
+
+            // 检查文件大小（5MB）
+            if (file.Length > 5 * 1024 * 1024)
+                return false;
+
+            // 检查文件类型
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(fileExtension))
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// 构建本地图片访问URL
+        /// </summary>
+        /// <summary>
+        /// 构建本地图片访问URL - 修正协议格式
+        /// </summary>
+        private string? BuildLocalImageUrl(string? relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath))
+                return null;
+
+            // 开发环境使用本地地址，生产环境使用域名
+            var baseUrl = _environment.IsDevelopment()
+                ? "https://localhost:44359"
+                : _configuration["AppSettings:ProductionUrl"] ?? "https://bianyuzhou.com";
+
+            // 确保baseUrl格式正确
+            baseUrl = baseUrl.TrimEnd('/');
+
+            // 构建完整的URL
+            var fullUrl = $"{baseUrl}/{BASE_WEB_PATH.TrimStart('/')}/{relativePath.TrimStart('/')}";
+
+            // 修正协议格式（确保是 https:// 而不是 https:/）
+            fullUrl = fullUrl.Replace("https:/", "https://")
+                            .Replace("http:/", "http://")
+                            .Replace("\\", "/")
+                            .Replace("//", "/");
+
+            _logger.LogInformation("构建图片URL: {FullUrl}", fullUrl);
+            return fullUrl;
+        }
+
+        /// <summary>
+        /// 本地上传结果类
+        /// </summary>
+        private class LocalUploadResult
+        {
+            public bool Success { get; set; }
+            public string? ErrorMessage { get; set; }
+            public string? FileName { get; set; }
+            public string? FilePath { get; set; }
+            public long FileSize { get; set; }
+            public string? PhysicalPath { get; set; }
+        }
+
+        #endregion
+
+        #region 辅助方法
 
         private int GetCurrentUserId()
         {
@@ -583,54 +764,6 @@ namespace THCY_BE.Controller.Chai
             var userName = User.FindFirstValue(ClaimTypes.Name) ?? "未知用户";
             _logger.LogWarning("当前用户: {UserName}", userName);
             return 1;
-        }
-
-        /// <summary>
-        /// 新的方法：直接构建NAS图片访问URL
-        /// </summary>
-        /// <summary>
-        /// 新的方法：根据环境自动构建NAS图片访问URL
-        /// </summary>
-        private string? BuildNasImageUrl(string? relativePath)
-        {
-            if (string.IsNullOrEmpty(relativePath))
-                return null;
-
-            // 获取当前环境
-            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var isProduction = environment == "Production";
-
-            _logger.LogInformation("当前环境: {Environment}, 是否为生产环境: {IsProduction}", environment, isProduction);
-
-            // 根据环境选择NAS地址
-            var nasBaseUrl = isProduction
-                ? _configuration["StorageSettings:ProdNasEndpoint"]
-                : _configuration["StorageSettings:DevNasEndpoint"];
-
-            // 安全回退
-            if (string.IsNullOrEmpty(nasBaseUrl))
-            {
-                nasBaseUrl = isProduction
-                    ? "http://100.102.164.127:7506/官网资源地址"
-                    : "http://192.168.50.225:7506/官网资源地址";
-
-                _logger.LogWarning("NAS地址未配置，使用默认{Environment}地址: {NasUrl}",
-                    isProduction ? "生产" : "开发", nasBaseUrl);
-            }
-
-            var fullUrl = $"{nasBaseUrl.TrimEnd('/')}/{relativePath.TrimStart('/')}";
-            _logger.LogInformation("构建图片URL: 环境={Environment}, 相对路径={RelativePath}, 完整URL={FullUrl}",
-                environment, relativePath, fullUrl);
-
-            return fullUrl;
-        }
-
-        // 保留旧的BuildImageApiUrl方法（可选，用于向后兼容）
-        [Obsolete("请使用BuildNasImageUrl方法，直接返回NAS地址")]
-        private string? BuildImageApiUrl(string? relativePath, int? width = null, int? height = null, int? quality = null, string? format = null, bool webp = true)
-        {
-            // 可以调用新的方法，或者直接弃用
-            return BuildNasImageUrl(relativePath);
         }
 
         #endregion

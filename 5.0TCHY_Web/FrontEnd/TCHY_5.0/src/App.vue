@@ -1,113 +1,98 @@
 <template>
-  <div id="app">
-    <HeaderNav 
-      :nav-items="navItems"
-      :show-cta="true"
-      @nav-change="handleNavChange"
-      @user-action="handleUserAction"
-    />
-    <main class="main-content">
-      <router-view />
-    </main>
-    
-    <!-- 固定在底部的备案信息 -->
-    <footer class="app-footer fixed-footer">
-      <div class="footer-content">
-        <span>太初寰宇 © 2025</span>
-        <a href="http://beian.miit.gov.cn" target="_blank" rel="noopener noreferrer">
-          京ICP备2022020268号
-        </a>
-      </div>
-    </footer>
+  <div class="BigContainer">
+    <div id="app">
+      <HeaderNav
+        :nav-items="navItems"
+        :show-cta="true"
+        @nav-change="handleNavChange"
+        @user-action="handleUserAction"
+      />
+
+      <main class="main-content">
+        <router-view />
+      </main>
+
+      <footer class="app-footer fixed-footer">
+        <div class="footer-content">
+          <span>太初寰宇 © 2025</span>
+          <a href="http://beian.miit.gov.cn" target="_blank" rel="noopener noreferrer">京ICP备2022020268号</a>
+        </div>
+      </footer>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted} from 'vue'
+import { ref } from 'vue'
 import HeaderNav from './layouts/HeaderNav.vue'
 import { NAV_ITEMS } from './constants/navigation.js'
-import { useAuthStore } from '@/utils/auth'
 
-const authStore = useAuthStore()
 const navItems = ref(NAV_ITEMS)
 
-const handleNavChange = (item) => {
-  console.log('导航切换:', item)
-}
-
-const handleUserAction = () => {
-  console.log('用户操作')
-}
-onMounted(() => {
-  console.log('🚀 App 组件挂载完成')
-  console.log('🔐 当前认证状态:', authStore.isAuthenticated)
-  console.log('👤 当前用户:', authStore.user)
-})
-
+const handleNavChange = (item) => { console.log('导航切换:', item) }
+const handleUserAction = () => { console.log('用户操作') }
 </script>
 
-<style>
-.main-content {
-  margin-top: 70px;
-  padding-bottom: 50px; /* 为固定footer留出空间 */
+<style scoped>
+/* Footer 样式 */
+.app-footer {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  padding: 1.5rem 0;
+  margin-top: auto;
 }
 
-body {
-  margin: 0;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  background-color: #f8f9fa;
-}
-
-#app {
-  min-height: 100vh;
-  position: relative;
-}
-
-/* 固定在底部的备案信息样式 */
-.fixed-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: rgba(255, 255, 255, 0.95);
-  border-top: 1px solid #e0e0e0;
-  padding: 0.75rem 0;
-  backdrop-filter: blur(10px);
-  z-index: 100;
-}
-
-.fixed-footer .footer-content {
+.footer-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.8rem;
-  color: #666;
+  font-size: 0.875rem;
+  color: #64748b;
 }
 
-.fixed-footer .footer-content a {
-  color: #666;
+.footer-content a {
+  color: #64748b;
   text-decoration: none;
-  transition: color 0.3s ease;
+  transition: color 0.2s ease;
 }
 
-.fixed-footer .footer-content a:hover {
-  color: #007bff;
+.footer-content a:hover {
+  color: #334155;
 }
 
-/* 响应式设计 */
+/* 固定底部样式 */
+.fixed-footer {
+  position: relative;
+  width: 100%;
+  bottom: 0;
+}
+
+.main-content {
+  width: 100%;
+  margin-top: 70px;
+  padding-bottom: 50px;
+}
+
+#app {
+  min-height: 100%;
+  position: relative;
+  width: 100%;
+}
+
+/* 小屏适配 */
 @media (max-width: 768px) {
-  .fixed-footer .footer-content {
-    padding: 0 1rem;
+  .footer-content {
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.5rem;
     text-align: center;
   }
-  
-  .main-content {
-    padding-bottom: 70px; /* 移动端需要更多空间 */
-  }
+}
+
+.main-content {
+  min-height: calc(100vh - 200px);
+  padding-bottom: 2rem;
 }
 </style>

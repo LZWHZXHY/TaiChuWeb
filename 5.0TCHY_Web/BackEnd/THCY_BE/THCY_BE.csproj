@@ -7,6 +7,17 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Config\**" />
+	  <Compile Remove="Requests\**" />
+	  <Content Remove="Config\**" />
+	  <Content Remove="Requests\**" />
+	  <EmbeddedResource Remove="Config\**" />
+	  <EmbeddedResource Remove="Requests\**" />
+	  <None Remove="Config\**" />
+	  <None Remove="Requests\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<!-- Entity Framework Core 核心包 - 使用统一版本 -->
 		<PackageReference Include="MailKit" Version="4.14.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
@@ -29,11 +40,6 @@
 		<PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.10" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
 	
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Config\" />
-	  <Folder Include="Requests\" />
 	</ItemGroup>
 
 </Project>

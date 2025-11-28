@@ -99,8 +99,10 @@ let refreshTimer = null
 const items = [
   { id: 'review', label: '审核中心', icon: '🗂️' },
   { id: 'users', label: '用户管理', icon: '👤' },
+  { id: 'notifications', label: '通知系统', icon: '👤' },
   { id: 'reports', label: '举报处理', icon: '🚩' },
-  { id: 'settings', label: '系统设置', icon: '⚙️' }
+  { id: 'settings', label: '系统设置', icon: '⚙️' },
+  { id: 'updates', label: '更新设置', icon: '⚙️' }
 ]
 
 function handleChange(id) {
@@ -170,6 +172,7 @@ function handleRefresh() {
   position: sticky;
   top: 0;
   z-index: 40;
+  width: 85%;
 }
 .header-left { display:flex; flex-direction:column; gap:4px; }
 .title { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: .2px; }

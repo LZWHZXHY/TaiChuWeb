@@ -9,6 +9,7 @@ export const NAV_ITEMS = [
     name: '社区', 
     type: 'dropdown',
     children: [
+      { name: '太虚坛', path: '/taixutan' },
       { name: '绘画社区', path: '/drawing' },
       { name: '编程技术', path: '/community/programming' },
       { name: '火柴人板块', path: '/chai' },
@@ -21,8 +22,11 @@ export const NAV_ITEMS = [
     name:'太初产品',
     path:'/product',
     type:'link',
-
-
+  },
+  {
+    name:'交易站',
+    path:'/trade',
+    type:'link',
   },
   { 
     name: '管理', 

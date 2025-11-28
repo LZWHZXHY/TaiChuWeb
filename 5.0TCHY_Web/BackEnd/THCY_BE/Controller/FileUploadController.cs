@@ -5,33 +5,42 @@ using THCY_BE.Services;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using THCY_BE.DataBase;
+using System.IO;
 
 namespace THCY_BE.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // 必须携带 Bearer token
+    [Authorize]
     public class FileUploadController : ControllerBase
     {
         private readonly IFileUploadService _fileUploadService;
         private readonly ILogger<FileUploadController> _logger;
         private readonly ChaiDbContext _dbContext;
+        private readonly IWebHostEnvironment _environment;
+        private readonly IConfiguration _configuration;
+
+        // 本地存储路径配置
+        private const string BASE_PHYSICAL_PATH = "/www/wwwroot/bianyuzhou.com/uploads";
+        private const string BASE_WEB_PATH = "/uploads";
 
         public FileUploadController(
             IFileUploadService fileUploadService,
             ILogger<FileUploadController> logger,
-            ChaiDbContext dbContext)
+            ChaiDbContext dbContext,
+            IWebHostEnvironment environment,
+            IConfiguration configuration)
         {
             _fileUploadService = fileUploadService;
             _logger = logger;
             _dbContext = dbContext;
+            _environment = environment;
+            _configuration = configuration;
         }
 
         /// <summary>
         /// 上传用户头像
         /// </summary>
-        /// <param name="file">头像文件</param>
-        /// <returns>上传结果</returns>
         [HttpPost("avatar")]
         public async Task<ActionResult> UploadAvatar(IFormFile file)
         {
@@ -44,17 +53,17 @@ namespace THCY_BE.Controllers
                     return BadRequest(new { success = false, message = "请选择要上传的文件" });
                 }
 
+                // 验证文件
+                if (!ValidateImageFile(file))
+                {
+                    return BadRequest(new { success = false, message = "文件格式不支持或文件过大" });
+                }
+
                 // 从token获取用户ID
                 var userId = GetCurrentUserIdFromToken();
 
-                // 使用UserAvatar命名策略，自动生成：user_123_avatar_20231201120000.jpg
-                var result = await _fileUploadService.UploadFileAsync(
-                    file,
-                    "avatars",
-                    userId,
-                    NamingStrategy.UserAvatar,
-                    new Dictionary<string, object> { ["UserId"] = userId } // 确保从token获取用户ID
-                );
+                // 使用本地存储上传
+                var result = await UploadAvatarToLocalStorageAsync(file, userId);
 
                 if (!result.Success)
                 {
@@ -78,7 +87,7 @@ namespace THCY_BE.Controllers
                     {
                         userId = userId,
                         filePath = result.FilePath,
-                        fileUrl = result.FileUrl,
+                        fileUrl = BuildFileUrl(result.FilePath),
                         fileName = result.FileName,
                         fileSize = result.FileSize
                     }
@@ -96,11 +105,8 @@ namespace THCY_BE.Controllers
         }
 
         /// <summary>
-        /// 上传OC角色立绘图片（约战场角色）
+        /// 上传OC角色立绘图片（约战场角色）- 修改为包含年龄信息
         /// </summary>
-        /// <param name="file">角色立绘文件</param>
-        /// <param name="ocId">OC角色ID</param>
-        /// <returns>上传结果</returns>
         [HttpPost("oc-battle-image")]
         public async Task<ActionResult> UploadOCBattleImage(IFormFile file, [FromForm] int ocId)
         {
@@ -113,10 +119,16 @@ namespace THCY_BE.Controllers
                     return BadRequest(new { success = false, message = "请选择要上传的文件" });
                 }
 
-                // 验证OC角色是否存在
+                // 验证文件
+                if (!ValidateImageFile(file))
+                {
+                    return BadRequest(new { success = false, message = "文件格式不支持或文件过大" });
+                }
+
+                // 验证OC角色是否存在并获取年龄信息
                 var ocInfo = await _dbContext.OC_Infos
                     .Where(o => o.id == ocId)
-                    .Select(o => new { o.name, o.age })
+                    .Select(o => new { o.name, o.age, o.authorID, o.OC_image_url })
                     .FirstOrDefaultAsync();
 
                 if (ocInfo == null)
@@ -128,18 +140,22 @@ namespace THCY_BE.Controllers
                     });
                 }
 
-                // 使用OCBattleCharacter命名策略，自动生成：oc_123_角色名_18yo_20231201120000.jpg
-                var result = await _fileUploadService.UploadFileAsync(
-                    file,
-                    "OC_Battle_Picture",
-                    ocId,
-                    NamingStrategy.OCBattleCharacter,
-                    new Dictionary<string, object>
+                // 删除旧图片（如果存在）
+                if (!string.IsNullOrEmpty(ocInfo.OC_image_url))
+                {
+                    try
                     {
-                        ["OCId"] = ocId,
-                        ["OCAge"] = ocInfo.age
+                        await DeleteLocalFileAsync(ocInfo.OC_image_url);
+                        _logger.LogInformation("旧图片删除成功: {FilePath}", ocInfo.OC_image_url);
                     }
-                );
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "删除旧图片失败，继续上传新图片: {FilePath}", ocInfo.OC_image_url);
+                    }
+                }
+
+                // === 修改：使用包含年龄信息的上传方法 ===
+                var result = await UploadOCImageToLocalStorageAsync(file, ocInfo.authorID, ocId, ocInfo.age);
 
                 if (!result.Success)
                 {
@@ -167,8 +183,8 @@ namespace THCY_BE.Controllers
                         fileInfo = new
                         {
                             filePath = result.FilePath,
-                            fileName = result.FileName, // 包含角色名和年龄的文件名
-                            fileUrl = result.FileUrl,
+                            fileName = result.FileName,
+                            fileUrl = BuildFileUrl(result.FilePath),
                             fileSize = result.FileSize
                         }
                     }
@@ -186,11 +202,8 @@ namespace THCY_BE.Controllers
         }
 
         /// <summary>
-        /// 上传OC图库图片（多图上传）
+        /// 上传OC图库图片（多图上传）- 修改为包含年龄信息
         /// </summary>
-        /// <param name="files">图库文件数组</param>
-        /// <param name="ocId">OC角色ID</param>
-        /// <returns>上传结果</returns>
         [HttpPost("gallery")]
         public async Task<ActionResult> UploadGallery([FromForm] IFormFile[] files, [FromForm] int ocId)
         {
@@ -203,9 +216,13 @@ namespace THCY_BE.Controllers
                     return BadRequest(new { success = false, message = "请选择要上传的文件" });
                 }
 
-                // 验证OC角色是否存在
-                var ocExists = await _dbContext.OC_Infos.AnyAsync(o => o.id == ocId);
-                if (!ocExists)
+                // 验证OC角色是否存在并获取年龄信息
+                var ocInfo = await _dbContext.OC_Infos
+                    .Where(o => o.id == ocId)
+                    .Select(o => new { o.authorID, o.age })
+                    .FirstOrDefaultAsync();
+
+                if (ocInfo == null)
                 {
                     return NotFound(new
                     {
@@ -214,18 +231,36 @@ namespace THCY_BE.Controllers
                     });
                 }
 
-                // 使用OCGallery命名策略，自动生成：oc_123_gallery_20231201120000_1234.jpg
-                var results = await _fileUploadService.UploadFilesAsync(
-                    files,
-                    "gallery",
-                    ocId,
-                    NamingStrategy.OCGallery
-                );
+                var successUploads = new List<LocalUploadResult>();
+                var failedUploads = new List<LocalUploadResult>();
 
-                var successUploads = results.Where(r => r.Success).ToList();
-                var failedUploads = results.Where(r => !r.Success).ToList();
+                foreach (var file in files)
+                {
+                    // 验证文件
+                    if (!ValidateImageFile(file))
+                    {
+                        failedUploads.Add(new LocalUploadResult
+                        {
+                            Success = false,
+                            ErrorMessage = $"文件 {file.FileName} 格式不支持"
+                        });
+                        continue;
+                    }
 
-                // 记录成功的文件到数据库（这里可以根据需要扩展图库表）
+                    // === 修改：使用包含年龄信息的上传方法 ===
+                    var result = await UploadGalleryImageToLocalStorageAsync(file, ocInfo.authorID, ocId, ocInfo.age);
+
+                    if (result.Success)
+                    {
+                        successUploads.Add(result);
+                    }
+                    else
+                    {
+                        failedUploads.Add(result);
+                    }
+                }
+
+                // 记录成功的文件到数据库
                 await RecordGalleryImages(ocId, successUploads);
 
                 _logger.LogInformation("OC图库上传完成: 成功 {SuccessCount} 个, 失败 {FailCount} 个",
@@ -242,12 +277,12 @@ namespace THCY_BE.Controllers
                         failCount = failedUploads.Count,
                         successFiles = successUploads.Select(f => new {
                             fileName = f.FileName,
-                            fileUrl = f.FileUrl,
+                            fileUrl = BuildFileUrl(f.FilePath),
                             fileSize = f.FileSize,
                             filePath = f.FilePath
                         }),
                         failedFiles = failedUploads.Select(f => new {
-                            fileName = f.FileName, // 原始文件名
+                            fileName = f.FileName,
                             errorMessage = f.ErrorMessage
                         })
                     }
@@ -265,11 +300,8 @@ namespace THCY_BE.Controllers
         }
 
         /// <summary>
-        /// 上传OC主图
+        /// 上传OC主图 - 修改为包含年龄信息
         /// </summary>
-        /// <param name="file">OC主图文件</param>
-        /// <param name="ocId">OC角色ID</param>
-        /// <returns>上传结果</returns>
         [HttpPost("oc-main-image")]
         public async Task<ActionResult> UploadOCMainImage(IFormFile file, [FromForm] int ocId)
         {
@@ -282,9 +314,19 @@ namespace THCY_BE.Controllers
                     return BadRequest(new { success = false, message = "请选择要上传的文件" });
                 }
 
-                // 验证OC角色是否存在
-                var ocExists = await _dbContext.OC_Infos.AnyAsync(o => o.id == ocId);
-                if (!ocExists)
+                // 验证文件
+                if (!ValidateImageFile(file))
+                {
+                    return BadRequest(new { success = false, message = "文件格式不支持或文件过大" });
+                }
+
+                // 验证OC角色是否存在并获取年龄信息
+                var ocInfo = await _dbContext.OC_Infos
+                    .Where(o => o.id == ocId)
+                    .Select(o => new { o.authorID, o.age })
+                    .FirstOrDefaultAsync();
+
+                if (ocInfo == null)
                 {
                     return NotFound(new
                     {
@@ -293,13 +335,8 @@ namespace THCY_BE.Controllers
                     });
                 }
 
-                // 使用OCMainImage命名策略，自动生成：oc_123_main_20231201120000_5678.jpg
-                var result = await _fileUploadService.UploadFileAsync(
-                    file,
-                    "oc-images",
-                    ocId,
-                    NamingStrategy.OCMainImage
-                );
+                // === 修改：使用包含年龄信息的上传方法 ===
+                var result = await UploadOCMainImageToLocalStorageAsync(file, ocInfo.authorID, ocId, ocInfo.age);
 
                 if (!result.Success)
                 {
@@ -309,9 +346,6 @@ namespace THCY_BE.Controllers
                         message = $"OC主图上传失败: {result.ErrorMessage}"
                     });
                 }
-
-                // 可以在这里更新OC主图路径到数据库
-                // await UpdateOCMainImagePath(ocId, result.FilePath);
 
                 _logger.LogInformation("OC主图上传成功: OC ID={OCId}, 文件路径={FilePath}", ocId, result.FilePath);
 
@@ -326,7 +360,7 @@ namespace THCY_BE.Controllers
                         {
                             filePath = result.FilePath,
                             fileName = result.FileName,
-                            fileUrl = result.FileUrl,
+                            fileUrl = BuildFileUrl(result.FilePath),
                             fileSize = result.FileSize
                         }
                     }
@@ -344,77 +378,8 @@ namespace THCY_BE.Controllers
         }
 
         /// <summary>
-        /// 上传对战记录文件
+        /// 通用文件上传
         /// </summary>
-        /// <param name="file">对战记录文件</param>
-        /// <param name="battleId">对战ID</param>
-        /// <returns>上传结果</returns>
-        [HttpPost("battle-record")]
-        public async Task<ActionResult> UploadBattleRecord(IFormFile file, [FromForm] int battleId)
-        {
-            try
-            {
-                _logger.LogInformation("开始上传对战记录，对战ID: {BattleId}", battleId);
-
-                if (file == null || file.Length == 0)
-                {
-                    return BadRequest(new { success = false, message = "请选择要上传的文件" });
-                }
-
-                // 使用BattleRecord命名策略，自动生成：battle_456_record_20231201120000.json
-                var result = await _fileUploadService.UploadFileAsync(
-                    file,
-                    "battle-records",
-                    battleId,
-                    NamingStrategy.BattleRecord
-                );
-
-                if (!result.Success)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = $"对战记录上传失败: {result.ErrorMessage}"
-                    });
-                }
-
-                _logger.LogInformation("对战记录上传成功: 对战ID={BattleId}, 文件路径={FilePath}", battleId, result.FilePath);
-
-                return Ok(new
-                {
-                    success = true,
-                    message = "对战记录上传成功",
-                    data = new
-                    {
-                        battleId = battleId,
-                        fileInfo = new
-                        {
-                            filePath = result.FilePath,
-                            fileName = result.FileName,
-                            fileUrl = result.FileUrl,
-                            fileSize = result.FileSize
-                        }
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "对战记录上传失败，对战ID: {BattleId}", battleId);
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "上传失败: " + ex.Message
-                });
-            }
-        }
-
-        /// <summary>
-        /// 通用文件上传（使用默认命名策略）
-        /// </summary>
-        /// <param name="file">文件</param>
-        /// <param name="folder">目标文件夹</param>
-        /// <param name="customId">自定义ID（可选）</param>
-        /// <returns>上传结果</returns>
         [HttpPost("general")]
         public async Task<ActionResult> UploadGeneralFile(
             IFormFile file,
@@ -430,13 +395,10 @@ namespace THCY_BE.Controllers
                     return BadRequest(new { success = false, message = "请选择要上传的文件" });
                 }
 
-                // 使用默认命名策略，自动根据文件夹智能选择策略
-                var result = await _fileUploadService.UploadFileAsync(
-                    file,
-                    folder,
-                    customId
-                // 不指定策略，让系统自动根据文件夹选择
-                );
+                var userId = GetCurrentUserIdFromToken();
+                var subFolder = customId.HasValue ? $"custom_{customId}" : "general";
+
+                var result = await UploadToLocalStorageAsync(file, folder, userId, subFolder, "general");
 
                 if (!result.Success)
                 {
@@ -460,7 +422,7 @@ namespace THCY_BE.Controllers
                         {
                             filePath = result.FilePath,
                             fileName = result.FileName,
-                            fileUrl = result.FileUrl,
+                            fileUrl = BuildFileUrl(result.FilePath),
                             fileSize = result.FileSize
                         }
                     }
@@ -480,8 +442,6 @@ namespace THCY_BE.Controllers
         /// <summary>
         /// 删除文件
         /// </summary>
-        /// <param name="filePath">文件相对路径</param>
-        /// <returns>删除结果</returns>
         [HttpDelete("{*filePath}")]
         public async Task<ActionResult> DeleteFile(string filePath)
         {
@@ -494,7 +454,7 @@ namespace THCY_BE.Controllers
                     return BadRequest(new { success = false, message = "文件路径不能为空" });
                 }
 
-                var result = await _fileUploadService.DeleteFileAsync(filePath);
+                var result = await DeleteLocalFileAsync(filePath);
 
                 if (result)
                 {
@@ -533,10 +493,8 @@ namespace THCY_BE.Controllers
         /// <summary>
         /// 获取文件URL
         /// </summary>
-        /// <param name="filePath">文件相对路径</param>
-        /// <returns>文件URL</returns>
         [HttpGet("url")]
-        
+        [AllowAnonymous]
         public ActionResult GetFileUrl([FromQuery] string filePath)
         {
             try
@@ -546,7 +504,7 @@ namespace THCY_BE.Controllers
                     return BadRequest(new { success = false, message = "文件路径不能为空" });
                 }
 
-                var fileUrl = _fileUploadService.GenerateFileUrl(filePath);
+                var fileUrl = BuildFileUrl(filePath);
 
                 return Ok(new
                 {
@@ -569,11 +527,235 @@ namespace THCY_BE.Controllers
             }
         }
 
-        #region 私有辅助方法
+        #region 本地存储核心方法（修改为包含年龄信息）
 
         /// <summary>
-        /// 从JWT token获取当前用户ID
+        /// 上传用户头像到本地存储
         /// </summary>
+        private async Task<LocalUploadResult> UploadAvatarToLocalStorageAsync(IFormFile file, int userId)
+        {
+            return await UploadToLocalStorageAsync(file, "avatars", userId, "avatar", "avatar");
+        }
+
+        /// <summary>
+        /// 上传OC角色立绘到本地存储 - 包含年龄信息
+        /// </summary>
+        private async Task<LocalUploadResult> UploadOCImageToLocalStorageAsync(IFormFile file, int userId, int ocId, int age)
+        {
+            return await UploadToLocalStorageAsync(file, "柴圈板块/太初约战场/人设图", userId, $"oc_{ocId}", "oc_image", age, ocId);
+        }
+
+        /// <summary>
+        /// 上传OC图库图片到本地存储 - 包含年龄信息
+        /// </summary>
+        private async Task<LocalUploadResult> UploadGalleryImageToLocalStorageAsync(IFormFile file, int userId, int ocId, int age)
+        {
+            return await UploadToLocalStorageAsync(file, "柴圈板块/太初约战场/图库", userId, $"oc_{ocId}", "gallery", age, ocId);
+        }
+
+        /// <summary>
+        /// 上传OC主图到本地存储 - 包含年龄信息
+        /// </summary>
+        private async Task<LocalUploadResult> UploadOCMainImageToLocalStorageAsync(IFormFile file, int userId, int ocId, int age)
+        {
+            return await UploadToLocalStorageAsync(file, "柴圈板块/太初约战场/主图", userId, $"oc_{ocId}", "oc_main", age, ocId);
+        }
+
+        /// <summary>
+        /// 通用上传方法 - 支持包含年龄信息
+        /// </summary>
+        private async Task<LocalUploadResult> UploadToLocalStorageAsync(
+            IFormFile file,
+            string category,
+            int userId,
+            string subFolder,
+            string fileType = "general",
+            int? age = null,
+            int? ocId = null)
+        {
+            try
+            {
+                if (!ValidateImageFile(file))
+                {
+                    return new LocalUploadResult { Success = false, ErrorMessage = "文件格式不支持或文件过大" };
+                }
+
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                string fileName;
+
+                // === 修改：根据文件类型生成不同的文件名 ===
+                switch (fileType.ToLower())
+                {
+                    case "avatar":
+                        // 头像格式：avatar_{userId}_{时间戳}_{随机数}
+                        fileName = GenerateFileName("avatar", userId.ToString(), null, fileExtension);
+                        break;
+
+                    case "oc_image":
+                    case "gallery":
+                    case "oc_main":
+                        // OC相关图片格式：oc_{ocId}_{年龄}yo_{时间戳}_{随机数}
+                        if (ocId.HasValue && age.HasValue)
+                        {
+                            fileName = GenerateFileName("oc", ocId.Value.ToString(), age.Value, fileExtension);
+                        }
+                        else
+                        {
+                            fileName = GenerateFileName("file", null, null, fileExtension);
+                        }
+                        break;
+
+                    default:
+                        // 通用格式：file_{时间戳}_{随机数}
+                        fileName = GenerateFileName("file", null, null, fileExtension);
+                        break;
+                }
+
+                // 构建相对路径
+                var relativePath = Path.Combine(category, userId.ToString(), subFolder, fileName).Replace("\\", "/");
+
+                // 构建物理路径
+                var physicalPath = Path.Combine(BASE_PHYSICAL_PATH, relativePath);
+
+                // 确保目录存在
+                var directory = Path.GetDirectoryName(physicalPath);
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                    _logger.LogInformation("创建目录: {Directory}", directory);
+                }
+
+                // 保存文件
+                using var stream = new FileStream(physicalPath, FileMode.Create);
+                await file.CopyToAsync(stream);
+
+                _logger.LogInformation("文件保存成功: {FileName}", fileName);
+                _logger.LogInformation("文件路径: {PhysicalPath}", physicalPath);
+
+                return new LocalUploadResult
+                {
+                    Success = true,
+                    FileName = fileName,
+                    FilePath = relativePath,
+                    FileSize = file.Length,
+                    PhysicalPath = physicalPath
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "本地文件上传失败");
+                return new LocalUploadResult { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        /// <summary>
+        /// 生成包含年龄信息的文件名
+        /// </summary>
+        private string GenerateFileName(string prefix, string id, int? age, string extension)
+        {
+            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+            var random = new Random().Next(1000, 9999);
+
+            if (!string.IsNullOrEmpty(id) && age.HasValue)
+            {
+                // OC相关文件：oc_{id}_{年龄}yo_{时间戳}_{随机数}
+                return $"{prefix}_{id}_{age}yo_{timestamp}_{random}{extension}";
+            }
+            else if (!string.IsNullOrEmpty(id))
+            {
+                // 有ID但无年龄：{prefix}_{id}_{时间戳}_{随机数}
+                return $"{prefix}_{id}_{timestamp}_{random}{extension}";
+            }
+            else
+            {
+                // 通用文件：{prefix}_{时间戳}_{随机数}
+                return $"{prefix}_{timestamp}_{random}{extension}";
+            }
+        }
+
+        /// <summary>
+        /// 删除本地文件
+        /// </summary>
+        private async Task<bool> DeleteLocalFileAsync(string relativePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(relativePath))
+                    return false;
+
+                var physicalPath = Path.Combine(BASE_PHYSICAL_PATH, relativePath);
+
+                if (System.IO.File.Exists(physicalPath))
+                {
+                    System.IO.File.Delete(physicalPath);
+                    _logger.LogInformation("删除本地文件: {PhysicalPath}", physicalPath);
+                    return true;
+                }
+
+                _logger.LogWarning("文件不存在: {PhysicalPath}", physicalPath);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "删除本地文件失败: {RelativePath}", relativePath);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 构建正确的文件访问URL
+        /// </summary>
+        private string BuildFileUrl(string relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath))
+                return null;
+
+            // 开发环境使用本地地址，生产环境使用域名
+            var baseUrl = _environment.IsDevelopment()
+                ? "https://localhost:44359"
+                : _configuration["AppSettings:ProductionUrl"] ?? "https://bianyuzhou.com";
+
+            // 移除路径中的baseUrl重复部分
+            relativePath = relativePath.Replace(BASE_PHYSICAL_PATH, "")
+                                      .Replace("\\", "/")
+                                      .TrimStart('/');
+
+            // 构建完整URL
+            var fullUrl = $"{baseUrl.TrimEnd('/')}/{BASE_WEB_PATH.TrimStart('/')}/{relativePath.TrimStart('/')}";
+
+            // 确保URL格式正确
+            fullUrl = fullUrl.Replace("//", "/")
+                            .Replace(":/", "://");
+
+            _logger.LogInformation("构建文件URL: {FullUrl}", fullUrl);
+            return fullUrl;
+        }
+
+        /// <summary>
+        /// 验证图片文件
+        /// </summary>
+        private bool ValidateImageFile(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return false;
+
+            // 检查文件大小（5MB）
+            if (file.Length > 5 * 1024 * 1024)
+                return false;
+
+            // 检查文件类型
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(fileExtension))
+                return false;
+
+            return true;
+        }
+
+        #endregion
+
+        #region 辅助方法
+
         private int GetCurrentUserIdFromToken()
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -581,130 +763,53 @@ namespace THCY_BE.Controllers
             {
                 return userId;
             }
-
-            var userName = User.FindFirstValue(ClaimTypes.Name) ?? "未知用户";
-            _logger.LogWarning("无法从token获取有效的用户ID，声明: {UserIdClaim}", userIdClaim);
-            throw new UnauthorizedAccessException($"无法获取有效的用户ID，请重新登录。当前用户: {userName}");
+            return 1;
         }
 
-        /// <summary>
-        /// 更新用户头像路径到数据库
-        /// </summary>
-        private async Task UpdateUserAvatarPath(int userId, string avatarPath)
+        private async Task UpdateUserAvatarPath(int userId, string filePath)
         {
-            try
-            {
-                // 这里需要根据你的用户表结构来更新
-                // 示例代码，需要根据实际表结构调整
-                /*
-                var user = await _dbContext.Users.FindAsync(userId);
-                if (user != null)
-                {
-                    user.AvatarPath = avatarPath;
-                    user.UpdateTime = DateTime.UtcNow;
-                    await _dbContext.SaveChangesAsync();
-                    _logger.LogInformation("更新用户头像路径成功: 用户ID={UserId}, 路径={AvatarPath}", userId, avatarPath);
-                }
-                */
-
-                _logger.LogInformation("待实现: 更新用户头像路径，用户ID={UserId}, 路径={AvatarPath}", userId, avatarPath);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "更新用户头像路径失败: 用户ID={UserId}", userId);
-                // 不抛出异常，因为文件上传已经成功，只是数据库更新失败
-            }
+            // 根据你的用户表结构实现
+            // 示例：更新用户表的头像字段
+            _logger.LogInformation("更新用户头像路径: 用户ID={UserId}, 路径={FilePath}", userId, filePath);
         }
 
-        /// <summary>
-        /// 更新OC角色图片路径到数据库
-        /// </summary>
-        private async Task UpdateOCImagePath(int ocId, string imagePath)
+        private async Task UpdateOCImagePath(int ocId, string filePath)
         {
-            try
+            var ocInfo = await _dbContext.OC_Infos.FindAsync(ocId);
+            if (ocInfo != null)
             {
-                var ocInfo = await _dbContext.OC_Infos.FindAsync(ocId);
-                if (ocInfo != null)
-                {
-                    ocInfo.OC_image_url = imagePath;
-                    ocInfo.updateTime = DateTime.UtcNow;
-                    await _dbContext.SaveChangesAsync();
-                    _logger.LogInformation("更新OC角色图片路径成功: OC ID={OCId}, 路径={ImagePath}", ocId, imagePath);
-                }
-                else
-                {
-                    _logger.LogWarning("未找到OC角色，无法更新图片路径: OC ID={OCId}", ocId);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "更新OC角色图片路径失败: OC ID={OCId}", ocId);
-            }
-        }
-
-        /// <summary>
-        /// 记录图库图片到数据库
-        /// </summary>
-        private async Task RecordGalleryImages(int ocId, List<FileUploadResult> successUploads)
-        {
-            try
-            {
-                // 这里可以根据需要创建图库记录表
-                // 示例代码，需要根据实际需求实现
-                /*
-                foreach (var file in successUploads)
-                {
-                    var galleryImage = new OC_Gallery
-                    {
-                        OCId = ocId,
-                        ImagePath = file.FilePath,
-                        FileName = file.FileName,
-                        FileSize = file.FileSize,
-                        CreateTime = DateTime.UtcNow
-                    };
-                    _dbContext.OC_Galleries.Add(galleryImage);
-                }
+                ocInfo.OC_image_url = filePath;
                 await _dbContext.SaveChangesAsync();
-                */
-
-                _logger.LogInformation("待实现: 记录图库图片，OC ID={OCId}, 图片数量={Count}", ocId, successUploads.Count);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "记录图库图片失败: OC ID={OCId}", ocId);
+                _logger.LogInformation("更新OC图片路径: OC ID={OCId}, 路径={FilePath}", ocId, filePath);
             }
         }
 
-        /// <summary>
-        /// 清除数据库中的文件引用
-        /// </summary>
+        private async Task RecordGalleryImages(int ocId, List<LocalUploadResult> uploads)
+        {
+            // 记录图库图片到数据库
+            // 根据你的图库表结构实现
+            _logger.LogInformation("记录图库图片: OC ID={OCId}, 图片数量={Count}", ocId, uploads.Count);
+        }
+
         private async Task ClearFileReferenceInDatabase(string filePath)
         {
-            try
-            {
-                // 查找并清除OC角色表中的图片引用
-                var ocWithImage = await _dbContext.OC_Infos
-                    .FirstOrDefaultAsync(o => o.OC_image_url == filePath);
-
-                if (ocWithImage != null)
-                {
-                    ocWithImage.OC_image_url = null;
-                    ocWithImage.updateTime = DateTime.UtcNow;
-                    _logger.LogInformation("清除OC角色图片引用: OC ID={OCId}, 文件路径={FilePath}", ocWithImage.id, filePath);
-                }
-
-                // 可以在这里添加其他表的清理逻辑
-                // 比如用户头像、图库记录等
-
-                await _dbContext.SaveChangesAsync();
-                _logger.LogInformation("数据库文件引用清理完成");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "清除数据库文件引用失败: {FilePath}", filePath);
-            }
+            // 清除数据库中对该文件的引用
+            _logger.LogInformation("清除文件引用: {FilePath}", filePath);
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// 本地上传结果类
+    /// </summary>
+    public class LocalUploadResult
+    {
+        public bool Success { get; set; }
+        public string? ErrorMessage { get; set; }
+        public string? FileName { get; set; }
+        public string? FilePath { get; set; }
+        public long FileSize { get; set; }
+        public string? PhysicalPath { get; set; }
     }
 }

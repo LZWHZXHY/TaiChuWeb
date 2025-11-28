@@ -13,18 +13,20 @@
         <form @submit.prevent="onSubmit" novalidate>
           <!-- 分类 -->
           <div class="fb-field">
-            <label for="category" class="fb-label required">分类</label>
+            <label for="type" class="fb-label required">分类</label>
             <select
-              id="category"
-              v-model="form.category"
+              id="type"
+              v-model="form.type"
               class="fb-select"
-              :class="{ invalid: touched.category && !valid.category }"
-              @blur="touched.category = true"
+              :class="{ invalid: touched.type && !valid.type }"
+              @blur="touched.type = true"
             >
               <option disabled value="">请选择分类</option>
-              <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
+              <option v-for="category in categories" :key="category.value" :value="category.value">
+                {{ category.label }}
+              </option>
             </select>
-            <p v-if="touched.category && !valid.category" class="fb-error">请选择分类</p>
+            <p v-if="touched.type && !valid.type" class="fb-error">请选择分类</p>
           </div>
 
           <!-- 标题 -->
@@ -49,7 +51,7 @@
             </p>
           </div>
 
-            <!-- 内容 -->
+          <!-- 内容 -->
           <div class="fb-field">
             <label for="content" class="fb-label required">详细描述</label>
             <textarea
@@ -83,15 +85,14 @@
                 <input
                   type="file"
                   accept="image/*"
-                  multiple
                   :disabled="form.images.length >= rules.images.maxCount"
                   @change="onFiles"
                 />
                 <span class="fb-upload-plus">+</span>
                 <span class="fb-upload-text">上传</span>
               </label>
-              <div v-for="(img, i) in form.images" :key="img" class="fb-thumb">
-                <img :src="img" alt="预览图片" />
+              <div v-for="(img, i) in form.images" :key="i" class="fb-thumb">
+                
                 <button
                   type="button"
                   class="fb-thumb-remove"
@@ -106,41 +107,21 @@
             <p v-if="errors.images" class="fb-error">{{ errors.images }}</p>
           </div>
 
-          <!-- 联系方式 / 匿名 -->
-          <div class="fb-field fb-grid-2">
-            <div>
-              <label for="contact" class="fb-label">联系方式（可选）</label>
-              <input
-                id="contact"
-                type="text"
-                v-model.trim="form.contact"
-                class="fb-input"
-                placeholder="邮箱 / 手机（便于跟进）"
-                :disabled="form.anonymous"
-                @blur="touched.contact = true"
-                :class="{ invalid: touched.contact && !valid.contact }"
-              />
-              <p v-if="touched.contact && !valid.contact" class="fb-error">
-                格式不正确（示例：name@domain.com 或 11 位手机号）
-              </p>
-            </div>
-            <label class="fb-check">
-              <input type="checkbox" v-model="form.anonymous" />
-              <span>匿名提交</span>
-            </label>
-          </div>
-
-          <!-- 隐私同意 -->
+          <!-- 联系方式 -->
           <div class="fb-field">
-            <label class="fb-check">
-              <input
-                type="checkbox"
-                v-model="form.consent"
-                @blur="touched.consent = true"
-              />
-              <span>同意用于改进服务</span>
-            </label>
-            <p v-if="touched.consent && !valid.consent" class="fb-error">请勾选同意</p>
+            <label for="ContactQQ" class="fb-label">联系QQ（可选）</label>
+            <input
+              id="ContactQQ"
+              type="text"
+              v-model.trim="form.ContactQQ"
+              class="fb-input"
+              placeholder="请输入QQ号码"
+              @blur="touched.ContactQQ = true"
+              :class="{ invalid: touched.ContactQQ && !valid.ContactQQ }"
+            />
+            <p v-if="touched.ContactQQ && !valid.ContactQQ" class="fb-error">
+              QQ号码格式不正确（5-15位数字）
+            </p>
           </div>
 
           <!-- 操作 -->
@@ -164,14 +145,14 @@
           <div class="fb-filters">
             <div class="fb-tabs" role="tablist" aria-label="状态筛选">
               <button
-                v-for="s in statusesForTabs"
-                :key="s.value"
+                v-for="status in statuses"
+                :key="status.value"
                 class="fb-tab"
-                :class="{ active: filter.status === s.value }"
-                @click="filter.status = s.value; filter.page = 1"
+                :class="{ active: filter.status === status.value }"
+                @click="filter.status = status.value; filter.page = 1"
                 role="tab"
               >
-                {{ s.label }}
+                {{ status.label }}
               </button>
             </div>
             <input
@@ -185,39 +166,30 @@
           </div>
         </div>
 
-        <div v-if="pagedItems.length === 0" class="fb-empty">暂无反馈</div>
+        <div v-if="loadingList" class="fb-empty">加载中...</div>
+        <div v-else-if="pagedItems.length === 0" class="fb-empty">暂无反馈</div>
 
         <ul v-else class="fb-items">
           <li v-for="item in pagedItems" :key="item.id" class="fb-item">
             <div class="fb-item-row1">
               <h3 class="fb-item-title">{{ item.title }}</h3>
               <span class="fb-status">
-                <span class="fb-dot" :data-status="item.status"></span>{{ item.status }}
+                <span class="fb-dot" :data-status="getStatusText(item.status)"></span>
+                {{ getStatusText(item.status) }}
               </span>
             </div>
             <div class="fb-item-meta">
-              <span>{{ item.category }}</span>
+              <span>{{ getTypeText(item.type) }}</span>
               <span class="sep">·</span>
-              <time>{{ formatDate(item.createdAt) }}</time>
-              <template v-if="item.images?.length">
+              <time>{{ formatDate(item.createTime) }}</time>
+              <template v-if="item.imagesURL">
                 <span class="sep">·</span>
-                <span>{{ item.images.length }} 图</span>
-              </template>
-              <template v-if="item.anonymous">
-                <span class="sep">·</span>
-                <span>匿名</span>
+                <span>有图片</span>
               </template>
             </div>
             <p class="fb-item-content">{{ snippet(item.content) }}</p>
-            <div v-if="item.images?.length" class="fb-mini-row">
-              <img
-                v-for="(img, i) in item.images"
-                :key="i"
-                :src="img"
-                alt="缩略图"
-                class="fb-mini"
-                @click="preview(img)"
-              />
+            <div v-if="item.imagesURL" class="fb-mini-row">
+              
             </div>
           </li>
         </ul>
@@ -238,133 +210,127 @@
       role="dialog"
       aria-modal="true"
     >
-      <img :src="previewUrl" alt="图片预览" @click.stop />
+      
       <button class="fb-close" @click="previewUrl = ''" aria-label="关闭预览">×</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, watch } from 'vue'
+import { reactive, ref, computed, watch, onMounted } from 'vue'
+import apiClient from '../utils/api'
 
-type Category = '功能建议' | 'BUG反馈' | '内容建议' | '其他'
-type Status = '未读' | '处理中' | '已完成'
-interface FeedbackItem {
-  id: string
-  category: Category
+interface FeedbackForm {
+  type: number
   title: string
   content: string
-  images: string[]
-  contact?: string
-  anonymous: boolean
-  createdAt: string
-  status: Status
+  ContactQQ?: string
+  images: Array<{ file: File; preview: string }>
 }
 
-const STORAGE_KEY = 'feedback_box_items'
-const categories: Category[] = ['功能建议', 'BUG反馈', '内容建议', '其他']
-const statusTabs: Array<{ label: string; value: Status | '全部' }> = [
-  { label: '全部', value: '全部' },
-  { label: '未读', value: '未读' },
-  { label: '处理中', value: '处理中' },
-  { label: '已完成', value: '已完成' }
-]
+interface FeedbackItem {
+  id: number
+  type: number
+  title: string
+  content: string
+  status: number
+  createTime: string
+  imagesURL?: string
+}
+
+interface Category {
+  value: number
+  label: string
+  description: string
+}
+
+interface Status {
+  value: number
+  label: string
+}
 
 const rules = {
-  title: { min: 6, max: 40 },
+  title: { min: 2, max: 50 },
   content: { min: 10, max: 1000 },
-  images: { maxCount: 5, maxSize: 2 * 1024 * 1024 }
+  images: { maxCount: 1, maxSize: 10 * 1024 * 1024 } // 单张图片限制
 }
 
-const form = reactive({
-  category: '' as '' | Category,
+const categories: Category[] = [
+  { value: 1, label: '网站BUG反馈', description: '报告网站功能异常、错误等问题' },
+  { value: 2, label: '社区意见', description: '对社区功能、体验的建议' },
+  { value: 3, label: '内容举报', description: '举报违规、不良内容' },
+  { value: 4, label: '其他', description: '其他类型的反馈' }
+]
+
+const statuses: Status[] = [
+  { value: 0, label: '待处理' },
+  { value: 1, label: '处理中' },
+  { value: 2, label: '已解决' },
+  { value: 3, label: '已关闭' }
+]
+
+const form = reactive<FeedbackForm>({
+  type: 0,
   title: '',
   content: '',
-  images: [] as string[],
-  contact: '',
-  anonymous: false,
-  consent: true
+  ContactQQ: '',
+  images: []
 })
 
 const touched = reactive({
-  category: false,
+  type: false,
   title: false,
   content: false,
-  contact: false,
-  consent: false
+  ContactQQ: false
 })
+
 const errors = reactive({ images: '' })
 const loading = ref(false)
+const loadingList = ref(false)
 const message = reactive({ text: '', type: '' as 'success' | 'error' | '' })
 const previewUrl = ref('')
 
-const items = ref<FeedbackItem[]>(loadItems())
+const items = ref<FeedbackItem[]>([])
 const filter = reactive({
-  status: '全部' as Status | '全部',
+  status: -1, // -1 表示全部
   q: '',
   page: 1,
   pageSize: 6
 })
-const statusesForTabs = statusTabs
 
-function loadItems(): FeedbackItem[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-function saveItems(arr: FeedbackItem[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr))
-}
+// 验证规则
+const valid = reactive({
+  type: computed(() => form.type > 0 && form.type <= 4),
+  title: computed(() => form.title.length >= rules.title.min && form.title.length <= rules.title.max),
+  content: computed(() => form.content.length >= rules.content.min && form.content.length <= rules.content.max),
+  ContactQQ: computed(() => {
+    if (!form.ContactQQ) return true
+    return /^[1-9][0-9]{4,14}$/.test(form.ContactQQ)
+  })
+})
 
+const formValid = computed(() => valid.type && valid.title && valid.content && valid.ContactQQ)
+
+// 过滤和分页
 const filtered = computed(() => {
   const q = filter.q.trim().toLowerCase()
   return items.value
-    .filter(it => (filter.status === '全部' ? true : it.status === filter.status))
-    .filter(it => (q ? (it.title + it.content).toLowerCase().includes(q) : true))
-    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
+    .filter(it => filter.status === -1 ? true : it.status === filter.status)
+    .filter(it => q ? (it.title + it.content).toLowerCase().includes(q) : true)
+    .sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime())
 })
+
 const totalPages = computed(() => Math.max(1, Math.ceil(filtered.value.length / filter.pageSize)))
 const pagedItems = computed(() => {
   const start = (filter.page - 1) * filter.pageSize
   return filtered.value.slice(start, start + filter.pageSize)
 })
+
 watch([() => filter.status, () => filter.q], () => {
   filter.page = 1
 })
 
-const valid = reactive({
-  category: computed(() => !!form.category),
-  title: computed(
-    () => form.title.length >= rules.title.min && form.title.length <= rules.title.max
-  ),
-  content: computed(
-    () => form.content.length >= rules.content.min && form.content.length <= rules.content.max
-  ),
-  contact: computed(() => {
-    if (form.anonymous || !form.contact) return true
-    const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    const mobile = /^1[3-9]\d{9}$/
-    return email.test(form.contact) || mobile.test(form.contact)
-  }),
-  consent: computed(() => !!form.consent),
-  images: computed(() => !errors.images)
-})
-const formValid = computed(
-  () => valid.category && valid.title && valid.content && valid.contact && valid.consent && valid.images
-)
-
-watch(
-  () => form.anonymous,
-  v => {
-    if (v) form.contact = ''
-  }
-)
-
+// 工具函数
 function setMessage(text: string, type: 'success' | 'error', timeout = 2500) {
   message.text = text
   message.type = type
@@ -374,117 +340,196 @@ function setMessage(text: string, type: 'success' | 'error', timeout = 2500) {
     }, timeout)
   }
 }
+
 function onReset() {
-  form.category = ''
+  form.type = 0
   form.title = ''
   form.content = ''
+  form.ContactQQ = ''
   form.images = []
-  form.contact = ''
-  form.anonymous = false
-  form.consent = true
-  Object.keys(touched).forEach(k => ((touched as any)[k] = false))
+  Object.keys(touched).forEach(key => (touched as any)[key] = false)
   errors.images = ''
 }
-function uid() {
-  return Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-6)
+
+function snippet(text: string, max = 140) {
+  return text.length > max ? text.slice(0, max) + '…' : text
 }
-function snippet(s: string, max = 140) {
-  return s.length > max ? s.slice(0, max) + '…' : s
-}
+
 function formatDate(iso: string) {
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
-    d.getHours()
-  )}:${pad(d.getMinutes())}`
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
+
 function preview(url: string) {
   previewUrl.value = url
 }
 
+function getTypeText(type: number): string {
+  const category = categories.find(c => c.value === type)
+  return category ? category.label : '未知类型'
+}
+
+function getStatusText(status: number): string {
+  const statusObj = statuses.find(s => s.value === status)
+  return statusObj ? statusObj.label : '未知状态'
+}
+
+function getFullImageUrl(localUrl: string): string {
+  if (!localUrl) return ''
+  return `/uploads/${localUrl}`
+}
+
+// 图片处理
 async function dataURLFromFile(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    const r = new FileReader()
-    r.onload = () => resolve(String(r.result))
-    r.onerror = reject
-    r.readAsDataURL(file)
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = reject
+    reader.readAsDataURL(file)
   })
 }
+
 async function handleFiles(files: FileList | File[]) {
   errors.images = ''
   const arr = Array.from(files)
   if (!arr.length) return
+  
   const available = rules.images.maxCount - form.images.length
-  for (const f of arr.slice(0, available)) {
-    if (!f.type.startsWith('image/')) {
-      errors.images = '仅支持图片'
+  for (const file of arr.slice(0, available)) {
+    if (!file.type.startsWith('image/')) {
+      errors.images = '仅支持图片文件'
       continue
     }
-    if (f.size > rules.images.maxSize) {
-      errors.images = `单张需 ≤ ${(rules.images.maxSize / 1024 / 1024).toFixed(0)}MB`
+    if (file.size > rules.images.maxSize) {
+      errors.images = `图片大小不能超过${(rules.images.maxSize / 1024 / 1024).toFixed(0)}MB`
       continue
     }
-    form.images.push(await dataURLFromFile(f))
+    
+    const preview = await dataURLFromFile(file)
+    form.images.push({ file, preview })
   }
-  if (arr.length > available) setMessage(`最多 ${rules.images.maxCount} 张，多余已忽略`, 'error')
+  
+  if (arr.length > available) {
+    setMessage(`最多上传${rules.images.maxCount}张图片，多余图片已忽略`, 'error')
+  }
 }
+
 function onFiles(e: Event) {
   const input = e.target as HTMLInputElement
   if (!input.files) return
   handleFiles(input.files)
   input.value = ''
 }
-function removeImage(i: number) {
-  form.images.splice(i, 1)
+
+function removeImage(index: number) {
+  form.images.splice(index, 1)
 }
+
 async function onPaste(e: ClipboardEvent) {
   const items = e.clipboardData?.items
   if (!items) return
+  
   const files: File[] = []
-  for (const it of items as any) {
-    if (it.kind === 'file') {
-      const f = it.getAsFile()
-      if (f) files.push(f)
+  for (const item of items as any) {
+    if (item.kind === 'file') {
+      const file = item.getAsFile()
+      if (file) files.push(file)
     }
   }
+  
   if (files.length) {
     e.preventDefault()
     await handleFiles(files)
   }
 }
 
+// API 调用
+async function loadFeedbacks() {
+  try {
+    loadingList.value = true
+    console.log('开始加载反馈列表...')
+    
+    const response = await apiClient.get('/feedback/list')
+    console.log('API响应:', response.data)
+    
+    if (response.data && response.data.success) {
+      // 修复：从 response.data.data.items 获取数据
+      const apiData = response.data.data
+      if (apiData && apiData.items) {
+        items.value = apiData.items
+        console.log('成功加载数据:', items.value.length, '条')
+      } else {
+        console.log('数据结构异常:', apiData)
+        items.value = []
+      }
+    } else {
+      console.log('API返回失败:', response.data?.message)
+      setMessage('加载反馈列表失败: ' + (response.data?.message || '未知错误'), 'error')
+      items.value = [] // 确保清空数据
+    }
+  } catch (error: any) {
+    console.error('加载反馈列表失败:', error)
+    const errorMessage = error.response?.data?.message || error.message
+    setMessage('加载反馈列表失败: ' + errorMessage, 'error')
+    items.value = [] // 出错时清空数据
+  } finally {
+    loadingList.value = false
+  }
+}
+
 async function onSubmit() {
-  touched.category = touched.title = touched.content = touched.consent = touched.contact = true
+  // 标记所有字段为已触摸
+  Object.keys(touched).forEach(key => (touched as any)[key] = true)
+  
   if (!formValid.value) {
     setMessage('请检查表单填写', 'error')
     return
   }
+  
   loading.value = true
+  
   try {
-    const payload: FeedbackItem = {
-      id: uid(),
-      category: form.category as Category,
-      title: form.title.trim(),
-      content: form.content.trim(),
-      images: [...form.images],
-      contact: form.anonymous ? '' : form.contact.trim(),
-      anonymous: form.anonymous,
-      createdAt: new Date().toISOString(),
-      status: '未读'
+    const formData = new FormData()
+    formData.append('title', form.title)
+    formData.append('content', form.content)
+    formData.append('type', form.type.toString())
+    
+    if (form.ContactQQ) {
+      formData.append('ContactQQ', form.ContactQQ)
     }
-    await new Promise(r => setTimeout(r, 500))
-    const next = [payload, ...items.value]
-    items.value = next
-    saveItems(next)
-    setMessage('提交成功，感谢你的反馈', 'success')
-    onReset()
-  } catch (e) {
-    console.error(e)
-    setMessage('提交失败，请稍后再试', 'error')
+    
+    // 添加图片文件（如果有）
+    if (form.images.length > 0) {
+      formData.append('ErrorImage', form.images[0].file)
+    }
+    
+    const response = await apiClient.post('/FeedBack/create', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    
+    if (response.data && response.data.success) {
+      setMessage('反馈提交成功！感谢您的反馈', 'success')
+      onReset()
+      await loadFeedbacks() // 重新加载列表
+    } else {
+      setMessage(response.data?.message || '提交失败', 'error')
+    }
+  } catch (error: any) {
+    console.error('提交反馈失败:', error)
+    const errorMessage = error.response?.data?.message || '提交失败，请重试'
+    setMessage(errorMessage, 'error')
   } finally {
     loading.value = false
   }
 }
+
+// 初始化
+onMounted(() => {
+  loadFeedbacks()
+})
 </script>
 
 <style scoped>

@@ -48,9 +48,19 @@
               {{ authStore.user?.username?.charAt(0) || 'U' }}
             </div>
             <span class="username">{{ authStore.user?.username }}</span>
+            
+            <!-- 未读通知徽标 -->
+            <div v-if="unreadCount > 0" class="notification-badge">
+              <span class="badge-count">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+            </div>
+            
             <div class="dropdown-arrow">▼</div>
           </div>
           <div v-if="showUserMenu" class="user-dropdown">
+            <div class="dropdown-item" @click="goToNotifications">
+              <span>通知中心</span>
+              <span v-if="unreadCount > 0" class="dropdown-badge">{{ unreadCount }}</span>
+            </div>
             <div class="dropdown-item" @click="goToProfile">
               <span>个人资料</span>
             </div>
@@ -85,13 +95,19 @@ const authStore = useAuthStore()
 const router = useRouter()
 
 const userCount = ref(0) // 默认为 0
+const unreadCount = ref(0) // 未读通知数量
 const showUserMenu = ref(false)
 const isScrolled = ref(false)
+let notificationInterval = null
 
 const props = defineProps({
   navItems: {
     type: Array,
     required: true
+  },
+  unreadCount: {
+    type: Number,
+    default: 0
   }
 })
 
@@ -109,7 +125,6 @@ const isActive = (path) => {
 // 精确显示人数，无格式单位换算
 const loadUserCount = async () => {
   try {
-    // 接口规范只返回 { count: number }
     const response = await apiClient.get('/default/users/count')
     if (typeof response.data.count === 'number' && !isNaN(response.data.count)) {
       userCount.value = response.data.count
@@ -121,6 +136,37 @@ const loadUserCount = async () => {
   } catch (err) {
     console.error('获取用户数量失败，显示为0')
     userCount.value = 0
+  }
+}
+
+// 加载未读通知数量
+const loadUnreadCount = async () => {
+  if (!authStore.isAuthenticated) {
+    unreadCount.value = 0
+    return
+  }
+  
+  try {
+    const response = await apiClient.get('/Notification/unread/count')
+    unreadCount.value = response?.data?.unread ?? 0
+  } catch (err) {
+    console.warn('未读通知数量获取失败，使用降级方案:', err)
+    // 降级方案：获取通知列表计算未读数量
+    try {
+      const response = await apiClient.get('/Notification/mine', {
+        params: { isRead: false, page: 1, pageSize: 1 }
+      })
+      const data = response?.data?.data
+      if (data && typeof data.total === 'number') {
+        unreadCount.value = data.total
+      } else {
+        const items = data?.items ?? []
+        unreadCount.value = Array.isArray(items) ? items.length : 0
+      }
+    } catch (err2) {
+      console.error('降级方案也失败:', err2)
+      unreadCount.value = 0
+    }
   }
 }
 
@@ -155,18 +201,26 @@ const goToSettings = () => {
   router.push('/settings')
 }
 
+const goToNotifications = () => {
+  showUserMenu.value = false
+  // 跳转到个人资料页面的通知标签页
+  router.push('/profile/me?tab=notification')
+}
+
 const handleLogout = async () => {
   try {
     showUserMenu.value = false
     authStore.logout()
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
+    unreadCount.value = 0 // 登出后清空未读计数
     console.log('✅ 用户已登出')
     router.push('/')
   } catch (error) {
     console.error('退出登录失败:', error)
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
+    unreadCount.value = 0
     router.push('/')
   }
 }
@@ -181,26 +235,76 @@ const handleScroll = () => {
   isScrolled.value = window.scrollY > 10
 }
 
+// 监听认证状态变化
+watch(() => authStore.isAuthenticated, (isAuthenticated) => {
+  if (isAuthenticated) {
+    // 登录后立即加载未读数量
+    loadUnreadCount()
+    // 启动定时刷新
+    notificationInterval = setInterval(loadUnreadCount, 60000) // 每分钟刷新一次
+  } else {
+    // 登出后清空未读数量并清除定时器
+    unreadCount.value = 0
+    if (notificationInterval) {
+      clearInterval(notificationInterval)
+      notificationInterval = null
+    }
+  }
+  showUserMenu.value = false
+})
+
 watch(() => router.currentRoute.value.path, () => {
   showUserMenu.value = false
 })
 
-watch(() => authStore.isAuthenticated, (newValue) => {
-  if (!newValue) {
-    showUserMenu.value = false
-  }
-})
-
 onMounted(() => {
   loadUserCount()
+  
+  // 如果已登录，启动未读通知定时刷新
+  if (authStore.isAuthenticated) {
+    loadUnreadCount()
+    notificationInterval = setInterval(loadUnreadCount, 60000)
+  }
+  
   document.addEventListener('click', closeUserMenu)
   window.addEventListener('scroll', handleScroll)
   window.addEventListener('unauthorized', () => {
     showUserMenu.value = false
+    unreadCount.value = 0
   })
 })
 
+// 在onMounted中添加全局事件监听
+onMounted(() => {
+  loadUserCount()
+  
+  // 监听未读数量更新事件
+  window.addEventListener('unread-count-updated', (event) => {
+    if (event.detail?.count !== undefined) {
+      unreadCount.value = event.detail.count
+    }
+  })
+  
+  if (authStore.isAuthenticated) {
+    loadUnreadCount()
+    notificationInterval = setInterval(loadUnreadCount, 60000)
+  }
+  
+  document.addEventListener('click', closeUserMenu)
+  window.addEventListener('scroll', handleScroll)
+  window.addEventListener('unauthorized', () => {
+    showUserMenu.value = false
+    unreadCount.value = 0
+  })
+})
+
+// 在onUnmounted中移除事件监听
 onUnmounted(() => {
+  if (notificationInterval) {
+    clearInterval(notificationInterval)
+  }
+  // 移除未读数量更新事件监听
+  window.removeEventListener('unread-count-updated', () => {})
   document.removeEventListener('click', closeUserMenu)
   window.removeEventListener('scroll', handleScroll)
   window.removeEventListener('unauthorized', () => {})
@@ -347,6 +451,7 @@ onUnmounted(() => {
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s ease;
+  position: relative;
 }
 .user-info:hover { background: rgba(0, 0, 0, 0.05); }
 .avatar-placeholder {
@@ -371,6 +476,37 @@ onUnmounted(() => {
 }
 .dropdown-arrow { font-size: 10px; color: #666; transition: transform 0.3s ease; }
 .user-info:hover .dropdown-arrow { transform: rotate(180deg); }
+
+/* 未读通知徽标样式 */
+.notification-badge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  background: #ff4444;
+  border-radius: 10px;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.3);
+  animation: pulse 2s infinite;
+}
+
+.badge-count {
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+/* 呼吸动画效果 */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
 .user-dropdown {
   position: absolute;
   top: 100%;
@@ -380,7 +516,7 @@ onUnmounted(() => {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  min-width: 150px;
+  min-width: 180px;
   z-index: 1001;
   animation: dropdownFadeIn 0.2s ease;
 }
@@ -394,8 +530,24 @@ onUnmounted(() => {
   transition: background 0.3s ease;
   color: #2c3e50;
   font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .dropdown-item:hover { background: #f8f9fa; }
+
+/* 下拉菜单中的徽标 */
+.dropdown-badge {
+  background: #ff4444;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+}
+
 .dropdown-divider { height: 1px; background: #e0e0e0; margin: 4px 0;}
 .logout-item { color: #e74c3c;}
 .logout-item:hover { background: #fee; }
@@ -406,5 +558,16 @@ onUnmounted(() => {
   .auth-buttons { gap: 8px;}
   .login-btn, .register-btn { padding: 6px 16px; font-size: 13px; }
   .username { max-width: 80px;}
+  
+  /* 移动端徽标调整 */
+  .notification-badge {
+    min-width: 18px;
+    height: 18px;
+    border-width: 1.5px;
+  }
+  .badge-count {
+    font-size: 10px;
+    padding: 0 3px;
+  }
 }
 </style>

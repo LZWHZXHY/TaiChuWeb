@@ -152,36 +152,29 @@ namespace THCY_BE.Controllers
             }
         }
 
-       
-        
-
-        // 原有的健康检查接口保持不变
-        [HttpGet("health")]
-        public async Task<IActionResult> HealthCheck()
+        [Authorize]
+        [HttpGet("user/id")]
+        public ActionResult GetUserId()
         {
             try
             {
-                var canConnect = await _context.Database.CanConnectAsync();
-                var userCount = await _context.UserAccounts.CountAsync();
-
-                return Ok(new
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if(userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                 {
-                    status = "healthy",
-                    database = canConnect ? "connected" : "disconnected",
-                    totalUsers = userCount,
-                    timestamp = DateTime.Now
-                });
+                    return Unauthorized();
+                }
+                return Ok(new { id = userId });
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 return StatusCode(500, new
                 {
-                    status = "unhealthy",
-                    error = ex.Message,
-                    timestamp = DateTime.Now
+                    error = "无法解析用户的ID",
+                     message = ex.Message
                 });
             }
         }
+     
 
         [HttpGet("users/count")]
         public async Task<ActionResult<object>> GetUserCount()
