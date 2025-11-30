@@ -16,54 +16,162 @@ namespace THCY_BE.Controller
         private readonly ILogger<FeedBackController> _logger;
         private readonly FeedBackDbContext _context;
 
+        private const string BASE_PHYSICAL_PATH = "/www/wwwroot/bianyuzhou.com/uploads";
+        private const string BASE_WEB_PATH = "/uploads";
+        private const string BASE_URL = "https://bianyuzhou.com"; // 生产环境URL
+
         public FeedBackController(ILogger<FeedBackController> logger, FeedBackDbContext context)
         {
             _logger = logger;
             _context = context;
         }
 
+        // 🔥 添加 LocalUploadResult 类的定义
+        private class LocalUploadResult
+        {
+            public bool Success { get; set; }
+            public string? ErrorMessage { get; set; }
+            public string? FileName { get; set; }
+            public string? FilePath { get; set; }
+            public long FileSize { get; set; }
+            public string? PhysicalPath { get; set; }
+        }
+
         /// <summary>
-        /// 创建反馈
+        /// 验证图片文件
         /// </summary>
-        [HttpPost("create")]
-        public async Task<ActionResult<ApiResponse<object>>> CreateFeedback([FromForm] FeedBackDto dto)
+        private bool ValidateImageFile(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return false;
+
+            // 检查文件大小（5MB限制）
+            if (file.Length > 5 * 1024 * 1024)
+                return false;
+
+            // 检查文件类型
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+            return allowedExtensions.Contains(fileExtension);
+        }
+
+        /// <summary>
+        /// 🔥 修复：将 BuildImageUrl 改为静态方法
+        /// </summary>
+        private static string BuildImageUrl(string relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath))
+                return null;
+
+            return $"{BASE_URL.TrimEnd('/')}/{BASE_WEB_PATH.TrimStart('/')}/{relativePath.TrimStart('/')}"
+                .Replace("https:/", "https://")
+                .Replace("http:/", "http://")
+                .Replace("\\", "/")
+                .Replace("//", "/");
+        }
+
+        /// <summary>
+        /// 上传反馈图片
+        /// </summary>
+        private async Task<LocalUploadResult> UploadFeedbackImageAsync(IFormFile file, int userId)
         {
             try
             {
-                // 基本验证
-                if (!ModelState.IsValid)
+                if (!ValidateImageFile(file))
                 {
-                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
-                    return BadRequest(new ApiResponse<object>
-                    {
-                        Success = false,
-                        Message = string.Join("; ", errors)
-                    });
+                    return new LocalUploadResult { Success = false, ErrorMessage = "文件格式不支持或文件过大" };
                 }
 
-                // 获取当前用户
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+                // 生成文件名：feedback_{用户ID}_{时间戳}_{随机数}
+                var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+                var random = new Random().Next(1000, 9999);
+                var fileName = $"feedback_{userId}_{timestamp}_{random}{fileExtension}";
+
+                var userFolder = userId.ToString();
+
+                // 构建路径（保持原有路径不变）
+                var physicalPath = Path.Combine(BASE_PHYSICAL_PATH, "反馈板块", "意见箱", userFolder, fileName);
+                var relativePath = Path.Combine("反馈板块", "意见箱", userFolder, fileName).Replace("\\", "/");
+
+                // 确保目录存在
+                var directory = Path.GetDirectoryName(physicalPath);
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                    _logger.LogInformation("创建目录: {Directory}", directory);
+                }
+
+                // 保存文件
+                using var stream = new FileStream(physicalPath, FileMode.Create);
+                await file.CopyToAsync(stream);
+
+                _logger.LogInformation("✅ 反馈图片保存成功: {FileName}", fileName);
+
+                return new LocalUploadResult
+                {
+                    Success = true,
+                    FileName = fileName,
+                    FilePath = relativePath, // 返回相对路径
+                    FileSize = file.Length,
+                    PhysicalPath = physicalPath
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ 反馈图片上传失败");
+                return new LocalUploadResult { Success = false, ErrorMessage = ex.Message };
+            }
+        }
+
+        // 修改创建反馈方法，存储相对路径
+        [HttpPost("create")]
+        public async Task<ActionResult> CreateFeedback([FromForm] FeedBackDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { success = false, message = "数据验证失败" });
+                }
+
                 var userId = GetCurrentUserId();
                 if (userId == null) return Unauthorized();
 
-                // 处理图片上传
-                string? imageUrl = null;
-                if (dto.ErrorImage != null)
+                // 处理QQ号码转换
+                int? contactQQ = null;
+                if (!string.IsNullOrEmpty(dto.ContactQQ))
                 {
-                    var uploadResult = await HandleImageUpload(dto.ErrorImage);
-                    if (!uploadResult.Success)
-                    {
-                        return BadRequest(new ApiResponse<object> { Success = false, Message = uploadResult.Message });
-                    }
-                    imageUrl = uploadResult.ImageUrl;
+                    if (int.TryParse(dto.ContactQQ, out int qq) && qq >= 10000 && qq <= 999999999999999)
+                        contactQQ = qq;
+                    else
+                        return BadRequest(new { success = false, message = "QQ号码格式不正确" });
                 }
 
-                // 创建反馈记录
+                // 处理图片上传
+                string imageRelativePath = null; // 存储相对路径
+                string imageFullUrl = null; // 完整URL用于返回给前端
+                if (dto.ErrorImage != null && dto.ErrorImage.Length > 0)
+                {
+                    var uploadResult = await UploadFeedbackImageAsync(dto.ErrorImage, userId.Value);
+                    if (!uploadResult.Success)
+                        return BadRequest(new { success = false, message = uploadResult.ErrorMessage });
+
+                    imageRelativePath = uploadResult.FilePath; // 存储相对路径到数据库
+                    imageFullUrl = BuildImageUrl(uploadResult.FilePath); // 构建完整URL给前端
+                }
+
+                // 创建反馈
                 var feedback = new Feedback
                 {
                     title = dto.Title.Trim(),
                     content = dto.Content.Trim(),
                     type = dto.Type,
-                    status = 0, // 待处理
+                    contactQQ = contactQQ,
+                    imagesUrl = imageRelativePath, // 存储相对路径
+                    status = 0,
                     createTime = DateTime.Now
                 };
 
@@ -72,71 +180,79 @@ namespace THCY_BE.Controller
 
                 _logger.LogInformation("用户 {UserId} 创建反馈成功: {FeedbackId}", userId, feedback.id);
 
-                return Ok(new ApiResponse<object>
+                return Ok(new
                 {
-                    Success = true,
-                    Message = GetSuccessMessage(dto.Type),
-                    Data = new { FeedbackId = feedback.id, CreateTime = feedback.createTime, ImageUrl = imageUrl }
+                    success = true,
+                    message = GetSuccessMessage(dto.Type),
+                    data = new
+                    {
+                        id = feedback.id,
+                        title = feedback.title,
+                        type = feedback.type,
+                        createTime = feedback.createTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                        hasImage = !string.IsNullOrEmpty(imageRelativePath),
+                        imageUrl = imageFullUrl // 返回完整URL给前端
+                    }
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "创建反馈失败");
-                return StatusCode(500, new ApiResponse<object> { Success = false, Message = "创建反馈失败" });
+                return StatusCode(500, new { success = false, message = "创建反馈失败" });
             }
         }
 
-        /// <summary>
-        /// 获取反馈列表
-        /// </summary>
         [HttpGet("list")]
-        public async Task<ActionResult<ApiResponse<PagedResult<FeedBackItemDto>>>> GetFeedbacks(
+        [Authorize]
+        public async Task<ActionResult> GetFeedbacks(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,
-            [FromQuery] int? type = null,
-            [FromQuery] int? status = null)
+            [FromQuery] int? type = null)
         {
             try
             {
                 var query = _context.FeedBacks.AsQueryable();
 
-                // 筛选
-                if (type.HasValue) query = query.Where(x => x.type == type);
-                if (status.HasValue) query = query.Where(x => x.status == status);
+                if (type.HasValue)
+                    query = query.Where(x => x.type == type);
 
-                // 分页
                 var totalCount = await query.CountAsync();
                 var items = await query
                     .OrderByDescending(x => x.createTime)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
-                    .Select(x => new FeedBackItemDto
+                    .Select(x => new
                     {
-                        Id = x.id,
-                        Title = x.title,
-                        Content = x.content,
-                        Type = x.type,
-                        Status = x.status,
-                        CreateTime = x.createTime
+                        x.id,
+                        x.title,
+                        x.content,
+                        x.type,
+                        x.status,
+                        x.createTime,
+                        x.contactQQ,
+                        imagesUrl = x.imagesUrl, // 数据库中的相对路径
+                        // 🔥 修复：使用静态方法调用
+                        imageFullUrl = !string.IsNullOrEmpty(x.imagesUrl) ? BuildImageUrl(x.imagesUrl) : null
                     })
                     .ToListAsync();
 
-                return Ok(new ApiResponse<PagedResult<FeedBackItemDto>>
+                return Ok(new
                 {
-                    Success = true,
-                    Data = new PagedResult<FeedBackItemDto>
+                    success = true,
+                    data = new
                     {
-                        Items = items,
-                        TotalCount = totalCount,
-                        Page = page,
-                        PageSize = pageSize
+                        items,
+                        totalCount,
+                        page,
+                        pageSize,
+                        totalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
                     }
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "获取反馈列表失败");
-                return StatusCode(500, new ApiResponse<PagedResult<FeedBackItemDto>> { Success = false, Message = "获取列表失败" });
+                return StatusCode(500, new { success = false, message = "获取列表失败" });
             }
         }
 
@@ -144,121 +260,63 @@ namespace THCY_BE.Controller
         /// 获取反馈详情
         /// </summary>
         [HttpGet("{id}")]
-        public async Task<ActionResult<ApiResponse<FeedBackItemDto>>> GetFeedback(int id)
+        public async Task<ActionResult> GetFeedback(int id)
         {
             try
             {
                 var feedback = await _context.FeedBacks
                     .Where(x => x.id == id)
-                    .Select(x => new FeedBackItemDto
+                    .Select(x => new
                     {
-                        Id = x.id,
-                        Title = x.title,
-                        Content = x.content,
-                        Type = x.type,
-                        Status = x.status,
-                        CreateTime = x.createTime
+                        x.id,
+                        x.title,
+                        x.content,
+                        x.type,
+                        x.status,
+                        x.createTime,
+                        x.contactQQ,
+                        imagesUrl = x.imagesUrl, // 相对路径
+                        // 🔥 修复：使用静态方法调用
+                        imageFullUrl = !string.IsNullOrEmpty(x.imagesUrl) ? BuildImageUrl(x.imagesUrl) : null
                     })
                     .FirstOrDefaultAsync();
 
                 if (feedback == null)
                 {
-                    return NotFound(new ApiResponse<FeedBackItemDto> { Success = false, Message = "反馈不存在" });
+                    return NotFound(new { success = false, message = "反馈不存在" });
                 }
 
-                return Ok(new ApiResponse<FeedBackItemDto> { Success = true, Data = feedback });
+                return Ok(new
+                {
+                    success = true,
+                    data = feedback
+                });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "获取反馈详情失败: {Id}", id);
-                return StatusCode(500, new ApiResponse<FeedBackItemDto> { Success = false, Message = "获取详情失败" });
+                return StatusCode(500, new { success = false, message = "获取详情失败" });
             }
         }
 
         /// <summary>
-        /// 更新反馈状态（管理员）
+        /// 获取当前用户ID
         /// </summary>
-        [HttpPut("{id}/status")]
-        [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<ApiResponse<object>>> UpdateStatus(int id, [FromBody] UpdateStatusDto dto)
-        {
-            try
-            {
-                var feedback = await _context.FeedBacks.FindAsync(id);
-                if (feedback == null)
-                {
-                    return NotFound(new ApiResponse<object> { Success = false, Message = "反馈不存在" });
-                }
-
-                feedback.status = dto.Status;
-                await _context.SaveChangesAsync();
-
-                return Ok(new ApiResponse<object> { Success = true, Message = "状态更新成功" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "更新反馈状态失败: {Id}", id);
-                return StatusCode(500, new ApiResponse<object> { Success = false, Message = "更新状态失败" });
-            }
-        }
-
-        /// <summary>
-        /// 获取反馈类型选项
-        /// </summary>
-        [HttpGet("types")]
-        [AllowAnonymous]
-        public ActionResult<ApiResponse<object>> GetTypes()
-        {
-            var types = new[]
-            {
-                new { Value = 1, Label = "网站BUG反馈" },
-                new { Value = 2, Label = "社区意见" },
-                new { Value = 3, Label = "内容举报" },
-                new { Value = 4, Label = "其他" }
-            };
-
-            return Ok(new ApiResponse<object> { Success = true, Data = types });
-        }
-
-        // 辅助方法
         private int? GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             return claim != null && int.TryParse(claim.Value, out var userId) ? userId : null;
         }
 
-        private async Task<(bool Success, string Message, string? ImageUrl)> HandleImageUpload(IFormFile image)
-        {
-            try
-            {
-                // 简单的图片上传逻辑
-                if (image.Length > 10 * 1024 * 1024) // 10MB
-                    return (false, "图片不能超过10MB", null);
-
-                var allowedTypes = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-                var extension = Path.GetExtension(image.FileName).ToLower();
-                if (!allowedTypes.Contains(extension))
-                    return (false, "只支持jpg、png、gif格式", null);
-
-                // 这里可以添加实际的文件保存逻辑
-                var fileName = $"{Guid.NewGuid()}{extension}";
-                var imageUrl = $"/uploads/feedback/{fileName}";
-
-                return (true, "上传成功", imageUrl);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "图片上传失败");
-                return (false, "图片上传失败", null);
-            }
-        }
-
+        /// <summary>
+        /// 根据反馈类型返回成功消息
+        /// </summary>
         private string GetSuccessMessage(int type) => type switch
         {
             1 => "BUG反馈提交成功，我们会尽快处理",
             2 => "感谢您的宝贵建议",
             3 => "举报已收到，我们会尽快核实",
-            4 => "反馈提交成功，感谢您的支持",
+            4 => "反馈提交成功，感谢您对太初寰宇社区做出的贡献",
             _ => "反馈提交成功"
         };
     }

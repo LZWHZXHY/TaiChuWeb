@@ -5,7 +5,7 @@ using THCY_BE.Models.UserDate;
 namespace THCY_BE.Models.Friends
 {
     [Table("friends")]
-    public class Friends
+    public class Friend
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // 确保Id自增
@@ -29,6 +29,6 @@ namespace THCY_BE.Models.Friends
         public virtual UserData User { get; set; }
 
         [ForeignKey("FriendId")]
-        public virtual UserData Friend { get; set; }
+        public virtual UserData friend { get; set; }
     }
 }

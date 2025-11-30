@@ -8,6 +8,8 @@
         @user-action="handleUserAction"
       />
 
+      <MobileWarning />
+
       <main class="main-content">
         <router-view />
       </main>
@@ -26,6 +28,8 @@
 import { ref } from 'vue'
 import HeaderNav from './layouts/HeaderNav.vue'
 import { NAV_ITEMS } from './constants/navigation.js'
+import MobileWarning from './views/MobileWarning.vue'
+
 
 const navItems = ref(NAV_ITEMS)
 

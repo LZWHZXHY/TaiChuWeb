@@ -82,7 +82,7 @@ const routes = [
     meta: { 
       requiresAuth: true,
       title: '管理员页面',
-      minRank: 1 // 新增：需要后端校验 rank >= 1
+      minRank: 1 // 需要后端校验 rank >= 1
     }
   },
   {
@@ -91,7 +91,8 @@ const routes = [
     component: () => import('@/feedbackComponents/FeedbackBox.vue'),
     meta: { 
       requiresAuth: true,
-      title: '意见箱'
+      title: '意见箱',
+      minLevel: 3 // 🔥 新增：需要用户等级 >= 3
     }
   },
   {
@@ -169,7 +170,6 @@ const checkAuthStatus = () => {
 const authorizeByRank = async (minRank) => {
   if (!apiClient) throw new Error('apiClient未就绪')
   try {
-    // 假设 apiClient.baseURL 已包含 /api，这里只写资源段
     const resp = await apiClient.get('/Userinfo/authorize', { params: { minRank } })
     const allowed = resp?.data?.allowed === true
     console.log('🔎 Rank 实时校验结果:', { required: minRank, allowed, data: resp?.data })
@@ -185,7 +185,32 @@ const authorizeByRank = async (minRank) => {
       // 没权限
       return false
     }
-    // 其他错误按无权限处理或你也可以放行
+    // 其他错误按无权限处理
+    return false
+  }
+}
+
+// 🔥 新增：每次进入需要 level 的页面，实时向后端校验
+const authorizeByLevel = async (minLevel) => {
+  if (!apiClient) throw new Error('apiClient未就绪')
+  try {
+    const resp = await apiClient.get('/Userinfo/level')
+    const userLevel = resp?.data || 0
+    const allowed = userLevel >= minLevel
+    console.log('🔎 Level 实时校验结果:', { 
+      required: minLevel, 
+      currentLevel: userLevel, 
+      allowed 
+    })
+    return allowed
+  } catch (err) {
+    const status = err?.response?.status
+    console.warn('⚠️ Level 校验失败:', status, err?.response?.data)
+    if (status === 401) {
+      // 未授权（token 失效/未登录）
+      throw new Error('unauthorized')
+    }
+    // 其他错误按无权限处理
     return false
   }
 }
@@ -241,14 +266,40 @@ router.beforeEach(async (to, from, next) => {
       return
     }
 
-    // 如果目标路由声明了最小 Rank，实时向后端校验（每次进入都请求）
+    // 如果目标路由声明了最小 Rank，实时向后端校验
     if (to.meta.minRank != null) {
       try {
         const ok = await authorizeByRank(Number(to.meta.minRank))
         if (!ok) {
-          // 无权限：重定向（你也可以跳到 /forbidden）
           console.warn('⛔ Rank 不足，禁止访问')
           next({ path: '/404', query: { noAccess: 1 } })
+          return
+        }
+      } catch (e) {
+        if (e?.message === 'unauthorized') {
+          // Token 失效或未登录
+          next({ path: '/login', query: { redirect: to.fullPath } })
+          return
+        }
+        // 其他错误：退回首页
+        next({ path: '/', query: { noAccess: 1 } })
+        return
+      }
+    }
+
+    // 🔥 新增：如果目标路由声明了最小 Level，实时向后端校验
+    if (to.meta.minLevel != null) {
+      try {
+        const ok = await authorizeByLevel(Number(to.meta.minLevel))
+        if (!ok) {
+          console.warn('⛔ 等级不足，禁止访问意见箱')
+          next({ 
+            path: '/404', 
+            query: { 
+              noAccess: 1,
+              message: `需要等级 ${to.meta.minLevel} 以上才能使用意见箱` 
+            } 
+          })
           return
         }
       } catch (e) {

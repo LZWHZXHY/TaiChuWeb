@@ -10,7 +10,7 @@
       <section class="fb-panel fb-form">
         <h2 class="fb-h2">提交反馈</h2>
 
-        <form @submit.prevent="onSubmit" novalidate>
+        <form @submit.prevent="onSubmit" novalidate @paste="handlePaste">
           <!-- 分类 -->
           <div class="fb-field">
             <label for="type" class="fb-label required">分类</label>
@@ -21,7 +21,7 @@
               :class="{ invalid: touched.type && !valid.type }"
               @blur="touched.type = true"
             >
-              <option disabled value="">请选择分类</option>
+              <option disabled value="0">请选择分类</option>
               <option v-for="category in categories" :key="category.value" :value="category.value">
                 {{ category.label }}
               </option>
@@ -62,7 +62,6 @@
               class="fb-textarea"
               placeholder="描述问题现象、复现步骤、期望结果等"
               @blur="touched.content = true"
-              @paste="onPaste"
               :class="{ invalid: touched.content && !valid.content }"
             ></textarea>
             <div class="fb-hint-row">
@@ -77,34 +76,34 @@
           <!-- 图片上传 -->
           <div class="fb-field">
             <label class="fb-label">图片 / 截图（可选）</label>
-            <div class="fb-upload-row">
-              <label
-                class="fb-upload-tile"
-                :class="{ disabled: form.images.length >= rules.images.maxCount }"
-              >
-                <input
-                  type="file"
-                  accept="image/*"
-                  :disabled="form.images.length >= rules.images.maxCount"
-                  @change="onFiles"
+            <div class="fb-upload-area">
+              <!-- 上传按钮 -->
+              <label v-if="!imagePreview" class="fb-upload-tile">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  @change="handleImageSelect"
+                  class="fb-file-input"
                 />
                 <span class="fb-upload-plus">+</span>
-                <span class="fb-upload-text">上传</span>
+                <span class="fb-upload-text">点击上传或粘贴图片</span>
+                <span class="fb-upload-hint">支持 JPG、PNG、GIF、WebP，最大 5MB</span>
               </label>
-              <div v-for="(img, i) in form.images" :key="i" class="fb-thumb">
-                
-                <button
-                  type="button"
-                  class="fb-thumb-remove"
-                  @click="removeImage(i)"
-                  aria-label="删除"
-                >×</button>
+              
+              <!-- 图片预览 -->
+              <div v-else class="fb-image-preview">
+                <img :src="imagePreview.previewUrl" :alt="imagePreview.file.name" class="fb-preview-image" />
+                <div class="fb-preview-info">
+                  <span class="fb-file-name">{{ imagePreview.file.name }}</span>
+                  <span class="fb-file-size">{{ (imagePreview.file.size / 1024).toFixed(1) }} KB</span>
+                </div>
+                <button type="button" class="fb-remove-btn" @click="removeImage" title="移除图片">
+                  ×
+                </button>
               </div>
             </div>
-            <p class="fb-hint">
-              最多 {{ rules.images.maxCount }} 张，单张 ≤ {{ (rules.images.maxSize/1024/1024).toFixed(0) }}MB，支持粘贴
-            </p>
-            <p v-if="errors.images" class="fb-error">{{ errors.images }}</p>
+            <p v-if="imageError" class="fb-error">{{ imageError }}</p>
+            <p v-else class="fb-hint">支持粘贴截图，单张图片最大 5MB</p>
           </div>
 
           <!-- 联系方式 -->
@@ -128,7 +127,7 @@
           <div class="fb-actions">
             <button type="submit" class="fb-btn primary" :disabled="!formValid || loading">
               <span v-if="loading" class="fb-spinner" aria-hidden="true"></span>
-              提交
+              提交反馈
             </button>
             <button type="button" class="fb-btn" @click="onReset" :disabled="loading">清空</button>
           </div>
@@ -138,86 +137,123 @@
         </form>
       </section>
 
-      <!-- 列表 -->
+      <!-- 已提交意见列表 -->
       <section class="fb-panel fb-list">
-        <div class="fb-list-head">
-          <h2 class="fb-h2">反馈列表</h2>
-          <div class="fb-filters">
-            <div class="fb-tabs" role="tablist" aria-label="状态筛选">
-              <button
-                v-for="status in statuses"
-                :key="status.value"
+        <div class="fb-list-header">
+          <h2 class="fb-h2">已提交的意见</h2>
+          <div class="fb-list-controls">
+            <div class="fb-tabs">
+              <button 
+                v-for="tab in tabs" 
+                :key="tab.value"
                 class="fb-tab"
-                :class="{ active: filter.status === status.value }"
-                @click="filter.status = status.value; filter.page = 1"
-                role="tab"
+                :class="{ active: activeTab === tab.value }"
+                @click="changeTab(tab.value)"
               >
-                {{ status.label }}
+                {{ tab.label }}
               </button>
             </div>
-            <input
-              type="search"
-              v-model.trim="filter.q"
-              class="fb-input fb-search"
-              placeholder="搜索"
-              @input="filter.page = 1"
-              aria-label="搜索反馈"
-            />
+            <button class="fb-btn small" @click="loadFeedbacks" :disabled="loadingList">
+              <span v-if="loadingList" class="fb-spinner" aria-hidden="true"></span>
+              刷新
+            </button>
           </div>
         </div>
 
-        <div v-if="loadingList" class="fb-empty">加载中...</div>
-        <div v-else-if="pagedItems.length === 0" class="fb-empty">暂无反馈</div>
+        <!-- 加载状态 -->
+        <div v-if="loadingList" class="fb-loading">
+          <div class="fb-spinner large"></div>
+          <span>加载中...</span>
+        </div>
 
-        <ul v-else class="fb-items">
-          <li v-for="item in pagedItems" :key="item.id" class="fb-item">
-            <div class="fb-item-row1">
-              <h3 class="fb-item-title">{{ item.title }}</h3>
-              <span class="fb-status">
-                <span class="fb-dot" :data-status="getStatusText(item.status)"></span>
-                {{ getStatusText(item.status) }}
+        <!-- 空状态 -->
+        <div v-else-if="feedbacks.length === 0" class="fb-empty">
+          <div class="fb-empty-icon">📝</div>
+          <p class="fb-empty-text">暂无提交的意见</p>
+          <p class="fb-empty-hint">提交第一条反馈后，将在这里显示</p>
+        </div>
+
+        <!-- 意见列表 -->
+        <div v-else class="fb-feedbacks">
+          <div 
+            v-for="feedback in feedbacks" 
+            :key="feedback.id" 
+            class="fb-feedback-item"
+            :class="getStatusClass(feedback.status)"
+          >
+            <div class="fb-feedback-header">
+              <h3 class="fb-feedback-title">{{ feedback.title }}</h3>
+              <span class="fb-feedback-badge" :class="getTypeClass(feedback.type)">
+                {{ getTypeLabel(feedback.type) }}
               </span>
             </div>
-            <div class="fb-item-meta">
-              <span>{{ getTypeText(item.type) }}</span>
-              <span class="sep">·</span>
-              <time>{{ formatDate(item.createTime) }}</time>
-              <template v-if="item.imagesURL">
-                <span class="sep">·</span>
-                <span>有图片</span>
-              </template>
+            
+            <div class="fb-feedback-meta">
+              <span class="fb-feedback-time">{{ formatDate(feedback.createTime) }}</span>
+              <span class="fb-feedback-status" :class="getStatusClass(feedback.status)">
+                {{ getStatusLabel(feedback.status) }}
+              </span>
             </div>
-            <p class="fb-item-content">{{ snippet(item.content) }}</p>
-            <div v-if="item.imagesURL" class="fb-mini-row">
-              
-            </div>
-          </li>
-        </ul>
 
-        <div v-if="totalPages > 1" class="fb-pager">
-          <button class="fb-btn small" :disabled="filter.page === 1" @click="filter.page--">上一页</button>
-          <span class="fb-hint">第 {{ filter.page }} / {{ totalPages }} 页</span>
-          <button class="fb-btn small" :disabled="filter.page === totalPages" @click="filter.page++">下一页</button>
+            <p class="fb-feedback-content">{{ truncateContent(feedback.content) }}</p>
+
+            <div v-if="feedback.imageFullUrl" class="fb-feedback-image">
+              <img 
+                :src="feedback.imageFullUrl" 
+                :alt="feedback.title" 
+                class="fb-feedback-thumb"
+                @click="previewImage(feedback.imageFullUrl)"
+              />
+              <span class="fb-image-hint">点击查看图片</span>
+            </div>
+
+            <div class="fb-feedback-footer">
+              <span class="fb-feedback-id">ID: {{ feedback.id }}</span>
+              <button 
+                v-if="feedback.contactQQ" 
+                class="fb-qq-btn"
+                @click="copyQQ(feedback.contactQQ)"
+                title="复制QQ号"
+              >
+                QQ: {{ feedback.contactQQ }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分页 -->
+        <div v-if="totalPages > 1" class="fb-pagination">
+          <button 
+            class="fb-btn small" 
+            :disabled="currentPage === 1" 
+            @click="changePage(currentPage - 1)"
+          >
+            上一页
+          </button>
+          <span class="fb-page-info">第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
+          <button 
+            class="fb-btn small" 
+            :disabled="currentPage === totalPages" 
+            @click="changePage(currentPage + 1)"
+          >
+            下一页
+          </button>
         </div>
       </section>
     </main>
 
-    <!-- 图片预览 -->
-    <div
-      v-if="previewUrl"
-      class="fb-preview"
-      @click="previewUrl = ''"
-      role="dialog"
-      aria-modal="true"
-    >
-      
-      <button class="fb-close" @click="previewUrl = ''" aria-label="关闭预览">×</button>
+    <!-- 图片预览模态框 -->
+    <div v-if="previewImageUrl" class="fb-image-modal" @click="previewImageUrl = null">
+      <div class="fb-modal-content" @click.stop>
+        <img :src="previewImageUrl" alt="预览图片" class="fb-modal-image" />
+        <button class="fb-modal-close" @click="previewImageUrl = null" title="关闭">×</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, watch, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import apiClient from '../utils/api'
 
 interface FeedbackForm {
@@ -225,57 +261,71 @@ interface FeedbackForm {
   title: string
   content: string
   ContactQQ?: string
-  images: Array<{ file: File; preview: string }>
+  ErrorImage?: File | null
+}
+
+interface ImagePreview {
+  file: File
+  previewUrl: string
 }
 
 interface FeedbackItem {
   id: number
-  type: number
   title: string
   content: string
+  type: number
   status: number
   createTime: string
-  imagesURL?: string
-}
-
-interface Category {
-  value: number
-  label: string
-  description: string
-}
-
-interface Status {
-  value: number
-  label: string
+  contactQQ?: number
+  imagesUrl?: string
+  imageFullUrl?: string
 }
 
 const rules = {
   title: { min: 2, max: 50 },
   content: { min: 10, max: 1000 },
-  images: { maxCount: 1, maxSize: 10 * 1024 * 1024 } // 单张图片限制
+  images: { maxCount: 1, maxSize: 5 * 1024 * 1024 }
 }
 
-const categories: Category[] = [
+const categories = [
   { value: 1, label: '网站BUG反馈', description: '报告网站功能异常、错误等问题' },
   { value: 2, label: '社区意见', description: '对社区功能、体验的建议' },
   { value: 3, label: '内容举报', description: '举报违规、不良内容' },
   { value: 4, label: '其他', description: '其他类型的反馈' }
 ]
 
-const statuses: Status[] = [
+const tabs = [
+  { value: -1, label: '全部' },
   { value: 0, label: '待处理' },
   { value: 1, label: '处理中' },
-  { value: 2, label: '已解决' },
-  { value: 3, label: '已关闭' }
+  { value: 2, label: '已解决' }
 ]
+
+const statusLabels = {
+  0: '待处理',
+  1: '处理中', 
+  2: '已解决',
+  3: '已关闭'
+}
 
 const form = reactive<FeedbackForm>({
   type: 0,
   title: '',
   content: '',
   ContactQQ: '',
-  images: []
+  ErrorImage: null
 })
+
+const feedbacks = ref<FeedbackItem[]>([])
+const currentPage = ref(1)
+const pageSize = ref(10)
+const totalPages = ref(0)
+const activeTab = ref(-1)
+const loadingList = ref(false)
+const previewImageUrl = ref('')
+
+const imagePreview = ref<ImagePreview | null>(null)
+const imageError = ref('')
 
 const touched = reactive({
   type: false,
@@ -284,19 +334,8 @@ const touched = reactive({
   ContactQQ: false
 })
 
-const errors = reactive({ images: '' })
 const loading = ref(false)
-const loadingList = ref(false)
 const message = reactive({ text: '', type: '' as 'success' | 'error' | '' })
-const previewUrl = ref('')
-
-const items = ref<FeedbackItem[]>([])
-const filter = reactive({
-  status: -1, // -1 表示全部
-  q: '',
-  page: 1,
-  pageSize: 6
-})
 
 // 验证规则
 const valid = reactive({
@@ -306,31 +345,117 @@ const valid = reactive({
   ContactQQ: computed(() => {
     if (!form.ContactQQ) return true
     return /^[1-9][0-9]{4,14}$/.test(form.ContactQQ)
+  }),
+  image: computed(() => {
+    if (!form.ErrorImage) return true
+    return form.ErrorImage.size <= rules.images.maxSize
   })
 })
 
-const formValid = computed(() => valid.type && valid.title && valid.content && valid.ContactQQ)
-
-// 过滤和分页
-const filtered = computed(() => {
-  const q = filter.q.trim().toLowerCase()
-  return items.value
-    .filter(it => filter.status === -1 ? true : it.status === filter.status)
-    .filter(it => q ? (it.title + it.content).toLowerCase().includes(q) : true)
-    .sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime())
-})
-
-const totalPages = computed(() => Math.max(1, Math.ceil(filtered.value.length / filter.pageSize)))
-const pagedItems = computed(() => {
-  const start = (filter.page - 1) * filter.pageSize
-  return filtered.value.slice(start, start + filter.pageSize)
-})
-
-watch([() => filter.status, () => filter.q], () => {
-  filter.page = 1
-})
+const formValid = computed(() => valid.type && valid.title && valid.content && valid.ContactQQ && valid.image)
 
 // 工具函数
+function getTypeLabel(type: number): string {
+  const category = categories.find(c => c.value === type)
+  return category ? category.label : '未知类型'
+}
+
+function getStatusLabel(status: number): string {
+  return statusLabels[status as keyof typeof statusLabels] || '未知状态'
+}
+
+function getTypeClass(type: number): string {
+  return `type-${type}`
+}
+
+function getStatusClass(status: number): string {
+  return `status-${status}`
+}
+
+function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+function truncateContent(content: string, maxLength: number = 100): string {
+  if (content.length <= maxLength) return content
+  return content.substring(0, maxLength) + '...'
+}
+
+function changeTab(tab: number) {
+  activeTab.value = tab
+  currentPage.value = 1
+  loadFeedbacks()
+}
+
+function changePage(page: number) {
+  currentPage.value = page
+  loadFeedbacks()
+}
+
+function previewImage(url: string) {
+  previewImageUrl.value = url
+}
+
+async function copyQQ(qq: number) {
+  try {
+    await navigator.clipboard.writeText(qq.toString())
+    setMessage('QQ号已复制到剪贴板', 'success', 1500)
+  } catch (err) {
+    console.error('复制失败:', err)
+  }
+}
+
+// 加载反馈列表
+async function loadFeedbacks() {
+  loadingList.value = true
+  try {
+    const params = new URLSearchParams({
+      page: currentPage.value.toString(),
+      pageSize: pageSize.value.toString()
+    })
+    
+    if (activeTab.value !== -1) {
+      params.append('status', activeTab.value.toString())
+    }
+
+    const response = await apiClient.get(`/FeedBack/list?${params}`)
+    
+    if (response.data && response.data.success) {
+      feedbacks.value = response.data.data.items || []
+      totalPages.value = response.data.data.totalPages || 1
+    } else {
+      setMessage('加载反馈列表失败', 'error')
+      feedbacks.value = []
+    }
+  } catch (error: any) {
+    console.error('加载反馈列表失败:', error)
+    setMessage('加载失败，请重试', 'error')
+    feedbacks.value = []
+  } finally {
+    loadingList.value = false
+  }
+}
+
+// 表单相关函数
+function onReset() {
+  form.type = 0
+  form.title = ''
+  form.content = ''
+  form.ContactQQ = ''
+  form.ErrorImage = null
+  imagePreview.value = null
+  imageError.value = ''
+  Object.keys(touched).forEach(key => (touched as any)[key] = false)
+  message.text = ''
+}
+
 function setMessage(text: string, type: 'success' | 'error', timeout = 2500) {
   message.text = text
   message.type = type
@@ -341,145 +466,73 @@ function setMessage(text: string, type: 'success' | 'error', timeout = 2500) {
   }
 }
 
-function onReset() {
-  form.type = 0
-  form.title = ''
-  form.content = ''
-  form.ContactQQ = ''
-  form.images = []
-  Object.keys(touched).forEach(key => (touched as any)[key] = false)
-  errors.images = ''
-}
-
-function snippet(text: string, max = 140) {
-  return text.length > max ? text.slice(0, max) + '…' : text
-}
-
-function formatDate(iso: string) {
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
-
-function preview(url: string) {
-  previewUrl.value = url
-}
-
-function getTypeText(type: number): string {
-  const category = categories.find(c => c.value === type)
-  return category ? category.label : '未知类型'
-}
-
-function getStatusText(status: number): string {
-  const statusObj = statuses.find(s => s.value === status)
-  return statusObj ? statusObj.label : '未知状态'
-}
-
-function getFullImageUrl(localUrl: string): string {
-  if (!localUrl) return ''
-  return `/uploads/${localUrl}`
-}
-
-// 图片处理
-async function dataURLFromFile(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result))
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
-async function handleFiles(files: FileList | File[]) {
-  errors.images = ''
-  const arr = Array.from(files)
-  if (!arr.length) return
+function handleImageSelect(event: Event) {
+  const input = event.target as HTMLInputElement
+  if (!input.files || input.files.length === 0) return
   
-  const available = rules.images.maxCount - form.images.length
-  for (const file of arr.slice(0, available)) {
-    if (!file.type.startsWith('image/')) {
-      errors.images = '仅支持图片文件'
-      continue
-    }
-    if (file.size > rules.images.maxSize) {
-      errors.images = `图片大小不能超过${(rules.images.maxSize / 1024 / 1024).toFixed(0)}MB`
-      continue
-    }
-    
-    const preview = await dataURLFromFile(file)
-    form.images.push({ file, preview })
+  const file = input.files[0]
+  imageError.value = ''
+  
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    imageError.value = '只支持 JPG、PNG、GIF、WebP 格式的图片'
+    input.value = ''
+    return
   }
   
-  if (arr.length > available) {
-    setMessage(`最多上传${rules.images.maxCount}张图片，多余图片已忽略`, 'error')
+  if (file.size > rules.images.maxSize) {
+    imageError.value = `图片大小不能超过 ${(rules.images.maxSize / 1024 / 1024).toFixed(0)}MB`
+    input.value = ''
+    return
   }
-}
-
-function onFiles(e: Event) {
-  const input = e.target as HTMLInputElement
-  if (!input.files) return
-  handleFiles(input.files)
+  
+  form.ErrorImage = file
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    imagePreview.value = {
+      file: file,
+      previewUrl: e.target?.result as string
+    }
+  }
+  reader.readAsDataURL(file)
+  
   input.value = ''
 }
 
-function removeImage(index: number) {
-  form.images.splice(index, 1)
+function removeImage() {
+  form.ErrorImage = null
+  imagePreview.value = null
+  imageError.value = ''
 }
 
-async function onPaste(e: ClipboardEvent) {
-  const items = e.clipboardData?.items
+function handlePaste(event: ClipboardEvent) {
+  const items = event.clipboardData?.items
   if (!items) return
   
-  const files: File[] = []
-  for (const item of items as any) {
-    if (item.kind === 'file') {
-      const file = item.getAsFile()
-      if (file) files.push(file)
-    }
-  }
+  const itemsArray = Array.from(items)
   
-  if (files.length) {
-    e.preventDefault()
-    await handleFiles(files)
-  }
-}
-
-// API 调用
-async function loadFeedbacks() {
-  try {
-    loadingList.value = true
-    console.log('开始加载反馈列表...')
-    
-    const response = await apiClient.get('/feedback/list')
-    console.log('API响应:', response.data)
-    
-    if (response.data && response.data.success) {
-      // 修复：从 response.data.data.items 获取数据
-      const apiData = response.data.data
-      if (apiData && apiData.items) {
-        items.value = apiData.items
-        console.log('成功加载数据:', items.value.length, '条')
-      } else {
-        console.log('数据结构异常:', apiData)
-        items.value = []
+  for (const item of itemsArray) {
+    if (item.kind === 'file' && item.type.startsWith('image/')) {
+      const file = item.getAsFile()
+      if (file) {
+        const dataTransfer = new DataTransfer()
+        dataTransfer.items.add(file)
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.files = dataTransfer.files
+        
+        const changeEvent = new Event('change', { bubbles: true })
+        Object.defineProperty(changeEvent, 'target', { value: input })
+        
+        handleImageSelect(changeEvent as unknown as Event)
+        break
       }
-    } else {
-      console.log('API返回失败:', response.data?.message)
-      setMessage('加载反馈列表失败: ' + (response.data?.message || '未知错误'), 'error')
-      items.value = [] // 确保清空数据
     }
-  } catch (error: any) {
-    console.error('加载反馈列表失败:', error)
-    const errorMessage = error.response?.data?.message || error.message
-    setMessage('加载反馈列表失败: ' + errorMessage, 'error')
-    items.value = [] // 出错时清空数据
-  } finally {
-    loadingList.value = false
   }
 }
 
 async function onSubmit() {
-  // 标记所有字段为已触摸
   Object.keys(touched).forEach(key => (touched as any)[key] = true)
   
   if (!formValid.value) {
@@ -499,9 +552,8 @@ async function onSubmit() {
       formData.append('ContactQQ', form.ContactQQ)
     }
     
-    // 添加图片文件（如果有）
-    if (form.images.length > 0) {
-      formData.append('ErrorImage', form.images[0].file)
+    if (form.ErrorImage) {
+      formData.append('ErrorImage', form.ErrorImage)
     }
     
     const response = await apiClient.post('/FeedBack/create', formData, {
@@ -511,9 +563,10 @@ async function onSubmit() {
     })
     
     if (response.data && response.data.success) {
-      setMessage('反馈提交成功！感谢您的反馈', 'success')
+      setMessage(response.data.message || '提交成功', 'success')
       onReset()
-      await loadFeedbacks() // 重新加载列表
+      // 提交成功后重新加载列表
+      await loadFeedbacks()
     } else {
       setMessage(response.data?.message || '提交失败', 'error')
     }
@@ -526,14 +579,13 @@ async function onSubmit() {
   }
 }
 
-// 初始化
+// 初始化加载
 onMounted(() => {
   loadFeedbacks()
 })
 </script>
 
 <style scoped>
-/* 基础变量 */
 .fb-root {
   --font-stack: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --bg: #f9fafb;
@@ -547,70 +599,101 @@ onMounted(() => {
   --accent-bg: #eff6ff;
   --danger: #dc2626;
   --success: #059669;
+  --warning: #d97706;
+  --info: #0369a1;
   --radius-sm: 4px;
   --radius: 8px;
+  --radius-lg: 12px;
   --focus: 2px solid var(--accent);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   font-family: var(--font-stack);
   color: var(--fg);
   background: transparent;
-  /* 为独立使用时防止紧贴屏幕边缘，可按需删除或调整 */
   padding: 25px;
+  min-height: 100vh;
 }
 
-/* 页头 */
-.fb-header { margin-bottom: 28px; }
+/* 头部样式 */
+.fb-header { 
+  margin-bottom: 28px; 
+  text-align: center;
+}
 .fb-h1 {
   margin: 0 0 6px;
   font-size: 26px;
   letter-spacing: .5px;
   font-weight: 600;
+  color: var(--fg);
+  line-height: 1.2;
 }
 .fb-sub {
   margin: 0;
   font-size: 14px;
   color: var(--mute);
+  line-height: 1.5;
 }
 
-/* 布局 */
+/* 布局样式 */
 .fb-layout {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1fr;
   gap: 28px;
   align-items: start;
-}
-@media (max-width: 980px) {
-  .fb-layout { grid-template-columns: 1fr; }
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-/* Panel */
+/* 面板样式 */
 .fb-panel {
   background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 24px 24px 28px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.3s ease;
 }
-.fb-form, .fb-list { display: flex; flex-direction: column; gap: 18px; }
+.fb-panel:hover {
+  box-shadow: var(--shadow);
+}
+
+/* 表单样式 */
+.fb-form { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 18px; 
+}
 .fb-h2 {
   margin: 0 0 8px;
   font-size: 18px;
   font-weight: 600;
   letter-spacing: .3px;
+  color: var(--fg);
+  line-height: 1.3;
 }
 
-/* 表单元素 */
-.fb-field { display: flex; flex-direction: column; gap: 6px; }
+/* 表单字段样式 */
+.fb-field { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 6px; 
+}
 .fb-label {
   font-size: 13px;
   font-weight: 500;
   color: var(--fg-soft);
   display: inline-flex;
   gap: 4px;
+  line-height: 1.4;
 }
 .fb-label.required::after {
   content:"*";
   color: var(--danger);
   font-weight: 400;
 }
+
+/* 输入框样式 */
 .fb-input, .fb-select, .fb-textarea {
   width: 100%;
   font: inherit;
@@ -620,105 +703,176 @@ onMounted(() => {
   background: #fff;
   color: var(--fg);
   line-height: 1.4;
-  transition: border-color .15s, background-color .15s;
+  transition: all 0.3s ease;
+  font-size: 14px;
 }
 .fb-input:focus, .fb-select:focus, .fb-textarea:focus {
   outline: var(--focus);
   outline-offset: 0;
   background: var(--accent-bg);
   border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
-.invalid { border-color: var(--danger) !important; }
-.fb-textarea { resize: vertical; min-height: 148px; }
+.invalid { 
+  border-color: var(--danger) !important; 
+  background: #fef2f2 !important;
+}
+.fb-textarea { 
+  resize: vertical; 
+  min-height: 148px; 
+  line-height: 1.6;
+}
 
+/* 提示信息样式 */
 .fb-hint-row {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center;
 }
 .fb-hint, .fb-count {
   font-size: 12px;
   color: var(--mute);
+  line-height: 1.4;
 }
 .fb-error {
   font-size: 12px;
   color: var(--danger);
   margin: 0;
+  line-height: 1.4;
 }
 
-.fb-grid-2 {
-  display: grid;
-  gap: 18px;
-  grid-template-columns: 1fr 160px;
-}
-@media (max-width: 640px) {
-  .fb-grid-2 { grid-template-columns: 1fr; }
-}
-
-.fb-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding-left: 20px;
-  font-size: 13px;
-  color: var(--fg-soft);
+/* 图片上传区域样式 */
+.fb-upload-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  background: var(--accent-bg);
+  transition: all 0.3s ease;
   cursor: pointer;
-  user-select: none;
+  position: relative;
+}
+.fb-upload-area:hover {
+  border-color: var(--accent);
+  background: #dbeafe;
 }
 
-.fb-check input {
-  width: 16px; height: 16px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  accent-color: var(--accent);
-}
-
-/* 上传区 */
-.fb-upload-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
 .fb-upload-tile {
-  width: 96px; height: 72px;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-sm);
-  background: #fff;
-  color: var(--mute);
-  font-size: 12px;
-  display: flex; flex-direction: column;
-  justify-content: center; align-items: center;
-  gap: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   cursor: pointer;
+  padding: 20px;
+  text-align: center;
+  color: var(--mute);
+  transition: all 0.3s ease;
+}
+.fb-upload-tile:hover {
+  color: var(--accent);
+  transform: scale(1.02);
+}
+
+.fb-file-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.fb-upload-plus {
+  font-size: 32px;
+  line-height: 1;
+  font-weight: 300;
+  transition: transform 0.3s ease;
+}
+.fb-upload-tile:hover .fb-upload-plus {
+  transform: scale(1.1);
+}
+.fb-upload-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+.fb-upload-hint {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* 图片预览样式 */
+.fb-image-preview {
   position: relative;
-  transition: background .15s, border-color .15s;
-}
-.fb-upload-tile:hover { background: var(--accent-bg); border-color: var(--accent); }
-.fb-upload-tile.disabled { opacity:.5; cursor: not-allowed; }
-.fb-upload-tile input {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer;
-}
-.fb-upload-plus { font-size: 22px; line-height: 1; }
-.fb-thumb {
-  width: 96px; height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: white;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  transition: all 0.3s ease;
+}
+.fb-image-preview:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+.fb-preview-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  transition: transform 0.3s ease;
+}
+.fb-preview-image:hover {
+  transform: scale(1.05);
+}
+.fb-preview-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fb-file-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--fg);
   overflow: hidden;
-  position: relative;
-  background: #fff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.fb-thumb img {
-  width: 100%; height: 100%; object-fit: cover; display: block;
+.fb-file-size {
+  font-size: 12px;
+  color: var(--mute);
 }
-.fb-thumb-remove {
-  position: absolute; top: 3px; right: 3px;
-  border: none; background: rgba(0,0,0,.45);
-  color: #fff; width: 20px; height: 20px;
-  border-radius: 50%; font-size: 14px; cursor: pointer;
+.fb-remove-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: var(--danger);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
   line-height: 1;
+  transition: all 0.3s ease;
+  position: absolute;
+  top: -8px;
+  right: -8px;
 }
-.fb-thumb-remove:hover { background: rgba(0,0,0,.65); }
+.fb-remove-btn:hover {
+  background: #b91c1c;
+  transform: scale(1.1);
+}
 
-/* 按钮 */
-.fb-actions { display: flex; gap: 10px; margin-top: 4px; }
+/* 按钮样式 */
+.fb-actions { 
+  display: flex; 
+  gap: 10px; 
+  margin-top: 4px; 
+}
 .fb-btn {
   font: inherit;
   padding: 10px 18px;
@@ -728,12 +882,16 @@ onMounted(() => {
   cursor: pointer;
   font-size: 14px;
   color: var(--fg-soft);
-  transition: background .15s, border-color .15s, color .15s;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 .fb-btn:hover:not(:disabled) {
   background: var(--accent-bg);
   border-color: var(--accent);
   color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 .fb-btn.primary {
   background: var(--accent);
@@ -744,12 +902,23 @@ onMounted(() => {
 .fb-btn.primary:hover:not(:disabled) {
   background: #1d4ed8;
   border-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
 }
-.fb-btn:disabled { opacity:.55; cursor: not-allowed; }
-.fb-btn.small { padding: 6px 12px; font-size: 13px; }
+.fb-btn:disabled { 
+  opacity:.55; 
+  cursor: not-allowed; 
+  transform: none !important;
+}
+.fb-btn.small {
+  padding: 6px 12px;
+  font-size: 13px;
+}
 
+/* 加载动画 */
 .fb-spinner {
-  width: 16px; height:16px;
+  width: 16px; 
+  height:16px;
   border: 2px solid rgba(255,255,255,.6);
   border-right-color: transparent;
   border-radius: 50%;
@@ -757,14 +926,28 @@ onMounted(() => {
   margin-right:6px;
   animation: fb-spin .8s linear infinite;
 }
-@keyframes fb-spin { to { transform: rotate(360deg); } }
+.fb-spinner.large {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+  margin-right: 0;
+  margin-bottom: 8px;
+}
+@keyframes fb-spin { 
+  to { 
+    transform: rotate(360deg); 
+  } 
+}
 
+/* 消息提示样式 */
 .fb-msg {
   margin: 10px 0 0;
   padding: 10px 14px;
   font-size: 13px;
   border-radius: var(--radius-sm);
   border: 1px solid;
+  line-height: 1.4;
+  animation: slideDown 0.3s ease;
 }
 .fb-msg.success {
   color: var(--success);
@@ -776,190 +959,441 @@ onMounted(() => {
   background: #fef2f2;
   border-color: #fecaca;
 }
-
-/* 列表 */
-.fb-list-head {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.fb-filters {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.fb-tabs {
-  display: flex; gap: 6px; flex-wrap: wrap;
-}
-.fb-tab {
-  background: #fff;
-  border: 1px solid var(--border);
-  padding: 6px 14px;
-  font-size: 13px;
-  border-radius: 20px;
-  cursor: pointer;
-  color: var(--fg-soft);
-  transition: background .15s, color .15s, border-color .15s;
-}
-.fb-tab.active {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-.fb-tab:not(.active):hover {
-  background: var(--accent-bg);
-  color: var(--accent);
-  border-color: var(--accent);
-}
-.fb-search { width: 200px; }
-@media (max-width: 640px) { .fb-search { width: 100%; } }
-
-.fb-empty {
-  text-align: center;
-  padding: 40px 0;
-  color: var(--mute);
-  font-size: 14px;
-  border-top: 1px solid var(--border);
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.fb-items {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  border-top: 1px solid var(--border);
-  padding-top: 6px;
-}
-.fb-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 4px 0 2px;
-}
-.fb-item-row1 {
+/* 列表区域样式 */
+.fb-list-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-}
-.fb-item-title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 1.3;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.fb-status {
-  font-size: 12px;
-  color: var(--mute);
-  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
-.fb-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--border-strong);
-  display: inline-block;
-}
-.fb-dot[data-status="未读"] { background: var(--accent); }
-.fb-dot[data-status="处理中"] { background: #d97706; }
-.fb-dot[data-status="已完成"] { background: var(--success); }
-
-.fb-item-meta {
-  font-size: 12px;
-  color: var(--mute);
+.fb-list-controls {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 15px;
   flex-wrap: wrap;
 }
-.sep { color: var(--border-strong); }
 
-.fb-item-content {
-  margin: 0;
+/* 标签页样式 */
+.fb-tabs {
+  display: flex;
+  background: var(--accent-bg);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  gap: 4px;
+}
+.fb-tab {
+  padding: 6px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
   font-size: 13px;
+  color: var(--mute);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+.fb-tab:hover {
+  color: var(--accent);
+}
+.fb-tab.active {
+  background: white;
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+  font-weight: 500;
+}
+
+/* 加载状态 */
+.fb-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--mute);
+  gap: 10px;
+  text-align: center;
+}
+
+/* 空状态 */
+.fb-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--mute);
+}
+.fb-empty-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+.fb-empty-text {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 5px;
   color: var(--fg-soft);
-  line-height: 1.55;
+}
+.fb-empty-hint {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* 反馈列表样式 */
+.fb-feedbacks {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.fb-feedback-item {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.fb-feedback-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--border);
+  transition: background-color 0.3s ease;
+}
+.fb-feedback-item:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+.fb-feedback-item:hover::before {
+  background: var(--accent);
+}
+
+.fb-feedback-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+.fb-feedback-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg);
+  flex: 1;
+  line-height: 1.4;
+}
+.fb-feedback-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.fb-feedback-badge.type-1 { background: #fef2f2; color: #dc2626; }
+.fb-feedback-badge.type-2 { background: #f0f9ff; color: #0369a1; }
+.fb-feedback-badge.type-3 { background: #fefce8; color: #ca8a04; }
+.fb-feedback-badge.type-4 { background: #f3f4f6; color: #374151; }
+
+.fb-feedback-meta {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--mute);
+  flex-wrap: wrap;
+}
+.fb-feedback-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.fb-feedback-time::before {
+  content: '🕒';
+  font-size: 12px;
+}
+.fb-feedback-status {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.fb-feedback-status.status-0 { background: #fef3c7; color: #d97706; }
+.fb-feedback-status.status-1 { background: #dbeafe; color: #1d4ed8; }
+.fb-feedback-status.status-2 { background: #dcfce7; color: #16a34a; }
+.fb-feedback-status.status-3 { background: #f3f4f6; color: #6b7280; }
+
+.fb-feedback-content {
+  margin: 0 0 15px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--fg-soft);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.fb-mini-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 2px;
+.fb-feedback-image {
+  margin-bottom: 15px;
 }
-.fb-mini {
-  width: 60px; height: 44px;
+.fb-feedback-thumb {
+  width: 80px;
+  height: 60px;
   object-fit: cover;
-  border: 1px solid var(--border);
   border-radius: 6px;
-  cursor: zoom-in;
-  background: #fff;
-}
-.fb-mini:hover { border-color: var(--accent); }
-
-.fb-pager {
-  margin-top: 8px;
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  font-size: 13px;
-}
-
-/* 预览 */
-.fb-preview {
-  position: fixed;
-  inset: 0;
-  background: rgba(17,24,39,.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 20px;
-  z-index: 90;
-}
-.fb-preview img {
-  max-width: 92vw;
-  max-height: 80vh;
-  border-radius: var(--radius);
-  background: #fff;
-  box-shadow: 0 0 0 1px var(--border), 0 8px 30px rgba(0,0,0,.35);
-}
-.fb-close {
-  position: fixed;
-  top: 18px; right: 18px;
-  width: 40px; height: 40px;
-  border: none;
-  background: rgba(0,0,0,.5);
-  color: #fff;
-  font-size: 22px;
-  border-radius: 50%;
+  border: 1px solid var(--border);
   cursor: pointer;
+  transition: all 0.3s ease;
 }
-.fb-close:hover { background: rgba(0,0,0,.65); }
-
-/* 可访问性辅助 */
-.fb-input:disabled { background: #f3f4f6; color: #9ca3af; }
-.fb-upload-tile:focus-visible,
-.fb-tab:focus-visible,
-.fb-btn:focus-visible,
-.fb-thumb-remove:focus-visible {
-  outline: var(--focus);
-  outline-offset: 2px;
+.fb-feedback-thumb:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow);
+}
+.fb-image-hint {
+  display: block;
+  font-size: 12px;
+  color: var(--mute);
+  margin-top: 4px;
 }
 
-/* 动效/微调 */
-.fb-tab, .fb-btn, .fb-upload-tile { will-change: background, color, border-color; }
+.fb-feedback-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--mute);
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.fb-feedback-id {
+  opacity: 0.7;
+}
+.fb-qq-btn {
+  background: #ffe6e6;
+  border: 1px solid #ffcccc;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: #d63384;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.fb-qq-btn:hover {
+  background: #ffcccc;
+  transform: translateY(-1px);
+}
+
+/* 分页样式 */
+.fb-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.fb-page-info {
+  font-size: 14px;
+  color: var(--mute);
+  font-weight: 500;
+}
+
+/* 图片预览模态框 */
+.fb-image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+.fb-modal-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  animation: scaleIn 0.3s ease;
+}
+.fb-modal-image {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
+.fb-modal-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: rgba(255,255,255,0.9);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  transition: all 0.3s ease;
+}
+.fb-modal-close:hover {
+  background: white;
+  transform: scale(1.1);
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 响应式设计 */
+@media (min-width: 1024px) {
+  .fb-layout {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .fb-root {
+    padding: 15px;
+  }
+  
+  .fb-layout {
+    gap: 20px;
+  }
+  
+  .fb-panel {
+    padding: 20px;
+  }
+  
+  .fb-list-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .fb-list-controls {
+    justify-content: space-between;
+  }
+  
+  .fb-tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .fb-feedback-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .fb-feedback-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .fb-feedback-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .fb-pagination {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .fb-actions {
+    flex-direction: column;
+  }
+  
+  .fb-image-preview {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  
+  .fb-preview-info {
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .fb-root {
+    padding: 10px;
+  }
+  
+  .fb-h1 {
+    font-size: 22px;
+  }
+  
+  .fb-h2 {
+    font-size: 16px;
+  }
+  
+  .fb-panel {
+    padding: 16px;
+  }
+  
+  .fb-feedback-item {
+    padding: 16px;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .fb-root {
+    padding: 0;
+  }
+  
+  .fb-panel {
+    border: none;
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+  
+  .fb-actions,
+  .fb-list-controls,
+  .fb-remove-btn,
+  .fb-modal-close {
+    display: none;
+  }
+}
 </style>

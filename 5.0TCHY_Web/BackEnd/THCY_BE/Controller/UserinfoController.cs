@@ -20,11 +20,23 @@ namespace THCY_BE.Controller
             _db = db;
         }
 
-        
+
+        [HttpGet("level")]
+        public async Task<ActionResult<int>> GetUserLevel()
+        {
+            var currentUser = await FindCurrentUserAsync();
+            if (currentUser is null)
+                return Unauthorized();
+
+            var level = await _db.Set<UserAccount>()
+                .Where(u => u.Id == currentUser.Id)
+                .Select(u => u.userdata != null ? u.userdata.level : 0)
+                .FirstOrDefaultAsync(); // ✅ 直接调用 FirstOrDefaultAsync()
+
+            return Ok(level);
+        }
+
         [HttpGet("all")]
-        [ProducesResponseType(typeof(List<UserFullInfoDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<List<UserFullInfoDto>>> GetAllUsers()
         {
             // 检查当前用户是否有管理员权限
@@ -114,9 +126,6 @@ namespace THCY_BE.Controller
         /// <param name="minRank">所需最小 rank（默认 1）</param>
         /// <returns>200: { allowed: true, rank }；403: { allowed: false, rank, required }</returns>
         [HttpGet("authorize")]
-        [ProducesResponseType(typeof(AuthorizeResultDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(AuthorizeResultDto), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> AuthorizeByRank([FromQuery] int minRank = 1)
         {
             if (minRank < 1) minRank = 1;
@@ -188,9 +197,7 @@ namespace THCY_BE.Controller
         /// 更新用户信息（管理员权限）
         /// </summary>
         [HttpPut("{userId}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
         public async Task<IActionResult> UpdateUser(int userId, [FromBody] UpdateUserDto updateDto)
         {
             // 检查当前用户权限

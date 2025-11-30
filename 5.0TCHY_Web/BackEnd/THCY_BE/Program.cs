@@ -51,7 +51,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ImageUrlService>();
 
 // 注册 FileUploadService - 确保注入 IWebHostEnvironment
-builder.Services.AddScoped<IFileUploadService, FileUploadService>();
+
 
 // 注册命名 HttpClient，用于调用 B 站 API（后端代理）
 // 超时、User-Agent 可在此统一设置

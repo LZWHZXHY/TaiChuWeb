@@ -176,6 +176,42 @@
         </div>
       </div>
 
+      <!-- 新增：武器立绘（可选，多张） -->
+      <div class="field">
+        <label for="weapon-images">武器立绘（可选，可多张）</label>
+        <div class="uploader" :class="{ 'uploader-has-file': weaponImages.length > 0 }" @click="triggerWeaponInput">
+          <div class="uploader-inner">
+            <div class="uploader-icon">🗡️</div>
+            <div class="uploader-text">
+              <template v-if="weaponImages.length">
+                <strong>已选择 {{ weaponImages.length }} 张武器图片</strong>
+                <span class="muted">点击可重新选择或拖拽添加</span>
+              </template>
+              <template v-else>
+                <strong>选择武器图片（可选，多张）</strong>
+                <span class="muted">支持 PNG/JPG/GIF/WebP，单张最大 5MB</span>
+              </template>
+            </div>
+            <button v-if="weaponImages.length" type="button" class="btn-remove" @click.stop="removeAllWeaponImages">×</button>
+          </div>
+        </div>
+        <input
+          id="weapon-images"
+          ref="weaponInput"
+          type="file"
+          accept=".jpg,.jpeg,.png,.gif,.webp"
+          @change="handleWeaponSelect"
+          multiple
+          style="display: none"
+        />
+        <div v-if="weaponPreviews.length" class="weapon-previews">
+          <div v-for="(p, idx) in weaponPreviews" :key="idx" class="weapon-preview">
+            <img :src="p" alt="weapon preview" />
+            <button type="button" @click="removeWeaponAt(idx)">×</button>
+          </div>
+        </div>
+      </div>
+
       <div class="field check">
         <label class="checkbox">
           <input 
@@ -211,24 +247,13 @@
         <h4>{{ uploadResult.success ? '✅ 上传成功' : '❌ 上传失败' }}</h4>
         <p>{{ uploadResult.message }}</p>
         
-        <!-- 显示详细错误信息 -->
-        <div v-if="!uploadResult.success" class="error-details">
-          <details>
-            <summary>查看详细错误信息</summary>
-            <div class="error-content">
-              <p v-if="uploadResult.statusCode"><strong>状态码:</strong> {{ uploadResult.statusCode }}</p>
-              <pre class="error-json">{{ JSON.stringify(uploadResult.details, null, 2) }}</pre>
-            </div>
-          </details>
-        </div>
-        
         <div v-if="uploadResult.data" class="result-details">
           <p><strong>角色ID:</strong> {{ uploadResult.data.ocId }}</p>
           <p><strong>角色名称:</strong> {{ uploadResult.data.ocName }}</p>
           <p><strong>POO:</strong> {{ uploadResult.data.poo }}</p>
           <img 
-            v-if="uploadResult.data.imageInfo" 
-            :src="uploadResult.data.imageInfo.fullUrl" 
+            v-if="uploadResult.data.imageInfo?.character" 
+            :src="uploadResult.data.imageInfo.fullUrl || buildFullUrl(uploadResult.data.imageInfo.character)" 
             :alt="uploadResult.data.ocName"
             class="preview-image"
           />
@@ -265,6 +290,11 @@ const isSubmitting = ref(false)
 const uploadProgress = ref(0)
 const uploadResult = ref(null)
 
+// 武器图片
+const weaponInput = ref(null)
+const weaponImages = ref([]) // File[]
+const weaponPreviews = ref([]) // data URLs
+
 // 计算属性
 const canSubmit = computed(() => {
   return form.OCName && 
@@ -278,7 +308,7 @@ const canSubmit = computed(() => {
          form.agreedToRules
 })
 
-// 表单提交函数 - 修复版本
+// 表单提交函数
 const submitOC = async () => {
   if (!canSubmit.value || isSubmitting.value) return
 
@@ -287,251 +317,129 @@ const submitOC = async () => {
   uploadResult.value = null
 
   try {
-    console.log('=== 开始表单验证 ===')
-    
-    // 1. 验证必填字段
-    const validations = [
-      { field: '角色名称', value: form.OCName?.trim(), required: true },
-      { field: '作者名称', value: form.authorName?.trim(), required: true },
-      { field: '性别', value: form.gender, required: true },
-      { field: '年龄', value: form.age, required: true, min: 1, max: 999 },
-      { field: '种族', value: form.species?.trim(), required: true },
-      { field: '能力描述', value: form.ability?.trim(), required: true },
-      { field: 'POO', value: form.poo?.trim(), required: true }, // POO必填
-      { field: '立绘图片', value: characterImage.value, required: true },
-      { field: '用户协议', value: form.agreedToRules, required: true }
-    ]
-
-    for (const validation of validations) {
-      if (validation.required && !validation.value) {
-        throw new Error(`${validation.field}是必须的`)
-      }
-      if (validation.min && validation.value < validation.min) {
-        throw new Error(`${validation.field}不能小于${validation.min}`)
-      }
-      if (validation.max && validation.value > validation.max) {
-        throw new Error(`${validation.field}不能大于${validation.max}`)
-      }
-    }
-
-    console.log('✅ 前端验证通过')
-
-    // 2. 准备表单数据
-    const formDataToSend = new FormData()
-    
-    // 生成数字类型的时间戳（秒级）
+    // 1. 前端验证已在 canSubmit
     const currentTime = Math.floor(Date.now() / 1000)
-    console.log('⏰ 生成的时间戳:', currentTime, '类型:', typeof currentTime)
-    
-    // 添加文本字段
+
+    const formDataToSend = new FormData()
     const fields = {
         OCName: form.OCName.trim(),
         authorName: form.authorName.trim(),
         gender: form.gender.toString(),
-        age: form.age.toString(),
+        age: String(form.age),
         species: form.species.trim(),
         ability: form.ability.trim(),
         Background: form.background?.trim() || '',
-        POO: form.poo.trim(), // POO是必填
-        currentTime: currentTime.toString() // 发送数字时间戳
+        POO: form.poo.trim(),
+        currentTime: currentTime.toString()
     }
-    
-    console.log('📋 准备发送的字段:')
+
     Object.entries(fields).forEach(([key, value]) => {
         formDataToSend.append(key, value)
-        console.log(`  ${key}:`, value, '类型:', typeof value)
     })
-    
-    // 添加立绘图片文件
+
     if (characterImage.value) {
         formDataToSend.append('CharacterImage', characterImage.value)
-        console.log('🖼️ 图片文件:', {
-            name: characterImage.value.name,
-            size: characterImage.value.size,
-            type: characterImage.value.type
-        })
     }
 
-    // 3. 检查认证
-    const token = getAuthToken()
-    console.log('🔐 认证令牌:', token ? '已找到' : '未找到')
-    
-    if (!token) {
-        throw new Error('未找到认证令牌，请先登录')
+    // append multiple weapon files
+    if (weaponImages.value && weaponImages.value.length) {
+      weaponImages.value.forEach((f) => {
+        formDataToSend.append('WeaponImages', f)
+      })
     }
 
-    // 4. 发送请求
-    console.log('🚀 开始上传OC数据到 /OCBattleField/upload...')
-    
+    // send without manually setting Content-Type
     const response = await apiClient.post('/OCBattleField/upload', formDataToSend, {
-        headers: {
-            'Content-Type': 'multipart/form-data'
-        },
         timeout: 30000,
         onUploadProgress: (progressEvent) => {
             if (progressEvent.total) {
-                uploadProgress.value = Math.round(
-                    (progressEvent.loaded * 100) / progressEvent.total
-                )
+                uploadProgress.value = Math.round((progressEvent.loaded * 100) / progressEvent.total)
             }
         }
     })
 
-    console.log('✅ 上传成功:', response.data)
-    
-    // 5. 处理成功响应
     uploadResult.value = {
         success: true,
-        message: response.data.message || '上传成功',
-        data: response.data.data || response.data
+        message: response.data?.message || '上传成功',
+        data: response.data?.data || response.data
+    }
+  } catch (error) {
+    let errorMessage = '上传失败，请稍后重试'
+    if (error.response?.status === 401) {
+      clearInvalidToken()
+      errorMessage = '登录已过期，请重新登录'
+    } else if (error.response?.status === 400 && error.response?.data?.message) {
+      errorMessage = error.response.data.message
+    } else if (error.message) {
+      errorMessage = error.message
     }
 
-  } catch (error) {
-    console.error('❌ 上传失败详情:')
-    console.error('错误消息:', error.message)
-    console.error('HTTP状态码:', error.response?.status)
-    console.error('响应数据:', error.response?.data)
-    console.error('请求配置:', {
-        url: error.config?.url,
-        method: error.config?.method,
-        data: error.config?.data
-    })
-    
-    let errorMessage = '上传失败，请稍后重试'
-    let errorDetails = null
-    
-    // 处理认证错误
-    if (error.response?.status === 401) {
-        clearInvalidToken()
-        errorMessage = '登录已过期，请重新登录'
-    }
-    
-    // 处理400错误 - 显示后端具体验证错误
-    else if (error.response?.status === 400) {
-        const responseData = error.response?.data
-        
-        if (responseData) {
-            // 尝试提取后端返回的具体错误信息
-            if (responseData.message) {
-                errorMessage = responseData.message
-            }
-            
-            if (responseData.errors && Array.isArray(responseData.errors)) {
-                errorMessage = responseData.errors[0] || errorMessage
-            } else if (typeof responseData === 'string') {
-                errorMessage = responseData
-            }
-            
-            // 保存详细错误信息用于显示
-            errorDetails = responseData
-        }
-        
-        // 如果没有具体错误信息，使用通用提示
-        if (errorMessage === '上传失败，请稍后重试') {
-            errorMessage = '数据验证失败，请检查表单填写是否正确'
-        }
-    }
-    
-    // 处理其他HTTP错误
-    else if (error.response?.status === 404) {
-        errorMessage = '接口不存在，请检查API路径配置'
-    } else if (error.response?.status === 500) {
-        errorMessage = '服务器内部错误，请稍后重试'
-    }
-    
-    // 处理网络错误
-    else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-        errorMessage = '请求超时，请检查网络连接'
-    } else if (error.message.includes('Network Error')) {
-        errorMessage = '网络连接失败，请检查API服务是否运行'
-    }
-    
     uploadResult.value = {
-        success: false,
-        message: errorMessage,
-        details: errorDetails || error.response?.data || error.message,
-        statusCode: error.response?.status
+      success: false,
+      message: errorMessage,
+      details: error.response?.data || error.message,
+      statusCode: error.response?.status
     }
-    
   } finally {
     isSubmitting.value = false
     uploadProgress.value = 0
   }
 }
 
-// 测试API连接
-const testApiConnection = async () => {
-  try {
-    console.log('🔍 测试API连接...')
-    const response = await apiClient.get('/health', {
-      validateStatus: (status) => status < 500 // 允许400错误，只测试连接
-    })
-    console.log('📡 API连接状态:', response.status)
-    return true
-  } catch (error) {
-    console.error('❌ API连接测试失败:', error.message)
-    return false
-  }
-}
-
-// 页面加载时检查
-onMounted(async () => {
-  console.log('🔄 页面加载完成，检查API状态...')
-  const isConnected = await testApiConnection()
-  if (!isConnected) {
-    console.warn('⚠️ API服务可能未启动，请检查后端服务')
-  }
-})
-
-// 其他辅助函数
-const triggerFileInput = () => {
-  fileInput.value?.click()
-}
-
+// 文件选择与拖拽处理（人物）
+const triggerFileInput = () => fileInput.value?.click()
 const handleFileSelect = (event) => {
   const file = event.target.files[0]
-  if (file) {
-    validateAndSetImage(file)
-  }
+  if (file) validateAndSetImage(file)
 }
-
-const handleDragOver = () => {
-  isDragging.value = true
-}
-
-const handleDragLeave = () => {
-  isDragging.value = false
-}
-
+const handleDragOver = () => { isDragging.value = true }
+const handleDragLeave = () => { isDragging.value = false }
 const handleDrop = (event) => {
   isDragging.value = false
   const file = event.dataTransfer.files[0]
-  if (file) {
-    validateAndSetImage(file)
-  }
+  if (file) validateAndSetImage(file)
 }
-
 const validateAndSetImage = (file) => {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
-  if (!allowedTypes.includes(file.type)) {
-    alert('不支持的文件格式，请选择 JPG、PNG、GIF 或 WebP 格式的图片')
-    return
-  }
-
   const maxSize = 5 * 1024 * 1024
-  if (file.size > maxSize) {
-    alert('文件大小超过 5MB 限制')
-    return
-  }
-
+  if (!allowedTypes.includes(file.type)) { alert('不支持的文件格式'); return }
+  if (file.size > maxSize) { alert('文件大小超过 5MB'); return }
   characterImage.value = file
 }
 
+// 移除人物图片
 const removeImage = () => {
   characterImage.value = null
-  if (fileInput.value) {
-    fileInput.value.value = ''
-  }
+  if (fileInput.value) fileInput.value.value = ''
+}
+
+// 武器图片处理
+const triggerWeaponInput = () => weaponInput.value?.click()
+
+const handleWeaponSelect = (e) => {
+  const files = Array.from(e.target.files || [])
+  files.forEach(file => {
+    if (!validateImageFile(file)) {
+      alert('不支持的文件或超过大小限制（5MB）')
+      return
+    }
+    weaponImages.value.push(file)
+    const reader = new FileReader()
+    reader.onload = (ev) => { weaponPreviews.value.push(ev.target.result) }
+    reader.readAsDataURL(file)
+  })
+  e.target.value = ''
+}
+
+const removeWeaponAt = (idx) => {
+  weaponImages.value.splice(idx, 1)
+  weaponPreviews.value.splice(idx, 1)
+}
+
+const removeAllWeaponImages = () => {
+  weaponImages.value = []
+  weaponPreviews.value = []
+  if (weaponInput.value) weaponInput.value.value = ''
 }
 
 const formatFileSize = (bytes) => {
@@ -543,22 +451,51 @@ const formatFileSize = (bytes) => {
 }
 
 const resetForm = () => {
-  Object.keys(form).forEach(key => {
-    if (key !== 'agreedToRules') {
-      form[key] = ''
-    } else {
-      form[key] = false
-    }
-  })
+  form.OCName = ''
+  form.authorName = ''
+  form.gender = ''
+  form.age = ''
+  form.species = ''
+  form.ability = ''
+  form.background = ''
+  form.poo = ''
+  form.roleType = ''
+  form.tier = ''
+  form.agreedToRules = false
   characterImage.value = null
+  weaponImages.value = []
+  weaponPreviews.value = []
   uploadResult.value = null
-  if (fileInput.value) {
-    fileInput.value.value = ''
-  }
+  if (fileInput.value) fileInput.value.value = ''
+  if (weaponInput.value) weaponInput.value.value = ''
 }
+
+const validateImageFile = (file) => {
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+  const maxSize = 5 * 1024 * 1024
+  if (!file) return false
+  if (!allowedTypes.includes(file.type)) return false
+  if (file.size > maxSize) return false
+  return true
+}
+
+const buildFullUrl = (relativePath) => {
+  if (!relativePath) return null
+  const base = window.location.origin
+  return `${base}/${relativePath.replace(/^\/+/, '')}`
+}
+
+onMounted(() => {
+  // noop
+})
 </script>
 
 <style scoped>
+.weapon-previews { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap }
+.weapon-preview { position:relative; width:80px; height:80px; border:1px solid #e6ebf3; border-radius:6px; overflow:hidden }
+.weapon-preview img { width:100%; height:100%; object-fit:cover }
+.weapon-preview button { position:absolute; top:4px; right:4px; background:#ef4444; color:#fff; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer }
+.preview-image { max-width:200px; max-height:200px; border-radius:8px; margin-top:8px; }
 .card { 
   background: #fff; 
   border: 1px solid #e6ebf3; 

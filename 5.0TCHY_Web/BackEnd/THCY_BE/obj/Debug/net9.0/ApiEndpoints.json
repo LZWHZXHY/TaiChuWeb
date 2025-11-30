@@ -496,48 +496,7 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "THCY_BE.Dto.FeedBack.ApiResponse\u00601[[THCY_BE.Dto.FeedBack.FeedBackItemDto, THCY_BE, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "THCY_BE.Controller.FeedBackController",
-    "Method": "UpdateStatus",
-    "RelativePath": "api/FeedBack/{id}/status",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "THCY_BE.Dto.FeedBack.UpdateStatusDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "THCY_BE.Dto.FeedBack.ApiResponse\u00601[[System.Object, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
     "ContainingType": "THCY_BE.Controller.FeedBackController",
@@ -573,17 +532,7 @@
         "IsRequired": false
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "THCY_BE.Dto.FeedBack.ApiResponse\u00601[[System.Object, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
+    "ReturnTypes": []
   },
   {
     "ContainingType": "THCY_BE.Controller.FeedBackController",
@@ -607,230 +556,61 @@
         "Name": "type",
         "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "IsRequired": false
-      },
-      {
-        "Name": "status",
-        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": [
-      {
-        "Type": "THCY_BE.Dto.FeedBack.ApiResponse\u00601[[THCY_BE.Dto.FeedBack.PagedResult\u00601[[THCY_BE.Dto.FeedBack.FeedBackItemDto, THCY_BE, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], THCY_BE, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "THCY_BE.Controller.FeedBackController",
-    "Method": "GetTypes",
-    "RelativePath": "api/FeedBack/types",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": [
-      {
-        "Type": "THCY_BE.Dto.FeedBack.ApiResponse\u00601[[System.Object, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      }
-    ]
-  },
-  {
-    "ContainingType": "THCY_BE.Controllers.FileUploadController",
-    "Method": "DeleteFile",
-    "RelativePath": "api/FileUpload/{filePath}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "filePath",
-        "Type": "System.String",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "THCY_BE.Controllers.FileUploadController",
-    "Method": "UploadAvatar",
-    "RelativePath": "api/FileUpload/avatar",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "file",
-        "Type": "Microsoft.AspNetCore.Http.IFormFile",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "THCY_BE.Controllers.FileUploadController",
-    "Method": "UploadGallery",
-    "RelativePath": "api/FileUpload/gallery",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "files",
-        "Type": "Microsoft.AspNetCore.Http.IFormFile[]",
-        "IsRequired": false
-      },
-      {
-        "Name": "ocId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "THCY_BE.Controllers.FileUploadController",
-    "Method": "UploadGeneralFile",
-    "RelativePath": "api/FileUpload/general",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "file",
-        "Type": "Microsoft.AspNetCore.Http.IFormFile",
-        "IsRequired": false
-      },
-      {
-        "Name": "folder",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "customId",
-        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "THCY_BE.Controllers.FileUploadController",
-    "Method": "UploadOCBattleImage",
-    "RelativePath": "api/FileUpload/oc-battle-image",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "file",
-        "Type": "Microsoft.AspNetCore.Http.IFormFile",
-        "IsRequired": false
-      },
-      {
-        "Name": "ocId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "THCY_BE.Controllers.FileUploadController",
-    "Method": "UploadOCMainImage",
-    "RelativePath": "api/FileUpload/oc-main-image",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "file",
-        "Type": "Microsoft.AspNetCore.Http.IFormFile",
-        "IsRequired": false
-      },
-      {
-        "Name": "ocId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "THCY_BE.Controllers.FileUploadController",
-    "Method": "GetFileUrl",
-    "RelativePath": "api/FileUpload/url",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "filePath",
-        "Type": "System.String",
-        "IsRequired": false
       }
     ],
     "ReturnTypes": []
   },
   {
     "ContainingType": "THCY_BE.Controller.Friends.FriendsController",
-    "Method": "SendFriendRequest",
-    "RelativePath": "api/Friends/request",
+    "Method": "DeleteFriend",
+    "RelativePath": "api/Friends/{friendId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "friendId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Friends.FriendsController",
+    "Method": "HandleFriendRequest",
+    "RelativePath": "api/Friends/handle-request",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "requestDto",
-        "Type": "THCY_BE.Dto.Friends.SendFriendRequestDto",
+        "Name": "request",
+        "Type": "THCY_BE.Controller.Friends.HandleRequestDto",
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "THCY_BE.Dto.Friends.SendFriendRequestResponseDto",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      },
-      {
-        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 400
-      },
-      {
-        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 401
-      },
-      {
-        "Type": "System.Void",
-        "MediaTypes": [],
-        "StatusCode": 500
-      }
-    ]
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Friends.FriendsController",
+    "Method": "GetFriendList",
+    "RelativePath": "api/Friends/list",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Friends.FriendsController",
+    "Method": "GetPendingRequests",
+    "RelativePath": "api/Friends/pending-requests",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "THCY_BE.Controller.Friends.FriendsController",
@@ -856,40 +636,23 @@
         "IsRequired": false
       }
     ],
-    "ReturnTypes": [
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.Friends.FriendsController",
+    "Method": "SendFriendRequest",
+    "RelativePath": "api/Friends/send-request",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
       {
-        "Type": "THCY_BE.Dto.Friends.SearchUsersResponseDto",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 200
-      },
-      {
-        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 400
-      },
-      {
-        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
-        "MediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ],
-        "StatusCode": 401
-      },
-      {
-        "Type": "System.Void",
-        "MediaTypes": [],
-        "StatusCode": 500
+        "Name": "request",
+        "Type": "THCY_BE.Controller.Friends.SendRequestDto",
+        "IsRequired": true
       }
-    ]
+    ],
+    "ReturnTypes": []
   },
   {
     "ContainingType": "THCY_BE.Controller.LoginRegisterController",
@@ -1150,25 +913,9 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "THCY_BE.Controller.Chai.OCBattleFieldController",
+    "ContainingType": "THCY_BE.Controllers.Chai.OCBattleFieldController",
     "Method": "GetOCDetail",
-    "RelativePath": "api/OCBattleField/{id}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Int32",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "THCY_BE.Controller.Chai.OCBattleFieldController",
-    "Method": "GetOCImagesByAge",
-    "RelativePath": "api/OCBattleField/{ocId}/images-by-age",
+    "RelativePath": "api/OCBattleField/{ocId}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -1177,19 +924,14 @@
         "Name": "ocId",
         "Type": "System.Int32",
         "IsRequired": true
-      },
-      {
-        "Name": "age",
-        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "THCY_BE.Controller.Chai.OCBattleFieldController",
-    "Method": "UpdateOCAge",
-    "RelativePath": "api/OCBattleField/{ocId}/update-age",
+    "ContainingType": "THCY_BE.Controllers.Chai.OCBattleFieldController",
+    "Method": "UpdateOC",
+    "RelativePath": "api/OCBattleField/{ocId}/update",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -1200,65 +942,18 @@
         "IsRequired": true
       },
       {
-        "Name": "dto",
-        "Type": "THCY_BE.Controller.Chai.UpdateOCAgeDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "THCY_BE.Controller.Chai.OCBattleFieldController",
-    "Method": "UpdateOCImage",
-    "RelativePath": "api/OCBattleField/{ocId}/update-image",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "ocId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "characterImage",
-        "Type": "Microsoft.AspNetCore.Http.IFormFile",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "THCY_BE.Controller.Chai.OCBattleFieldController",
-    "Method": "GetOCList",
-    "RelativePath": "api/OCBattleField/list",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "THCY_BE.Controller.Chai.OCBattleFieldController",
-    "Method": "UploadContent",
-    "RelativePath": "api/OCBattleField/upload",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "OCName",
+        "Name": "name",
         "Type": "System.String",
         "IsRequired": false
       },
       {
         "Name": "gender",
-        "Type": "System.Int32",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "IsRequired": false
       },
       {
         "Name": "age",
-        "Type": "System.Int32",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "IsRequired": false
       },
       {
@@ -1272,18 +967,48 @@
         "IsRequired": false
       },
       {
-        "Name": "authorName",
+        "Name": "CharacterImage",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      },
+      {
+        "Name": "WeaponImages",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile[]",
+        "IsRequired": false
+      },
+      {
+        "Name": "character",
         "Type": "System.String",
         "IsRequired": false
       },
       {
-        "Name": "currentTime",
-        "Type": "System.Int32",
+        "Name": "background",
+        "Type": "System.String",
         "IsRequired": false
       },
       {
-        "Name": "Background",
+        "Name": "colors",
         "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "weaponImageUrl",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "weaponDesc",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "extraDesc",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "ocStatus",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "IsRequired": false
       },
       {
@@ -1292,8 +1017,119 @@
         "IsRequired": false
       },
       {
+        "Name": "currentTime",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "updateDescription",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controllers.Chai.OCBattleFieldController",
+    "Method": "GetOCList",
+    "RelativePath": "api/OCBattleField/list",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controllers.Chai.OCBattleFieldController",
+    "Method": "UploadContent",
+    "RelativePath": "api/OCBattleField/upload",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "OCName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "authorName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "gender",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "age",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "species",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "ability",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
         "Name": "CharacterImage",
         "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      },
+      {
+        "Name": "WeaponImages",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile[]",
+        "IsRequired": false
+      },
+      {
+        "Name": "weaponDesc",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "extraDesc",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "character",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "background",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "colors",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "ocStatus",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "POO",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "currentTime",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "VersionDescription",
+        "Type": "System.String",
         "IsRequired": false
       }
     ],
@@ -1391,27 +1227,7 @@
         "IsRequired": true
       }
     ],
-    "ReturnTypes": [
-      {
-        "Type": "System.Void",
-        "MediaTypes": [],
-        "StatusCode": 200
-      },
-      {
-        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
-        "MediaTypes": [
-          "application/json"
-        ],
-        "StatusCode": 403
-      },
-      {
-        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
-        "MediaTypes": [
-          "application/json"
-        ],
-        "StatusCode": 404
-      }
-    ]
+    "ReturnTypes": []
   },
   {
     "ContainingType": "THCY_BE.Controller.UserinfoController",
@@ -1428,20 +1244,6 @@
           "application/json"
         ],
         "StatusCode": 200
-      },
-      {
-        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
-        "MediaTypes": [
-          "application/json"
-        ],
-        "StatusCode": 401
-      },
-      {
-        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
-        "MediaTypes": [
-          "application/json"
-        ],
-        "StatusCode": 403
       }
     ]
   },
@@ -1459,27 +1261,23 @@
         "IsRequired": false
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "THCY_BE.Controller.UserinfoController",
+    "Method": "GetUserLevel",
+    "RelativePath": "api/Userinfo/level",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": [
       {
-        "Type": "THCY_BE.Controller.AuthorizeResultDto",
+        "Type": "System.Int32",
         "MediaTypes": [
           "application/json"
         ],
         "StatusCode": 200
-      },
-      {
-        "Type": "THCY_BE.Controller.AuthorizeResultDto",
-        "MediaTypes": [
-          "application/json"
-        ],
-        "StatusCode": 403
-      },
-      {
-        "Type": "Microsoft.AspNetCore.Mvc.ProblemDetails",
-        "MediaTypes": [
-          "application/json"
-        ],
-        "StatusCode": 401
       }
     ]
   },

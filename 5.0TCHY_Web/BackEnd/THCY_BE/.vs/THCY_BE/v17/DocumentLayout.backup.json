@@ -3,68 +3,128 @@
   "WorkspaceRootPath": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\dto\\feedback\\feedbackdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:dto\\feedback\\feedbackdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\chai\\ocbattlefieldcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\chai\\ocbattlefieldcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\feedbackcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\feedbackcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\posts\\comment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\posts\\comment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\database\\feedbackdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\feedbackdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\chai\\oc_versions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\chai\\oc_versions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\dto\\chai\\createocdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:dto\\chai\\createocdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\utils\\passwordhasher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:utils\\passwordhasher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\dto\\chai\\ocbattledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:dto\\chai\\ocbattledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\feedback\\feedback.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\feedback\\feedback.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\userdate\\userdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\userdate\\userdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\friends\\friends.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\friends\\friends.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\userdate\\useraccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\userdate\\useraccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\friends\\friendrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\friends\\friendrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\postscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\postscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\chai\\editocdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\chai\\editocdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\database\\chaidbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\chaidbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\chai\\ocbattlefieldcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\chai\\ocbattlefieldcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\chai\\oc_master.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\chai\\oc_master.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\defaultcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\defaultcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\chai\\chaishetuan.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\chai\\chaishetuan.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\database\\feedbackdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\feedbackdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\database\\friendsdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\friendsdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\database\\notificationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\notificationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\userdate\\useraccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\userdate\\useraccount.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\chai\\videorecommend.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\chai\\videorecommend.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\friends\\friendscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\friends\\friendscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\database\\userdatadbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\userdatadbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\userinfocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\userinfocontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\dto\\chai\\ocbattledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:dto\\chai\\ocbattledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\userdate\\userdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\userdate\\userdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\friends\\friendrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\friends\\friendrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\friends\\friends.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\friends\\friends.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\dto\\feedback\\feedbackdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:dto\\feedback\\feedbackdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\userdate\\usercheckin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\userdate\\usercheckin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\feedback\\feedback.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\feedback\\feedback.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\feedbackcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\feedbackcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\defaultcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\defaultcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\notificationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\notificationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\utils\\passwordhasher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:utils\\passwordhasher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\database\\postsdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\postsdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\postscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\postscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\dto\\chai\\ocbattlemultipledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -75,18 +135,6 @@
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:dto\\friends\\sendfriendrequestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\fileuploadcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\fileuploadcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\database\\notificationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\notificationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\database\\postsdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\postsdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\posts\\post.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\posts\\post.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -95,40 +143,12 @@
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:dto\\friends\\searchusersdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\friends\\friendscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\friends\\friendscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\database\\friendsdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\friendsdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\services\\emailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:services\\emailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\database\\userdatadbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\userdatadbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\userdate\\usercheckin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\userdate\\usercheckin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\services\\fileuploadservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:services\\fileuploadservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\posts\\comment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\posts\\comment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\controller\\notificationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:controller\\notificationcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\notification\\notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -143,24 +163,8 @@
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:database\\basicinfodbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\chai\\oc_info.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\chai\\oc_info.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\chai\\videorecommend.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\chai\\videorecommend.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\chai\\chailianhe.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\chai\\chailianhe.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|e:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0tchy_web\\backend\\thcy_be\\models\\chai\\chaishetuan.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A16DCCF5-7B5C-AC21-D006-6EA3F966A555}|THCY_BE.csproj|solutionrelative:models\\chai\\chaishetuan.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -169,38 +173,62 @@
       "VerticalTabListWidth": 256,
       "DocumentGroups": [
         {
-          "DockedWidth": 221,
+          "DockedWidth": 216,
           "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "PasswordHasher.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Utils\\PasswordHasher.cs",
-              "RelativeDocumentMoniker": "Utils\\PasswordHasher.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Utils\\PasswordHasher.cs",
-              "RelativeToolTip": "Utils\\PasswordHasher.cs",
+              "DocumentIndex": 9,
+              "Title": "ChaiSheTuan.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\ChaiSheTuan.cs",
+              "RelativeDocumentMoniker": "Models\\Chai\\ChaiSheTuan.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\ChaiSheTuan.cs",
+              "RelativeToolTip": "Models\\Chai\\ChaiSheTuan.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T02:17:30.461Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-24T01:34:47.712Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "FeedBackController.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\FeedBackController.cs",
-              "RelativeDocumentMoniker": "Controller\\FeedBackController.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\FeedBackController.cs",
-              "RelativeToolTip": "Controller\\FeedBackController.cs",
-              "ViewState": "AgIAAOoAAAAAAAAAAAAiwO4AAABMAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "OCBattleFieldController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\Chai\\OCBattleFieldController.cs",
+              "RelativeDocumentMoniker": "Controller\\Chai\\OCBattleFieldController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\Chai\\OCBattleFieldController.cs",
+              "RelativeToolTip": "Controller\\Chai\\OCBattleFieldController.cs",
+              "ViewState": "AgIAAFUCAAAAAAAAAAAUwF8CAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T00:18:18.078Z",
+              "WhenOpened": "2025-11-23T02:21:56.269Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
+              "Title": "CreateOCDto.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Chai\\CreateOCDto.cs",
+              "RelativeDocumentMoniker": "Dto\\Chai\\CreateOCDto.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Chai\\CreateOCDto.cs",
+              "RelativeToolTip": "Dto\\Chai\\CreateOCDto.cs",
+              "ViewState": "AgIAABgAAAAAAAAAAAAuwCgAAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-29T21:32:26.31Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "EditOCDto.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\EditOCDto.cs",
+              "RelativeDocumentMoniker": "Models\\Chai\\EditOCDto.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\EditOCDto.cs",
+              "RelativeToolTip": "Models\\Chai\\EditOCDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-29T21:52:24.9Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
               "Title": "FeedBackDbContext.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\FeedBackDbContext.cs",
               "RelativeDocumentMoniker": "DataBase\\FeedBackDbContext.cs",
@@ -208,38 +236,23 @@
               "RelativeToolTip": "DataBase\\FeedBackDbContext.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T22:39:38.41Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 14,
-              "Title": "UserinfoController.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\UserinfoController.cs",
-              "RelativeDocumentMoniker": "Controller\\UserinfoController.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\UserinfoController.cs",
-              "RelativeToolTip": "Controller\\UserinfoController.cs",
-              "ViewState": "AgIAAFEAAAAAAAAAAAAYwCEAAAA8AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-24T14:20:52.574Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-27T22:39:38.41Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 12,
-              "Title": "OCBattleFieldController.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\Chai\\OCBattleFieldController.cs",
-              "RelativeDocumentMoniker": "Controller\\Chai\\OCBattleFieldController.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\Chai\\OCBattleFieldController.cs",
-              "RelativeToolTip": "Controller\\Chai\\OCBattleFieldController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAAIAAAAAAAAAA==",
+              "Title": "NotificationDbContext.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\NotificationDbContext.cs",
+              "RelativeDocumentMoniker": "DataBase\\NotificationDbContext.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\NotificationDbContext.cs",
+              "RelativeToolTip": "DataBase\\NotificationDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAA8AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-23T02:21:56.269Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-25T20:02:48.543Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 4,
               "Title": "OCBattleDto.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Chai\\OCBattleDto.cs",
               "RelativeDocumentMoniker": "Dto\\Chai\\OCBattleDto.cs",
@@ -252,33 +265,31 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
-              "Title": "FriendsController.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\Friends\\FriendsController.cs",
-              "RelativeDocumentMoniker": "Controller\\Friends\\FriendsController.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\Friends\\FriendsController.cs",
-              "RelativeToolTip": "Controller\\Friends\\FriendsController.cs",
-              "ViewState": "AgIAAEMBAAAAAAAAAAAAAC8BAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T21:30:58.783Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 7,
-              "Title": "Friends.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Friends\\Friends.cs",
-              "RelativeDocumentMoniker": "Models\\Friends\\Friends.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Friends\\Friends.cs",
-              "RelativeToolTip": "Models\\Friends\\Friends.cs",
-              "ViewState": "AgIAAAoAAAAAAAAAAAAAABEAAAAAAAAAAAAAAA==",
+              "Title": "OC_Master.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\OC_Master.cs",
+              "RelativeDocumentMoniker": "Models\\Chai\\OC_Master.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\OC_Master.cs",
+              "RelativeToolTip": "Models\\Chai\\OC_Master.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAACQAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T21:24:01.091Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-29T18:51:03.289Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 14,
+              "Title": "VideoRecommend.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\VideoRecommend.cs",
+              "RelativeDocumentMoniker": "Models\\Chai\\VideoRecommend.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\VideoRecommend.cs",
+              "RelativeToolTip": "Models\\Chai\\VideoRecommend.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-24T01:34:50.793Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
               "Title": "UserCheckIn.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserCheckIn.cs",
               "RelativeDocumentMoniker": "Models\\UserDate\\UserCheckIn.cs",
@@ -286,51 +297,23 @@
               "RelativeToolTip": "Models\\UserDate\\UserCheckIn.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T20:49:05.675Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-27T20:49:05.675Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
-              "Title": "FileUploadController.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\FileUploadController.cs",
-              "RelativeDocumentMoniker": "Controller\\FileUploadController.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\FileUploadController.cs",
-              "RelativeToolTip": "Controller\\FileUploadController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAO0BAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-23T02:18:57.654Z",
-              "EditorCaption": ""
+              "DocumentIndex": 27,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-11-23T01:14:18.912Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
-              "Title": "EmailService.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Services\\EmailService.cs",
-              "RelativeDocumentMoniker": "Services\\EmailService.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Services\\EmailService.cs",
-              "RelativeToolTip": "Services\\EmailService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T21:26:03.348Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 19,
-              "Title": "NotificationDbContext.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\NotificationDbContext.cs",
-              "RelativeDocumentMoniker": "DataBase\\NotificationDbContext.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\NotificationDbContext.cs",
-              "RelativeToolTip": "DataBase\\NotificationDbContext.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAA8AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-25T20:02:48.543Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 16,
               "Title": "UserDataDbContext.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\UserDataDbContext.cs",
               "RelativeDocumentMoniker": "DataBase\\UserDataDbContext.cs",
@@ -338,25 +321,71 @@
               "RelativeToolTip": "DataBase\\UserDataDbContext.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-24T14:20:49.834Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-24T14:20:49.834Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 15,
+              "Title": "FriendsController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\Friends\\FriendsController.cs",
+              "RelativeDocumentMoniker": "Controller\\Friends\\FriendsController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\Friends\\FriendsController.cs",
+              "RelativeToolTip": "Controller\\Friends\\FriendsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAIkBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-27T21:30:58.783Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
               "Title": "NotificationController.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\NotificationController.cs",
               "RelativeDocumentMoniker": "Controller\\NotificationController.cs",
               "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\NotificationController.cs",
               "RelativeToolTip": "Controller\\NotificationController.cs",
-              "ViewState": "AgIAABMAAAAAAAAAAAAQwA0AAAA4AAAAAAAAAA==",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAB4AAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-24T16:11:21.128Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-24T16:11:21.128Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 17,
+              "Title": "UserinfoController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\UserinfoController.cs",
+              "RelativeDocumentMoniker": "Controller\\UserinfoController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\UserinfoController.cs",
+              "RelativeToolTip": "Controller\\UserinfoController.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAAwBcAAAAaAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-24T14:20:52.574Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "PasswordHasher.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Utils\\PasswordHasher.cs",
+              "RelativeDocumentMoniker": "Utils\\PasswordHasher.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Utils\\PasswordHasher.cs",
+              "RelativeToolTip": "Utils\\PasswordHasher.cs",
+              "ViewState": "AgIAADAAAAAAAAAAAAAYwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-28T02:17:30.461Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 35,
+              "Title": "EmailService.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Services\\EmailService.cs",
+              "RelativeDocumentMoniker": "Services\\EmailService.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Services\\EmailService.cs",
+              "RelativeToolTip": "Services\\EmailService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-27T21:26:03.348Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 37,
               "Title": "Notification.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Notification\\Notification.cs",
               "RelativeDocumentMoniker": "Models\\Notification\\Notification.cs",
@@ -364,24 +393,11 @@
               "RelativeToolTip": "Models\\Notification\\Notification.cs",
               "ViewState": "AgIAAC8AAAAAAAAAAAAmwDMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-24T16:17:27.803Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-24T16:17:27.803Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\appsettings.json",
-              "RelativeDocumentMoniker": "appsettings.json",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\appsettings.json",
-              "RelativeToolTip": "appsettings.json",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAwAAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-11-23T01:14:18.912Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 38,
               "Title": "NotificationRequest.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Notification\\NotificationRequest.cs",
               "RelativeDocumentMoniker": "Dto\\Notification\\NotificationRequest.cs",
@@ -393,33 +409,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 37,
-              "Title": "VideoRecommend.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\VideoRecommend.cs",
-              "RelativeDocumentMoniker": "Models\\Chai\\VideoRecommend.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\VideoRecommend.cs",
-              "RelativeToolTip": "Models\\Chai\\VideoRecommend.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-24T01:34:50.793Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 36,
-              "Title": "OC_Info.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\OC_Info.cs",
-              "RelativeDocumentMoniker": "Models\\Chai\\OC_Info.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\OC_Info.cs",
-              "RelativeToolTip": "Models\\Chai\\OC_Info.cs",
-              "ViewState": "AgIAADUAAAAAAAAAAAAgwEsAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-24T01:34:49.48Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 38,
+              "DocumentIndex": 40,
               "Title": "ChaiLianHe.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\ChaiLianHe.cs",
               "RelativeDocumentMoniker": "Models\\Chai\\ChaiLianHe.cs",
@@ -427,252 +417,90 @@
               "RelativeToolTip": "Models\\Chai\\ChaiLianHe.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-24T01:34:43.939Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 39,
-              "Title": "ChaiSheTuan.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\ChaiSheTuan.cs",
-              "RelativeDocumentMoniker": "Models\\Chai\\ChaiSheTuan.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\ChaiSheTuan.cs",
-              "RelativeToolTip": "Models\\Chai\\ChaiSheTuan.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-24T01:34:47.712Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-24T01:34:43.939Z"
             }
           ]
         },
         {
-          "DockedWidth": 179,
-          "SelectedChildIndex": 0,
+          "DockedWidth": 184,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "FeedBackDto.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\FeedBack\\FeedBackDto.cs",
-              "RelativeDocumentMoniker": "Dto\\FeedBack\\FeedBackDto.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\FeedBack\\FeedBackDto.cs",
-              "RelativeToolTip": "Dto\\FeedBack\\FeedBackDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAABAAAAAAAAAA==",
+              "DocumentIndex": 2,
+              "Title": "OC_Versions.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\OC_Versions.cs",
+              "RelativeDocumentMoniker": "Models\\Chai\\OC_Versions.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Chai\\OC_Versions.cs",
+              "RelativeToolTip": "Models\\Chai\\OC_Versions.cs",
+              "ViewState": "AgIAABEAAAAAAAAAAAA1wC4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T00:32:41.715Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "FriendRequest.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Friends\\FriendRequest.cs",
-              "RelativeDocumentMoniker": "Models\\Friends\\FriendRequest.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Friends\\FriendRequest.cs",
-              "RelativeToolTip": "Models\\Friends\\FriendRequest.cs",
-              "ViewState": "AgIAAAsAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T21:27:36.181Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "UserAccount.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserAccount.cs",
-              "RelativeDocumentMoniker": "Models\\UserDate\\UserAccount.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserAccount.cs",
-              "RelativeToolTip": "Models\\UserDate\\UserAccount.cs",
-              "ViewState": "AgIAABQAAAAAAAAAAAA3wC0AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-24T14:20:40.836Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "UserData.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserData.cs",
-              "RelativeDocumentMoniker": "Models\\UserDate\\UserData.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserData.cs",
-              "RelativeToolTip": "Models\\UserDate\\UserData.cs",
-              "ViewState": "AgIAABkAAAAAAAAAAAAwwC0AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-24T14:20:45.572Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Program.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAADMAAAAAAAAAAAAAACUAAAAyAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-24T14:06:47.144Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "Feedback.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\FeedBack\\Feedback.cs",
-              "RelativeDocumentMoniker": "Models\\FeedBack\\Feedback.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\FeedBack\\Feedback.cs",
-              "RelativeToolTip": "Models\\FeedBack\\Feedback.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAkAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T22:39:02.401Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 16,
-              "Title": "OCBattleMultipleDto.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Chai\\OCBattleMultipleDto.cs",
-              "RelativeDocumentMoniker": "Dto\\Chai\\OCBattleMultipleDto.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Chai\\OCBattleMultipleDto.cs",
-              "RelativeToolTip": "Dto\\Chai\\OCBattleMultipleDto.cs",
-              "ViewState": "AgIAAAoAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-28T00:54:36.113Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 17,
-              "Title": "SendFriendRequestDto.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Friends\\SendFriendRequestDto.cs",
-              "RelativeDocumentMoniker": "Dto\\Friends\\SendFriendRequestDto.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Friends\\SendFriendRequestDto.cs",
-              "RelativeToolTip": "Dto\\Friends\\SendFriendRequestDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T21:39:53.587Z",
+              "WhenOpened": "2025-11-24T01:34:49.48Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 13,
-              "Title": "DefaultController.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\DefaultController.cs",
-              "RelativeDocumentMoniker": "Controller\\DefaultController.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\DefaultController.cs",
-              "RelativeToolTip": "Controller\\DefaultController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAdAAAAAAAAAA==",
+              "Title": "UserAccount.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserAccount.cs",
+              "RelativeDocumentMoniker": "Models\\UserDate\\UserAccount.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserAccount.cs",
+              "RelativeToolTip": "Models\\UserDate\\UserAccount.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACMAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-24T14:21:05.842Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "PostsController.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\PostsController.cs",
-              "RelativeDocumentMoniker": "Controller\\PostsController.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\PostsController.cs",
-              "RelativeToolTip": "Controller\\PostsController.cs",
-              "ViewState": "AgIAAHsBAAAAAAAAAAAswI8BAAAzAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T15:16:42.658Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-24T14:20:40.836Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 11,
-              "Title": "ChaiDbContext.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\ChaiDbContext.cs",
-              "RelativeDocumentMoniker": "DataBase\\ChaiDbContext.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\ChaiDbContext.cs",
-              "RelativeToolTip": "DataBase\\ChaiDbContext.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAoAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-23T01:18:48.164Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 20,
-              "Title": "PostsDbContext.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\PostsDbContext.cs",
-              "RelativeDocumentMoniker": "DataBase\\PostsDbContext.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\PostsDbContext.cs",
-              "RelativeToolTip": "DataBase\\PostsDbContext.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T15:10:51.01Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 21,
-              "Title": "Post.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Posts\\Post.cs",
-              "RelativeDocumentMoniker": "Models\\Posts\\Post.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Posts\\Post.cs",
-              "RelativeToolTip": "Models\\Posts\\Post.cs",
-              "ViewState": "AgIAAA0AAAAAAAAAAAAQwCsAAAAXAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T15:10:09.387Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 22,
-              "Title": "SearchUsersDto.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Friends\\SearchUsersDto.cs",
-              "RelativeDocumentMoniker": "Dto\\Friends\\SearchUsersDto.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Friends\\SearchUsersDto.cs",
-              "RelativeToolTip": "Dto\\Friends\\SearchUsersDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAArAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T21:56:46.809Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 24,
               "Title": "FriendsDbContext.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\FriendsDbContext.cs",
               "RelativeDocumentMoniker": "DataBase\\FriendsDbContext.cs",
               "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\FriendsDbContext.cs",
               "RelativeToolTip": "DataBase\\FriendsDbContext.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAABGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T21:28:23.329Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-27T21:28:23.329Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
-              "Title": "FileUploadService.cs",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Services\\FileUploadService.cs",
-              "RelativeDocumentMoniker": "Services\\FileUploadService.cs",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Services\\FileUploadService.cs",
-              "RelativeToolTip": "Services\\FileUploadService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAA0AAAAAAAAAA==",
+              "DocumentIndex": 8,
+              "Title": "Program.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAABsAAAAAAAAAAAASwDUAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-27T19:30:03.892Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-24T14:06:47.144Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
-              "Title": "launchSettings.json",
-              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Properties\\launchSettings.json",
-              "RelativeDocumentMoniker": "Properties\\launchSettings.json",
-              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Properties\\launchSettings.json",
-              "RelativeToolTip": "Properties\\launchSettings.json",
-              "ViewState": "AgIAABsAAAAAAAAAAAAAABYAAAAIAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-11-27T18:57:40.576Z",
-              "EditorCaption": ""
+              "DocumentIndex": 21,
+              "Title": "FeedBackDto.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\FeedBack\\FeedBackDto.cs",
+              "RelativeDocumentMoniker": "Dto\\FeedBack\\FeedBackDto.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\FeedBack\\FeedBackDto.cs",
+              "RelativeToolTip": "Dto\\FeedBack\\FeedBackDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-28T00:32:41.715Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 23,
+              "Title": "Feedback.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\FeedBack\\Feedback.cs",
+              "RelativeDocumentMoniker": "Models\\FeedBack\\Feedback.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\FeedBack\\Feedback.cs",
+              "RelativeToolTip": "Models\\FeedBack\\Feedback.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-27T22:39:02.401Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "Comment.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Posts\\Comment.cs",
               "RelativeDocumentMoniker": "Models\\Posts\\Comment.cs",
@@ -685,7 +513,163 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "ChaiDbContext.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\ChaiDbContext.cs",
+              "RelativeDocumentMoniker": "DataBase\\ChaiDbContext.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\ChaiDbContext.cs",
+              "RelativeToolTip": "DataBase\\ChaiDbContext.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAkwC0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-23T01:18:48.164Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "UserData.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserData.cs",
+              "RelativeDocumentMoniker": "Models\\UserDate\\UserData.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\UserDate\\UserData.cs",
+              "RelativeToolTip": "Models\\UserDate\\UserData.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-24T14:20:45.572Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "FriendRequest.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Friends\\FriendRequest.cs",
+              "RelativeDocumentMoniker": "Models\\Friends\\FriendRequest.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Friends\\FriendRequest.cs",
+              "RelativeToolTip": "Models\\Friends\\FriendRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAA9AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-27T21:27:36.181Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "Friends.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Friends\\Friends.cs",
+              "RelativeDocumentMoniker": "Models\\Friends\\Friends.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Friends\\Friends.cs",
+              "RelativeToolTip": "Models\\Friends\\Friends.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-27T21:24:01.091Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "FeedBackController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\FeedBackController.cs",
+              "RelativeDocumentMoniker": "Controller\\FeedBackController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\FeedBackController.cs",
+              "RelativeToolTip": "Controller\\FeedBackController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAA5AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-28T00:18:18.078Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "DefaultController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\DefaultController.cs",
+              "RelativeDocumentMoniker": "Controller\\DefaultController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\DefaultController.cs",
+              "RelativeToolTip": "Controller\\DefaultController.cs",
+              "ViewState": "AgIAAG8AAAAAAAAAAAAUwJwAAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-24T14:21:05.842Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "PostsDbContext.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\PostsDbContext.cs",
+              "RelativeDocumentMoniker": "DataBase\\PostsDbContext.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\PostsDbContext.cs",
+              "RelativeToolTip": "DataBase\\PostsDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-27T15:10:51.01Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "OCBattleMultipleDto.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Chai\\OCBattleMultipleDto.cs",
+              "RelativeDocumentMoniker": "Dto\\Chai\\OCBattleMultipleDto.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Chai\\OCBattleMultipleDto.cs",
+              "RelativeToolTip": "Dto\\Chai\\OCBattleMultipleDto.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-28T00:54:36.113Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "SendFriendRequestDto.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Friends\\SendFriendRequestDto.cs",
+              "RelativeDocumentMoniker": "Dto\\Friends\\SendFriendRequestDto.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Friends\\SendFriendRequestDto.cs",
+              "RelativeToolTip": "Dto\\Friends\\SendFriendRequestDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-27T21:39:53.587Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "PostsController.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\PostsController.cs",
+              "RelativeDocumentMoniker": "Controller\\PostsController.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Controller\\PostsController.cs",
+              "RelativeToolTip": "Controller\\PostsController.cs",
+              "ViewState": "AgIAAHsBAAAAAAAAAAAswI8BAAAzAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-27T15:16:42.658Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "Post.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Posts\\Post.cs",
+              "RelativeDocumentMoniker": "Models\\Posts\\Post.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Models\\Posts\\Post.cs",
+              "RelativeToolTip": "Models\\Posts\\Post.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAQwCsAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-27T15:10:09.387Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 34,
+              "Title": "SearchUsersDto.cs",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Friends\\SearchUsersDto.cs",
+              "RelativeDocumentMoniker": "Dto\\Friends\\SearchUsersDto.cs",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Dto\\Friends\\SearchUsersDto.cs",
+              "RelativeToolTip": "Dto\\Friends\\SearchUsersDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-27T21:56:46.809Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 36,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "Properties\\launchSettings.json",
+              "ToolTip": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\Properties\\launchSettings.json",
+              "RelativeToolTip": "Properties\\launchSettings.json",
+              "ViewState": "AgIAABsAAAAAAAAAAAAAABYAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-11-27T18:57:40.576Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 39,
               "Title": "BasicInfoDbContext.cs",
               "DocumentMoniker": "E:\\\u592A\u521D\u5BF0\u5B87\u5B98\u7F51\u5F00\u53D1\\5.0TCHY_Web\\BackEnd\\THCY_BE\\DataBase\\BasicInfoDbContext.cs",
               "RelativeDocumentMoniker": "DataBase\\BasicInfoDbContext.cs",

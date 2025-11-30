@@ -1,26 +1,23 @@
-﻿// Controllers/Chai/OCBattleFieldController.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using System.Text;
+using System.IO;
+using System.Text.Json;
+using System.Linq;
 using THCY_BE.DataBase;
 using THCY_BE.Dto.Chai;
 using THCY_BE.Models.Chai;
-using THCY_BE.Services;
-using System.IO;
+using Microsoft.AspNetCore.Http;
 
-namespace THCY_BE.Controller.Chai
+namespace THCY_BE.Controllers.Chai
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class OCBattleFieldController : ControllerBase
     {
         private readonly ChaiDbContext _db;
-        private readonly IFileUploadService _fileUploadService;
         private readonly ILogger<OCBattleFieldController> _logger;
-        private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _environment;
 
         // 本地存储路径配置
@@ -29,130 +26,128 @@ namespace THCY_BE.Controller.Chai
 
         public OCBattleFieldController(
             ChaiDbContext db,
-            IFileUploadService fileUploadService,
             ILogger<OCBattleFieldController> logger,
-            IConfiguration configuration,
             IWebHostEnvironment environment)
         {
             _db = db;
-            _fileUploadService = fileUploadService;
             _logger = logger;
-            _configuration = configuration;
             _environment = environment;
         }
 
         /// <summary>
-        /// 创建OC角色并上传立绘图片 - 使用本地存储
+        /// 创建 OC（支持可选上传多张武器立绘）
         /// </summary>
         [HttpPost("upload")]
-        public async Task<ActionResult> UploadContent([FromForm] OCBattleDto dto)
+        [Authorize]
+        public async Task<ActionResult> UploadContent([FromForm] CreateOCDto dto)
         {
+            await using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
-                _logger.LogInformation("=== 开始创建OC角色 ===");
-                _logger.LogInformation("角色名: {OCName}, 作者: {AuthorName}", dto.OCName, dto.authorName);
-
+                _logger.LogInformation("=== 开始处理OC创建请求 ===");
                 if (!ModelState.IsValid)
                 {
-                    var errors = ModelState.Values
-                        .SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage)
-                        .ToList();
-
-                    _logger.LogWarning("数据验证失败: {Errors}", string.Join(", ", errors));
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "数据验证失败",
-                        errors = errors
-                    });
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    return BadRequest(new { success = false, message = "数据验证失败", errors });
                 }
 
                 if (dto.CharacterImage == null || dto.CharacterImage.Length == 0)
                 {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "请上传角色立绘图片"
-                    });
+                    return BadRequest(new { success = false, message = "请上传角色立绘图片" });
                 }
 
                 if (string.IsNullOrWhiteSpace(dto.POO))
                 {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "POO是必须的"
-                    });
-                }
-
-                var existingOC = await _db.OC_Infos
-                    .Where(o => o.name == dto.OCName.Trim())
-                    .FirstOrDefaultAsync();
-
-                if (existingOC != null)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = $"角色名称 '{dto.OCName}' 已存在，请使用其他名称"
-                    });
+                    return BadRequest(new { success = false, message = "POO是必须的" });
                 }
 
                 var userId = GetCurrentUserId();
-                var newOC_info = new OC_Info
+
+                var normalizedName = dto.OCName?.Trim();
+                if (string.IsNullOrEmpty(normalizedName))
+                    return BadRequest(new { success = false, message = "角色名称不能为空" });
+
+                var existingOC = await _db.OC_Master
+                    .Where(o => o.authorID == userId && o.name.ToLower() == normalizedName.ToLower())
+                    .FirstOrDefaultAsync();
+
+                if (existingOC != null)
+                    return BadRequest(new { success = false, message = $"你已创建过名为 '{normalizedName}' 的角色，请在已创建角色中编辑" });
+
+                var masterRecord = new OC_Master
                 {
-                    name = dto.OCName.Trim(),
-                    gender = dto.gender,
-                    age = dto.age,
-                    species = dto.species.Trim(),
-                    ability = dto.ability.Trim(),
-                    authorName = dto.authorName.Trim(),
-                    background = dto.Background?.Trim(),
-                    POO = dto.POO.Trim(),
-                    OC_Current_Time = dto.currentTime,
+                    name = normalizedName,
+                    authorName = dto.authorName?.Trim() ?? string.Empty,
+                    authorID = userId,
+                    createTime = DateTime.UtcNow,
+                    updateTime = DateTime.UtcNow,
+                    status = 1,
+                    dueling = 0,
+                    currentVersionId = 0
+                };
+
+                _db.OC_Master.Add(masterRecord);
+                await _db.SaveChangesAsync();
+
+                // 上传人物立绘
+                var charUpload = await UploadSingleFileToLocalAsync(dto.CharacterImage, userId, masterRecord.id, "char");
+                if (!charUpload.Success)
+                {
+                    await transaction.RollbackAsync();
+                    return BadRequest(new { success = false, message = $"人物图片上传失败: {charUpload.ErrorMessage}" });
+                }
+
+                // 上传武器图片（可选）
+                List<string> weaponPaths = new();
+                if (dto.WeaponImages != null && dto.WeaponImages.Length > 0)
+                {
+                    var multiRes = await UploadMultipleFilesToLocalAsync(dto.WeaponImages, userId, masterRecord.id, "weapon");
+                    if (!multiRes.Success)
+                    {
+                        await transaction.RollbackAsync();
+                        return BadRequest(new { success = false, message = $"武器图片上传失败: {multiRes.ErrorMessage}" });
+                    }
+                    weaponPaths = multiRes.FilePaths;
+                }
+
+                // worldTime in OC_Versions might be int, ensure assign via ?? 0
+                var worldTimeValue = dto.currentTime ?? 0;
+
+                var versionRecord = new OC_Versions
+                {
+                    ocMasterId = masterRecord.id,
+                    versionNumber = 1,
+                    versionDescription = dto.VersionDescription ?? "初始版本",
+                    isCurrent = true,
+                    name = normalizedName,
+                    // fix: use null-coalescing to provide int when model expects int
+                    gender = dto.gender ?? 0,
+                    age = dto.age ?? 0,
+                    species = dto.species?.Trim(),
+                    ability = dto.ability?.Trim(),
+                    character = dto.character?.Trim(),
+                    background = dto.background?.Trim(),
+                    colors = dto.colors?.Trim(),
+                    OC_WeapenImgUrl = weaponPaths.Count > 0 ? JsonSerializer.Serialize(weaponPaths) : null,
+                    OC_WeapenDesc = dto.weaponDesc?.Trim(),
+                    ExtraDesc = dto.extraDesc?.Trim(),
+                    OC_status = dto.ocStatus ?? 0,
+                    worldTime = worldTimeValue,
                     experience = "[]",
                     winCount = 0,
                     loseCount = 0,
-                    status = 1,
-                    dueling = 0,
-                    version = 1,
-                    authorID = userId,
-                    OC_image_url = null,
+                    POO = dto.POO?.Trim(),
                     createTime = DateTime.UtcNow,
-                    updateTime = DateTime.UtcNow
+                    OC_image_url = charUpload.FilePath
                 };
 
-                _db.OC_Infos.Add(newOC_info);
+                _db.OC_Versions.Add(versionRecord);
                 await _db.SaveChangesAsync();
 
-                _logger.LogInformation("OC记录创建成功，ID: {OCId}", newOC_info.id);
-
-                // 使用本地存储上传图片
-                var uploadResult = await UploadImageToLocalStorageAsync(
-                    dto.CharacterImage,
-                    userId,
-                    newOC_info.id
-                );
-
-                if (!uploadResult.Success)
-                {
-                    _db.OC_Infos.Remove(newOC_info);
-                    await _db.SaveChangesAsync();
-
-                    _logger.LogError("立绘图片上传失败: {ErrorMessage}", uploadResult.ErrorMessage);
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = $"立绘图片上传失败: {uploadResult.ErrorMessage}"
-                    });
-                }
-
-                newOC_info.OC_image_url = uploadResult.FilePath;
-                newOC_info.updateTime = DateTime.UtcNow;
+                masterRecord.currentVersionId = versionRecord.id;
                 await _db.SaveChangesAsync();
 
-                _logger.LogInformation("✅ OC角色创建成功，ID: {Id}", newOC_info.id);
+                await transaction.CommitAsync();
 
                 return Ok(new
                 {
@@ -160,235 +155,218 @@ namespace THCY_BE.Controller.Chai
                     message = "OC角色创建成功",
                     data = new
                     {
-                        ocId = newOC_info.id,
-                        ocName = newOC_info.name,
-                        authorName = newOC_info.authorName,
-                        age = newOC_info.age,
-                        species = newOC_info.species,
-                        gender = newOC_info.gender,
-                        poo = newOC_info.POO,
-                        currentTime = newOC_info.OC_Current_Time,
+                        ocId = masterRecord.id,
+                        versionId = versionRecord.id,
+                        versionNumber = versionRecord.versionNumber,
                         imageInfo = new
                         {
-                            relativePath = uploadResult.FilePath,
-                            fileName = uploadResult.FileName,
-                            fullUrl = BuildLocalImageUrl(uploadResult.FilePath),
-                            fileSize = uploadResult.FileSize
-                        },
-                        timestamps = new
-                        {
-                            createTime = newOC_info.createTime.ToString("yyyy-MM-dd HH:mm:ss"),
-                            updateTime = newOC_info.updateTime.ToString("yyyy-MM-dd HH:mm:ss")
+                            character = charUpload.FilePath,
+                            weapons = weaponPaths
                         }
                     }
                 });
             }
-            catch (Exception ex)
+            catch (DbUpdateException dbEx)
             {
-                _logger.LogError(ex, "❌ OC角色创建失败");
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "服务器内部错误: " + ex.Message
-                });
-            }
-        }
-
-        [HttpPost("{ocId}/update-age")]
-        public async Task<ActionResult> UpdateOCAge(int ocId, [FromBody] UpdateOCAgeDto dto)
-        {
-            try
-            {
-                _logger.LogInformation("开始更新OC角色年龄，OC ID: {OCId}, 新年龄: {NewAge}", ocId, dto.NewAge);
-
-                var ocInfo = await _db.OC_Infos.FindAsync(ocId);
-                if (ocInfo == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        message = $"未找到ID为 {ocId} 的OC角色"
-                    });
-                }
-
-                if (ocInfo.age == dto.NewAge)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "新年龄与当前年龄相同，无需更新"
-                    });
-                }
-
-                if (dto.NewAge < 0 || dto.NewAge > 1000)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "年龄必须在0-1000之间"
-                    });
-                }
-
-                var oldAge = ocInfo.age;
-                ocInfo.age = dto.NewAge;
-                ocInfo.updateTime = DateTime.UtcNow;
-
-                await _db.SaveChangesAsync();
-
-                _logger.LogInformation("✅ OC角色年龄更新成功: ID={OCId}, 旧年龄={OldAge}, 新年龄={NewAge}", ocId, oldAge, dto.NewAge);
-
-                return Ok(new
-                {
-                    success = true,
-                    message = "年龄更新成功",
-                    data = new
-                    {
-                        ocId = ocId,
-                        ocName = ocInfo.name,
-                        oldAge = oldAge,
-                        newAge = dto.NewAge,
-                        updateTime = ocInfo.updateTime.ToString("yyyy-MM-dd HH:mm:ss")
-                    }
-                });
+                await transaction.RollbackAsync();
+                _logger.LogError(dbEx, "数据库保存失败");
+                return StatusCode(500, new { success = false, message = "数据库保存失败", detail = dbEx.InnerException?.Message ?? dbEx.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ 更新OC年龄失败，OC ID: {OCId}", ocId);
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "更新失败: " + ex.Message
-                });
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "服务器错误");
+                return StatusCode(500, new { success = false, message = "服务器错误", detail = ex.Message });
             }
         }
 
         /// <summary>
-        /// 更新OC角色立绘
+        /// 更新 OC（新增版本），支持追加武器图
         /// </summary>
-        [HttpPost("{ocId}/update-image")]
-        public async Task<ActionResult> UpdateOCImage(int ocId, IFormFile characterImage)
+        [HttpPost("{ocId}/update")]
+        [Authorize]
+        public async Task<ActionResult> UpdateOC(int ocId, [FromForm] UpdateOCDto dto)
         {
+            await using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
-                _logger.LogInformation("开始更新OC角色立绘，OC ID: {OCId}", ocId);
+                _logger.LogInformation("开始更新OC角色，OC ID: {OCId}", ocId);
+                var userId = GetCurrentUserId();
 
-                var ocInfo = await _db.OC_Infos.FindAsync(ocId);
-                if (ocInfo == null)
+                var masterRecord = await _db.OC_Master.FirstOrDefaultAsync(m => m.id == ocId && m.authorID == userId && m.status == 1);
+                if (masterRecord == null) return NotFound(new { success = false, message = "未找到OC或无权限" });
+
+                var currentVersion = await _db.OC_Versions.FirstOrDefaultAsync(v => v.ocMasterId == ocId && v.isCurrent);
+                if (currentVersion == null) return NotFound(new { success = false, message = "未找到当前版本" });
+
+                _logger.LogInformation("Request.HasFormContentType: {HasForm}", Request.HasFormContentType);
+
+                var maxVersion = await _db.OC_Versions.Where(v => v.ocMasterId == ocId).MaxAsync(v => (int?)v.versionNumber) ?? 0;
+                var nextVersionNumber = maxVersion + 1;
+
+                // 上传新增武器图片（如果提供）
+                List<string> uploadedNewWeapons = new();
+                if (dto.WeaponImages != null && dto.WeaponImages.Length > 0)
                 {
-                    return NotFound(new
+                    var res = await UploadMultipleFilesToLocalAsync(dto.WeaponImages, userId, ocId, "weapon");
+                    if (!res.Success)
                     {
-                        success = false,
-                        message = $"未找到ID为 {ocId} 的OC角色"
-                    });
+                        await transaction.RollbackAsync();
+                        return BadRequest(new { success = false, message = $"武器图片上传失败: {res.ErrorMessage}" });
+                    }
+                    uploadedNewWeapons = res.FilePaths;
                 }
 
-                if (characterImage == null || characterImage.Length == 0)
-                {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "请上传图片文件"
-                    });
-                }
-
-                // 删除旧图片（如果存在）
-                if (!string.IsNullOrEmpty(ocInfo.OC_image_url))
+                // 将现有 weapon JSON 解析并合并
+                var mergedWeapons = new List<string>();
+                if (!string.IsNullOrEmpty(currentVersion.OC_WeapenImgUrl))
                 {
                     try
                     {
-                        await DeleteLocalImageAsync(ocInfo.OC_image_url);
-                        _logger.LogInformation("旧图片删除成功: {FilePath}", ocInfo.OC_image_url);
+                        var existing = JsonSerializer.Deserialize<List<string>>(currentVersion.OC_WeapenImgUrl);
+                        if (existing != null) mergedWeapons.AddRange(existing);
                     }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "删除旧图片失败，继续上传新图片: {FilePath}", ocInfo.OC_image_url);
-                    }
+                    catch { /* ignore */ }
                 }
+                if (uploadedNewWeapons.Any()) mergedWeapons.AddRange(uploadedNewWeapons);
 
-                // 使用本地存储上传新图片
-                var uploadResult = await UploadImageToLocalStorageAsync(
-                    characterImage,
-                    ocInfo.authorID,
-                    ocId
-                );
+                // form -> dto -> current fallback helper
+                IFormCollection form = Request.HasFormContentType ? Request.Form : null!;
+                string? GetForm(string key) => form != null && form.ContainsKey(key) ? form[key].FirstOrDefault() : null;
 
-                if (!uploadResult.Success)
+                string resolvedName = GetForm("name") ?? dto?.name ?? currentVersion.name;
+                string resolvedAbility = GetForm("ability") ?? GetForm("Ability") ?? dto?.ability ?? currentVersion.ability;
+                string resolvedSpecies = GetForm("species") ?? dto?.species ?? currentVersion.species;
+                int resolvedGender = int.TryParse(GetForm("gender") ?? dto?.gender?.ToString(), out var gval) ? gval : (currentVersion.gender);
+                int resolvedAge = int.TryParse(GetForm("age") ?? dto?.age?.ToString(), out var aval) ? aval : (currentVersion.age);
+                int resolvedWorldTime = dto?.currentTime ?? currentVersion.worldTime;
+
+                string resolvedDesc = GetForm("updateDescription") ?? GetForm("editDescription") ?? dto?.updateDescription ?? "内容更新";
+
+                var newVersion = new OC_Versions
                 {
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = $"图片上传失败: {uploadResult.ErrorMessage}"
-                    });
+                    ocMasterId = ocId,
+                    versionNumber = nextVersionNumber,
+                    versionDescription = resolvedDesc,
+                    isCurrent = true,
+                    createTime = DateTime.UtcNow,
+                    name = resolvedName,
+                    gender = resolvedGender,
+                    age = resolvedAge,
+                    species = resolvedSpecies,
+                    ability = resolvedAbility,
+                    character = GetForm("character") ?? dto?.character ?? currentVersion.character,
+                    background = GetForm("background") ?? dto?.background ?? currentVersion.background,
+                    colors = GetForm("colors") ?? dto?.colors ?? currentVersion.colors,
+                    OC_WeapenImgUrl = mergedWeapons.Count > 0 ? JsonSerializer.Serialize(mergedWeapons) : currentVersion.OC_WeapenImgUrl,
+                    OC_WeapenDesc = GetForm("weaponDesc") ?? dto?.weaponDesc ?? currentVersion.OC_WeapenDesc,
+                    ExtraDesc = GetForm("extraDesc") ?? dto?.extraDesc ?? currentVersion.ExtraDesc,
+                    OC_status = dto?.ocStatus ?? currentVersion.OC_status,
+                    worldTime = resolvedWorldTime,
+                    experience = currentVersion.experience,
+                    winCount = currentVersion.winCount,
+                    loseCount = currentVersion.loseCount,
+                    POO = GetForm("POO") ?? dto?.POO ?? currentVersion.POO,
+                    OC_image_url = currentVersion.OC_image_url
+                };
+
+                // 如果有人上传了新的 CharacterImage，则替换
+                if (dto?.CharacterImage != null && dto.CharacterImage.Length > 0)
+                {
+                    var charRes = await UploadSingleFileToLocalAsync(dto.CharacterImage, userId, ocId, "char");
+                    if (charRes.Success) newVersion.OC_image_url = charRes.FilePath;
                 }
 
-                var oldImagePath = ocInfo.OC_image_url;
-                ocInfo.OC_image_url = uploadResult.FilePath;
-                ocInfo.updateTime = DateTime.UtcNow;
+                // 标记旧版为非当前
+                currentVersion.isCurrent = false;
+
+                _db.OC_Versions.Add(newVersion);
                 await _db.SaveChangesAsync();
 
-                _logger.LogInformation("✅ OC角色立绘更新成功: ID={OCId}", ocId);
+                masterRecord.currentVersionId = newVersion.id;
+                masterRecord.updateTime = DateTime.UtcNow;
+                masterRecord.name = newVersion.name;
+
+                newVersion.isCurrent = true;
+                await _db.SaveChangesAsync();
+                await transaction.CommitAsync();
 
                 return Ok(new
                 {
                     success = true,
-                    message = "角色立绘更新成功",
-                    data = new
-                    {
-                        ocId = ocInfo.id,
-                        ocName = ocInfo.name,
-                        age = ocInfo.age,
-                        imageInfo = new
-                        {
-                            oldFilePath = oldImagePath,
-                            newFilePath = uploadResult.FilePath,
-                            fileName = uploadResult.FileName,
-                            fullUrl = BuildLocalImageUrl(uploadResult.FilePath),
-                            fileSize = uploadResult.FileSize
-                        },
-                        updateTime = ocInfo.updateTime.ToString("yyyy-MM-dd HH:mm:ss")
-                    }
+                    message = "OC角色更新成功",
+                    data = new { ocId = ocId, versionId = newVersion.id, versionNumber = newVersion.versionNumber }
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ 更新OC立绘失败，OC ID: {OCId}", ocId);
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "更新失败: " + ex.Message
-                });
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "更新失败");
+                return StatusCode(500, new { success = false, message = "更新失败", detail = ex.Message });
             }
         }
 
+        /// <summary>
+        /// 获取列表（容错）并返回 weaponImages 完整 URL 列表（若存在）
+        /// </summary>
         [HttpGet("list")]
         [AllowAnonymous]
         public async Task<ActionResult> GetOCList()
         {
             try
             {
-                _logger.LogInformation("开始获取OC角色列表");
+                var latestPerMaster = _db.OC_Versions
+                    .GroupBy(v => v.ocMasterId)
+                    .Select(g => new { ocMasterId = g.Key, latestVersionId = g.OrderByDescending(v => v.versionNumber).FirstOrDefault().id });
 
-                var rawList = await _db.OC_Infos
-                    .Where(o => o.status == 1)
-                    .OrderByDescending(o => o.updateTime)
-                    .Select(o => new
+                var query = from master in _db.OC_Master
+                            join lv in latestPerMaster on master.id equals lv.ocMasterId into lvj
+                            from lv in lvj.DefaultIfEmpty()
+                            join versionOnCurrent in _db.OC_Versions on master.currentVersionId equals versionOnCurrent.id into vcurj
+                            from versionOnCurrent in vcurj.DefaultIfEmpty()
+                            join versionLatest in _db.OC_Versions on lv.latestVersionId equals versionLatest.id into vlastj
+                            from versionLatest in vlastj.DefaultIfEmpty()
+                            where master.status == 1
+                            orderby master.updateTime descending
+                            select new
+                            {
+                                master.id,
+                                version = (versionOnCurrent != null && versionOnCurrent.isCurrent) ? versionOnCurrent : versionLatest,
+                                master.authorName,
+                                master.authorID
+                            };
+
+                var list = await query.ToListAsync();
+
+                var result = list.Where(x => x.version != null)
+                    .Select(x =>
                     {
-                        o.id,
-                        o.name,
-                        o.authorName,
-                        o.species,
-                        o.gender,
-                        o.age,
-                        o.winCount,
-                        o.loseCount,
-                        o.OC_Current_Time,
-                        o.updateTime,
-                        o.OC_image_url,
-                        o.authorID
-                    })
-                    .ToListAsync();
+                        List<string>? weaponImgs = null;
+                        try
+                        {
+                            if (!string.IsNullOrEmpty(x.version.OC_WeapenImgUrl))
+                                weaponImgs = JsonSerializer.Deserialize<List<string>>(x.version.OC_WeapenImgUrl);
+                        }
+                        catch { weaponImgs = null; }
 
-                var ocList = rawList.Select(o => new
+                        return new
+                        {
+                            id = x.id,
+                            name = x.version.name,
+                            authorName = x.authorName,
+                            species = x.version.species,
+                            gender = x.version.gender,
+                            age = x.version.age,
+                            worldTime = x.version.worldTime,
+                            createTime = x.version.createTime,
+                            OC_image_url = x.version.OC_image_url,
+                            weaponImages = weaponImgs,
+                            versionNumber = x.version.versionNumber,
+                            authorID = x.authorID
+                        };
+                    }).ToList();
+
+                var final = result.Select(o => new
                 {
                     o.id,
                     o.name,
@@ -396,349 +374,226 @@ namespace THCY_BE.Controller.Chai
                     o.species,
                     o.gender,
                     o.age,
-                    o.winCount,
-                    o.loseCount,
-                    o.OC_Current_Time,
-                    o.updateTime,
+                    o.worldTime,
+                    o.createTime,
+                    o.versionNumber,
                     o.authorID,
-                    imageUrl = !string.IsNullOrEmpty(o.OC_image_url) ? BuildLocalImageUrl(o.OC_image_url) : null
+                    imageUrl = !string.IsNullOrEmpty(o.OC_image_url) ? BuildImageUrl(o.OC_image_url) : null,
+                    weaponImages = o.weaponImages?.Select(p => BuildImageUrl(p)).ToList()
                 }).ToList();
 
-                _logger.LogInformation("获取到 {Count} 个OC角色", ocList.Count);
-
-                return Ok(new
-                {
-                    success = true,
-                    data = new
-                    {
-                        total = ocList.Count,
-                        items = ocList
-                    }
-                });
+                return Ok(new { success = true, data = new { total = final.Count, items = final } });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ 获取OC列表失败");
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "获取OC列表失败: " + ex.Message
-                });
+                _logger.LogError(ex, "获取列表失败");
+                return StatusCode(500, new { success = false, message = "获取列表失败" });
             }
         }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult> GetOCDetail(int id)
-        {
-            try
-            {
-                _logger.LogInformation("开始获取OC角色详情，ID: {Id}", id);
-
-                var raw = await _db.OC_Infos
-                    .Where(o => o.id == id && o.status == 1)
-                    .Select(o => new
-                    {
-                        o.id,
-                        o.name,
-                        o.gender,
-                        o.age,
-                        o.species,
-                        o.ability,
-                        o.authorName,
-                        o.background,
-                        o.POO,
-                        o.OC_Current_Time,
-                        o.winCount,
-                        o.loseCount,
-                        o.experience,
-                        o.version,
-                        o.createTime,
-                        o.updateTime,
-                        o.OC_image_url,
-                        o.authorID
-                    })
-                    .FirstOrDefaultAsync();
-
-                if (raw == null)
-                {
-                    _logger.LogWarning("未找到OC角色，ID: {Id}", id);
-                    return NotFound(new
-                    {
-                        success = false,
-                        message = "未找到指定的OC角色"
-                    });
-                }
-
-                var imageUrl = !string.IsNullOrEmpty(raw.OC_image_url) ? BuildLocalImageUrl(raw.OC_image_url) : null;
-
-                _logger.LogInformation("成功获取OC角色详情: {OCName}", raw.name);
-
-                return Ok(new
-                {
-                    success = true,
-                    data = new
-                    {
-                        raw.id,
-                        raw.name,
-                        raw.gender,
-                        raw.age,
-                        raw.species,
-                        raw.ability,
-                        raw.authorName,
-                        raw.background,
-                        raw.POO,
-                        raw.OC_Current_Time,
-                        raw.winCount,
-                        raw.loseCount,
-                        raw.experience,
-                        raw.version,
-                        raw.createTime,
-                        raw.updateTime,
-                        raw.authorID,
-                        imageUrl
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ 获取OC详情失败，ID: {Id}", id);
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "获取OC详情失败: " + ex.Message
-                });
-            }
-        }
-
-        [HttpGet("{ocId}/images-by-age")]
-        [AllowAnonymous]
-        public async Task<ActionResult> GetOCImagesByAge(int ocId, [FromQuery] int? age = null)
-        {
-            try
-            {
-                _logger.LogInformation("开始按年龄检索OC图片，OC ID: {OCId}, 年龄: {Age}", ocId, age);
-
-                var ocInfo = await _db.OC_Infos
-                    .Where(o => o.id == ocId && o.status == 1)
-                    .Select(o => new { o.name })
-                    .FirstOrDefaultAsync();
-
-                if (ocInfo == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        message = $"未找到ID为 {ocId} 的OC角色"
-                    });
-                }
-
-                var rawImages = await _db.OC_Infos
-                    .Where(o => o.id == ocId && o.status == 1 && (!age.HasValue || o.age == age.Value))
-                    .Select(o => new
-                    {
-                        o.id,
-                        o.name,
-                        o.age,
-                        o.OC_image_url,
-                        o.updateTime
-                    })
-                    .ToListAsync();
-
-                var result = rawImages.Select(i => new
-                {
-                    age = i.age,
-                    imageUrl = !string.IsNullOrEmpty(i.OC_image_url) ? BuildLocalImageUrl(i.OC_image_url) : null,
-                    period = $"{i.age}岁时期",
-                    updateTime = i.updateTime.ToString("yyyy-MM-dd HH:mm:ss"),
-                    fileName = !string.IsNullOrEmpty(i.OC_image_url) ? Path.GetFileName(i.OC_image_url) : "暂无图片"
-                }).ToList();
-
-                _logger.LogInformation("按年龄检索完成: OC ID={OCId}, 找到 {Count} 个记录", ocId, result.Count);
-
-                return Ok(new
-                {
-                    success = true,
-                    data = new
-                    {
-                        ocId,
-                        ocName = ocInfo.name,
-                        filterAge = age,
-                        totalImages = result.Count,
-                        images = result
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ 按年龄检索OC图片失败，OC ID: {OCId}", ocId);
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "检索失败: " + ex.Message
-                });
-            }
-        }
-
-        #region 本地存储核心方法
 
         /// <summary>
-        /// 上传图片到服务器本地存储 - 包含年龄信息格式（推荐版本）
-        /// 格式：oc_{ocId}_{年龄}yo_{时间戳}_{随机数}
+        /// 获取单个 OC 详情（包含 weaponImages 数组）
         /// </summary>
-        private async Task<LocalUploadResult> UploadImageToLocalStorageAsync(IFormFile file, int userId, int ocId)
+        [HttpGet("{ocId}")]
+        [AllowAnonymous]
+        public async Task<ActionResult> GetOCDetail(int ocId)
         {
             try
             {
-                if (!ValidateImageFile(file))
+                var detail = await (from master in _db.OC_Master
+                                    join version in _db.OC_Versions on master.currentVersionId equals version.id
+                                    where master.id == ocId && master.status == 1 && version.isCurrent
+                                    select new { master, version }).FirstOrDefaultAsync();
+
+                OC_Master masterRec;
+                OC_Versions curr;
+
+                if (detail == null)
                 {
-                    return new LocalUploadResult { Success = false, ErrorMessage = "文件格式不支持或文件过大" };
+                    curr = await _db.OC_Versions.Where(v => v.ocMasterId == ocId).OrderByDescending(v => v.versionNumber).FirstOrDefaultAsync();
+                    if (curr == null) return NotFound(new { success = false, message = "未找到指定的OC角色" });
+                    masterRec = await _db.OC_Master.FirstOrDefaultAsync(m => m.id == ocId && m.status == 1);
+                    if (masterRec == null) return NotFound(new { success = false, message = "未找到指定的OC角色" });
+                }
+                else
+                {
+                    masterRec = detail.master;
+                    curr = detail.version;
                 }
 
-                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-
-                // 获取OC角色的年龄和名称信息
-                var ocInfo = await _db.OC_Infos
-                    .Where(o => o.id == ocId)
-                    .Select(o => new { o.age, o.name })
-                    .FirstOrDefaultAsync();
-
-                if (ocInfo == null)
+                List<string>? weaponImgs = null;
+                try
                 {
-                    return new LocalUploadResult { Success = false, ErrorMessage = "未找到指定的OC角色" };
+                    if (!string.IsNullOrEmpty(curr.OC_WeapenImgUrl))
+                        weaponImgs = JsonSerializer.Deserialize<List<string>>(curr.OC_WeapenImgUrl);
                 }
+                catch { weaponImgs = null; }
 
-                // 生成文件名：oc_{ocId}_{年龄}yo_{时间戳}_{随机数}
+                var versionHistory = await _db.OC_Versions.Where(v => v.ocMasterId == ocId)
+                    .OrderByDescending(v => v.versionNumber)
+                    .Select(v => new
+                    {
+                        v.versionNumber,
+                        v.versionDescription,
+                        v.createTime,
+                        v.age,
+                        v.worldTime,
+                        v.OC_image_url,
+                        isCurrent = v.isCurrent
+                    }).ToListAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        ocId = masterRec.id,
+                        name = curr.name,
+                        authorName = masterRec.authorName,
+                        authorId = masterRec.authorID,
+                        createTime = masterRec.createTime,
+                        updateTime = masterRec.updateTime,
+                        gender = curr.gender,
+                        age = curr.age,
+                        species = curr.species,
+                        ability = curr.ability,
+                        character = curr.character,
+                        background = curr.background,
+                        colors = curr.colors,
+                        worldTime = curr.worldTime,
+                        POO = curr.POO,
+                        winCount = curr.winCount,
+                        loseCount = curr.loseCount,
+                        experience = curr.experience,
+                        weaponImageUrl = curr.OC_WeapenImgUrl,
+                        weaponImages = weaponImgs?.Select(p => BuildImageUrl(p)).ToList(),
+                        imageUrl = BuildImageUrl(curr.OC_image_url),
+                        currentVersion = new { curr.versionNumber, curr.versionDescription },
+                        versionHistory = versionHistory.Select(v => new
+                        {
+                            v.versionNumber,
+                            v.versionDescription,
+                            v.createTime,
+                            v.age,
+                            v.worldTime,
+                            imageUrl = BuildImageUrl(v.OC_image_url),
+                            v.isCurrent
+                        })
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取详情失败");
+                return StatusCode(500, new { success = false, message = "获取详情失败" });
+            }
+        }
+
+        #region 辅助方法
+
+        private async Task<UploadResult> UploadSingleFileToLocalAsync(IFormFile file, int userId, int ocId, string rolePrefix)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                    return new UploadResult { Success = false, ErrorMessage = "文件为空" };
+
+                var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowed.Contains(ext)) return new UploadResult { Success = false, ErrorMessage = "不支持的文件格式" };
+
+                if (file.Length > 5 * 1024 * 1024) return new UploadResult { Success = false, ErrorMessage = "文件大小不能超过5MB" };
+
                 var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-                var random = new Random().Next(1000, 9999); // 避免时间戳重复
-                var fileName = $"oc_{ocId}_{ocInfo.age}yo_{timestamp}_{random}{fileExtension}";
+                var random = new Random().Next(1000, 9999);
+                var safePrefix = string.IsNullOrWhiteSpace(rolePrefix) ? "file" : rolePrefix;
+                var fileName = $"oc_{ocId}_{safePrefix}_{timestamp}_{random}{ext}";
 
                 var userFolder = userId.ToString();
                 var ocFolder = $"oc_{ocId}";
+                var relativePath = Path.Combine("柴圈板块", "太初约战场", "人设图", userFolder, ocFolder, fileName).Replace("\\", "/");
+                var physicalPath = Path.Combine(BASE_PHYSICAL_PATH, relativePath);
 
-                // 构建路径
-                var physicalPath = Path.Combine(BASE_PHYSICAL_PATH, "柴圈板块", "太初约战场", "人设图", userFolder, ocFolder, fileName);
-                var relativePath = Path.Combine("柴圈板块", "太初约战场", "人设图", userFolder, ocFolder, fileName)
-                    .Replace("\\", "/");
-
-                // 确保目录存在
                 var directory = Path.GetDirectoryName(physicalPath);
-                if (!Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                    _logger.LogInformation("创建目录: {Directory}", directory);
-                }
+                if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
 
-                // 保存文件
                 using var stream = new FileStream(physicalPath, FileMode.Create);
                 await file.CopyToAsync(stream);
 
-                _logger.LogInformation("✅ 图片保存成功: {FileName}", fileName);
-                _logger.LogInformation("📝 OC角色信息: {OCName} (ID: {OCId}, 年龄: {Age}岁)",
-                    ocInfo.name, ocId, ocInfo.age);
-
-                return new LocalUploadResult
-                {
-                    Success = true,
-                    FileName = fileName,
-                    FilePath = relativePath,
-                    FileSize = file.Length,
-                    PhysicalPath = physicalPath
-                };
+                return new UploadResult { Success = true, FileName = fileName, FilePath = relativePath, FileSize = file.Length, PhysicalPath = physicalPath };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ 本地图片上传失败");
-                return new LocalUploadResult { Success = false, ErrorMessage = ex.Message };
+                _logger.LogError(ex, "上传文件失败");
+                return new UploadResult { Success = false, ErrorMessage = ex.Message };
             }
         }
 
-        /// <summary>
-        /// 删除本地图片
-        /// </summary>
-        private async Task<bool> DeleteLocalImageAsync(string relativePath)
+        private async Task<(bool Success, List<string> FilePaths, string ErrorMessage)> UploadMultipleFilesToLocalAsync(IFormFile[] files, int userId, int ocId, string rolePrefix)
         {
+            var paths = new List<string>();
             try
             {
-                if (string.IsNullOrEmpty(relativePath))
-                    return false;
-
-                // 相对路径转换为物理路径
-                var physicalPath = Path.Combine(BASE_PHYSICAL_PATH, relativePath);
-
-                if (System.IO.File.Exists(physicalPath))
+                var seq = 1;
+                foreach (var file in files)
                 {
-                    System.IO.File.Delete(physicalPath);
-                    _logger.LogInformation("删除本地图片: {PhysicalPath}", physicalPath);
-                    return true;
+                    if (file == null || file.Length == 0) continue;
+                    var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+                    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                    if (!allowed.Contains(ext)) continue;
+                    if (file.Length > 5 * 1024 * 1024) continue;
+
+                    var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+                    var fileName = $"oc_{ocId}_{rolePrefix}_{timestamp}_{seq}{ext}";
+
+                    var userFolder = userId.ToString();
+                    var ocFolder = $"oc_{ocId}";
+                    var relativePath = Path.Combine("柴圈板块", "太初约战场", "人设图", userFolder, ocFolder, fileName).Replace("\\", "/");
+                    var physicalPath = Path.Combine(BASE_PHYSICAL_PATH, relativePath);
+
+                    var directory = Path.GetDirectoryName(physicalPath);
+                    if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+
+                    using var stream = new FileStream(physicalPath, FileMode.Create);
+                    await file.CopyToAsync(stream);
+
+                    paths.Add(relativePath);
+                    seq++;
                 }
 
-                _logger.LogWarning("图片文件不存在: {PhysicalPath}", physicalPath);
-                return false;
+                return (true, paths, string.Empty);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "删除本地图片失败: {RelativePath}", relativePath);
-                return false;
+                _logger.LogError(ex, "批量上传失败");
+                return (false, paths, ex.Message);
             }
         }
 
-        /// <summary>
-        /// 验证图片文件
-        /// </summary>
-        private bool ValidateImageFile(IFormFile file)
+        private string? BuildImageUrl(string? relativePath)
         {
-            if (file == null || file.Length == 0)
-                return false;
-
-            // 检查文件大小（5MB）
-            if (file.Length > 5 * 1024 * 1024)
-                return false;
-
-            // 检查文件类型
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
-            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(fileExtension))
-                return false;
-
-            return true;
-        }
-
-        /// <summary>
-        /// 构建本地图片访问URL
-        /// </summary>
-        /// <summary>
-        /// 构建本地图片访问URL - 修正协议格式
-        /// </summary>
-        private string? BuildLocalImageUrl(string? relativePath)
-        {
-            if (string.IsNullOrEmpty(relativePath))
-                return null;
-
-            // 开发环境使用本地地址，生产环境使用域名
-            var baseUrl = _environment.IsDevelopment()
-                ? "https://localhost:44359"
-                : _configuration["AppSettings:ProductionUrl"] ?? "https://bianyuzhou.com";
-
-            // 确保baseUrl格式正确
-            baseUrl = baseUrl.TrimEnd('/');
-
-            // 构建完整的URL
+            if (string.IsNullOrEmpty(relativePath)) return null;
+            var baseUrl = _environment.IsDevelopment() ? "https://localhost:44359" : "https://bianyuzhou.com";
             var fullUrl = $"{baseUrl}/{BASE_WEB_PATH.TrimStart('/')}/{relativePath.TrimStart('/')}";
-
-            // 修正协议格式（确保是 https:// 而不是 https:/）
-            fullUrl = fullUrl.Replace("https:/", "https://")
-                            .Replace("http:/", "http://")
-                            .Replace("\\", "/")
-                            .Replace("//", "/");
-
-            _logger.LogInformation("构建图片URL: {FullUrl}", fullUrl);
+            fullUrl = fullUrl.Replace("https:/", "https://").Replace("http:/", "http://").Replace("\\", "/").Replace("//", "/");
             return fullUrl;
         }
 
-        /// <summary>
-        /// 本地上传结果类
-        /// </summary>
-        private class LocalUploadResult
+        private int GetCurrentUserId()
+        {
+            try
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (int.TryParse(userIdClaim, out int userId) && userId > 0) return userId;
+                return 1;
+            }
+            catch
+            {
+                return 1;
+            }
+        }
+
+        private class UploadResult
         {
             public bool Success { get; set; }
             public string? ErrorMessage { get; set; }
@@ -749,28 +604,5 @@ namespace THCY_BE.Controller.Chai
         }
 
         #endregion
-
-        #region 辅助方法
-
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdClaim, out int userId) && userId > 0)
-            {
-                return userId;
-            }
-
-            _logger.LogWarning("无法从token获取用户ID，声明: {UserIdClaim}", userIdClaim);
-            var userName = User.FindFirstValue(ClaimTypes.Name) ?? "未知用户";
-            _logger.LogWarning("当前用户: {UserName}", userName);
-            return 1;
-        }
-
-        #endregion
-    }
-
-    public class UpdateOCAgeDto
-    {
-        public int NewAge { get; set; }
     }
 }

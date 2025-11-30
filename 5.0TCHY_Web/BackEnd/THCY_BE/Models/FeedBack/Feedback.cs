@@ -22,5 +22,7 @@ namespace THCY_BE.Models.FeedBack
         public string title { get; set; }
 
         public string? imagesUrl { get; set; }
+
+        public int? contactQQ { get; set; }
     }
 }

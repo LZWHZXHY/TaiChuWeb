@@ -1,7 +1,8 @@
 <template>
   <div class="forbidden">
     <h2>权限不足</h2>
-    <p>此页面需要更高的权限或 Rank（需要：{{ $route.query.needRank || 1 }}）。</p>
+    <p>此页面需要更高的等级或管理员账户权限，请以后再尝试</p>
+    <p>门不能从这一侧打开.jpg</p>
     <router-link to="/">返回首页</router-link>
   </div>
 </template>
