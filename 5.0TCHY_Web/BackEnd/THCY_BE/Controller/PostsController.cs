@@ -381,6 +381,242 @@ namespace THCY_BE.Controller
             }
         }
 
+        #region 评论接口（已增强以支持 multipart/form-data 与 application/json）
+
+        // JSON 路由
+        [HttpPost("{postId}/comments")]
+        [Consumes("application/json")]
+        public async Task<IActionResult> CreateCommentJson(int postId, [FromBody] CreateCommentDto dto)
+            => await CreateCommentInternal(postId, dto, null);
+
+        // Form (x-www-form-urlencoded / multipart/form-data) 路由
+        [HttpPost("{postId}/comments")]
+        [Consumes("application/x-www-form-urlencoded", "multipart/form-data")]
+        public async Task<IActionResult> CreateCommentForm(int postId)
+        {
+            // 兼容前端使用 FormData 的情况
+            var form = await Request.ReadFormAsync();
+            var contentValue = form["Content"].FirstOrDefault() ?? form["content"].FirstOrDefault();
+            var parentStr = form["ParentCommentId"].FirstOrDefault() ?? form["parentCommentId"].FirstOrDefault();
+            int? parentId = null;
+            if (int.TryParse(parentStr, out var pid)) parentId = pid;
+
+            // 收集文件（若前端上传图片，但 Comment 实体不保存图片，先忽略或扩展后端以保存图片）
+            var files = form.Files?.Count > 0 ? form.Files : null;
+
+            var dto = new CreateCommentDto
+            {
+                Content = contentValue ?? string.Empty,
+                ParentCommentId = parentId
+            };
+
+            return await CreateCommentInternal(postId, dto, files);
+        }
+
+        // 兼容 /reply 路径（JSON）
+        [HttpPost("{postId}/reply")]
+        [Consumes("application/json")]
+        public async Task<IActionResult> CreateReplyAliasJson(int postId, [FromBody] CreateCommentDto dto)
+            => await CreateCommentInternal(postId, dto, null);
+
+        // 兼容 /reply 路径（form）
+        [HttpPost("{postId}/reply")]
+        [Consumes("application/x-www-form-urlencoded", "multipart/form-data")]
+        public async Task<IActionResult> CreateReplyAliasForm(int postId)
+        {
+            var form = await Request.ReadFormAsync();
+            var contentValue = form["Content"].FirstOrDefault() ?? form["content"].FirstOrDefault();
+            var parentStr = form["ParentCommentId"].FirstOrDefault() ?? form["parentCommentId"].FirstOrDefault();
+            int? parentId = null;
+            if (int.TryParse(parentStr, out var pid)) parentId = pid;
+            var files = form.Files?.Count > 0 ? form.Files : null;
+
+            var dto = new CreateCommentDto
+            {
+                Content = contentValue ?? string.Empty,
+                ParentCommentId = parentId
+            };
+
+            return await CreateCommentInternal(postId, dto, files);
+        }
+
+        // 公共内部实现：把原先 CreateComment 的逻辑移动到这里
+        private async Task<IActionResult> CreateCommentInternal(int postId, CreateCommentDto dto, IFormFileCollection? files)
+        {
+            try
+            {
+                if (dto == null || string.IsNullOrWhiteSpace(dto.Content))
+                    return BadRequest(new { success = false, message = "评论内容不能为空" });
+
+                var post = await _db.Posts.FirstOrDefaultAsync(p => p.id == postId && p.status == 0);
+                if (post == null)
+                    return NotFound(new { success = false, message = "帖子不存在或不可评论" });
+
+                var userId = GetCurrentUserId();
+
+                var comment = new Comment
+                {
+                    post_id = postId,
+                    user_id = userId,
+                    content = dto.Content.Trim(),
+                    createTime = DateTime.UtcNow,
+                    ParentCommentId = dto.ParentCommentId,
+                    status = 0,
+                    report_count = 0
+                };
+
+                _db.Comments.Add(comment);
+
+                // 同步更新帖子的评论数量
+                post.comment_count = (post.comment_count <= 0) ? 1 : post.comment_count + 1;
+                post.updateTime = DateTime.UtcNow;
+
+                await _db.SaveChangesAsync();
+
+                // 如果前端上传图片并且你计划把评论/回复支持图片：
+                // 这里可以处理 files（保存并把路径存入数据库），目前先记录数量到日志
+                if (files != null && files.Count > 0)
+                {
+                    _logger.LogInformation("收到 {Count} 附件 (未保存): postId={PostId}, commentId={CommentId}", files.Count, postId, comment.id);
+                    // TODO: 如需保存评论图片，新增 CommentImages 表或在 Comment 中增加字段并实现保存逻辑
+                }
+
+                // 返回创建的评论（包含作者简要信息）
+                // 注意：根据你的 PostsDbContext 命名，集合名称可能不同，请确保 _db.UserAccounts 存在或替换为实际名称
+                var author = await _db.UserAccounts.Where(u => u.Id == userId)
+                    .Select(u => new { u.Id, u.username })
+                    .FirstOrDefaultAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        id = comment.id,
+                        postId = comment.post_id,
+                        parentCommentId = comment.ParentCommentId,
+                        content = comment.content,
+                        createTime = comment.createTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                        author
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "创建评论失败");
+                return StatusCode(500, new { success = false, message = "创建评论失败" });
+            }
+        }
+
+        /// <summary>
+        /// 获取指定帖子的评论（分页/分段）
+        /// GET api/posts/{postId}/comments?lastId=xxx&pageSize=20
+        /// </summary>
+        [HttpGet("{postId}/comments")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetComments(int postId, [FromQuery] int? lastId = null, [FromQuery] int pageSize = 20)
+        {
+            try
+            {
+                if (pageSize < 1 || pageSize > 200) pageSize = 20;
+
+                var baseQuery = _db.Comments
+                    .Where(c => c.post_id == postId && c.status == 0)
+                    .OrderByDescending(c => c.createTime)
+                    .AsQueryable();
+
+                if (lastId.HasValue)
+                {
+                    var lastTime = await _db.Comments.Where(c => c.id == lastId.Value).Select(c => c.createTime).FirstOrDefaultAsync();
+                    if (lastTime != default)
+                    {
+                        baseQuery = baseQuery.Where(c => c.createTime < lastTime);
+                    }
+                }
+
+                var items = await baseQuery
+                    .Take(pageSize)
+                    .Select(c => new
+                    {
+                        c.id,
+                        c.post_id,
+                        c.ParentCommentId,
+                        c.content,
+                        c.createTime,
+                        c.report_count,
+                        author = new
+                        {
+                            id = c.useraccount.Id,
+                            username = c.useraccount.username,
+                            avatar = c.useraccount.userdata != null ? c.useraccount.userdata.logo : null
+                        }
+                    })
+                    .ToListAsync();
+
+                bool hasMore = false;
+                if (items.Any())
+                {
+                    var lastTime = items.Last().createTime;
+                    hasMore = await _db.Comments.AnyAsync(c => c.post_id == postId && c.status == 0 && c.createTime < lastTime);
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    data = items,
+                    pagination = new
+                    {
+                        lastId = items.LastOrDefault()?.id,
+                        pageSize,
+                        hasMore
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取评论列表失败");
+                return StatusCode(500, new { success = false, message = "获取评论列表失败" });
+            }
+        }
+
+        /// <summary>
+        /// 删除评论（作者或管理员可以删除） - 软删除
+        /// DELETE api/posts/{postId}/comments/{commentId}
+        /// </summary>
+        [HttpDelete("{postId}/comments/{commentId}")]
+        public async Task<IActionResult> DeleteComment(int postId, int commentId)
+        {
+            try
+            {
+                var comment = await _db.Comments.FirstOrDefaultAsync(c => c.id == commentId && c.post_id == postId);
+                if (comment == null) return NotFound(new { success = false, message = "评论不存在" });
+
+                var userId = GetCurrentUserId();
+                var isAuthor = comment.user_id == userId;
+                var isAdmin = User.IsInRole("Admin");
+
+                if (!isAuthor && !isAdmin) return Forbid();
+
+                // 软删除：将 status 标记为 1（已删除）
+                comment.status = 1;
+                comment.createTime = comment.createTime; // 保留原时间
+                // 减少帖子关联的 comment_count
+                var post = await _db.Posts.FirstOrDefaultAsync(p => p.id == postId);
+                if (post != null && post.comment_count > 0) post.comment_count--;
+
+                await _db.SaveChangesAsync();
+
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "删除评论失败");
+                return StatusCode(500, new { success = false, message = "删除评论失败" });
+            }
+        }
+
+        #endregion
+
         #region 图片处理核心方法
 
         /// <summary>
@@ -563,6 +799,69 @@ namespace THCY_BE.Controller
             return 1; // 默认用户ID
         }
 
+        // 将此方法添加/替换到你的 PostsController（评论接口区域）
+        [HttpGet("{postId}/replies")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetRepliesPaged(int postId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        {
+            try
+            {
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 200) pageSize = 20;
+
+                var baseQuery = _db.Comments
+                    .Where(c => c.post_id == postId && c.status == 0)
+                    .OrderByDescending(c => c.createTime)
+                    .AsQueryable();
+
+                var total = await baseQuery.CountAsync();
+
+                var items = await baseQuery
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(c => new
+                    {
+                        id = c.id,
+                        authorId = c.user_id,
+                        parentCommentId = c.ParentCommentId,   // <-- 返回父评论 ID（可为 null）
+                        createTime = c.createTime,
+                        content = c.content,
+                        images = new List<string>(),
+                        author = c.useraccount != null
+                            ? new
+                            {
+                                id = c.useraccount.Id,
+                                username = c.useraccount.username,
+                                avatar = c.useraccount.userdata != null ? c.useraccount.userdata.logo : null
+                            }
+                            : null
+                    })
+                    .ToListAsync();
+
+                var hasMore = page * pageSize < total;
+
+                return Ok(new
+                {
+                    success = true,
+                    data = items,
+                    pagination = new
+                    {
+                        page,
+                        pageSize,
+                        total,
+                        hasMore
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取分页 replies 失败: postId={PostId}", postId);
+                return StatusCode(500, new { success = false, message = "获取回复失败" });
+            }
+        }
+
+
+
         #endregion
     }
 
@@ -575,6 +874,15 @@ namespace THCY_BE.Controller
         public string Content { get; set; } = string.Empty;
         public int PostType { get; set; } = 0;
         public List<IFormFile>? Images { get; set; }
+    }
+
+    /// <summary>
+    /// 创建评论 DTO
+    /// </summary>
+    public class CreateCommentDto
+    {
+        public int? ParentCommentId { get; set; }
+        public string Content { get; set; } = string.Empty;
     }
 
     /// <summary>

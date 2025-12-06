@@ -105,7 +105,7 @@ export const useAuthStore = defineStore('auth', () => {
   // 发送验证码方法
   const sendVerificationCode = async (email) => {
     try {
-      const response = await apiClient.post('/loginregister/sendcode', {
+      const response = await apiClient.post('/loginregister/send-verification-code', {
         email: email
       })
       

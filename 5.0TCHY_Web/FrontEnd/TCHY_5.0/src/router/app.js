@@ -86,6 +86,15 @@ const routes = [
     }
   },
   {
+    path:'/blog',
+    name:'博客',
+    component:()=>import('@/views/blog.vue'),
+    meta:{
+      requiresAuth:true,
+      title:'博客'
+    }
+  },
+  {
     path:'/suggest',
     name:'意见箱',
     component: () => import('@/feedbackComponents/FeedbackBox.vue'),

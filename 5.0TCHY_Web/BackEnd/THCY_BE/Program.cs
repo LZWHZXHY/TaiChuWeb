@@ -40,6 +40,9 @@ builder.Services.AddDbContext<FriendsDbContext>(options =>
 builder.Services.AddDbContext<FeedBackDbContext>(options =>
     options.UseMySql(defaultConn, serverVersion));
 
+builder.Services.AddDbContext<DrawingDbContext>(options =>
+    options.UseMySql(defaultConn, serverVersion));
+
 
 // 注册内存缓存（B 站封面缓存会用到）
 builder.Services.AddMemoryCache();

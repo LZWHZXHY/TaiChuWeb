@@ -16,7 +16,8 @@ export const NAV_ITEMS = [
       { name: '游戏交流', path: '/community/gaming' },
       { name: '音乐分享', path: '/community/music' },
       { name: '资源板块', path: '/资源' },
-      { name: '文学创作', path: '/community/writing' }
+      { name: '文学创作', path: '/community/writing' },
+      { name: '博客区域', path: '/blog' }
     ]
   },{
     name:'太初产品',

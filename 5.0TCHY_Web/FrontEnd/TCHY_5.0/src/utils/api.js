@@ -19,7 +19,7 @@ const getBaseURL = () => {
 // 创建 axios 实例
 const apiClient = axios.create({
   baseURL: getBaseURL(),
-  timeout: 10000,
+  timeout: 30000,
   headers: {
     Accept: 'application/json'
   },
