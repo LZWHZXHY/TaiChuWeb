@@ -1,7 +1,9 @@
 <template>
   <div class="BigContainer">
     <div id="app">
-      <HeaderNav
+
+      
+      <HeaderNav 
         :nav-items="navItems"
         :show-cta="true"
         @nav-change="handleNavChange"
@@ -38,12 +40,37 @@ const handleUserAction = () => { console.log('用户操作') }
 </script>
 
 <style scoped>
-/* Footer 样式 */
+.BigContainer {
+  width: 100%;
+  height: 100vh;
+  background-color: rgb(54, 192, 107);
+  display: flex;
+  flex-direction: column;
+}
+
+#app {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* 防止内容溢出 */
+  width: 100%;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto; /* 主内容可滚动 */
+  width: 100%;
+  padding: 20px 0;
+  background-color: #ffffff;
+  margin-top: 70px; /* Header高度 */
+}
+
 .app-footer {
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
   padding: 1.5rem 0;
-  margin-top: auto;
+  width: 100%;
+  margin-top: auto; /* 关键：将footer推到最下面 */
 }
 
 .footer-content {
@@ -67,36 +94,4 @@ const handleUserAction = () => { console.log('用户操作') }
   color: #334155;
 }
 
-/* 固定底部样式 */
-.fixed-footer {
-  position: relative;
-  width: 100%;
-  bottom: 0;
-}
-
-.main-content {
-  width: 100%;
-  margin-top: 70px;
-  padding-bottom: 50px;
-}
-
-#app {
-  min-height: 100%;
-  position: relative;
-  width: 100%;
-}
-
-/* 小屏适配 */
-@media (max-width: 768px) {
-  .footer-content {
-    flex-direction: column;
-    gap: 0.5rem;
-    text-align: center;
-  }
-}
-
-.main-content {
-  min-height: calc(100vh - 200px);
-  padding-bottom: 2rem;
-}
-</style>
+</style>        

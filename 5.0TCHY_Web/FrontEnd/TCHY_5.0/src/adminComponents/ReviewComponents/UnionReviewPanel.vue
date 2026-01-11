@@ -94,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref, watch, defineProps, defineEmits, onMounted } from 'vue'
+import { ref, watch,  defineEmits, onMounted } from 'vue'
 import apiClient from '@/utils/api'
 
 const props = defineProps({

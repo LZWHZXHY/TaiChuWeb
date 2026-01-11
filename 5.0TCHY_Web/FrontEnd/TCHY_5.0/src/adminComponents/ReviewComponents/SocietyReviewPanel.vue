@@ -258,7 +258,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, defineProps, defineEmits, onMounted } from 'vue'
+import { ref, computed, watch,  defineEmits, onMounted } from 'vue'
 import apiClient from '@/utils/api'
 
 const props = defineProps({
@@ -694,7 +694,7 @@ onMounted(() => {
   color: var(--text-secondary);
   line-height: 1.4;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

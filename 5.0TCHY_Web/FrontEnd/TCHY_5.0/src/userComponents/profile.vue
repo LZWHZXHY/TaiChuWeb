@@ -13,7 +13,7 @@
     <!-- 用户信息 -->
     <div v-else-if="user" class="profile-content">
       <div class="user-header">
-        <img :src="user.avatar || defaultAvatar" class="avatar" />
+        
         <div class="user-info">
           <h2>
             {{ isMe ? "我的资料" : user.name + " 的资料" }}
@@ -45,7 +45,7 @@
       <!-- 选项卡 -->
       <div class="function-panel">
         <div class="panel-tabs">
-          <button v-for="tab in tabs" :key="tab.id"
+          <button v-for="tab in visibleTabs" :key="tab.id"
                   @click="switchTab(tab.id)"
                   :class="['tab-btn', { active: activeTab === tab.id }]">
             <span class="tab-icon">{{ tab.icon }}</span>
@@ -53,13 +53,28 @@
           </button>
         </div>
         <div class="panel-content">
-          <SettingsPanel      v-if="activeTab === 'settings'"      :user="user" :isMe="isMe"/>
+          <SettingsPanel      v-if="activeTab === 'settings' && isMe"      :user="user" :isMe="isMe"/>
+          <UserBlog           v-if="activeTab === 'blogs'       && isMe"  :user="user" :isMe="isMe"/>
+          <UserPosts          v-if="activeTab === 'posts'       && isMe"  :user="user" :isMe="isMe"/>
           <RepositoryPanel    v-if="activeTab === 'repository'"    :user="user" :isMe="isMe"/>
           <CheckinPanel       v-if="activeTab === 'checkin'"       :user="user" :isMe="isMe"/>
-          <FriendsPanel       v-if="activeTab === 'friends'"       :user="user" :isMe="isMe"/>
+          <FriendsPanel       v-if="activeTab === 'friends' && isMe"       :user="user" :isMe="isMe"/>
           <AchievementsPanel  v-if="activeTab === 'achievements'"  :user="user" :isMe="isMe"/>
-          <MessagesPanel      v-if="activeTab === 'messages'"       :user="user" :isMe="isMe"/>
-          <NotificationPanel  v-if="activeTab === 'notification'"  :user="user" :isMe="isMe"/>
+          <MessagesPanel      v-if="activeTab === 'messages' && isMe"      :user="user" :isMe="isMe"/>
+          <NotificationPanel  v-if="activeTab === 'notification' && isMe"  :user="user" :isMe="isMe"/>
+
+          
+          <!-- 查看他人页面时的提示 -->
+          <div v-if="!isMe && isPrivateTab(activeTab)" class="private-tab-notice">
+            <div class="notice-content">
+              <span class="notice-icon">🔒</span>
+              <h3>隐私保护</h3>
+              <p>此页面内容属于用户隐私，仅限本人查看</p>
+              <button @click="switchToPublicTab" class="switch-tab-btn">
+                查看公开信息
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -79,6 +94,8 @@ import FriendsPanel       from './FriendsPanel.vue'
 import AchievementsPanel  from './AchievementsPanel.vue'
 import MessagesPanel      from './MessagesPanel.vue'
 import NotificationPanel  from './notificationPanel.vue'
+import UserBlog from './UserBlog.vue'
+import UserPosts from './UserPosts.vue'
 
 const route = useRoute(); 
 const router = useRouter(); 
@@ -96,19 +113,52 @@ const error = ref('')
 const user = ref(null)
 const activeTab = ref('settings')
 
-// 选项卡定义
-const tabs = [
-  { id: 'settings', name: '设置',      icon: '⚙️' },
-  { id: 'repository', name: '仓库',    icon: '📦' },
-  { id: 'checkin',    name: '签到',    icon: '📅' },
-  { id: 'friends',    name: '好友',    icon: '👥' },
-  { id: 'achievements', name: '成就',  icon: '🏆' },
-  { id: 'messages', name: '信息', icon: '💬' },
-  { id: 'notification', name:'通知', icon:'🔔'}
+// 完整的选项卡定义
+const allTabs = [
+  { id: 'settings', name: '设置', icon: '⚙️', isPrivate: true },
+  { id: 'blogs', name: '博客', icon: '⚙️', isPrivate: false },
+  { id: 'posts', name: '帖子', icon: '⚙️', isPrivate: true },
+  { id: 'repository', name: '仓库', icon: '📦', isPrivate: false },
+  { id: 'checkin', name: '签到', icon: '📅', isPrivate: false },
+  { id: 'friends', name: '好友', icon: '👥', isPrivate: true },
+  { id: 'achievements', name: '成就', icon: '🏆', isPrivate: false },
+  { id: 'messages', name: '信息', icon: '💬', isPrivate: true },
+  { id: 'notification', name: '通知', icon: '🔔', isPrivate: true }
 ]
+
+// 根据是否查看自己来显示不同的选项卡
+const visibleTabs = computed(() => {
+  if (isMe.value) {
+    // 查看自己：显示所有选项卡
+    return allTabs
+  } else {
+    // 查看他人：只显示公开选项卡
+    return allTabs.filter(tab => !tab.isPrivate)
+  }
+})
+
+// 检查当前选项卡是否是隐私选项卡
+const isPrivateTab = (tabId) => {
+  const tab = allTabs.find(t => t.id === tabId)
+  return tab ? tab.isPrivate : false
+}
+
+// 切换到公开选项卡
+const switchToPublicTab = () => {
+  // 找到第一个公开的选项卡
+  const publicTab = visibleTabs.value[0]
+  if (publicTab) {
+    switchTab(publicTab.id)
+  }
+}
 
 // 切换标签页并更新URL
 const switchTab = (tabId) => {
+  // 检查权限：如果是查看他人且尝试访问隐私选项卡，则阻止
+  if (!isMe.value && isPrivateTab(tabId)) {
+    return
+  }
+  
   activeTab.value = tabId
   // 更新URL参数但不触发页面刷新
   router.push({ 
@@ -120,11 +170,22 @@ const switchTab = (tabId) => {
 // 根据URL参数设置活动标签页
 const setActiveTabFromQuery = () => {
   const tabFromQuery = route.query.tab
-  if (tabFromQuery && tabs.some(tab => tab.id === tabFromQuery)) {
-    activeTab.value = tabFromQuery
-  } else {
-    activeTab.value = 'settings' // 默认标签页
+  
+  if (tabFromQuery) {
+    // 检查权限：如果是查看他人且URL参数是隐私选项卡，则重定向到公开选项卡
+    if (!isMe.value && isPrivateTab(tabFromQuery)) {
+      switchToPublicTab()
+      return
+    }
+    
+    if (allTabs.some(tab => tab.id === tabFromQuery)) {
+      activeTab.value = tabFromQuery
+      return
+    }
   }
+  
+  // 默认标签页：如果是查看自己则显示设置，查看他人则显示仓库
+  activeTab.value = isMe.value ? 'settings' : 'repository'
 }
 
 function formatDate(dt) {
@@ -170,8 +231,16 @@ onMounted(() => {
 
 // 监听路由参数变化
 watch(() => route.query.tab, (newTab) => {
-  if (newTab && tabs.some(tab => tab.id === newTab)) {
-    activeTab.value = newTab
+  if (newTab) {
+    // 检查权限
+    if (!isMe.value && isPrivateTab(newTab)) {
+      switchToPublicTab()
+      return
+    }
+    
+    if (allTabs.some(tab => tab.id === newTab)) {
+      activeTab.value = newTab
+    }
   }
 })
 
@@ -179,6 +248,11 @@ watch(() => route.query.tab, (newTab) => {
 watch(userId, () => { 
   setActiveTabFromQuery()
   fetchUser() 
+})
+
+// 监听isMe变化，自动调整选项卡
+watch(isMe, (newIsMe) => {
+  setActiveTabFromQuery()
 })
 </script>
 
@@ -254,6 +328,50 @@ watch(userId, () => {
 .tab-btn.active { background: white; border-bottom-color: #3498db; color: #3498db;}
 .tab-icon { font-size: 18px; }
 .panel-content { padding: 20px; min-height: 300px;}
+
+/* 隐私选项卡提示样式 */
+.private-tab-notice {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  text-align: center;
+}
+
+.notice-content {
+  max-width: 300px;
+}
+
+.notice-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 15px;
+}
+
+.notice-content h3 {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+}
+
+.notice-content p {
+  margin: 0 0 20px 0;
+  color: #666;
+}
+
+.switch-tab-btn {
+  padding: 10px 20px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.switch-tab-btn:hover {
+  background: #2980b9;
+}
+
 .no-data { text-align: center; padding: 60px 20px; color: #666; background: white; border-radius: 8px; border: 1px solid #e9ecef;}
 @media (max-width: 768px) {
   .profile-page { padding: 10px;}

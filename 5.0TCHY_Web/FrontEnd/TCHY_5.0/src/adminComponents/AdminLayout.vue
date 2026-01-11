@@ -97,12 +97,14 @@ const loading = ref(false) // 刷新加载态
 let refreshTimer = null
 
 const items = [
-  { id: 'review', label: '审核中心', icon: '🗂️' },
-  { id: 'users', label: '用户管理', icon: '👤' },
-  { id: 'notifications', label: '通知系统', icon: '👤' },
-  { id: 'reports', label: '举报处理', icon: '🚩' },
-  { id: 'settings', label: '系统设置', icon: '⚙️' },
-  { id: 'updates', label: '更新设置', icon: '⚙️' }
+  { id: 'review', label: '审核中心', icon: '🗂️'},
+  { id: 'users', label: '用户管理', icon: '👤'},
+  { id: 'notifications', label: '通知系统', icon: '🔔' }, // 建议换个图标
+  { id: 'reports', label: '举报处理', icon: '🚩', },
+  { id: 'settings', label: '系统设置', icon: '⚙️'},
+  { id: 'updates', label: '更新日志', icon: '📝'}, // 建议换个图标
+  { id: 'rules', label: '社区规则', icon: '📜' },    // 建议换个图标
+  { id: 'feedback', label: '意见箱', icon: '📫' } // 建议换个图标
 ]
 
 function handleChange(id) {

@@ -440,19 +440,21 @@ const loadPendingRequests = async () => {
 }
 
 // 加载好友列表
+// 加载好友列表
 const loadFriendsList = async () => {
   try {
     loadingFriends.value = true
     const response = await apiClient.get('/Friends/list')
     
     if (response.data && response.data.success) {
+      // 🐛 修复点：后端返回的是大写开头 (FriendId)，不要用小写 (friend.friendId)
       friendsList.value = response.data.data.map(friend => ({
-        FriendId: friend.friendId,
-        FriendName: friend.friendName,
-        FriendLevel: friend.friendLevel || 1,
-        IsOnline: friend.isOnline || false,
-        CreateTime: friend.createTime,
-        Avatar: friend.friendAvatar || ''
+        FriendId: friend.FriendId,       // 修改为大写
+        FriendName: friend.FriendName,   // 修改为大写
+        FriendLevel: friend.FriendLevel || 1, // 修改为大写
+        IsOnline: friend.IsOnline || false,   // 修改为大写
+        CreateTime: friend.CreateTime,   // 修改为大写
+        Avatar: friend.FriendAvatar || '' // 修改为大写
       }))
     }
   } catch (error) {

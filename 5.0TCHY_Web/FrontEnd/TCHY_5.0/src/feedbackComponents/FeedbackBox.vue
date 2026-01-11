@@ -6,12 +6,10 @@
     </header>
 
     <main class="fb-layout">
-      <!-- 提交表单 -->
       <section class="fb-panel fb-form">
         <h2 class="fb-h2">提交反馈</h2>
 
         <form @submit.prevent="onSubmit" novalidate @paste="handlePaste">
-          <!-- 分类 -->
           <div class="fb-field">
             <label for="type" class="fb-label required">分类</label>
             <select
@@ -29,7 +27,6 @@
             <p v-if="touched.type && !valid.type" class="fb-error">请选择分类</p>
           </div>
 
-          <!-- 标题 -->
           <div class="fb-field">
             <label for="title" class="fb-label required">标题</label>
             <input
@@ -51,7 +48,6 @@
             </p>
           </div>
 
-          <!-- 内容 -->
           <div class="fb-field">
             <label for="content" class="fb-label required">详细描述</label>
             <textarea
@@ -73,11 +69,9 @@
             </p>
           </div>
 
-          <!-- 图片上传 -->
           <div class="fb-field">
             <label class="fb-label">图片 / 截图（可选）</label>
             <div class="fb-upload-area">
-              <!-- 上传按钮 -->
               <label v-if="!imagePreview" class="fb-upload-tile">
                 <input 
                   type="file" 
@@ -90,7 +84,6 @@
                 <span class="fb-upload-hint">支持 JPG、PNG、GIF、WebP，最大 5MB</span>
               </label>
               
-              <!-- 图片预览 -->
               <div v-else class="fb-image-preview">
                 <img :src="imagePreview.previewUrl" :alt="imagePreview.file.name" class="fb-preview-image" />
                 <div class="fb-preview-info">
@@ -106,7 +99,6 @@
             <p v-else class="fb-hint">支持粘贴截图，单张图片最大 5MB</p>
           </div>
 
-          <!-- 联系方式 -->
           <div class="fb-field">
             <label for="ContactQQ" class="fb-label">联系QQ（可选）</label>
             <input
@@ -123,7 +115,6 @@
             </p>
           </div>
 
-          <!-- 操作 -->
           <div class="fb-actions">
             <button type="submit" class="fb-btn primary" :disabled="!formValid || loading">
               <span v-if="loading" class="fb-spinner" aria-hidden="true"></span>
@@ -132,12 +123,10 @@
             <button type="button" class="fb-btn" @click="onReset" :disabled="loading">清空</button>
           </div>
 
-          <!-- 消息 -->
           <p v-if="message.text" :class="['fb-msg', message.type]">{{ message.text }}</p>
         </form>
       </section>
 
-      <!-- 已提交意见列表 -->
       <section class="fb-panel fb-list">
         <div class="fb-list-header">
           <h2 class="fb-h2">已提交的意见</h2>
@@ -160,20 +149,17 @@
           </div>
         </div>
 
-        <!-- 加载状态 -->
         <div v-if="loadingList" class="fb-loading">
           <div class="fb-spinner large"></div>
           <span>加载中...</span>
         </div>
 
-        <!-- 空状态 -->
         <div v-else-if="feedbacks.length === 0" class="fb-empty">
           <div class="fb-empty-icon">📝</div>
           <p class="fb-empty-text">暂无提交的意见</p>
           <p class="fb-empty-hint">提交第一条反馈后，将在这里显示</p>
         </div>
 
-        <!-- 意见列表 -->
         <div v-else class="fb-feedbacks">
           <div 
             v-for="feedback in feedbacks" 
@@ -207,6 +193,14 @@
               <span class="fb-image-hint">点击查看图片</span>
             </div>
 
+            <div v-if="feedback.adminReply" class="fb-admin-reply-box">
+              <div class="fb-reply-title">
+                <span class="fb-reply-icon">💬</span> 
+                <span>管理员回复：</span>
+              </div>
+              <div class="fb-reply-text">{{ feedback.adminReply }}</div>
+            </div>
+
             <div class="fb-feedback-footer">
               <span class="fb-feedback-id">ID: {{ feedback.id }}</span>
               <button 
@@ -221,7 +215,6 @@
           </div>
         </div>
 
-        <!-- 分页 -->
         <div v-if="totalPages > 1" class="fb-pagination">
           <button 
             class="fb-btn small" 
@@ -242,7 +235,6 @@
       </section>
     </main>
 
-    <!-- 图片预览模态框 -->
     <div v-if="previewImageUrl" class="fb-image-modal" @click="previewImageUrl = null">
       <div class="fb-modal-content" @click.stop>
         <img :src="previewImageUrl" alt="预览图片" class="fb-modal-image" />
@@ -254,7 +246,7 @@
 
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue'
-import apiClient from '../utils/api'
+import apiClient from '@/utils/api'
 
 interface FeedbackForm {
   type: number
@@ -279,6 +271,7 @@ interface FeedbackItem {
   contactQQ?: number
   imagesUrl?: string
   imageFullUrl?: string
+  adminReply?: string // 新增：管理员回复字段
 }
 
 const rules = {
@@ -288,10 +281,10 @@ const rules = {
 }
 
 const categories = [
-  { value: 1, label: '网站BUG反馈', description: '报告网站功能异常、错误等问题' },
-  { value: 2, label: '社区意见', description: '对社区功能、体验的建议' },
-  { value: 3, label: '内容举报', description: '举报违规、不良内容' },
-  { value: 4, label: '其他', description: '其他类型的反馈' }
+  { value: 1, label: '网站BUG反馈' },
+  { value: 2, label: '社区意见' },
+  { value: 3, label: '内容举报' },
+  { value: 4, label: '其他' }
 ]
 
 const tabs = [
@@ -565,7 +558,6 @@ async function onSubmit() {
     if (response.data && response.data.success) {
       setMessage(response.data.message || '提交成功', 'success')
       onReset()
-      // 提交成功后重新加载列表
       await loadFeedbacks()
     } else {
       setMessage(response.data?.message || '提交失败', 'error')
@@ -579,7 +571,6 @@ async function onSubmit() {
   }
 }
 
-// 初始化加载
 onMounted(() => {
   loadFeedbacks()
 })
@@ -1171,6 +1162,37 @@ onMounted(() => {
   font-size: 12px;
   color: var(--mute);
   margin-top: 4px;
+}
+
+/* 🔥 管理员回复样式 🔥 */
+.fb-admin-reply-box {
+  margin-top: 15px;
+  padding: 12px 15px;
+  background-color: #f8fafc; /* 浅灰色背景 */
+  border-left: 3px solid var(--accent); /* 左侧强调线 */
+  border-radius: 0 4px 4px 0;
+  font-size: 14px;
+  color: var(--fg);
+}
+
+.fb-reply-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.fb-reply-icon {
+  font-size: 14px;
+}
+
+.fb-reply-text {
+  line-height: 1.6;
+  white-space: pre-wrap; /* 保留换行符 */
+  color: var(--fg-soft);
 }
 
 .fb-feedback-footer {

@@ -136,6 +136,12 @@
 import { ref, computed, onMounted, watch, reactive } from 'vue'
 import apiClient from '../utils/api'
 
+
+// 添加防抖控制
+let unreadCountUpdateTimer: number | null = null
+let pendingUnreadCountUpdate = false
+
+
 /* 合并一次性定义 props（使用 withDefaults 提供默认值） */
 const props = withDefaults(
   defineProps<{
@@ -207,8 +213,35 @@ onMounted(() => {
   load()
 })
 
-/* 获取未读数量并更新HeaderNav */
-const loadUnreadCount = async () => {
+/* 优化后的 loadUnreadCount */
+const loadUnreadCount = async (immediate = false) => {
+  // 如果已经有定时器，清除它
+  if (unreadCountUpdateTimer) {
+    clearTimeout(unreadCountUpdateTimer)
+    unreadCountUpdateTimer = null
+  }
+  
+  // 如果已经有请求在进行中，标记为需要更新
+  if (pendingUnreadCountUpdate) {
+    return
+  }
+  
+  // 如果不是立即执行，设置防抖延迟
+  if (!immediate) {
+    unreadCountUpdateTimer = window.setTimeout(async () => {
+      await executeUnreadCountUpdate()
+    }, 1000) // 延迟1秒执行
+    return
+  }
+  
+  // 立即执行
+  await executeUnreadCountUpdate()
+}
+
+/* 执行实际的更新 */
+const executeUnreadCountUpdate = async () => {
+  pendingUnreadCountUpdate = true
+  
   try {
     const response = await GetUnreadCount()
     const count = response?.data?.unread ?? 0
@@ -216,17 +249,18 @@ const loadUnreadCount = async () => {
     window.dispatchEvent(new CustomEvent('unread-count-updated', { 
       detail: { count } 
     }))
-    return count
   } catch (err) {
     console.warn('获取未读数量失败:', err)
-    // 降级方案：使用本地计算的未读数量
+    // 使用本地计算的未读数量
     const localUnreadCount = items.value.filter(item => !item.IsRead && !item.IsDeleted).length
     window.dispatchEvent(new CustomEvent('unread-count-updated', { 
       detail: { count: localUnreadCount } 
     }))
-    return localUnreadCount
+  } finally {
+    pendingUnreadCountUpdate = false
   }
 }
+
 
 /* normalize：统一后端字段命名差异并强制布尔转换 IsRead */
 function normalize(raw: any) {
@@ -282,13 +316,13 @@ function refresh() {
   load() 
 }
 
-/* 标记全部已读 */
+/* 修改所有调用 loadUnreadCount 的地方 */
 async function markAllAsRead() {
   if (unreadCount.value === 0) return
   
   markingAll.value = true
   try {
-    // 乐观更新：先将所有通知标记为已读
+    // 乐观更新
     items.value.forEach(item => {
       if (!item.IsRead) {
         item.IsRead = true
@@ -297,11 +331,11 @@ async function markAllAsRead() {
     })
     
     await apiClient.patch('/Notification/read/all', { isRead: true })
-    // 操作成功后重新获取未读数量
-    await loadUnreadCount()
+    
+    // 延迟更新未读数量
+    loadUnreadCount()  // 不等待，异步执行
   } catch (err) {
     console.error('标记全部已读失败:', err)
-    // 失败时重新加载数据
     await load()
   } finally {
     markingAll.value = false
@@ -310,19 +344,17 @@ async function markAllAsRead() {
 
 async function openDetail(item: any) {
   activeId.value = item.Id
-  // 如果未读 -> 标记为已读（调用后端）
   if (!item.IsRead) {
-    // optimistic update
     const prev = item.IsRead
     item.IsRead = true
     item.ReadTime = new Date().toISOString()
     try {
       setBusy(item.Id, true)
       await PatchMarkRead(item.Id, true)
-      // 操作成功后重新获取未读数量
-      await loadUnreadCount()
+      
+      // 延迟更新未读数量
+      loadUnreadCount()  // 不等待，异步执行
     } catch (err) {
-      // revert on failure
       console.error('标记已读失败', err)
       item.IsRead = prev
       item.ReadTime = prev ? item.ReadTime : null
@@ -342,8 +374,9 @@ async function toggleRead(item: any) {
   try {
     setBusy(item.Id, true)
     await PatchMarkRead(item.Id, newState)
-    // 操作成功后重新获取未读数量
-    await loadUnreadCount()
+    
+    // 延迟更新未读数量
+    loadUnreadCount()  // 不等待，异步执行
   } catch (err) {
     console.error('切换已读状态失败', err)
     // revert
@@ -355,7 +388,6 @@ async function toggleRead(item: any) {
 }
 
 async function remove(item: any) {
-  // optimistic: hide locally while request in-flight
   const prevDeleted = item.IsDeleted
   item.IsDeleted = true
   if (activeId.value === item.Id) activeId.value = null
@@ -363,8 +395,9 @@ async function remove(item: any) {
   try {
     setBusy(item.Id, true)
     await DeleteNotification(item.Id)
-    // 操作成功后重新获取未读数量
-    await loadUnreadCount()
+    
+    // 延迟更新未读数量
+    loadUnreadCount()  // 不等待，异步执行
   } catch (err) {
     console.error('删除通知失败', err)
     // revert
@@ -572,7 +605,7 @@ ul::-webkit-scrollbar-thumb { background: rgba(2,6,23,0.06); border-radius: 8px;
   font-size:13px;
   color:var(--muted);
   display:-webkit-box;
-  -webkit-line-clamp:2;
+  -webkit-line-clamp:2; line-clamp:2;
   -webkit-box-orient:vertical;
   overflow:hidden;
   margin-top:6px;
@@ -649,6 +682,6 @@ ul::-webkit-scrollbar-thumb { background: rgba(2,6,23,0.06); border-radius: 8px;
   .controls input[type="search"] { min-width: 140px; }
   .nid { display:none; } /* 隐藏 ID 以节省空间 */
   .right { min-width: 90px; }
-  .meta .title { white-space: normal; -webkit-line-clamp: 1; display: block; }
+  .meta .title { white-space: normal; -webkit-line-clamp: 1; line-clamp:1;  display: block; }
 }
 </style>

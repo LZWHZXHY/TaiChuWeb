@@ -67,7 +67,8 @@ export const useAuthStore = defineStore('auth', () => {
         const authToken = response.data.token
         const userData = {
           id: response.data.userId,
-          username: response.data.username
+          username: response.data.username,
+          creater: response.data.creater
         }
 
         // 更新状态

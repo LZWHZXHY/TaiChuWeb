@@ -1,38 +1,52 @@
-# 忽略整个 TCserver_Backend 目录
-# 忽略项目中所有以 appsettings 开头的 json（匹配 TCserver_Backend/TCserver_Backend 下的文件）
-/servers/TCserver_Backend/**/appsettings*.json
+# ========================
+# 🚫 屏蔽后端 (Backend)
+# ========================
+# 忽略整个后端主目录
+/5.0TCHY_Web/BackEnd/
+/5.0TCHY_Web/5.0BackEnd/
 
-# 你可能还想继续忽略 VS 和构建产物（按需）
-/servers/TCserver_Backend/.vs/
-/servers/TCserver_Backend/**/bin/
-/servers/TCserver_Backend/**/obj/
+# 如果还有其他散落在外的后端文件夹，可以在这里补充
+# 例如: /Server/ 或 /API/
 
-/VUE版本/TaiChuWeb/.env
+# 双重保险：忽略所有 C# 项目文件和解决方案文件
+# (防止你意外把后端文件放到了前端目录里)
+*.sln
+*.csproj
+*.cs
+*.config
+appsettings*.json
 
-# 忽略 TCserver_Backend 下的 appsettings 文件
-/servers/TCserver_Backend/appsettings*.json
+# ========================
+# 🟢 前端通用忽略 (Frontend)
+# ========================
+# 依赖包 (体积巨大，必须忽略)
+node_modules/
 
+# 构建打包输出目录
+dist/
+dist-ssr/
+coverage/
 
+# 环境变量 (通常包含API Key等敏感信息)
+.env
+.env.local
+.env.*.local
 
-/5.0TCHY_Web/BackEnd/THCY_BE/appsettings*.json
+# 日志文件
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# 忽略 Visual Studio 缓存/索引
-/servers/TCserver_Backend/.vs/
-/servers/TCserver_Backend/.vs/**
-
-# 忽略构建产物
-/servers/TCserver_Backend/**/bin/
-/servers/TCserver_Backend/**/obj/
-/servers/TCserver_Backend/**/TestResults/
-
-# 常见个人/IDE 文件
+# ========================
+# 💻 编辑器/系统文件
+# ========================
 .vscode/
 .idea/
-*.user
 *.suo
-
-# 前端/通用
-node_modules/
-dist/
-.env
-*.log
+*.ntvs
+*.njsproj
+*.sln.docstates
+*.user
+.DS_Store
+Thumbs.db

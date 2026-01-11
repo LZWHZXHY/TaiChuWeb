@@ -31,10 +31,19 @@ const routes = [
   },{
     path:'/trade',
     name:'交易站',
-    component:()=>import('@/views/交易站.vue'),
+    component:()=>import('@/views/TradeStation.vue'),
     meta: { 
       requiresAuth: true,
       title: '交易站'
+    }
+  },
+  {
+    path:'/TCHYproduct',
+    name:'太初寰宇作品',
+    component:()=>import('@/views/TCHYproduct.vue'),
+    meta: { 
+      requiresAuth: true,
+      title: '太初寰宇'
     }
   },
   {
@@ -58,24 +67,6 @@ const routes = [
     }
   },
   {
-    path: '/drawing',
-    name: '绘画板块',
-    component: () => import('@/views/Drawing.vue'),
-    meta: { 
-      requiresAuth: true,
-      title: '绘画作品'
-    }
-  },
-  {
-    path:'/taixutan',
-    name:'太虚坛',
-    component:()=>import('@/views/TaiXuTan.vue'),
-    meta:{
-      requiresAuth:true,
-      title:'太虚坛'
-    }
-  },
-  {
     path:'/admin',
     name:'管理员页面',
     component: () => import('@/views/Admin.vue'),
@@ -86,12 +77,39 @@ const routes = [
     }
   },
   {
-    path:'/blog',
-    name:'博客',
-    component:()=>import('@/views/blog.vue'),
+    path:'/DataCenter',
+    name:'交流中枢',
+    component:()=>import('@/views/ComCenter.vue'),
     meta:{
       requiresAuth:true,
-      title:'博客'
+      title:'交流中枢'
+    }
+  },
+  {
+    path:'/ArtCenter',
+    name:'艺术大厅',
+    component:()=>import('@/views/ArtCenter.vue'),
+    meta:{
+      requiresAuth:true,
+      title:'艺术大厅'
+    }
+  },
+  {
+    path:'/blogCreater',
+    name:'博客创作',
+    component:()=>import('@/BlogComponents/BlogCreater.vue'),
+    meta:{
+      requiresAuth:true,
+      title:'博客创作页面'
+    }
+  },
+  {
+    path:'/EntertainmentArea',
+    name:'娱乐区',
+    component: () => import('@/views/EntertainmentArea.vue'),
+    meta: { 
+      requiresAuth: true,
+      title: '娱乐区'
     }
   },
   {
@@ -100,17 +118,7 @@ const routes = [
     component: () => import('@/feedbackComponents/FeedbackBox.vue'),
     meta: { 
       requiresAuth: true,
-      title: '意见箱',
-      minLevel: 3 // 🔥 新增：需要用户等级 >= 3
-    }
-  },
-  {
-    path: '/chai',
-    name: '火柴人板块',
-    component: () => import('@/views/火柴人板块.vue'),
-    meta: { 
-      requiresAuth: true,
-      title: '火柴人板块'
+      title: '意见箱'
     }
   },
   {

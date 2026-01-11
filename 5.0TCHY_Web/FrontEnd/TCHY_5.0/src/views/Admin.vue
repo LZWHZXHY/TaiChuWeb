@@ -16,7 +16,6 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-
 import AdminLayout from '@/adminComponents/AdminLayout.vue'
 import ReviewSocieties from '@/adminComponents/ReviewContent.vue'
 import UsersManagement from '@/adminComponents/UserManagement.vue'
@@ -24,6 +23,9 @@ import ReportsPanel from '@/adminComponents/ReportsPanel.vue'
 import SettingsPanel from '@/adminComponents/SettingsPanel.vue'
 import NotificationPanel from '@/adminComponents/NotificationPanel.vue'
 import UpdatePanel from '@/adminComponents/UpdatePanel.vue'
+import RulesPanel from '@/adminComponents/RulesPanel.vue'
+import FeedBackPanel from '@/adminComponents/FeedBackPanel.vue'
+
 
 const activeTab = ref('review') // review | users | reports | settings
 
@@ -33,7 +35,9 @@ const map = {
   reports: ReportsPanel,
   settings: SettingsPanel,
   notifications: NotificationPanel,
-  updates:UpdatePanel
+  updates: UpdatePanel,
+  rules:RulesPanel,
+  feedback:FeedBackPanel
 }
 
 const currentComponent = computed(() => map[activeTab.value] || ReviewSocieties)
@@ -55,3 +59,4 @@ function handleGlobalRefresh() {
   width: 80%;
 }
 </style>
+

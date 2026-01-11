@@ -1,6 +1,5 @@
 <template>
   <section class="review-content">
-    <!-- 顶部导航标签 -->
     <nav class="review-tabs">
       <button
         v-for="tab in tabs"
@@ -14,9 +13,7 @@
       </button>
     </nav>
 
-    <!-- 内容区域 -->
     <div class="review-panels">
-      <!-- 社团审核面板 -->
       <div v-show="activeTab === 'society'" class="panel-container">
         <SocietyReviewPanel
           ref="societyPanel"
@@ -25,7 +22,6 @@
         />
       </div>
 
-      <!-- 联合内容审核面板 -->
       <div v-show="activeTab === 'union'" class="panel-container">
         <UnionReviewPanel
           ref="unionPanel"
@@ -33,15 +29,30 @@
           @update-count="updateTabCount('union', $event)"
         />
       </div>
+
+      <div v-show="activeTab === 'posts'" class="panel-container">
+        <PostsPanel
+          ref="postsPanel"
+          :search="search"
+          @update-count="updateTabCount('posts', $event)"
+        />
+      </div>
+
+      <div v-show="activeTab === 'artist'" class="panel-container">
+        <ArtistReviewPanel
+          ref="artistPanel"
+          :search="search"
+          @update-count="updateTabCount('artist', $event)"
+        />
+      </div>
     </div>
 
-    <!-- 全局搜索框 -->
     <div class="global-search">
       <input
         v-model="searchTerm"
         class="search-input"
         type="search"
-        placeholder="全局搜索：名称 / 团长 / 作者…"
+        placeholder="全局搜索：名称 / 申请人 / ID…"
         @input="onSearchInput"
       />
     </div>
@@ -49,16 +60,22 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import SocietyReviewPanel from './ReviewComponents/SocietyReviewPanel.vue'
 import UnionReviewPanel from './ReviewComponents/UnionReviewPanel.vue'
+import PostsPanel from './ReviewComponents/PostsPanel.vue'
+// 1. 引入新组件
+import ArtistReviewPanel from './ReviewComponents/ArtistReviewPanel.vue'
 
 const activeTab = ref('society') // 默认显示社团审核
 const searchTerm = ref('')
+
 const societyPanel = ref(null)
 const unionPanel = ref(null)
+const postsPanel = ref(null)
+const artistPanel = ref(null) // 2. 新增 ref
 
-// 标签页配置
+// 3. 标签页配置
 const tabs = ref([
   {
     key: 'society',
@@ -71,6 +88,18 @@ const tabs = ref([
     label: '联合内容审核',
     icon: '🤝',
     count: 0
+  },
+  {
+    key: 'posts',
+    label: '帖子审核',
+    icon: '📝',
+    count: 0
+  },
+  {
+    key: 'artist',
+    label: '画师认证', // 新增 Tab
+    icon: '🎨',
+    count: 0
   }
 ])
 
@@ -81,11 +110,15 @@ const search = computed(() => searchTerm.value)
 function onSearchInput() {
   clearTimeout(searchDebounce)
   searchDebounce = setTimeout(() => {
-    // 通知当前激活的面板进行搜索
+    // 4. 通知当前激活的面板进行搜索
     if (activeTab.value === 'society' && societyPanel.value) {
       societyPanel.value.onSearch(searchTerm.value)
     } else if (activeTab.value === 'union' && unionPanel.value) {
       unionPanel.value.onSearch(searchTerm.value)
+    } else if (activeTab.value === 'posts' && postsPanel.value) {
+      postsPanel.value.onSearch(searchTerm.value)
+    } else if (activeTab.value === 'artist' && artistPanel.value) {
+      artistPanel.value.onSearch(searchTerm.value) // 新增搜索逻辑
     }
   }, 300)
 }
@@ -106,11 +139,25 @@ function updateTabCount(tabKey, count) {
 // 暴露方法供父组件调用
 defineExpose({
   refresh: () => {
+    // 5. 刷新逻辑加入新面板
     if (societyPanel.value) societyPanel.value.refresh()
     if (unionPanel.value) unionPanel.value.refresh()
+    if (postsPanel.value) postsPanel.value.refresh()
+    if (artistPanel.value) artistPanel.value.refresh()
   },
   getActivePanel: () => {
-    return activeTab.value === 'society' ? societyPanel.value : unionPanel.value
+    switch (activeTab.value) {
+      case 'society':
+        return societyPanel.value
+      case 'union':
+        return unionPanel.value
+      case 'posts':
+        return postsPanel.value
+      case 'artist':
+        return artistPanel.value // 新增返回
+      default:
+        return null
+    }
   }
 })
 </script>
@@ -187,6 +234,7 @@ defineExpose({
 .review-panels {
   flex: 1;
   min-height: 0;
+  position: relative;
 }
 
 .panel-container {
