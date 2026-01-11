@@ -337,7 +337,7 @@
               <template v-if="!isEditing">
                 
                 <div style="font-size: 10px; color: #999; margin-right: auto;">
-                  [Debug] Current: {{ currentUserId }} / Author: {{ selectedOC?.authorId }}
+                  [Debug] Current: {{ currentUserId }} / Author: {{ selectedOC?.authorId }} [检测用途]
                 </div>
 
                 <button v-if="isOwner(selectedOC)" class="bf-btn secondary" @click="startEdit">
