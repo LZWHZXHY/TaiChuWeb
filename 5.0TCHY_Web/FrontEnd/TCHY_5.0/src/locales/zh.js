@@ -41,11 +41,11 @@ export default{
     registerAccount: '注册太初寰宇',
     createAccount: '创建您的账户，开始探索社区',
     username: '用户名',
-    emailAddress: '邮箱地址', // 注意：你原代码拼写是 emailAddrese
+    emailAddress: '邮箱地址', 
     emailVerifyCode: '邮箱验证码',
     password: '密码',
     confirmPassword: '确认密码',
-    // --- 新增补全 ---
+
     placeholder_username: '请输入用户名（3-20个字符）',
     placeholder_email: '请输入邮箱地址',
     placeholder_code: '请输入6位验证码',
@@ -61,7 +61,6 @@ export default{
     privacy: '隐私政策',
     have_account: '已有账户？',
     login_now: '立即登录',
-    // --- 错误提示 ---
     err_username_empty: '请输入用户名',
     err_username_len: '用户名长度需在3-20个字符之间',
     err_email_empty: '请输入邮箱地址',
