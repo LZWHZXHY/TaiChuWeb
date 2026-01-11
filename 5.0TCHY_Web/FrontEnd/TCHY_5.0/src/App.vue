@@ -14,7 +14,7 @@
       <main class="main-content">
         <router-view />
       </main>
-
+      
       <footer class="app-footer fixed-footer">
         <div class="footer-content">
           <span>{{ $t('HeaderNav.site_name') }} © 2025</span>
@@ -24,6 +24,10 @@
       </footer>
     </div>
   </div>
+
+
+  <!-- 这是一个神奇的注释测试 - 腾蛇 -->
+  
 </template>
 
 <script setup>
