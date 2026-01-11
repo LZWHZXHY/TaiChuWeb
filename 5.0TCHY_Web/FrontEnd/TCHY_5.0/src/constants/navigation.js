@@ -1,26 +1,27 @@
-// 导航配置常量
+// navigation.js
+
 export const NAV_ITEMS = [
   { 
-    name: '首页', 
+    name: 'nav.home', // 原来是 '首页'
     path: '/',
     type: 'link'
   },
   { 
-    name: '寰宇社区', 
+    name: 'nav.community', // 原来是 '寰宇社区'
     type: 'dropdown',
     children: [
-      { name: '交流中枢', path: '/DataCenter', mode: 'TERMINAL' }, 
-      { name: '艺术大厅', path: '/ArtCenter', mode: 'GALLERY' },
-      { name: '娱乐区', path: '/EntertainmentArea'}
+      { name: 'nav.data_center', path: '/DataCenter', mode: 'TERMINAL' }, // 原来是 '交流中枢'
+      { name: 'nav.art_center', path: '/ArtCenter', mode: 'GALLERY' },    // 原来是 '艺术大厅'
+      { name: 'nav.entertainment', path: '/EntertainmentArea'}            // 原来是 '娱乐区'
     ]
-  },{
-    name:'太初产品',
-    path:'/TCHYproduct',
-    type:'link',
   },
-  
+  {
+    name: 'nav.product', // 原来是 '太初产品'
+    path: '/TCHYproduct',
+    type: 'link',
+  },
   { 
-    name: '管理', 
+    name: 'nav.manage', // 原来是 '管理'
     path: '/admin',
     type: 'link'
   }

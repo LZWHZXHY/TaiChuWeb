@@ -3,13 +3,13 @@
   <div class="register-container">
     <div class="register-card">
       <div class="register-header">
-        <h1>注册太初寰宇</h1>
-        <p>创建您的账户，开始探索社区</p>
+        <h1>{{$t('Register.registerAccount')}}</h1>
+        <p>{{$t('Register.createAccount')}}</p>
       </div>
 
       <form @submit.prevent="handleRegister" class="register-form">
         <div class="form-group">
-          <label for="username">用户名</label>
+          <label for="username">{{$t('Register.username')}}</label>
           <input
             id="username"
             v-model="registerForm.username"
@@ -133,7 +133,11 @@ import { ref, reactive, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/utils/auth'
 import apiClient from '@/utils/api'
+import { useI18n } from 'vue-i18n'
 
+
+
+const { t } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
 

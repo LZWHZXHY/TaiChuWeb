@@ -1,6 +1,5 @@
 <template>
   <div class="dropdown-container" @mouseleave="startCloseTimer">
-    <!-- 下拉菜单触发器 -->
     <div 
       class="dropdown-trigger"
       :class="{ 'dropdown-trigger--active': isOpen }"
@@ -11,7 +10,6 @@
       <span class="dropdown-arrow" :class="{ 'dropdown-arrow--open': isOpen }">▼</span>
     </div>
 
-    <!-- 下拉菜单内容 -->
     <transition name="dropdown">
       <div 
         v-if="isOpen"
@@ -26,7 +24,7 @@
           :class="{ 'dropdown-item--active': isActive(item.path) }"
           @click="handleItemClick(item)"
         >
-          <span class="dropdown-item-text">{{ item.name }}</span>
+          <span class="dropdown-item-text">{{ $t(item.name) }}</span>
         </div>
       </div>
     </transition>

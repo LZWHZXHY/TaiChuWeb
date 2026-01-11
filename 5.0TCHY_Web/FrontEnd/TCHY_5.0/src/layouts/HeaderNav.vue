@@ -2,7 +2,7 @@
   <header class="header-nav" :class="{ 'header-scrolled': isScrolled }">
     <div class="nav-container">
       <div class="logo" @click="navigateToHome">
-        <span class="logo-text">太初寰宇</span>
+        <span class="logo-text">{{ $t('HeaderNav.site_name') }}</span>
       </div>
 
       <nav class="desktop-nav">
@@ -13,13 +13,13 @@
             :class="{ 'nav-item--active': isActive(item.path) }"
             @click="handleNavClick(item)"
           >
-            <span class="nav-item-text">{{ item.name }}</span>
+            <span class="nav-item-text">{{ $t(item.name) }}</span>
             <div class="nav-item-indicator"></div>
           </div>
           <DropdownMenu
             v-else-if="item.type === 'dropdown'"
             :items="item.children"
-            :trigger-text="item.name"
+            :trigger-text="$t(item.name)" 
             @item-click="handleNavClick"
             class="nav-dropdown"
           />
@@ -27,17 +27,22 @@
       </nav>
 
       <div class="nav-actions">
+        
+        <div class="lang-switch" @click="toggleLang" :title="locale === 'zh' ? '当前语言：中文' : 'Current Language: English'">
+          <i class="fas fa-globe"></i>
+          <span class="lang-text">{{ locale === 'zh' ? '中' : 'EN' }}</span>
+        </div>
+
         <div class="user-count" v-if="userCount > 0">
           <div class="count-icon">👥</div>
           <div class="count-text">
             <span class="count-number">{{ userCount }}</span>
-            <span class="count-label">位成员</span>
+            <span class="count-label">{{ $t('HeaderNav.members') }}</span>
           </div>
         </div>
 
         <div v-if="authStore.isAuthenticated" class="user-menu">
           <div class="user-info" @click="toggleUserMenu">
-            
             <img 
               v-if="realAvatarUrl"
               :src="realAvatarUrl" 
@@ -45,41 +50,37 @@
               alt="Avatar"
               @error="handleImageError"
             />
-            
             <div v-else class="avatar-placeholder">
               {{ userNameText.charAt(0)?.toUpperCase() || 'U' }}
             </div>
-
             <span class="username">{{ userNameText }}</span>
-            
             <div v-if="unreadCount > 0" class="notification-badge">
               <span class="badge-count">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
             </div>
-            
             <div class="dropdown-arrow">▼</div>
           </div>
           
           <div v-if="showUserMenu" class="user-dropdown">
             <div class="dropdown-item" @click="goToNotifications">
-              <span>通知中心</span>
+              <span>{{ $t('HeaderNav.notify') }}</span>
               <span v-if="unreadCount > 0" class="dropdown-badge">{{ unreadCount }}</span>
             </div>
             <div class="dropdown-item" @click="goToProfile">
-              <span>个人资料</span>
+              <span>{{ $t('HeaderNav.profile') }}</span>
             </div>
             <div class="dropdown-item" @click="goToSettings">
-              <span>账户设置</span>
+              <span>{{ $t('HeaderNav.settings') }}</span>
             </div>
             <div class="dropdown-divider"></div>
             <div class="dropdown-item logout-item" @click="handleLogout">
-              <span>退出登录</span>
+              <span>{{ $t('HeaderNav.logout') }}</span>
             </div>
           </div>
         </div>
 
         <div v-else class="auth-buttons">
-          <button @click="handleLogin" class="login-btn">登录</button>
-          <button @click="handleRegister" class="register-btn">注册</button>
+          <button @click="handleLogin" class="login-btn">{{ $t('HeaderNav.login') }}</button>
+          <button @click="handleRegister" class="register-btn">{{ $t('HeaderNav.register') }}</button>
         </div>
       </div>
     </div>
@@ -89,72 +90,49 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import DropdownMenu from './DropdownMenu.vue'
+import DropdownMenu from './DropdownMenu.vue' 
 import apiClient from '@/utils/api'
 import { useAuthStore } from '@/utils/auth'
+import { useI18n } from 'vue-i18n' 
 
 const authStore = useAuthStore()
 const router = useRouter()
+const { t, locale } = useI18n() 
 
-// ====== 1. 配置基础域名 ======
-// 生产环境用 bianyuzhou.com，开发环境用 localhost
 const BASE_URL = 'https://bianyuzhou.com'
 
-// 状态变量
 const userCount = ref(0)
 const unreadCount = ref(0)
 const showUserMenu = ref(false)
 const isScrolled = ref(false)
-const avatarLoadError = ref(false) // 图片是否加载失败
+const avatarLoadError = ref(false)
 
-// ====== 2. 核心逻辑：获取最新用户信息 ======
-// 页面加载时，直接请求接口，拿到最新的头像字段
+// --- 语言切换逻辑 ---
+const toggleLang = () => {
+  // 点击时，如果当前是中文就切英文，反之亦然
+  const newLang = locale.value === 'zh' ? 'en' : 'zh'
+  locale.value = newLang
+  localStorage.setItem('app_language', newLang) 
+}
+
 const fetchLatestUserInfo = async () => {
   if (!authStore.isAuthenticated) return
-
   try {
     const res = await apiClient.get('/default/user/me')
     if (res.data && res.data.success) {
       const userData = res.data.data
-      
-      // 重要：把拿到的最新数据（含 avatar）更新到 Pinia Store 中
-      // 这样整个应用都能用上最新的头像
-      authStore.user = {
-        ...authStore.user,
-        ...userData // 这会覆盖旧数据，把 avatar 字段补进去
-      }
-      
-      console.log('✅ 用户信息已同步，头像路径:', userData.avatar)
+      authStore.user = { ...authStore.user, ...userData }
     }
-  } catch (error) {
-    console.warn('获取用户信息失败:', error)
-  }
+  } catch (error) { console.warn('获取用户信息失败:', error) }
 }
 
-// ====== 3. 核心逻辑：拼接图片地址 ======
-// 这里不需要复杂的正则，只要做最简单的拼接
 const realAvatarUrl = computed(() => {
-  // 从 Store 里拿头像路径
   let path = authStore.user?.avatar || authStore.user?.logo
-  
-  // 1. 如果没有路径，或者是图片加载报错了，返回 null (显示文字头像)
   if (!path || avatarLoadError.value) return null
-  
-  // 2. 如果已经是完整链接 (比如 http 开头)，直接用
   if (path.startsWith('http')) return path
-
-  // 3. 规范化路径：把 Windows 的反斜杠 \ 换成正斜杠 /
   path = path.replace(/\\/g, '/')
-  
-  // 4. 去掉开头的 /
   if (path.startsWith('/')) path = path.substring(1)
-
-  // 5. 补全 uploads 目录 (如果你数据库只存了 "头像/82/xxx")
-  if (!path.startsWith('uploads/')) {
-    path = `uploads/${path}`
-  }
-
-  // 6. 最终拼接：域名 + 路径
+  if (!path.startsWith('uploads/')) path = `uploads/${path}`
   return `${BASE_URL}/${path}`
 })
 
@@ -162,16 +140,9 @@ const userNameText = computed(() => {
   return authStore.user?.name || authStore.user?.username || '用户'
 })
 
-const handleImageError = () => {
-  avatarLoadError.value = true
-}
+const handleImageError = () => { avatarLoadError.value = true }
+watch(() => authStore.user, () => { avatarLoadError.value = false })
 
-// 监听用户变化，重置错误状态
-watch(() => authStore.user, () => {
-  avatarLoadError.value = false
-})
-
-// ... 以下是通用的路由和菜单逻辑 (保持不变) ...
 const props = defineProps({
   navItems: { type: Array, required: true },
   unreadCount: { type: Number, default: 0 }
@@ -214,10 +185,7 @@ const handleScroll = () => isScrolled.value = window.scrollY > 10
 
 onMounted(() => {
   loadUserCount()
-  
-  // 🔥🔥🔥 页面加载时，立即去获取最新的用户信息！ 🔥🔥🔥
   fetchLatestUserInfo()
-  
   document.addEventListener('click', closeUserMenu)
   window.addEventListener('scroll', handleScroll)
 })
@@ -229,7 +197,31 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 样式保持不变，直接复制之前的即可 */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  color: #666;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  background: rgba(0,0,0,0.02); /* 稍微给个极淡的背景，让它像个按钮 */
+}
+.lang-switch:hover {
+  background: rgba(0, 0, 0, 0.08); /* 悬浮稍微加深 */
+  color: #3498db;
+}
+.lang-text {
+  font-weight: 700; /* 加粗一点，更清晰 */
+  font-size: 13px;
+  min-width: 20px; /* 稍微占宽一点，防止切换时抖动 */
+  text-align: center;
+}
+
+/* 以下是原有样式 */
 .header-nav { position: fixed; top: 0; width: 100%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0, 0, 0, 0.1); transition: all 0.3s ease; z-index: 1000; }
 .header-scrolled { background: rgba(255, 255, 255, 0.98); box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1); }
 .nav-container { max-width: 1200px; margin: 0 auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 70px; }
@@ -283,5 +275,6 @@ onUnmounted(() => {
   .username { max-width: 80px;}
   .notification-badge { min-width: 18px; height: 18px; border-width: 1.5px; }
   .badge-count { font-size: 10px; padding: 0 3px; }
+  .lang-text { display: none; }
 }
 </style>

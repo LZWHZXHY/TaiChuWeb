@@ -2,25 +2,25 @@
   <div class="login-container">
     <div class="login-card">
       <div class="login-header">
-        <h1>登录太初寰宇</h1>
-        <p>欢迎回来！请登录您的账户</p>
+        <h1>{{$t('login.LoginAccount')}}</h1>
+        <p>{{$t('login.Welcome')}}</p>
       </div>
 
       <!-- 测试连接按钮 -->
       <button @click="testConnection" class="test-btn">
         <span v-if="testingConnection" class="loading-spinner"></span>
-        <span v-else>测试API连接</span>
+        <span v-else>{{$t('login.apiTest')}}</span>
       </button>
 
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
-          <label for="username">用户名或邮箱</label>
+          <label for="username">{{$t('login.usernameOrEmail')}}</label>
           <input
             id="username"
             v-model="loginForm.username"
             type="text"
             required
-            placeholder="请输入用户名或邮箱"
+            placeholder="email or username"
             autocomplete="username"
             :class="{ 'error': errors.username }"
             @input="clearError('username')"
@@ -29,7 +29,7 @@
         </div>
 
         <div class="form-group">
-          <label for="password">密码</label>
+          <label for="password">{{$t('login.password')}}</label>
           <input
             id="password"
             v-model="loginForm.password"
@@ -50,14 +50,14 @@
               v-model="loginForm.rememberMe"
               autocomplete="off"
             />
-            <span>记住我</span>
+            <span>{{$t('login.rememberMe')}}</span>
           </label>
-          <a href="#" class="forgot-password" @click.prevent="handleForgotPassword">忘记密码？</a>
+          <a href="#" class="forgot-password" @click.prevent="handleForgotPassword">{{$t('login.forgetPassword')}}</a>
         </div>
 
         <button type="submit" class="login-btn" :disabled="isLoading">
           <span v-if="isLoading" class="loading-spinner"></span>
-          <span v-else>登录</span>
+          <span v-else>{{$t('login.logIn')}}</span>
         </button>
 
         <div v-if="error" class="error-message">
@@ -66,7 +66,7 @@
       </form>
 
       <div class="login-footer">
-        <p>还没有账号？ <a href="#" @click.prevent="switchToRegister">立即注册</a></p>
+        <p>{{$t('login.Account')}} <a href="#" @click.prevent="switchToRegister">{{$t('login.Register')}}</a></p>
       </div>
     </div>
   </div>
@@ -77,6 +77,9 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/utils/auth'
 import apiClient from '@/utils/api'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 
 const router = useRouter()
 const route = useRoute()

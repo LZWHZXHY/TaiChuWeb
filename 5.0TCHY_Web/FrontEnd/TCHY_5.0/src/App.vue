@@ -2,8 +2,7 @@
   <div class="BigContainer">
     <div id="app">
 
-      
-      <HeaderNav 
+      <HeaderNav
         :nav-items="navItems"
         :show-cta="true"
         @nav-change="handleNavChange"
@@ -18,7 +17,8 @@
 
       <footer class="app-footer fixed-footer">
         <div class="footer-content">
-          <span>太初寰宇 © 2025</span>
+          <span>{{ $t('HeaderNav.site_name') }} © 2025</span>
+          
           <a href="http://beian.miit.gov.cn" target="_blank" rel="noopener noreferrer">京ICP备2022020268号</a>
         </div>
       </footer>
@@ -32,7 +32,8 @@ import HeaderNav from './layouts/HeaderNav.vue'
 import { NAV_ITEMS } from './constants/navigation.js'
 import MobileWarning from './views/MobileWarning.vue'
 
-
+// 只要 navigation.js 里的 name 改成了 'nav.home' 这种 Key，
+// 这里直接传给子组件就行，不需要额外处理
 const navItems = ref(NAV_ITEMS)
 
 const handleNavChange = (item) => { console.log('导航切换:', item) }
@@ -40,6 +41,7 @@ const handleUserAction = () => { console.log('用户操作') }
 </script>
 
 <style scoped>
+/* 样式保持完全不变 */
 .BigContainer {
   width: 100%;
   height: 100vh;
@@ -93,5 +95,4 @@ const handleUserAction = () => { console.log('用户操作') }
 .footer-content a:hover {
   color: #334155;
 }
-
-</style>        
+</style>
