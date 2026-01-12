@@ -10,6 +10,10 @@
 
     <div class="main-bridge">
       
+      <aside class="rank-column">
+        <ActivityRanking />
+      </aside>
+
       <aside class="left-column">
         <section class="panel-card md-elevation-1 full-height">
           <div class="card-header">
@@ -270,8 +274,8 @@
 import { ref, computed, reactive, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import apiClient from '@/utils/api';
-// PostForm 已经移除，使用 CreatePost
-import CreatePost from '@/comminicateCenter/CreatePost.vue'
+import CreatePost from '@/comminicateCenter/CreatePost.vue';
+import ActivityRanking from '@/comminicateCenter/ActivityRanking.vue'; // ✅ 引入排行榜
 import { marked } from 'marked';
 import { useOnlineStore } from '@/stores/online';
 
@@ -294,7 +298,7 @@ const lastId = ref(null);
 const news = ref([{ id: 1, text: '喝水游戏持续开发中ing.....' }, { id: 2, text: '暂无，随便放点' }]);
 
 const showDetail = ref(false);
-const showPostForm = ref(false); // 此变量现在传递给 CreatePost 使用
+const showPostForm = ref(false);
 const detailLoading = ref(false);
 const currentType = ref('post'); 
 const currentData = ref(null);   
@@ -348,7 +352,7 @@ const fetchPosts = async (isFirstLoad = true) => {
   if (loading.value || (!hasMore.value && !isFirstLoad)) return;
   loading.value = true;
   try {
-    const res = await apiClient.get('/Posts', { params: { lastId: isFirstLoad ? null : lastId.value, pageSize: 15 } });
+    const res = await apiClient.get('/Posts', { params: { lastId: isFirstLoad ? null : lastId.value, pageSize: 15, _t: new Date().getTime() } });
     if (res.data.success) {
       posts.value = isFirstLoad ? res.data.data : [...posts.value, ...res.data.data];
       lastId.value = res.data.pagination.lastId;
@@ -414,30 +418,17 @@ const submitComment = async () => {
   } catch (e) { alert("发送失败"); } finally { isSubmitting.value = false; }
 };
 
-
-
-
-
 const handlePostSuccess = async () => {
-  // 1. 关闭弹窗
   showPostForm.value = false; 
-
-  // 2. 找到滚动容器并瞬间回到顶部
   const scrollContainer = document.querySelector('.posts-scroll-area');
   if (scrollContainer) {
     scrollContainer.scrollTop = 0;
   }
-
-  // 3. 强制重置分页状态，准备接收最新数据
   lastId.value = null;
   hasMore.value = true;
-  loading.value = false; // 确保没有被之前的加载卡住
-
-  // 4. 重新获取第一页数据 (这会把新发布的帖子抓回来)
+  loading.value = false;
   await fetchPosts(true);
 };
-
-
 
 const handleScroll = (e) => {
   if (e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight - 50) fetchPosts(false);
@@ -478,7 +469,7 @@ onUnmounted(() => {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* 核心布局: 弹性盒模型 + 最大宽度限制 */
+/* --- 核心布局修改 --- */
 .main-bridge { 
   flex: 1; 
   display: flex; 
@@ -486,76 +477,87 @@ onUnmounted(() => {
   gap: var(--gap); 
   min-height: 0; 
   width: 100%; 
-  max-width: 1920px; 
+  /* ✅ 修改点 1：最大宽度从 1920 改为 2560，解决 2K 屏两边空的问题 */
+  max-width: 2560px; 
   margin: 0 auto;
   box-sizing: border-box;
 }
 
-/* 默认宽屏状态 (2K/4K) */
+/* 排行榜栏 */
+.rank-column {
+  flex: 0 0 240px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
 .left-column { 
-  flex: 0 0 280px; 
+  flex: 0 0 260px; 
   display: flex; flex-direction: column; gap: var(--gap); 
   transition: all 0.3s ease; 
 }
+
 .right-column { 
-  flex: 0 0 340px; 
+  flex: 0 0 320px; 
   display: flex; flex-direction: column; gap: var(--gap); 
   transition: all 0.3s ease;
 }
+
 .mid-column { 
   flex: 1; 
   display: flex; flex-direction: column; gap: var(--gap); 
   min-width: 0; 
 }
 
-/* 动作栏默认宽度 */
 .action-sidebar { 
   width: 240px; 
   display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; 
   transition: width 0.3s ease;
 }
 
-/* 通用组件基础样式 */
+/* 通用组件基础样式 (保持不变) */
 .sys-info-bar { height: var(--header-height); background: var(--card-bg); border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; padding: 0 32px; font-size: 12px; font-weight: 600; color: var(--text-secondary); z-index: 10; }
 .panel-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--border-light); }
 .full-height { height: 100%; }
 
-/* --- 1K / 1080P 屏幕专属极致优化 (核心修改) --- */
+/* --- ⚡️ 响应式适配关键修改 ⚡️ --- */
+
+/* ✅ 修改点 2：将隐藏排行榜的断点从 1600px 降到 1200px。
+   这样即使是 1080P 屏幕开启了 125% 缩放 (等效 1536px)，排行榜也依然会显示。
+*/
+@media screen and (max-width: 1200px) {
+  .rank-column {
+    display: none;
+  }
+  .left-column { flex: 0 0 280px; }
+  .right-column { flex: 0 0 340px; }
+}
+
+/* 1920px (1080P) 屏幕缩放逻辑 - 保持您喜欢的 zoom 设置 */
 @media screen and (max-width: 1920px) {
   .tc-dashboard {
-    /* 缩小全局字号基准，让文字更秀气 */
     font-size: 13px; 
-  }
-  
-  .tc-dashboard {
-    /* 核心魔法：整体缩放 90%，瞬间获得 2K 屏的开阔感 */
-    zoom: 0.7; 
-    /* 配合缩放，稍微减小间距 */
+    zoom: 0.7; /* 保持缩放 */
     --gap: 16px; 
   }
 
-  /* 进一步收窄侧边栏，给中间腾位置 */
-  .left-column { flex: 0 0 230px; }
-  .right-column { flex: 0 0 290px; }
+  /* 适配 4 列的宽度调整 */
+  .rank-column { 
+    flex: 0 0 220px; 
+    display: flex !important; /* ✅ 双重保险：强制显示 */
+  }
+  .left-column { flex: 0 0 240px; }
+  .right-column { flex: 0 0 300px; }
   .action-sidebar { width: 190px; gap: 12px; }
 
-  /* 减小头部高度 */
   .sys-info-bar { height: 48px; padding: 0 24px; }
-  
-  /* 减小横幅高度 */
   .activity-slider { height: 150px !important; }
   .slider-title { font-size: 24px !important; }
-  
-  /* 减小卡片内边距 */
   .post-entry { padding: 16px !important; gap: 12px !important; }
   .entry-title { font-size: 16px !important; margin: 6px 0 !important; }
   .entry-thumb-wrapper { width: 80px !important; height: 80px !important; }
-  
-  /* 调整按钮大小 */
   .btn-action { padding: 12px !important; border-radius: 12px !important; }
   .icon-box { width: 32px !important; height: 32px !important; font-size: 14px !important; }
-  
-  /* 右侧面板压缩 */
   .metrics-grid { padding: 16px !important; }
   .metric-val { font-size: 22px !important; }
   .online-panel { min-height: 160px !important; }
@@ -675,8 +677,8 @@ onUnmounted(() => {
 .online-avatar:hover { transform: scale(1.1); border-color: var(--accent-blue); z-index: 2; }
 .online-avatar img { width: 100%; height: 100%; object-fit: cover; }
 @keyframes pulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 </style>
