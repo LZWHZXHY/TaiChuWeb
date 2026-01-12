@@ -392,18 +392,124 @@ onMounted(() => {
   padding: 15px; 
 }
 
+
+
+
+
+
+
 /* 头部样式 */
-.content-header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; background: #fff; padding: 15px 20px; border-radius: 10px; border: 1px solid var(--border, #e2e8f0); flex-wrap: wrap; gap: 15px; min-width: 0; margin-bottom: 20px; }
-.header-group-left { display: flex; align-items: center; gap: 20px; flex: 1; min-width: 0; flex-wrap: wrap; }
+.content-header { display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  flex-shrink: 0; 
+  background: #fff; 
+  padding: 15px 20px; 
+  border-radius: 10px; 
+  border: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 15px; /* 增加Gap防止挤压 */
+  min-width: 0;
+}
+.header-group-left {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
 .header-title h2 { margin: 0; font-size: 18px; font-weight: 900; letter-spacing: 1px; color: var(--text-primary, #1e293b); }
 .header-title .subtitle { font-size: 12px; color: var(--text-sub, #64748b); }
 
-/* 筛选按钮 */
-.segment-button-group { display: flex; align-items: center; gap: 0px; height: 40px; flex: 1; max-width: 650px; min-width: 250px; margin: 0 1px; }
-.button-segment { display: flex; align-items: center; justify-content: center; width: 10%; height: 100%; font-size: 16px; border-radius: 10px; color: #333; transition: background-color 0.2s ease, width 0.5s ease-out; cursor: pointer; flex-wrap: wrap; flex: 1 1 auto; min-width: 60px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.button-segment.hoverable:hover { background-color: #f3f4f6; width: 25%; flex-grow: 2; }
-.button-segment.active { width: 50%; flex-grow: 4; background-color: #1b212e; color: #fff; }
-.button-segment.active.hoverable:hover { width: 55%; background-color: #2f313f; }
+/* --- 容器 --- */
+.segment-button-group {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+  height: 40px;
+  flex: 1;
+  max-width: 650px;
+  min-width: 250px;
+  margin: auto;
+  background-color: rgba(243, 244, 246, 0.5);
+  border-radius: 12px;
+}
+
+/* --- 按钮基础 --- */
+.button-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 10%;
+  flex: 1 1 auto;
+  min-width: 0; /* 修正：负值无效，改为0以确保正常缩放 */
+  height: 100%;
+  font-size: 16px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: 10px;
+  cursor: pointer;
+  flex-grow: 4;
+
+  /* 物理弹跳 + 颜色匀速 分离 */
+  transition: 
+    width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+    flex-grow 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.4s linear,
+    color 0.4s linear;
+}
+
+/* --- 1. 普通按钮悬浮：占据大部分空间 --- */
+.button-segment.hoverable:hover {
+  background-color: #e5e7eb;
+  width: 5%;    /* 增加目标宽度 */
+  flex-grow: 8;  /* 赋予极高权重，挤压其他按钮 */
+}
+
+/* --- 2. 选中按钮默认状态：--- */
+.button-segment.active {
+  width: 10%;
+  flex-grow: 4;
+  background-color: #1b212e;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(27, 33, 46, 0.25);
+
+  /* 选中态 transition */
+  transition: 
+    width 0.6s cubic-bezier(0.34, 1.3, 0.64, 1),
+    flex-grow 0.6s cubic-bezier(0.34, 1.3, 0.64, 1),
+    background-color 0.4s linear,
+    color 0.4s linear,
+    box-shadow 0.4s linear;
+}
+
+/* --- 核心：挤压自动化实现 --- */
+/* 当容器内有任何【非选中】按钮处于 hover 时，强制缩小【选中】按钮 */
+.segment-button-group:has(.button-segment.hoverable:hover) .button-segment.active {
+  flex-grow: 8.5; /* 权重降至最低 */
+  width: 3%;     /* 宽度缩至最小 */
+  background-color: #1B212E;
+}
+
+/* --- 3. 选中按钮自己被悬浮*/
+.button-segment.active.hoverable:hover {
+  width: 40%;
+  flex-grow: 2;
+  background-color: #1b212e;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(27, 33, 46, 0.25);
+
+  /* 选中态 transition */
+  transition: 
+    width 0.6s cubic-bezier(0.34, 1.3, 0.64, 1),
+    flex-grow 0.6s cubic-bezier(0.34, 1.3, 0.64, 1),
+    background-color 0.4s linear,
+    color 0.4s linear,
+    box-shadow 0.4s linear;
+}
 
 /* 瀑布流 */
 .scroll-wrapper { flex: 1; overflow-y: auto; padding-right: 5px; }
@@ -487,4 +593,47 @@ onMounted(() => {
   .art-title { font-size: 12px !important; margin-bottom: 3px !important; }
   .art-meta { font-size: 9px !important; }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* --- 高级交互：挤压效果 --- */
+
+/* 逻辑翻译：
+  当 .segment-button-group (容器) 
+  内部拥有 (:has) 一个正在被悬浮 (:hover) 且不是选中态 (:not(.active)) 的按钮时...
+  找到内部那个 .active 按钮，强行让它变小。
+*/
+.segment-button-group:has(.button-segment.hoverable:hover:not(.active)) .button-segment.active {
+  /* 1. 物理挤压：权重由 4 降为 1，宽度减半 */
+  flex-grow: 1; 
+  width: 15%; 
+  
+  /* 2. 视觉降级：颜色稍微变淡，表示"焦点暂时离开了你" */
+  background-color: #374151; /* 比原来的 #1b212e 稍微灰一点 */
+  color: #d1d5db;
+  
+  /* 注意：这里不需要写 transition，
+    因为它会继承 .button-segment.active 原本写好的那个
+    "物理弹跳 + 颜色匀速" 的分离式 transition。
+  */
+}
+
+
+
+
+
+
 </style>
