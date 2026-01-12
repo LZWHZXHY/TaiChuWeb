@@ -77,5 +77,15 @@ export default{
     msg_reg_fail: '注册失败，请稍后重试',
     msg_reg_success: '注册成功！欢迎加入',
     modal_close:'关闭'
+  },
+  CreatePost: {
+    create_title: '发布新内容',
+    placeholder_title: '输入标题...',
+    placeholder_content: '记录当下的想法 (支持 Markdown)...',
+    submit: '发射信号 // PUBLISH',
+    uploading: '上传中...',
+    ready: '就绪',
+    add_img: '添加图片'
   }
+  
 }

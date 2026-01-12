@@ -162,21 +162,10 @@
       </aside>
     </div>
 
-    <Teleport to="body">
-      <Transition name="modal-scale">
-        <div v-if="showPostForm" class="detail-overlay" @click.self="showPostForm = false">
-          <div class="form-container md-elevation-5">
-            <header class="form-header">
-              <h3>发布新内容 // NEW_POST</h3>
-              <button class="close-btn-mini" @click="showPostForm = false"><i class="fas fa-times"></i></button>
-            </header>
-            <div class="form-body">
-              <PostForm @success="handlePostSuccess" />
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
+    <CreatePost 
+      v-model="showPostForm" 
+      @success="handlePostSuccess" 
+    />
 
     <Teleport to="body">
       <Transition name="modal-scale">
@@ -281,7 +270,8 @@
 import { ref, computed, reactive, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import apiClient from '@/utils/api';
-import PostForm from '@/TXTComponents/PostForm.vue';
+// PostForm 已经移除，使用 CreatePost
+import CreatePost from '@/comminicateCenter/CreatePost.vue'
 import { marked } from 'marked';
 import { useOnlineStore } from '@/stores/online';
 
@@ -304,10 +294,10 @@ const lastId = ref(null);
 const news = ref([{ id: 1, text: '喝水游戏持续开发中ing.....' }, { id: 2, text: '暂无，随便放点' }]);
 
 const showDetail = ref(false);
-const showPostForm = ref(false);
+const showPostForm = ref(false); // 此变量现在传递给 CreatePost 使用
 const detailLoading = ref(false);
 const currentType = ref('post'); 
-const currentData = ref(null);   
+const currentData = ref(null);   
 const comments = ref([]);
 const newComment = ref('');
 const isSubmitting = ref(false);
@@ -315,130 +305,154 @@ const replyTarget = ref(null);
 const commentInputRef = ref(null);
 
 const handleImgError = (e) => { 
-  if (e.target.src.includes('土豆.jpg')) return;
-  e.target.src = '/土豆.jpg'; 
+  if (e.target.src.includes('土豆.jpg')) return;
+  e.target.src = '/土豆.jpg'; 
 };
 
 const fixAvatarUrl = (url) => {
-  if (!url || typeof url !== 'string') return '/土豆.jpg';
-  if (url.startsWith('http') || url.startsWith('data:image')) return url;
-  let path = url.replace(/\\/g, '/');
-  if (path.startsWith('/')) path = path.substring(1);
-  if (!path.startsWith('uploads/')) path = `uploads/${path}`;
-  return `${BASE_URL}/${path}`;
+  if (!url || typeof url !== 'string') return '/土豆.jpg';
+  if (url.startsWith('http') || url.startsWith('data:image')) return url;
+  let path = url.replace(/\\/g, '/');
+  if (path.startsWith('/')) path = path.substring(1);
+  if (!path.startsWith('uploads/')) path = `uploads/${path}`;
+  return `${BASE_URL}/${path}`;
 };
 
 const formatTime = (t, showTime = false) => {
-  if (!t) return 'N/A';
-  const date = new Date(t);
-  return showTime ? date.toLocaleString() : date.toLocaleDateString();
+  if (!t) return 'N/A';
+  const date = new Date(t);
+  return showTime ? date.toLocaleString() : date.toLocaleDateString();
 };
 const renderMarkdown = (content) => content ? marked.parse(content) : '';
 
 const commentLinearList = computed(() => {
-  if (!comments.value?.length) return [];
-  const map = {}, roots = [], result = [];
-  comments.value.forEach(c => map[c.id] = { ...c, children: [] });
-  comments.value.forEach(c => {
-    const pid = c.ParentCommentId || c.parentId;
-    (pid && map[pid]) ? map[pid].children.push(map[c.id]) : roots.push(map[c.id]);
-  });
-  const traverse = (node, level) => {
-    node.level = level;
-    const pid = node.ParentCommentId || node.parentId;
-    if (level > 0 && map[pid]) node.replyToUser = map[pid].author?.username;
-    result.push(node);
-    node.children?.sort((a, b) => new Date(a.createTime) - new Date(b.createTime)).forEach(child => traverse(child, level + 1));
-  };
-  roots.sort((a, b) => new Date(b.createTime) - new Date(a.createTime)).forEach(root => traverse(root, 0));
-  return result;
+  if (!comments.value?.length) return [];
+  const map = {}, roots = [], result = [];
+  comments.value.forEach(c => map[c.id] = { ...c, children: [] });
+  comments.value.forEach(c => {
+    const pid = c.ParentCommentId || c.parentId;
+    (pid && map[pid]) ? map[pid].children.push(map[c.id]) : roots.push(map[c.id]);
+  });
+  const traverse = (node, level) => {
+    node.level = level;
+    const pid = node.ParentCommentId || node.parentId;
+    if (level > 0 && map[pid]) node.replyToUser = map[pid].author?.username;
+    result.push(node);
+    node.children?.sort((a, b) => new Date(a.createTime) - new Date(b.createTime)).forEach(child => traverse(child, level + 1));
+  };
+  roots.sort((a, b) => new Date(b.createTime) - new Date(a.createTime)).forEach(root => traverse(root, 0));
+  return result;
 });
 
 const fetchPosts = async (isFirstLoad = true) => {
-  if (loading.value || (!hasMore.value && !isFirstLoad)) return;
-  loading.value = true;
-  try {
-    const res = await apiClient.get('/Posts', { params: { lastId: isFirstLoad ? null : lastId.value, pageSize: 15 } });
-    if (res.data.success) {
-      posts.value = isFirstLoad ? res.data.data : [...posts.value, ...res.data.data];
-      lastId.value = res.data.pagination.lastId;
-      hasMore.value = res.data.pagination.hasMore;
-    }
-  } catch (e) { console.error(e); } finally { loading.value = false; }
+  if (loading.value || (!hasMore.value && !isFirstLoad)) return;
+  loading.value = true;
+  try {
+    const res = await apiClient.get('/Posts', { params: { lastId: isFirstLoad ? null : lastId.value, pageSize: 15 } });
+    if (res.data.success) {
+      posts.value = isFirstLoad ? res.data.data : [...posts.value, ...res.data.data];
+      lastId.value = res.data.pagination.lastId;
+      hasMore.value = res.data.pagination.hasMore;
+    }
+  } catch (e) { console.error(e); } finally { loading.value = false; }
 };
 
 const fetchBlogs = async () => {
-  blogLoading.value = true;
-  try {
-    const res = await apiClient.get('/Blog/articles', { params: { page: 1, pageSize: 10 } });
-    blogs.value = res.data.list;
-  } catch (e) { console.error(e); } finally { blogLoading.value = false; }
+  blogLoading.value = true;
+  try {
+    const res = await apiClient.get('/Blog/articles', { params: { page: 1, pageSize: 10 } });
+    blogs.value = res.data.list;
+  } catch (e) { console.error(e); } finally { blogLoading.value = false; }
 };
 
 const fetchStats = async () => {
-  try {
-    const [blogRes, postRes] = await Promise.all([
-      apiClient.get('/Blog/blogAmount'),
-      apiClient.get('/Posts/postAmount')
-    ]);
-    stats.blogs = blogRes.data;
-    stats.posts = postRes.data;
-  } catch (e) { console.error("Stats Error", e); }
+  try {
+    const [blogRes, postRes] = await Promise.all([
+      apiClient.get('/Blog/blogAmount'),
+      apiClient.get('/Posts/postAmount')
+    ]);
+    stats.blogs = blogRes.data;
+    stats.posts = postRes.data;
+  } catch (e) { console.error("Stats Error", e); }
 };
 
 const openPostDetail = async (id) => {
-  currentType.value = 'post'; showDetail.value = true; detailLoading.value = true;
-  currentData.value = null; comments.value = []; cancelReply();
-  try {
-    const [postRes, commentRes] = await Promise.all([
-      apiClient.get(`/Posts/${id}`),
-      apiClient.get(`/Posts/${id}/comments`, { params: { pageSize: 500 } })
-    ]);
-    if (postRes.data.success) currentData.value = postRes.data.data;
-    if (commentRes.data.success) comments.value = commentRes.data.data;
-  } catch (e) { console.error(e); } finally { detailLoading.value = false; }
+  currentType.value = 'post'; showDetail.value = true; detailLoading.value = true;
+  currentData.value = null; comments.value = []; cancelReply();
+  try {
+    const [postRes, commentRes] = await Promise.all([
+      apiClient.get(`/Posts/${id}`),
+      apiClient.get(`/Posts/${id}/comments`, { params: { pageSize: 500 } })
+    ]);
+    if (postRes.data.success) currentData.value = postRes.data.data;
+    if (commentRes.data.success) comments.value = commentRes.data.data;
+  } catch (e) { console.error(e); } finally { detailLoading.value = false; }
 };
 
 const openBlogDetail = async (id) => {
-  currentType.value = 'blog'; showDetail.value = true; detailLoading.value = true; currentData.value = null;
-  try {
-    const res = await apiClient.get(`/Blog/articles/${id}`);
-    currentData.value = res.data;
-  } catch (e) { console.error(e); } finally { detailLoading.value = false; }
+  currentType.value = 'blog'; showDetail.value = true; detailLoading.value = true; currentData.value = null;
+  try {
+    const res = await apiClient.get(`/Blog/articles/${id}`);
+    currentData.value = res.data;
+  } catch (e) { console.error(e); } finally { detailLoading.value = false; }
 };
 
 const submitComment = async () => {
-  if (!newComment.value.trim() || !currentData.value) return;
-  isSubmitting.value = true;
-  try {
-    const res = await apiClient.post(`/Posts/${currentData.value.id}/comments/json`, {
-      Content: newComment.value,
-      ParentCommentId: replyTarget.value?.id || 0
-    });
-    if (res.data.success) {
-      comments.value.push(res.data.data);
-      newComment.value = '';
-      cancelReply();
-      if(currentData.value.comment_count !== undefined) currentData.value.comment_count++;
-    }
-  } catch (e) { alert("发送失败"); } finally { isSubmitting.value = false; }
+  if (!newComment.value.trim() || !currentData.value) return;
+  isSubmitting.value = true;
+  try {
+    const res = await apiClient.post(`/Posts/${currentData.value.id}/comments/json`, {
+      Content: newComment.value,
+      ParentCommentId: replyTarget.value?.id || 0
+    });
+    if (res.data.success) {
+      comments.value.push(res.data.data);
+      newComment.value = '';
+      cancelReply();
+      if(currentData.value.comment_count !== undefined) currentData.value.comment_count++;
+    }
+  } catch (e) { alert("发送失败"); } finally { isSubmitting.value = false; }
 };
 
-const handlePostSuccess = () => { showPostForm.value = false; fetchPosts(true); };
+
+
+
+
+const handlePostSuccess = async () => {
+  // 1. 关闭弹窗
+  showPostForm.value = false; 
+
+  // 2. 找到滚动容器并瞬间回到顶部
+  const scrollContainer = document.querySelector('.posts-scroll-area');
+  if (scrollContainer) {
+    scrollContainer.scrollTop = 0;
+  }
+
+  // 3. 强制重置分页状态，准备接收最新数据
+  lastId.value = null;
+  hasMore.value = true;
+  loading.value = false; // 确保没有被之前的加载卡住
+
+  // 4. 重新获取第一页数据 (这会把新发布的帖子抓回来)
+  await fetchPosts(true);
+};
+
+
+
 const handleScroll = (e) => {
-  if (e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight - 50) fetchPosts(false);
+  if (e.target.scrollTop + e.target.clientHeight >= e.target.scrollHeight - 50) fetchPosts(false);
 };
 const closeDetail = () => { showDetail.value = false; currentData.value = null; comments.value = []; };
 const handleReplyTo = (c) => { replyTarget.value = c; nextTick(() => commentInputRef.value?.focus()); };
 const cancelReply = () => { replyTarget.value = null; };
 
 onMounted(() => {
-  fetchPosts(true); fetchBlogs(); fetchStats();
-  clockTimer = setInterval(() => { currentTime.value = new Date().toLocaleTimeString(); }, 1000);
+  fetchPosts(true); fetchBlogs(); fetchStats();
+  clockTimer = setInterval(() => { currentTime.value = new Date().toLocaleTimeString(); }, 1000);
 });
 
 onUnmounted(() => {
-  clearInterval(clockTimer);
+  clearInterval(clockTimer);
 });
 </script>
 
