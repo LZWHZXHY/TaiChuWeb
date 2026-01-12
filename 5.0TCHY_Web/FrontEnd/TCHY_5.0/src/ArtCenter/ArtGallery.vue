@@ -41,30 +41,40 @@
 
       <div class="scroll-wrapper custom-scroll" ref="mainScroll" @scroll="handleScroll">
         <div class="gallery-container">
-          <div v-if="loading && artworks.length === 0" class="loading-state">
+          <div v-if="loading && totalCount === 0" class="loading-state">
             <i class="fas fa-circle-notch fa-spin"></i> 读取神经元数据...
           </div>
 
           <div v-else class="gallery-waterfall">
-            <div v-for="img in filteredArtworks" :key="img.id" class="art-card" @click="openLightbox(img)">
-              <div class="img-wrapper">
-                <img :src="upgradeUrlToHttps(img.imageUrlFull || img.url)" @error="handleImgError" loading="lazy" />
-              </div>
-              <div class="art-overlay">
-                <h3 class="art-title">{{ img.title }}</h3>
-                <div class="art-meta">
-                  <span><i class="fas fa-user"></i> {{ img.authorName || img.author }}</span>
-                  <span><i class="fas fa-heart"></i> {{ img.likes }}</span>
+            <div 
+              v-for="(col, colIndex) in waterfallColumns" 
+              :key="colIndex" 
+              class="waterfall-column"
+            >
+              <div 
+                v-for="img in col" 
+                :key="img.id" 
+                class="art-card" 
+                @click="openLightbox(img)"
+              >
+                <div class="img-wrapper">
+                  <img :src="upgradeUrlToHttps(img.imageUrlFull || img.url)" @error="handleImgError" loading="lazy" />
+                </div>
+                <div class="art-overlay">
+                  <h3 class="art-title">{{ img.title }}</h3>
+                  <div class="art-meta">
+                    <span><i class="fas fa-user"></i> {{ img.authorName || img.author }}</span>
+                    <span><i class="fas fa-heart"></i> {{ img.likes }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="list-footer">
-            <span v-if="loading && artworks.length > 0">正在加载更多资源...</span>
-            <span v-if="!hasMore && artworks.length > 0" class="end-text">--- 已显示全部作品 ---</span>
-            <span v-if="!loading && artworks.length === 0" class="end-text">暂无作品，快来发布第一个吧！</span>
-            <span v-if="!loading && artworks.length > 0 && filteredArtworks.length === 0" class="end-text">该分类下暂无作品</span>
+            <span v-if="loading && totalCount > 0">正在加载更多资源...</span>
+            <span v-if="!hasMore && totalCount > 0" class="end-text">--- 已显示全部作品 ---</span>
+            <span v-if="!loading && totalCount === 0" class="end-text">暂无作品，快来发布第一个吧！</span>
           </div>
         </div>
       </div>
@@ -84,7 +94,6 @@
 
       <div class="sidebar-panel top-contributors">
         <div class="section-label">TOP_ARTISTS // 社区名人堂</div>
-        
         <div v-for="(user, idx) in leaderboard" :key="user.UploaderId" class="artist-row">
           <span class="rank-num" :class="'rank-' + (idx + 1)">{{ idx + 1 }}</span>
           <div class="artist-info">
@@ -183,14 +192,21 @@ const { t } = useI18n()
 const emit = defineEmits(['refresh-stats'])
 
 // --- 状态定义 ---
-const selectedSegment = ref(2)
-const artworks = ref([])
+const selectedSegment = ref(2) // 默认选中综合 (type=2)
+// 定义 4 个独立的列容器，彻底解决跳动问题
+const waterfallColumns = ref([[], [], [], []]) 
+
 const loading = ref(false)
 const nextCursor = ref(null)
 const hasMore = ref(true)
 const mainScroll = ref(null)
 
-// 排行榜数据 (新增)
+// 辅助计算总数，用于显示 Empty State
+const totalCount = computed(() => {
+  return waterfallColumns.value.reduce((acc, col) => acc + col.length, 0)
+})
+
+// 排行榜数据
 const leaderboard = ref([])
 
 // 上传相关
@@ -202,27 +218,23 @@ const uploadForm = reactive({ title: '', desc: '', authorName: '', file: null, p
 // 灯箱相关
 const lightboxImg = ref(null)
 
-// --- 计算属性 ---
-const filteredArtworks = computed(() => {
-  if (selectedSegment.value === 2) {
-    return artworks.value
-  }
-  return artworks.value.filter(img => {
-    const url = (img.imageUrlFull || img.url || '').toLowerCase()
-    const isGif = url.endsWith('.gif') || url.includes('.gif?')
-    if (selectedSegment.value === 1) return isGif // 动态
-    else if (selectedSegment.value === 3) return !isGif // 静态
-    return true
-  })
-})
-
 // --- 方法 ---
 
 const handleSegmentClick = (segment) => {
+  if (selectedSegment.value === segment) return
   selectedSegment.value = segment
+  
+  // 切换标签时，重置所有数据
+  waterfallColumns.value = [[], [], [], []]
+  nextCursor.value = null
+  hasMore.value = true
+  
   if (mainScroll.value) {
     mainScroll.value.scrollTop = 0
   }
+  
+  // 重新发起请求
+  fetchArtworks(true)
 }
 
 const upgradeUrlToHttps = (url) => {
@@ -235,14 +247,39 @@ const upgradeUrlToHttps = (url) => {
 const fetchArtworks = async (isRefresh = false) => {
   if (loading.value) return
   if (!isRefresh && !hasMore.value) return
+  
   loading.value = true
   try {
-    const params = { pageSize: 30, sort: 'new', cursor: isRefresh ? null : nextCursor.value }
+    // 传递 type 给后端 (1=动态, 2=综合, 3=静态)
+    const params = { 
+      pageSize: 30, 
+      sort: 'new', 
+      cursor: isRefresh ? null : nextCursor.value,
+      type: selectedSegment.value 
+    }
+    
     const res = await apiClient.get('/Drawing/list', { params })
+    
     if (res.data.success) {
       const { items, nextCursor: newCursor, hasMore: more } = res.data.data
-      if (isRefresh) artworks.value = items
-      else artworks.value = [...artworks.value, ...items]
+      
+      // 如果是刷新，先清空
+      if (isRefresh) {
+        waterfallColumns.value = [[], [], [], []]
+      }
+      
+      // --- 核心：瀑布流分发算法 ---
+      // 计算当前已有的图片总数，保证追加时的顺序连贯
+      let currentTotal = 0
+      waterfallColumns.value.forEach(col => currentTotal += col.length)
+
+      items.forEach((item, index) => {
+        // 轮询分发：保证 1,2,3,4 依次进入 4 个列
+        // 这样数据永远只是"追加"到底部，上面的内容绝对不动
+        const targetColIndex = (currentTotal + index) % 4
+        waterfallColumns.value[targetColIndex].push(item)
+      })
+
       nextCursor.value = newCursor
       hasMore.value = more
     }
@@ -253,16 +290,17 @@ const fetchArtworks = async (isRefresh = false) => {
   }
 }
 
-// 获取排行榜 (新增)
+// 获取排行榜
 const fetchLeaderboard = async () => {
   try {
-    const res = await apiClient.get('/Drawing/leaderboard?limit=10')
+    const res = await apiClient.get('/Drawing/leaderboard?limit=15')
     if (res.data.success) leaderboard.value = res.data.data
   } catch (error) { console.error("加载排行榜失败", error) }
 }
 
 const handleScroll = (e) => {
   const { scrollTop, scrollHeight, clientHeight } = e.target
+  // 距离底部 100px 时加载更多
   if (scrollTop + clientHeight >= scrollHeight - 100) {
     fetchArtworks(false)
   }
@@ -274,6 +312,7 @@ const handleLike = async (img) => {
   const originalLiked = img.isLiked
   const originalLikes = img.likes || 0
   
+  // 乐观更新 UI
   img.isLiked = !originalLiked
   img.likes = originalLiked ? originalLikes - 1 : originalLikes + 1
   img.isAnimating = true
@@ -285,6 +324,7 @@ const handleLike = async (img) => {
       img.likes = res.data.likes
       img.isLiked = res.data.isLiked
     } else {
+      // 失败回滚
       img.isLiked = originalLiked
       img.likes = originalLikes
     }
@@ -324,15 +364,16 @@ const submitArtwork = async () => {
     if (res.data.success) {
       alert("发布成功")
       showUploadModal.value = false
+      // 重置表单
       uploadForm.title = ''
       uploadForm.desc = ''
       uploadForm.file = null
       uploadForm.previewUrl = ''
       
-      // 刷新列表和排行榜
+      // 刷新数据
       fetchArtworks(true)
       fetchLeaderboard() 
-      emit('refresh-stats') // 通知父组件更新侧边栏统计
+      emit('refresh-stats')
     } else {
       alert(res.data.message)
     }
@@ -349,7 +390,7 @@ const formatTime = (t) => t ? new Date(t).toLocaleDateString() : ''
 
 onMounted(() => {
   fetchArtworks(true)
-  fetchLeaderboard() // 加载时获取排行榜
+  fetchLeaderboard()
 })
 </script>
 
@@ -513,8 +554,32 @@ onMounted(() => {
 
 /* 瀑布流 */
 .scroll-wrapper { flex: 1; overflow-y: auto; padding-right: 5px; }
-.gallery-waterfall { column-count: 4; column-gap: 15px; padding-bottom: 20px; } /* 默认4列 */
-.art-card { break-inside: avoid; margin-bottom: 15px; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid var(--border, #e2e8f0); background: #fff; transition: 0.2s; }
+.gallery-waterfall { 
+  display: flex;       
+  flex-direction: row; 
+  align-items: flex-start; /* 顶部对齐，实现参差不齐的流动感 */
+  gap: 15px;           /* 列与列之间的间距 */
+  padding-bottom: 20px; 
+  /* 移除原来的 column-count: 4; */
+}
+.waterfall-column {
+  flex: 1;             /* 4 列平分宽度 */
+  display: flex;
+  flex-direction: column; /* 列内部垂直排列 */
+  gap: 15px;           /* 图片垂直间距 */
+  min-width: 0;        /* 防止 flex 子项溢出 */
+}
+.art-card { 
+  width: 100%; /* 占满所在列的宽度 */
+  margin-bottom: 0; /* 不需要 margin-bottom，由 gap 控制 */
+  border-radius: 8px; 
+  overflow: hidden; 
+  position: relative; 
+  cursor: pointer; 
+  border: 1px solid var(--border, #e2e8f0); 
+  background: #fff; 
+  transition: 0.2s; 
+}
 .art-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
 .img-wrapper { width: 100%; min-height: 100px; background: #f3f4f6; }
 .art-card img { width: 100%; display: block; height: auto; }
