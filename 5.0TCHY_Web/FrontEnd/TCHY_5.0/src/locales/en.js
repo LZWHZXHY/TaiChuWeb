@@ -17,7 +17,7 @@ export default {
     home: 'Intro', // 如果想叫首页，建议用 'Home'
     community: 'TC Community',
     data_center: 'Communication Center',
-    art_center: 'Art Hall',
+    work_center: 'product Hall',
     entertainment: 'Entertainment',
     product: 'Products',
     manage: 'Admin'

@@ -719,7 +719,7 @@ onMounted(() => {
 
 /* Buttons & Utils */
 .bf-btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px; }
-.bf-btn.primary { background: var(--bf-purple); color: white; }
+.bf-btn.primary { background: var(--bf-purple); color: rgb(0, 0, 0); }
 .bf-btn.primary:hover { background: #7c3aed; }
 .bf-btn.secondary { background: #f59e0b; color: white; }
 .bf-btn.secondary:hover { background: #d97706; }

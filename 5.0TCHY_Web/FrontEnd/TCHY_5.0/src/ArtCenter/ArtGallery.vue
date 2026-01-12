@@ -158,35 +158,22 @@
       </Transition>
     </Teleport>
 
-    <Teleport to="body">
-      <Transition name="fade">
-        <div v-if="lightboxImg" class="lightbox-overlay" @click="lightboxImg = null">
-          <img :src="upgradeUrlToHttps(lightboxImg.imageUrlFull || lightboxImg.url)" class="lightbox-img" @click.stop />
-          <div class="lightbox-caption" @click.stop>
-            <h3>{{ lightboxImg.title }}</h3>
-            <p class="desc" v-if="lightboxImg.desc">{{ lightboxImg.desc }}</p>
-            <div class="action-bar">
-              <button class="like-action-btn" :class="{ 'is-liked': lightboxImg.isLiked, 'is-animating': lightboxImg.isAnimating }" @click="handleLike(lightboxImg)">
-                <i class="fas fa-heart"></i>
-                <span>{{ lightboxImg.likes || 0 }}</span>
-              </button>
-            </div>
-            <div class="meta">
-              <span>By @{{ lightboxImg.authorName || lightboxImg.author }}</span>
-              <span>{{ formatTime(lightboxImg.uploadAt) }}</span>
-            </div>
-          </div>
-          <button class="lightbox-close"><i class="fas fa-times"></i></button>
-        </div>
-      </Transition>
-    </Teleport>
+    <ArtWorkDetail 
+      :visible="!!lightboxImg" 
+      :artwork="lightboxImg || {}"
+      @close="lightboxImg = null"
+      @like="handleLike"
+    />
+
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
+import ArtWorkDetail from './Components/ArtWorkDetail.vue'
 import apiClient from '@/utils/api'
 import { useI18n } from 'vue-i18n'
+
 
 const { t } = useI18n()
 const emit = defineEmits(['refresh-stats'])

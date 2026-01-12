@@ -86,12 +86,12 @@ const routes = [
     }
   },
   {
-    path:'/ArtCenter',
+    path:'/WorkCenter',
     name:'艺术大厅',
-    component:()=>import('@/views/ArtCenter.vue'),
+    component:()=>import('@/views/WorkCenter.vue'),
     meta:{
       requiresAuth:true,
-      title:'艺术大厅'
+      title:'作品大厅'
     }
   },
   {

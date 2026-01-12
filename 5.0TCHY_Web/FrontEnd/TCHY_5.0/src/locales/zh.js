@@ -16,7 +16,7 @@ export default{
     home: '首页',
     community: '寰宇社区',
     data_center: '交流中枢',
-    art_center: '艺术大厅',
+    work_center: '作品大厅',
     entertainment: '娱乐区',
     product: '太初产品',
     manage: '管理'
