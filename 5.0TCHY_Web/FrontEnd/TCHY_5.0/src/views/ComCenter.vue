@@ -55,7 +55,7 @@
             <div class="flow-header">
               <span class="header-title">COMMUNITY_POSTS</span>
               <div class="header-tabs">
-                <span class="tab active">最新</span>
+                <span class="tab">最新</span>
                 <span class="tab">热门</span>
               </div>
             </div>
@@ -94,20 +94,20 @@
             <div class="section-label">QUICK_ACTIONS</div>
             <div class="action-grid">
               <button class="btn-action primary md-elevation-1 md-ripple" @click="router.push('/blogCreater')">
-                <div class="icon-box"><i class="fas fa-edit"></i></div>
-                <div class="btn-text"><span class="main">发布博客</span><span class="sub">POST_BLOG</span></div>
+                <div class="icon-box">●<i class="fas fa-edit"></i></div>
+                <div class="btn-text"><span class="main">发布博客</span><span class="sub">Post Blog</span></div>
               </button>
               <button class="btn-action secondary md-elevation-1 md-ripple" @click="showPostForm = true">
-                <div class="icon-box"><i class="fas fa-paper-plane"></i></div>
-                <div class="btn-text"><span class="main">发布帖子</span><span class="sub">POST_THREAD</span></div>
+                <div class="icon-box">●<i class="fas fa-paper-plane"></i></div>
+                <div class="btn-text"><span class="main">发布帖子</span><span class="sub">Post Thread</span></div>
               </button>
               <button class="btn-action info md-elevation-1 md-ripple" @click="router.push('/suggest')">
-                <div class="icon-box"><i class="fas fa-comment-dots"></i></div>
-                <div class="btn-text"><span class="main">意见反馈</span><span class="sub">FEEDBACK</span></div>
+                <div class="icon-box">●<i class="fas fa-comment-dots"></i></div>
+                <div class="btn-text"><span class="main">意见反馈</span><span class="sub">Feed Back</span></div>
               </button>
               <button class="btn-action trade md-elevation-1 md-ripple" @click="router.push('/trade')">
-                <div class="icon-box"><i class="fas fa-exchange-alt"></i></div>
-                <div class="btn-text"><span class="main">交易站</span><span class="sub">MARKET</span></div>
+                <div class="icon-box">●<i class="fas fa-exchange-alt"></i></div>
+                <div class="btn-text"><span class="main">交易站</span><span class="sub">Market</span></div>
               </button>
             </div>
           </aside>
@@ -445,6 +445,10 @@ onMounted(() => {
 onUnmounted(() => {
   clearInterval(clockTimer);
 });
+
+
+
+
 </script>
 
 <style scoped>
@@ -556,12 +560,35 @@ onUnmounted(() => {
   .post-entry { padding: 16px !important; gap: 12px !important; }
   .entry-title { font-size: 16px !important; margin: 6px 0 !important; }
   .entry-thumb-wrapper { width: 80px !important; height: 80px !important; }
-  .btn-action { padding: 12px !important; border-radius: 12px !important; }
-  .icon-box { width: 32px !important; height: 32px !important; font-size: 14px !important; }
+
+
+
+
+
+
+
+  .btn-action { /*帖子右侧导航栏*/
+    padding: 12px !important;
+     border-radius: 12px !important;
+     margin: 0 auto;
+     transition: all 0.5s ease-in-out;
+    }
+    
+.icon-box { /*导航栏前小点*/
+      font-size: 8px !important;
+      width: 36px !important;
+      height: 36px !important;
+    }
+
   .metrics-grid { padding: 16px !important; }
   .metric-val { font-size: 22px !important; }
   .online-panel { min-height: 160px !important; }
 }
+
+
+
+
+
 
 /* --- 下面是保持不变的视觉样式 --- */
 .detail-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 9999; display: flex; justify-content: center; align-items: center; }
@@ -634,8 +661,78 @@ onUnmounted(() => {
 .posts-flow-container { flex: 1; background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border-light); display: flex; flex-direction: column; overflow: hidden; }
 .flow-header { padding: 16px 24px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; background: #fff; }
 .header-title { font-size: 14px; font-weight: 700; color: var(--text-primary); letter-spacing: 0.5px; }
-.header-tabs { display: flex; gap: 16px; font-size: 13px; font-weight: 600; color: var(--text-sub); }
-.header-tabs .tab.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); }
+
+
+
+
+/* 容器：灰色的背景轨道 */
+.header-tabs { 
+  display: inline-flex; /* 改为 inline-flex 让容器紧贴内容，或保持 flex */
+  align-items: center;
+  background-color: #f1f3f5; /* 浅灰色轨道背景 */
+  padding: 0px; /* 轨道内边距，给滑块留出呼吸空间 */
+  border-radius: 10px; /* 无论多高都保持圆角 */
+  position: relative;
+  /* 移除 gap，因为我们用 padding 和布局来控制间距 */
+  gap: 4px;
+}
+
+/* 单个 Tab 按钮：默认状态 */
+.tab {
+  position: relative;
+  padding: 8px 20px; /* 调整内边距，控制按钮大小 */
+  font-size: 16px; /* 稍微调小一点字体使其更精致，原 20px 可能过大 */
+  font-weight: 500;
+  color: var(--text-sub, #888); /* 默认文字颜色（灰色） */
+  cursor: pointer;
+  border-radius: 10px; /* 按钮自身也需要圆角 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 添加平滑过渡动画 */
+  z-index: 1;
+  user-select: none; /* 防止双击选中文本 */
+}
+
+/* 激活状态：变成白色的药丸 */
+.tab.active {
+  background-color: #ffffff; /* 激活时的背景色（白色） */
+  color: #ffffff; /* 激活时的文字颜色（深色） */
+  font-weight: 600; /* 激活时加粗 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* 添加轻微的投影，增加立体感 */
+}
+
+/* 悬停状态：轻微反馈 */
+.tab:hover:not(.active) {
+  color: #ffffff; /* 没被选中时，鼠标放上去稍微变深一点 */
+  background-color: #212c3f; /* 轻微的灰色背景 */
+}
+
+
+
+
+
+
+
+
+
+
+.btn-text {
+  /* 核心：开启Flex布局 */
+  display: flex;
+  /* 核心：设置竖向排列（主轴为垂直方向），实现自动换行堆叠 */
+  flex-direction: column;
+  
+  /* 可选补充：优化布局（根据需求调整） */
+  align-items: flex-start; /* 子元素水平左对齐（默认居中） */
+  gap: 8px; /* 两个span之间的间距（替代margin，更便捷） */
+  /* 其他自定义样式 */
+  width: 100%; /* 让按钮宽度撑满容器 */
+  padding: 1px;
+  background-color: var(--header-height);
+}
+
+
+
+
+
 .posts-scroll-area { flex: 1; overflow-y: auto; background: #f3f4f6; padding: 16px; }
 .post-entry { background: #fff; border-radius: 16px; padding: 24px; margin-bottom: 16px; border: 1px solid transparent; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; gap: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
 .post-entry:hover { border-color: var(--accent-blue); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.1); transform: translateY(-2px); }
@@ -648,7 +745,7 @@ onUnmounted(() => {
 .entry-actions { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); }
 .entry-thumb-wrapper { width: 100px; height: 100px; border-radius: 12px; overflow: hidden; position: relative; flex-shrink: 0; }
 .entry-thumb { width: 100%; height: 100%; object-fit: cover; }
-.action-grid { display: flex; flex-direction: column; gap: 12px; }
+.action-grid { display: flex; flex-direction: column; gap: 12px; transition: 0.4s ease-in-out; }
 .btn-action { padding: 16px; border-radius: 16px; border: none; cursor: pointer; display: flex; align-items: center; gap: 12px; width: 100%; transition: all 0.2s; text-align: left; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid transparent; }
 .btn-action:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0,0,0,0.05); border-color: var(--border-light); }
 .icon-box { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
