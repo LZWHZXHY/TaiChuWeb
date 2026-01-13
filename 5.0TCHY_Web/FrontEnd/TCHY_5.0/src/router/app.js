@@ -128,6 +128,12 @@ const routes = [
     meta: { requiresAuth: true, title: '我的资料' }
   },
   {
+    path: "/profile/MEE",
+    name: "new-profile",
+    component: () => import("@/views/Settings.vue"),
+    meta: { requiresAuth: true, title: '我的资料 · 新' }
+  },
+  {
     path: "/profile/:userId",
     name: "profile",
     component: () => import("@/userComponents/profile.vue"),

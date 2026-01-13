@@ -193,7 +193,7 @@ const handleLogin = () => router.push('/login')
 const handleRegister = () => router.push('/register')
 const toggleUserMenu = () => showUserMenu.value = !showUserMenu.value
 const goToProfile = () => { showUserMenu.value = false; router.push('/profile/me') }
-const goToSettings = () => { showUserMenu.value = false; router.push('/settings') }
+const goToSettings = () => { showUserMenu.value = false; router.push('/profile/MEE') }
 const goToNotifications = () => { showUserMenu.value = false; router.push('/profile/me?tab=notification') }
 
 const handleLogout = async () => {
