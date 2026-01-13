@@ -4,42 +4,54 @@
     
     <div class="comment-list custom-scroll">
       <div v-for="item in comments" :key="item.Id" class="comment-group">
-        <div class="comment-item">
+        
+        <div class="comment-item root-item">
           <div class="avatar-box">
             <img :src="fixAvatarUrl(item.UserAvatar)" @error="handleImgError" alt="avatar" />
           </div>
           <div class="comment-content">
-            <div class="user-name">
-              {{ item.UserName }}
+            <div class="user-info">
+              <span class="user-name main-name">{{ item.UserName }}</span>
               <span class="time">{{ formatTime(item.CreateTime) }}</span>
             </div>
-            <p class="text">{{ item.Content }}</p>
+            <p class="text root-text">{{ item.Content }}</p>
             <div class="op-bar">
               <span class="reply-btn" @click="handleSetReply(item)">回复</span>
             </div>
           </div>
         </div>
 
-        <div v-if="item.Replies && item.Replies.length > 0" class="replies-container">
-          <div v-for="sub in item.Replies" :key="sub.Id" class="comment-item sub-item">
-            <div class="avatar-box mini">
-              <img :src="fixAvatarUrl(sub.UserAvatar)" @error="handleImgError" alt="avatar" />
+        <div v-if="item.FlatReplies && item.FlatReplies.length > 0" class="replies-wrapper">
+          <div v-for="sub in item.FlatReplies" :key="sub.Id" class="sub-comment-item">
+            
+            <div class="sub-avatar">
+               <img :src="fixAvatarUrl(sub.UserAvatar)" @error="handleImgError" alt="avatar" />
             </div>
-            <div class="comment-content">
-              <div class="user-name">
-                {{ sub.UserName }} 
-                <span class="reply-text">回复</span> 
-                @{{ sub.ReplyToUserName || item.UserName }}
-                <span class="time">{{ formatTime(sub.CreateTime) }}</span>
+
+            <div class="sub-content-box">
+              <div class="sub-header">
+                <span class="sub-user">{{ sub.UserName }}</span>
+
+                <span v-if="sub.ReplyToUserName && sub.ReplyToUserName !== item.UserName" class="reply-relation">
+                  <span class="arrow">▶</span> 
+                  <span class="target-user">{{ sub.ReplyToUserName }}</span>
+                </span>
+                
+                <span class="sub-time">{{ formatTime(sub.CreateTime) }}</span>
               </div>
-              <p class="text">{{ sub.Content }}</p>
-              <div class="op-bar">
-                <span class="reply-btn" @click="handleSetReply(sub)">回复</span>
+
+              <div class="sub-text">
+                {{ sub.Content }}
+              </div>
+
+              <div class="sub-op">
+                <span class="reply-btn-mini" @click="handleSetReply(sub)">回复</span>
               </div>
             </div>
+
           </div>
         </div>
-      </div>
+        </div>
       
       <div v-if="comments.length === 0" class="empty-comment">
         还没有人评论，快来抢沙发~
@@ -48,8 +60,8 @@
 
     <div class="comment-input-area">
       <div v-if="replyTarget" class="reply-hint">
-        回复 @{{ replyTarget.UserName }}
-        <span class="cancel" @click="replyTarget = null">取消</span>
+        <span>回复: <strong>{{ replyTarget.UserName }}</strong></span>
+        <span class="cancel-btn" @click="replyTarget = null">×</span>
       </div>
 
       <div class="input-row">
@@ -57,7 +69,7 @@
           v-model="inputContent" 
           type="text" 
           ref="commentInputRef"
-          :placeholder="replyTarget ? '输入回复内容...' : '说点什么...'" 
+          :placeholder="replyTarget ? `回复 @${replyTarget.UserName}...` : '说点什么...'" 
           @keyup.enter="handleSubmit"
         />
         <button 
@@ -80,11 +92,10 @@ const props = defineProps({
   artworkId: { type: Number, required: true }
 })
 
-// --- 配置常量 (参考你提供的代码) ---
-const isDev = window.location.hostname === 'localhost';
-const BASE_URL = isDev ? 'https://localhost:44359' : 'https://bianyuzhou.com';
+// --- 常量 ---
+const BASE_URL = 'https://bianyuzhou.com'; 
 
-// --- 响应式数据 ---
+// --- 状态 ---
 const comments = ref([])
 const total = ref(0)
 const inputContent = ref('')
@@ -92,31 +103,30 @@ const isSubmitting = ref(false)
 const replyTarget = ref(null)
 const commentInputRef = ref(null)
 
-// --- 工具函数 (同步你提供的逻辑) ---
-
-// 1. 头像处理：确保 localhost 路径正确或显示兜底图
+// --- 工具函数 ---
 const fixAvatarUrl = (url) => {
   if (!url || typeof url !== 'string') return '/土豆.jpg';
-  // 如果已经是完整路径则直接返回
-  if (url.startsWith('http') || url.startsWith('data:image')) return url;
-  
+  const TARGET_HOST = 'https://bianyuzhou.com';
   let path = url.replace(/\\/g, '/');
-  if (path.startsWith('/')) path = path.substring(1);
-  return `${BASE_URL}/${path}`;
+  if (path.startsWith('http')) {
+    const thirdSlashIndex = path.indexOf('/', 8);
+    if (thirdSlashIndex > -1) {
+      path = path.substring(thirdSlashIndex);
+    }
+  }
+  if (!path.startsWith('/')) path = '/' + path;
+  if (path !== '/土豆.jpg' && !path.startsWith('/uploads')) {
+    path = '/uploads' + path;
+  }
+  return `${TARGET_HOST}${path}`;
 };
 
-// 2. 图片错误兜底
-const handleImgError = (e) => { 
-  e.target.src = '/土豆.jpg'; 
-};
+const handleImgError = (e) => { e.target.src = '/土豆.jpg'; };
 
-// 3. 时间格式化：解决 NaN 问题
 const formatTime = (t) => {
-  if (!t) return 'N/A';
+  if (!t) return '';
   const date = new Date(t);
-  if (isNaN(date.getTime())) return '时间格式错误';
-  
-  // 简易格式化：MM-DD HH:mm
+  if (isNaN(date.getTime())) return '';
   const M = (date.getMonth() + 1).toString().padStart(2, '0');
   const D = date.getDate().toString().padStart(2, '0');
   const h = date.getHours().toString().padStart(2, '0');
@@ -124,52 +134,79 @@ const formatTime = (t) => {
   return `${M}-${D} ${h}:${m}`;
 };
 
-// --- API 交互 ---
+// --- API ---
 
 const loadComments = async () => {
   try {
     const res = await apiClient.get(`/Drawing/comment_list`, {
       params: { drawingId: props.artworkId }
     })
+    
     if (res.data.success) {
-      comments.value = res.data.data
-      // 计算包含回复的总数
-      let count = 0
-      const countFn = (list) => {
-        list.forEach(c => { 
-          count++; 
-          if(c.Replies) countFn(c.Replies); 
+      const rawData = res.data.data || [];
+
+      // 递归拍平函数：把所有子孙节点放到一个数组里
+      const flattenReplies = (nodes) => {
+        let result = [];
+        if (!nodes || nodes.length === 0) return result;
+        
+        nodes.forEach(node => {
+          // 兼容 Id 大小写
+          const safeNode = { ...node, Id: node.Id || node.id };
+          result.push(safeNode);
+          
+          if (node.Replies && node.Replies.length > 0) {
+            result = result.concat(flattenReplies(node.Replies));
+          }
         });
-      }
-      countFn(res.data.data)
-      total.value = count
+        // 关键：必须按时间排序，让对话看起来是线性的
+        return result.sort((a, b) => new Date(a.CreateTime) - new Date(b.CreateTime));
+      };
+
+      let count = 0;
+      const processedData = rawData.map(item => {
+        count++;
+        // 获取该一级评论下的所有后代
+        const flatList = flattenReplies(item.Replies || []);
+        count += flatList.length;
+
+        return {
+          ...item,
+          Id: item.Id || item.id,
+          FlatReplies: flatList 
+        };
+      });
+
+      comments.value = processedData;
+      total.value = count;
     }
   } catch (err) {
-    console.error('获取评论失败', err)
+    console.error('加载失败', err)
   }
 }
 
 const handleSubmit = async () => {
   if (!inputContent.value.trim() || isSubmitting.value) return
-  
   isSubmitting.value = true
   try {
+    const target = replyTarget.value;
+    // 确保取到 ID
+    const parentId = target ? (target.Id || target.id) : null;
+
     const payload = {
       DrawingId: props.artworkId,
       Content: inputContent.value,
-      // 注意：后端可能区分 ParentId 或 ParentCommentId，根据你的 DTO 选择
-      ParentId: replyTarget.value ? replyTarget.value.Id : null
+      ParentId: parentId
     }
 
     const res = await apiClient.post(`/Drawing/add_comment`, payload)
-    
     if (res.data.success) {
       inputContent.value = ''
       replyTarget.value = null
       await loadComments() 
     }
   } catch (err) {
-    console.error('发送评论错误', err)
+    console.error(err)
   } finally {
     isSubmitting.value = false
   }
@@ -187,67 +224,98 @@ watch(() => props.artworkId, loadComments)
 </script>
 
 <style scoped>
+/* 容器调整 */
 .comment-section {
-  display: flex;
-  flex-direction: column;
-  height: 100%; 
-  border-top: 1px solid #f1f5f9;
-  margin-top: 15px;
-  padding-top: 15px;
+  display: flex; flex-direction: column; height: 100%; 
+  border-top: 1px solid #f1f5f9; margin-top: 15px; padding-top: 15px;
 }
+.section-title { font-size: 15px; font-weight: 600; margin-bottom: 15px; color: #1e293b; }
+.comment-list { flex: 1; overflow-y: auto; padding-right: 6px; }
 
-.section-title { font-size: 14px; font-weight: bold; margin-bottom: 12px; color: #333; }
+/* 滚动条美化 */
+.custom-scroll::-webkit-scrollbar { width: 4px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-.comment-list { flex: 1; overflow-y: auto; padding-right: 5px; min-height: 0; }
+/* 单个评论组 (包含一级和它的子回复) */
+.comment-group { margin-bottom: 20px; border-bottom: 1px solid #f8fafc; padding-bottom: 15px; }
 
-.comment-group { margin-bottom: 15px; }
-
-.comment-item { display: flex; gap: 10px; margin-bottom: 8px; }
-
-.avatar-box img { 
-  width: 32px; height: 32px; border-radius: 50%; 
-  background: #eee; object-fit: cover; 
-}
-
-.mini img { width: 24px; height: 24px; }
-
+/* === 一级评论样式 === */
+.root-item { display: flex; gap: 12px; margin-bottom: 10px; }
+.avatar-box img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid #f1f5f9; }
 .comment-content { flex: 1; }
+.main-name { font-size: 13px; font-weight: 600; color: #334155; }
+.time { font-size: 11px; color: #94a3b8; margin-left: 8px; font-weight: normal; }
+.root-text { font-size: 14px; color: #334155; line-height: 1.5; margin: 4px 0; }
+.op-bar { margin-top: 4px; }
+.reply-btn { font-size: 12px; color: #64748b; cursor: pointer; transition: color 0.2s; }
+.reply-btn:hover { color: #8b5cf6; }
 
-.user-name { font-size: 12px; font-weight: bold; color: #555; margin-bottom: 2px; }
-.time { font-weight: normal; color: #999; font-size: 10px; margin-left: 8px; }
-
-.text { font-size: 13px; color: #333; margin: 4px 0; line-height: 1.4; word-break: break-all; }
-
-.replies-container {
-  margin-left: 42px;
-  background-color: #f8fafc;
-  border-radius: 6px;
-  padding: 8px 10px;
+/* === 子回复区域 (关键样式优化) === */
+.replies-wrapper {
+  margin-left: 48px; /* 跟一级头像对齐后的偏移 */
+  background-color: #f8fafc; /* 浅灰底色 */
+  border-radius: 8px;
+  padding: 10px 12px;
 }
 
-.op-bar { margin-top: 2px; }
-.reply-btn { font-size: 11px; color: #8b5cf6; cursor: pointer; }
-.reply-btn:hover { text-decoration: underline; }
+.sub-comment-item {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.sub-comment-item:last-child { margin-bottom: 0; }
 
+/* 子评论头像更小 */
+.sub-avatar img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+
+.sub-content-box { flex: 1; }
+
+.sub-header {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
+  font-size: 12px; line-height: 1.4;
+}
+
+/* 名字高亮 */
+.sub-user { color: #475569; font-weight: 600; }
+.target-user { color: #475569; font-weight: 600; }
+
+/* 关系箭头 */
+.reply-relation { color: #94a3b8; display: flex; align-items: center; gap: 4px; margin: 0 2px; }
+.arrow { font-size: 10px; transform: scale(0.8); }
+
+.sub-time { color: #cbd5e1; font-size: 11px; margin-left: auto; }
+
+/* 子评论内容 */
+.sub-text {
+  font-size: 13px; color: #1e293b; margin-top: 2px; line-height: 1.4;
+}
+
+/* 子回复按钮 */
+.sub-op { margin-top: 2px; text-align: right; } /* 按钮放右边，或者放左边看你喜好 */
+.reply-btn-mini { font-size: 11px; color: #94a3b8; cursor: pointer; }
+.reply-btn-mini:hover { color: #8b5cf6; text-decoration: underline; }
+
+/* === 底部输入框 === */
+.comment-input-area { padding: 12px 0; border-top: 1px solid #e2e8f0; background: #fff; }
 .reply-hint {
-  font-size: 12px; color: #8b5cf6; background: #f5f3ff;
-  padding: 6px 12px; border-radius: 20px; margin-bottom: 8px;
-  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; color: #64748b; background: #f1f5f9;
+  padding: 4px 10px; border-radius: 4px; margin-bottom: 8px;
+  display: inline-flex; align-items: center; gap: 8px;
 }
-.cancel { cursor: pointer; font-size: 14px; font-weight: bold; opacity: 0.7; }
-
-.comment-input-area { padding: 12px 0; border-top: 1px solid #f1f5f9; }
+.cancel-btn { 
+  cursor: pointer; width: 16px; height: 16px; background: #cbd5e1; color: #fff; 
+  border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;
+}
 .input-row { display: flex; gap: 10px; }
 .input-row input { 
   flex: 1; border: 1px solid #e2e8f0; border-radius: 20px; 
-  padding: 8px 15px; font-size: 13px; outline: none; background: #f8fafc; 
+  padding: 8px 16px; font-size: 13px; outline: none; transition: border 0.2s;
 }
+.input-row input:focus { border-color: #8b5cf6; }
 .send-btn { 
   background: #8b5cf6; color: #fff; border: none; border-radius: 20px; 
-  padding: 0 18px; font-size: 12px; cursor: pointer; font-weight: bold;
+  padding: 0 20px; font-size: 13px; cursor: pointer; font-weight: 500;
+  transition: opacity 0.2s;
 }
-.send-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
-
-.custom-scroll::-webkit-scrollbar { width: 4px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+.send-btn:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
 </style>
