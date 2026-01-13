@@ -7,7 +7,7 @@ const routes = [
     component: () => import('@/views/Home.vue'),
     meta: { 
       title: '首页',
-      public: false
+      public: true
     }
   },
   {
@@ -16,7 +16,7 @@ const routes = [
     component: () => import('@/views/Forbidden.vue'),
     meta: { 
       title: '404',
-      public: false
+      public: true
     }
   },
   {
@@ -24,16 +24,16 @@ const routes = [
     name: '登录',
     component: () => import('@/LoginRegister/Login.vue'),
     meta: { 
-      requiresGuest: false,
+      requiresGuest: true,
       title: '用户登录',
-      public: false
+      public: true
     }
   },{
     path:'/trade',
     name:'交易站',
     component:()=>import('@/views/TradeStation.vue'),
     meta: { 
-      requiresAuth: false,
+      requiresAuth: true,
       title: '交易站'
     }
   },
@@ -42,7 +42,7 @@ const routes = [
     name:'太初寰宇作品',
     component:()=>import('@/views/TCHYproduct.vue'),
     meta: { 
-      requiresAuth: false,
+      requiresAuth: true,
       title: '太初寰宇'
     }
   },
@@ -51,9 +51,9 @@ const routes = [
     name: '注册',
     component: () => import('@/LoginRegister/Register.vue'),
     meta: { 
-      requiresGuest: false,
+      requiresGuest: true,
       title: '用户注册',
-      public: false
+      public: true
     }
   },
   {
@@ -61,9 +61,9 @@ const routes = [
     name:'密码找回',
     component: () => import('@/LoginRegister/ForgetPassword.vue'),
     meta: { 
-      requiresGuest: false,
+      requiresGuest: true,
       title: '密码找回',
-      public: false
+      public: true
     }
   },
   {
@@ -71,7 +71,7 @@ const routes = [
     name:'管理员页面',
     component: () => import('@/views/Admin.vue'),
     meta: { 
-      requiresAuth: false,
+      requiresAuth: true,
       title: '管理员页面',
       minRank: 1 // 需要后端校验 rank >= 1
     }
@@ -81,7 +81,7 @@ const routes = [
     name:'交流中枢',
     component:()=>import('@/views/ComCenter.vue'),
     meta:{
-      requiresAuth:false,
+      requiresAuth:true,
       title:'交流中枢'
     }
   },
@@ -90,7 +90,7 @@ const routes = [
     name:'艺术大厅',
     component:()=>import('@/views/WorkCenter.vue'),
     meta:{
-      requiresAuth:false,
+      requiresAuth:true,
       title:'作品大厅'
     }
   },
@@ -99,7 +99,7 @@ const routes = [
     name:'博客创作',
     component:()=>import('@/BlogComponents/BlogCreater.vue'),
     meta:{
-      requiresAuth:false,
+      requiresAuth:true,
       title:'博客创作页面'
     }
   },
@@ -108,7 +108,7 @@ const routes = [
     name:'娱乐区',
     component: () => import('@/views/EntertainmentArea.vue'),
     meta: { 
-      requiresAuth: false,
+      requiresAuth: true,
       title: '娱乐区'
     }
   },
@@ -117,7 +117,7 @@ const routes = [
     name:'意见箱',
     component: () => import('@/feedbackComponents/FeedbackBox.vue'),
     meta: { 
-      requiresAuth: false,
+      requiresAuth: true,
       title: '意见箱'
     }
   },
@@ -125,13 +125,13 @@ const routes = [
     path: "/profile/me",
     name: "my-profile",
     component: () => import("@/userComponents/profile.vue"),
-    meta: { requiresAuth: false, title: '我的资料' }
+    meta: { requiresAuth: true, title: '我的资料' }
   },
   {
     path: "/profile/:userId",
     name: "profile",
     component: () => import("@/userComponents/profile.vue"),
-    meta: { requiresAuth: false, title: '用户资料' }
+    meta: { requiresAuth: true, title: '用户资料' }
   },
   // 可选：覆盖 /profile 自动跳转到/profile/me
   {
@@ -140,11 +140,11 @@ const routes = [
   },
     {
     path:'/settings',
-    name:'个人设置',
+    name:'个人主页',
     component: () => import('@/views/Settings.vue'),
     meta: { 
-      requiresAuth: false,
-      title: '个人设置'
+      requiresAuth: true,
+      title: '个人主页'
     }
   },
 ]
@@ -197,7 +197,7 @@ const authorizeByRank = async (minRank) => {
   if (!apiClient) throw new Error('apiClient未就绪')
   try {
     const resp = await apiClient.get('/Userinfo/authorize', { params: { minRank } })
-    const allowed = resp?.data?.allowed === false
+    const allowed = resp?.data?.allowed === true
     console.log('🔎 Rank 实时校验结果:', { required: minRank, allowed, data: resp?.data })
     return allowed
   } catch (err) {
@@ -209,10 +209,10 @@ const authorizeByRank = async (minRank) => {
     }
     if (status === 403) {
       // 没权限
-      return false
+      return true
     }
     // 其他错误按无权限处理
-    return false
+    return true
   }
 }
 
@@ -237,7 +237,7 @@ const authorizeByLevel = async (minLevel) => {
       throw new Error('unauthorized')
     }
     // 其他错误按无权限处理
-    return false
+    return true
   }
 }
 
@@ -265,7 +265,7 @@ router.beforeEach(async (to, from, next) => {
           const token = localStorage.getItem('auth_token')
           authStore.user = userData
           authStore.token = token
-          authStore.isAuthenticated = false
+          authStore.isAuthenticated = true
           console.log('🔄 已同步认证状态到 Pinia')
         } catch (error) {
           console.error('❌ 同步认证状态失败:', error)
