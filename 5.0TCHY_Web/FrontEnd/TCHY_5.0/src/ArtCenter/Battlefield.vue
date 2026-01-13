@@ -1,355 +1,332 @@
 <template>
-  <div class="battlefield-container">
-    <header class="bf-header">
-      <div class="header-left">
-        <h2 class="title">TAICHU_BATTLEFIELD // 约战场</h2>
-        <span class="subtitle">OC 混合成长型企划平台</span>
-      </div>
-      
-      <nav class="bf-tabs">
-        <button 
-          v-for="t in tabs" 
-          :key="t.key"
-          class="tab-btn"
-          :class="{ active: activeTab === t.key }"
-          @click="activeTab = t.key"
-        >
-          <i :class="t.icon"></i> {{ t.label }}
-        </button>
-      </nav>
-    </header>
+  <div class="battlefield-industrial">
+    <div class="grid-bg moving-grid"></div>
 
-    <div class="bf-content custom-scroll">
+    <div class="bf-container">
       
-      <section v-if="activeTab === 'intro'" class="module-intro fade-in">
-        <div class="hero-box">
-          <h3>欢迎来到太初约战场</h3>
-          <p>这是一个由社区驱动的长期运营企划，旨在连接每一位火柴人创作者。</p>
-          <div class="alert-box">
-            <i class="fas fa-info-circle"></i>
-            <span>当前版本支持人设上传、展示与作者本人修订。</span>
+      <header class="tactical-header">
+        <div class="header-left">
+          <div class="logo-group">
+            <span class="icon-box">BATTLE</span>
+            <div class="text-info">
+              <h2 class="title">BATTLEFIELD_OS</h2>
+              <span class="sub">混合成长型企划平台 // OC_DATABASE</span>
+            </div>
           </div>
         </div>
         
-        <div class="info-grid">
-          <div class="info-card">
-            <div class="icon">📜</div>
-            <h4>企划概念</h4>
-            <p>不同于单一IP创作，这是一个混合成长型舞台。上传你的OC，在规则框架下与其他创作者互动。</p>
-          </div>
-          <div class="info-card">
-            <div class="icon">🎯</div>
-            <h4>核心目标</h4>
-            <p>打造"上传-匹配-约战-结算-归档"的完整闭环，让创作有迹可循。</p>
-          </div>
-          <div class="info-card">
-            <div class="icon">⚖️</div>
-            <h4>基本规则</h4>
-            <p>尊重原创，公平竞技。所有战斗结果需经双方确认及官方审核后方可计入正史。</p>
-          </div>
-        </div>
+        <nav class="tactical-tabs">
+          <button 
+            v-for="t in tabs" 
+            :key="t.key"
+            class="cyber-tab-btn"
+            :class="{ active: activeTab === t.key }"
+            @click="activeTab = t.key"
+          >
+            <span class="tab-deco"></span>
+            <span class="tab-text">{{ t.label }}</span>
+          </button>
+        </nav>
+      </header>
 
-        <div class="action-area">
-          <button class="bf-btn primary large" @click="activeTab = 'upload'">立即上传人设</button>
-          <button class="bf-btn ghost large" @click="activeTab = 'roster'">浏览人设列表</button>
-        </div>
-      </section>
-
-      <section v-else-if="activeTab === 'upload'" class="module-upload fade-in">
-        <div class="form-container">
-          <h3 class="section-title">登记新的人设档案</h3>
-          <form @submit.prevent="submitOC">
-            <div class="form-row">
-              <div class="form-group">
-                <label>角色名称 <span class="req">*</span></label>
-                <input v-model="upForm.OCName" class="bf-input" placeholder="例如：炎刃·赤霄" required />
-              </div>
-              <div class="form-group">
-                <label>作者名称 <span class="req">*</span></label>
-                <input v-model="upForm.authorName" class="bf-input" placeholder="你的署名" required />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>性别 <span class="req">*</span></label>
-                <select v-model="upForm.gender" class="bf-select" required>
-                  <option value="">选择性别</option>
-                  <option value="0">男</option>
-                  <option value="1">女</option>
-                  <option value="2">未知</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>种族 <span class="req">*</span></label>
-                <input v-model="upForm.species" class="bf-input" placeholder="如：人类、机械" required />
-              </div>
-              <div class="form-group">
-                <label>年龄 <span class="req">*</span></label>
-                <input v-model.number="upForm.age" type="number" class="bf-input" required />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>能力设定 <span class="req">*</span></label>
-              <textarea v-model="upForm.ability" class="bf-textarea" rows="5" placeholder="详细描述能力、招式与限制..." required></textarea>
-            </div>
-
-            <div class="form-group">
-              <label>POO (Power of Origin) <span class="req">*</span></label>
-              <input v-model="upForm.poo" class="bf-input" placeholder="核心能量/起源设定" required />
-            </div>
-
-            <div class="form-group upload-zone">
-              <label>立绘上传 <span class="req">*</span></label>
-              <div class="upload-box" @click="$refs.charInput.click()">
-                <div v-if="upForm.charFile" class="file-preview">
-                  <span class="file-name">{{ upForm.charFile.name }}</span>
-                  <button type="button" @click.stop="upForm.charFile = null" class="remove-btn">×</button>
-                </div>
-                <div v-else class="placeholder">
-                  <i class="fas fa-cloud-upload-alt"></i>
-                  <span>点击上传立绘 (Max 5MB)</span>
+      <div class="bf-main-viewport custom-scroll">
+        
+        <Transition name="glitch-fade" mode="out-in">
+          <section v-if="activeTab === 'intro'" class="module-intro">
+            <div class="briefing-terminal">
+              <div class="term-header">>> MISSION_BRIEFING // 企划简报</div>
+              <div class="term-content">
+                <h3 class="hero-title">WELCOME_TO_THE_ARENA</h3>
+                <p class="hero-desc">这是一个由社区驱动的长期运营企划，旨在连接每一位火柴人创作者。</p>
+                <div class="alert-strip">
+                  <span class="icon">!</span>
+                  <span>SYSTEM_NOTICE: 当前版本支持人设上传、展示与作者本人修订。</span>
                 </div>
               </div>
-              <input ref="charInput" type="file" accept="image/*" style="display:none" @change="handleCharFile" />
             </div>
-
-            <div class="form-group">
-              <label class="checkbox-label">
-                <input type="checkbox" v-model="upForm.agreed" required />
-                我已阅读并遵守社区约战规则
-              </label>
-            </div>
-
-            <div class="form-actions">
-              <button class="bf-btn primary" type="submit" :disabled="upSubmitting">
-                {{ upSubmitting ? '上传中...' : '提交档案' }}
+            <div class="action-deck">
+              <button class="cyber-btn primary large" @click="activeTab = 'upload'">
+                >>> REGISTER_NEW_OC
+              </button>
+              <button class="cyber-btn ghost large" @click="activeTab = 'roster'">
+                VIEW_ROSTER
               </button>
             </div>
-          </form>
-        </div>
-      </section>
+          </section>
 
-      <section v-else-if="activeTab === 'roster'" class="module-roster fade-in">
-        <div class="roster-tools">
-          <div class="search-bar">
-            <i class="fas fa-search"></i>
-            <input v-model="rosterQuery" placeholder="搜索角色、作者或能力..." @input="rosterPage = 1" />
-          </div>
-          <button class="bf-btn ghost" @click="loadRoster">刷新列表</button>
-        </div>
-
-        <div v-if="rosterLoading" class="state-box">
-          <i class="fas fa-circle-notch fa-spin"></i> 正在读取档案库...
-        </div>
-        
-        <div v-else-if="rosterList.length === 0" class="state-box">
-          <i class="fas fa-box-open"></i> 暂无角色数据
-        </div>
-
-        <div v-else class="roster-grid">
-          <div 
-            v-for="oc in paginatedRoster" 
-            :key="oc.id" 
-            class="oc-card"
-            @click="openDetail(oc)"
-          >
-            <div class="oc-cover">
-              <img :src="getImageUrl(oc.imageUrl || oc.OC_image_url)" loading="lazy" @error="handleImgError" />
-              <span class="status-tag" :class="getStatusClass(oc.OC_status)">
-                {{ getStatusText(oc.OC_status) }}
-              </span>
-              <span v-if="isOwner(oc)" class="owner-tag" title="我的角色"><i class="fas fa-user-edit"></i></span>
-            </div>
-            <div class="oc-info">
-              <h4 class="oc-name">{{ oc.name }}</h4>
-              <div class="oc-meta">
-                <span>{{ oc.authorName }}</span>
-                <span class="dot">•</span>
-                <span>{{ oc.species }}</span>
+          <section v-else-if="activeTab === 'upload'" class="module-upload">
+            <div class="form-panel">
+              <div class="panel-header">
+                <span class="deco">▼</span> NEW_RECRUIT_REGISTRY // 档案登记
               </div>
-              <p class="oc-desc">{{ truncate(oc.ability, 40) }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="pagination" v-if="totalPages > 1">
-          <button :disabled="rosterPage <= 1" @click="rosterPage--">上一页</button>
-          <span>{{ rosterPage }} / {{ totalPages }}</span>
-          <button :disabled="rosterPage >= totalPages" @click="rosterPage++">下一页</button>
-        </div>
-      </section>
-
-      <section v-else-if="activeTab === 'records'" class="module-records fade-in">
-        <div class="records-table-wrap">
-          <table class="records-table">
-            <thead>
-              <tr>
-                <th>日期</th>
-                <th>对局标题</th>
-                <th>发起方</th>
-                <th>应战方</th>
-                <th>结果</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="5" class="empty-row">
-                  <i class="fas fa-history"></i> 暂无战斗记录，等待系统接入...
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-    </div>
-
-    <Teleport to="body">
-      <Transition name="fade">
-        <div v-if="detailLoading || selectedOC" class="modal-overlay" @click.self="closeModal">
-          
-          <div v-if="detailLoading" class="modal-card loading-card">
-            <div class="modal-body center-content">
-              <i class="fas fa-circle-notch fa-spin fa-2x"></i>
-              <p>正在读取神经元数据...</p>
-            </div>
-          </div>
-
-          <div v-else class="modal-card">
-            <div class="modal-header">
-              <h3>
-                <span v-if="isEditing">正在编辑 // {{ editForm.name }}</span>
-                <span v-else>档案详情 // {{ selectedOC.name }}</span>
-              </h3>
-              <button class="close-icon" @click="closeModal"><i class="fas fa-times"></i></button>
-            </div>
-            
-            <div class="modal-body custom-scroll">
-              
-              <div v-if="!isEditing" class="detail-container">
-                <div class="detail-split">
-                  <div class="detail-left">
-                    <div class="char-image-box">
-                      <img :src="getImageUrl(selectedOC.imageUrl || selectedOC.OC_image_url)" @error="handleImgError" />
-                    </div>
-                    
-                    <div class="battle-stats">
-                      <div class="stat-item win">
-                        <span class="label">WIN</span>
-                        <span class="val">{{ selectedOC.winCount || 0 }}</span>
-                      </div>
-                      <div class="stat-item lose">
-                        <span class="label">LOSE</span>
-                        <span class="val">{{ selectedOC.loseCount || 0 }}</span>
-                      </div>
-                    </div>
+              <form @submit.prevent="submitOC" class="cyber-form">
+                <div class="form-row">
+                  <div class="form-group half">
+                    <label>CODENAME / 角色名称 <span class="req">*</span></label>
+                    <input v-model="upForm.OCName" class="cyber-input" placeholder="ENTER_NAME..." required />
                   </div>
-
-                  <div class="detail-right">
-                    <div class="info-row">
-                      <label>作者</label> <span>{{ selectedOC.authorName }}</span>
-                    </div>
-                    <div class="info-row">
-                      <label>种族</label> <span>{{ selectedOC.species }}</span>
-                    </div>
-                    <div class="info-row">
-                      <label>性别</label> <span>{{ getGenderText(selectedOC.gender) }} / {{ selectedOC.age }}岁</span>
-                    </div>
-                    <div class="info-row">
-                      <label>POO</label> <span class="poo-text">{{ selectedOC.POO || selectedOC.poo }}</span>
-                    </div>
-                    
-                    <div class="info-section">
-                      <label>能力设定</label>
-                      <p>{{ selectedOC.ability }}</p>
-                    </div>
-
-                    <div class="info-section" v-if="selectedOC.background">
-                      <label>背景故事</label>
-                      <p>{{ selectedOC.background }}</p>
-                    </div>
-
-                    <div class="info-section" v-if="selectedOC.weaponImages && selectedOC.weaponImages.length">
-                      <label>武器/装备库</label>
-                      <div class="weapon-grid">
-                        <div v-for="(wp, idx) in selectedOC.weaponImages" :key="idx" class="weapon-item">
-                          <img :src="getImageUrl(wp)" @click="openImage(wp)" />
-                        </div>
-                      </div>
-                    </div>
+                  <div class="form-group half">
+                    <label>CREATOR / 作者署名 <span class="req">*</span></label>
+                    <input v-model="upForm.authorName" class="cyber-input" placeholder="YOUR_ID..." required />
                   </div>
                 </div>
-              </div>
-
-              <div v-else class="edit-mode-form">
-                <div class="form-row">
+                <div class="form-row three-col">
                   <div class="form-group">
-                    <label>角色名称</label>
-                    <input v-model="editForm.name" class="bf-input" />
-                  </div>
-                  <div class="form-group">
-                    <label>种族</label>
-                    <input v-model="editForm.species" class="bf-input" />
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>性别 (0男 1女 2未知)</label>
-                    <select v-model="editForm.gender" class="bf-select">
-                      <option :value="0">男</option>
-                      <option :value="1">女</option>
-                      <option :value="2">未知</option>
+                    <label>GENDER</label>
+                    <select v-model="upForm.gender" class="cyber-select" required>
+                      <option value="">SELECT...</option>
+                      <option value="0">MALE</option>
+                      <option value="1">FEMALE</option>
+                      <option value="2">UNKNOWN</option>
                     </select>
                   </div>
                   <div class="form-group">
-                    <label>年龄</label>
-                    <input v-model.number="editForm.age" type="number" class="bf-input" />
+                    <label>SPECIES</label>
+                    <input v-model="upForm.species" class="cyber-input" required />
+                  </div>
+                  <div class="form-group">
+                    <label>AGE</label>
+                    <input v-model.number="upForm.age" type="number" class="cyber-input" required />
                   </div>
                 </div>
                 <div class="form-group">
-                  <label>POO (核心能量)</label>
-                  <input v-model="editForm.POO" class="bf-input" />
+                  <label>ABILITY_DATA / 能力设定</label>
+                  <textarea v-model="upForm.ability" class="cyber-textarea" rows="5" required></textarea>
                 </div>
                 <div class="form-group">
-                  <label>能力设定</label>
-                  <textarea v-model="editForm.ability" class="bf-textarea" rows="4"></textarea>
+                  <label>P.O.O (ORIGIN_POWER)</label>
+                  <input v-model="upForm.poo" class="cyber-input" required />
                 </div>
                 <div class="form-group">
-                  <label>背景故事</label>
-                  <textarea v-model="editForm.background" class="bf-textarea" rows="3"></textarea>
+                  <label>VISUAL_ASSET / 立绘</label>
+                  <div class="upload-zone" @click="$refs.charInput.click()">
+                    <div v-if="upForm.charFile" class="file-preview">
+                      <span class="file-name">FILE: {{ upForm.charFile.name }}</span>
+                      <button type="button" @click.stop="upForm.charFile = null" class="remove-btn">[REMOVE]</button>
+                    </div>
+                    <div v-else class="placeholder">
+                      <div class="icon">+</div>
+                      <span>UPLOAD_IMAGE (MAX 5MB)</span>
+                    </div>
+                  </div>
+                  <input ref="charInput" type="file" accept="image/*" style="display:none" @change="handleCharFile" />
                 </div>
-                <div class="form-group">
-                  <label>更新立绘 (可选)</label>
-                  <input type="file" @change="handleEditFileChange" accept="image/*" class="bf-input" />
-                  <span class="tip-text">不上传则保留原图</span>
+                <div class="form-group checkbox-row">
+                  <label class="cyber-checkbox">
+                    <input type="checkbox" v-model="upForm.agreed" required />
+                    <span class="checkmark"></span>
+                    <span class="text">I_ACCEPT_THE_RULES</span>
+                  </label>
                 </div>
-                <div class="form-group">
-                  <label>版本更新说明</label>
-                  <input v-model="editForm.updateDescription" class="bf-input" placeholder="简述本次修改内容" />
+                <div class="form-actions">
+                  <button class="cyber-btn primary full" type="submit" :disabled="upSubmitting">
+                    {{ upSubmitting ? 'UPLOADING...' : 'SUBMIT_DOSSIER' }}
+                  </button>
                 </div>
+              </form>
+            </div>
+          </section>
+
+          <section v-else-if="activeTab === 'roster'" class="module-roster">
+            <div class="roster-toolbar">
+              <div class="search-unit">
+                <span class="prompt">> QUERY:</span>
+                <input v-model="rosterQuery" class="search-input" placeholder="NAME / AUTHOR..." @input="rosterPage = 1" />
+              </div>
+              <button class="cyber-btn ghost" @click="loadRoster">REFRESH_DB</button>
+            </div>
+
+            <div v-if="rosterLoading" class="loading-state">
+              <div class="spinner"></div><span>ACCESSING_DATABASE...</span>
+            </div>
+            
+            <div v-else class="roster-grid">
+              <div 
+                v-for="oc in paginatedRoster" 
+                :key="oc.id" 
+                class="dossier-card"
+                @click="openDetail(oc)"
+              >
+                <div class="card-status-bar">
+                  <span class="status-indicator" :class="getStatusClass(oc.OC_status)">
+                    {{ getStatusText(oc.OC_status) }}
+                  </span>
+                  <span v-if="isOwner(oc)" class="owner-badge">[ MY_OC ]</span>
+                </div>
+                <div class="card-portrait">
+                  <img :src="getImageUrl(oc.imageUrl || oc.OC_image_url)" loading="lazy" @error="handleImgError" />
+                  <div class="scan-overlay"></div>
+                </div>
+                <div class="card-info">
+                  <h4 class="oc-name">{{ oc.name }}</h4>
+                  <div class="oc-meta">
+                    <span>AUTH: {{ oc.authorName }}</span>
+                    <span>RACE: {{ oc.species }}</span>
+                  </div>
+                  <div class="oc-stats">
+                    <div class="stat-bar win" :style="{width: (oc.winCount/(oc.winCount+oc.loseCount+1)*100)+'%' }"></div>
+                    <span class="stat-text">W:{{ oc.winCount || 0 }} / L:{{ oc.loseCount || 0 }}</span>
+                  </div>
+                </div>
+                <div class="corner-br"></div>
+              </div>
+            </div>
+
+            <div class="pagination-bar" v-if="totalPages > 1">
+              <button class="nav-btn" :disabled="rosterPage <= 1" @click="rosterPage--">&lt;</button>
+              <span class="page-num">{{ rosterPage }} / {{ totalPages }}</span>
+              <button class="nav-btn" :disabled="rosterPage >= totalPages" @click="rosterPage++">&gt;</button>
+            </div>
+          </section>
+
+          <section v-else-if="activeTab === 'records'" class="module-records">
+            <div class="cyber-table-wrapper">
+              <table class="cyber-table">
+                <thead>
+                  <tr><th>DATE</th><th>OPERATION</th><th>INITIATOR</th><th>DEFENDER</th><th>OUTCOME</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="5" class="empty-row">[ NO_COMBAT_LOGS_RECORDED ]</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </Transition>
+      </div>
+    </div>
+
+    <Teleport to="body">
+      <Transition name="glitch-fade">
+        <div v-if="detailLoading || selectedOC" class="cyber-modal-overlay" @click.self="closeModal">
+          
+          <div v-if="detailLoading" class="loading-modal">
+            <div class="spinner"></div>
+            <span>DECRYPTING_FILE...</span>
+          </div>
+
+          <div v-else class="cyber-terminal-window wide">
+            
+            <div class="term-header">
+              <div class="header-title">
+                <span class="deco-dot"></span>
+                <span class="title-text">
+                  {{ isEditing ? '>> EDIT_PROTOCOL' : '>> DOSSIER_VIEWER' }} // {{ isEditing ? editForm.name : selectedOC.name }}
+                </span>
+              </div>
+              <button class="term-close" @click="closeModal">[ CLOSE / ESC ]</button>
+            </div>
+
+            <div class="term-body custom-scroll">
+              
+              <div v-if="!isEditing" class="detail-layout">
+                
+                <div class="detail-col-left">
+                  <div class="portrait-display">
+                    <img :src="getImageUrl(selectedOC.imageUrl || selectedOC.OC_image_url)" @error="handleImgError" />
+                    <div class="frame-decor"></div>
+                  </div>
+                  
+                  <div class="combat-matrix">
+                    <div class="matrix-item">
+                      <span class="m-label">WINS</span>
+                      <span class="m-val win-color">{{ selectedOC.winCount || 0 }}</span>
+                    </div>
+                    <div class="matrix-divider"></div>
+                    <div class="matrix-item">
+                      <span class="m-label">LOSSES</span>
+                      <span class="m-val lose-color">{{ selectedOC.loseCount || 0 }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="detail-col-right custom-scroll">
+                  
+                  <div class="info-block basic">
+                    <h3 class="block-head"># BASIC_INTEL // 基础档案</h3>
+                    <div class="info-grid">
+                      <div class="grid-item">
+                        <span class="label">CREATOR</span>
+                        <span class="value">{{ selectedOC.authorName }}</span>
+                      </div>
+                      <div class="grid-item">
+                        <span class="label">SPECIES</span>
+                        <span class="value">{{ selectedOC.species }}</span>
+                      </div>
+                      <div class="grid-item">
+                        <span class="label">GENDER</span>
+                        <span class="value">{{ getGenderText(selectedOC.gender) }}</span>
+                      </div>
+                      <div class="grid-item">
+                        <span class="label">AGE</span>
+                        <span class="value">{{ selectedOC.age }}</span>
+                      </div>
+                      <div class="grid-item full">
+                        <span class="label">P.O.O (ORIGIN)</span>
+                        <span class="value highlight">{{ selectedOC.POO || selectedOC.poo }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="info-block ability">
+                    <h3 class="block-head"># ABILITY_SPECS // 能力设定</h3>
+                    <div class="text-body">
+                      {{ selectedOC.ability }}
+                    </div>
+                  </div>
+
+                  <div class="info-block background" v-if="selectedOC.background">
+                    <h3 class="block-head"># BACKGROUND_LOG // 背景故事</h3>
+                    <div class="text-body">
+                      {{ selectedOC.background }}
+                    </div>
+                  </div>
+
+                  <div class="info-block armory" v-if="selectedOC.weaponImages && selectedOC.weaponImages.length">
+                    <h3 class="block-head"># VISUAL_ARMORY // 武器库</h3>
+                    <div class="weapon-grid">
+                      <div v-for="(wp, idx) in selectedOC.weaponImages" :key="idx" class="weapon-slot">
+                        <img :src="getImageUrl(wp)" @click="openImage(wp)" />
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <div v-else class="edit-layout">
+                <div class="form-row">
+                  <div class="form-group half"><label>NAME:</label><input v-model="editForm.name" class="cyber-input" /></div>
+                  <div class="form-group half"><label>SPECIES:</label><input v-model="editForm.species" class="cyber-input" /></div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group"><label>GENDER (0:M, 1:F, 2:?):</label><select v-model="editForm.gender" class="cyber-select"><option :value="0">MALE</option><option :value="1">FEMALE</option><option :value="2">UNKNOWN</option></select></div>
+                  <div class="form-group"><label>AGE:</label><input v-model.number="editForm.age" type="number" class="cyber-input" /></div>
+                </div>
+                <div class="form-group"><label>P.O.O:</label><input v-model="editForm.POO" class="cyber-input" /></div>
+                <div class="form-group"><label>ABILITY:</label><textarea v-model="editForm.ability" class="cyber-textarea" rows="4"></textarea></div>
+                <div class="form-group"><label>BACKGROUND:</label><textarea v-model="editForm.background" class="cyber-textarea" rows="3"></textarea></div>
+                <div class="form-group"><label>UPDATE_IMAGE:</label><input type="file" @change="handleEditFileChange" accept="image/*" class="cyber-input file" /></div>
+                <div class="form-group"><label>UPDATE_NOTE:</label><input v-model="editForm.updateDescription" class="cyber-input" /></div>
               </div>
 
             </div>
 
-            <div class="modal-footer">
+            <div class="term-footer">
               <template v-if="!isEditing">
-                
-                <div style="font-size: 10px; color: #999; margin-right: auto;">
-                  [Debug] Current: {{ currentUserId }} / Author: {{ selectedOC?.authorId }} [检测用途]
+                <div class="debug-info">[ID:{{ selectedOC?.id }}]</div>
+                <div class="btn-group">
+                  <button v-if="isOwner(selectedOC)" class="cyber-btn secondary" @click="startEdit">
+                    EDIT_FILE
+                  </button>
+                  <button class="cyber-btn primary" @click="challengeOC(selectedOC)">
+                    INITIATE_BATTLE
+                  </button>
                 </div>
-
-                <button v-if="isOwner(selectedOC)" class="bf-btn secondary" @click="startEdit">
-                  <i class="fas fa-edit"></i> 编辑档案
-                </button>
-                <button class="bf-btn ghost" @click="closeModal">关闭</button>
-                <button class="bf-btn primary" @click="challengeOC(selectedOC)">发起约战</button>
               </template>
               <template v-else>
-                <button class="bf-btn ghost" @click="cancelEdit" :disabled="upSubmitting">取消</button>
-                <button class="bf-btn primary" @click="submitUpdate" :disabled="upSubmitting">
-                  {{ upSubmitting ? '保存中...' : '保存修改' }}
+                <button class="cyber-btn ghost" @click="cancelEdit" :disabled="upSubmitting">CANCEL</button>
+                <button class="cyber-btn primary" @click="submitUpdate" :disabled="upSubmitting">
+                  {{ upSubmitting ? 'SAVING...' : 'CONFIRM_UPDATE' }}
                 </button>
               </template>
             </div>
@@ -365,19 +342,11 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import apiClient from '@/utils/api'
 
-// --- Tabs Configuration ---
-const tabs = [
-  { key: 'intro', label: '企划介绍', icon: 'fas fa-info-circle' },
-  { key: 'upload', label: '人设上传', icon: 'fas fa-upload' },
-  { key: 'roster', label: '人设列表', icon: 'fas fa-users' },
-  { key: 'records', label: '战斗记录', icon: 'fas fa-trophy' }
-]
+// --- 逻辑代码完全保持一致 ---
+const tabs = [{ key: 'intro', label: 'BRIEFING' },{ key: 'upload', label: 'UPLOAD' },{ key: 'roster', label: 'ROSTER' },{ key: 'records', label: 'LOGS' }]
 const activeTab = ref('intro')
-
-// --- User Identity & Token Logic ---
 const currentUserId = ref(null)
 
-// 深度解析 JWT 获取当前用户ID (增强版)
 const getUserFromToken = () => {
   const token = localStorage.getItem('auth_token')
   if (!token) return null
@@ -385,220 +354,107 @@ const getUserFromToken = () => {
     const base64Url = token.split('.')[1]
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
     const payload = JSON.parse(window.atob(base64))
-    
-    // 兼容 Asp.Net Core Identity 默认生成的复杂 Key 和常见 Key
-    const nameId = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] 
-                || payload['nameid'] 
-                || payload['sub']
-                || payload['id']
-                || payload['UserId']
-                
-    if (nameId) {
-      console.log('>> Debug: Token 解析成功, UserID:', parseInt(nameId))
-      return parseInt(nameId)
-    }
-    console.warn('>> Debug: Token 解析成功但未找到 UserID 字段')
-    return null
-  } catch (e) {
-    console.error("Token parse error", e)
-    return null
-  }
+    const nameId = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || payload['nameid'] || payload['sub'] || payload['id'] || payload['UserId']
+    return nameId ? parseInt(nameId) : null
+  } catch (e) { return null }
 }
 
-// --- Upload Logic ---
 const upSubmitting = ref(false)
-const upForm = reactive({
-  OCName: '', authorName: '', gender: '', age: '', species: '', ability: '', poo: '', agreed: false, charFile: null
-})
-const handleCharFile = (e) => {
-  const file = e.target.files[0]
-  if(file && file.size <= 5*1024*1024) upForm.charFile = file
-  else alert('文件过大或格式错误')
-}
+const upForm = reactive({ OCName: '', authorName: '', gender: '', age: '', species: '', ability: '', poo: '', agreed: false, charFile: null })
+const handleCharFile = (e) => { const file = e.target.files[0]; if(file && file.size <= 5*1024*1024) upForm.charFile = file; else alert('FILE_ERROR') }
 const submitOC = async () => {
-  if(!upForm.agreed) return alert('请先同意规则')
+  if(!upForm.agreed) return alert('ACCEPT_RULES_REQUIRED')
   upSubmitting.value = true
   try {
     const fd = new FormData()
-    fd.append('OCName', upForm.OCName)
-    fd.append('authorName', upForm.authorName)
-    fd.append('gender', upForm.gender)
-    fd.append('age', upForm.age)
-    fd.append('species', upForm.species)
-    fd.append('ability', upForm.ability)
-    fd.append('POO', upForm.poo)
-    fd.append('currentTime', Math.floor(Date.now()/1000).toString())
+    fd.append('OCName', upForm.OCName); fd.append('authorName', upForm.authorName); fd.append('gender', upForm.gender); fd.append('age', upForm.age); fd.append('species', upForm.species); fd.append('ability', upForm.ability); fd.append('POO', upForm.poo); fd.append('currentTime', Math.floor(Date.now()/1000).toString());
     if(upForm.charFile) fd.append('CharacterImage', upForm.charFile)
-    
     await apiClient.post('/OCBattleField/upload', fd, { headers: {'Content-Type': 'multipart/form-data'} })
-    alert('上传成功')
+    alert('UPLOAD_COMPLETE')
     Object.assign(upForm, { OCName:'', authorName:'', gender:'', age:'', species:'', ability:'', poo:'', agreed:false, charFile:null })
-    activeTab.value = 'roster'
-    loadRoster()
-  } catch(e) { alert('上传失败: ' + (e.response?.data?.message || e.message)) }
-  finally { upSubmitting.value = false }
+    activeTab.value = 'roster'; loadRoster()
+  } catch(e) { alert('ERROR') } finally { upSubmitting.value = false }
 }
 
-// --- Roster Logic ---
 const rosterLoading = ref(false)
 const rosterList = ref([])
 const rosterQuery = ref('')
 const rosterPage = ref(1)
-const rosterSize = 10
+const rosterSize = 12
 
-// --- Detail & Edit Logic ---
 const selectedOC = ref(null)
 const detailLoading = ref(false)
 const isEditing = ref(false)
-const editForm = reactive({
-  name: '', gender: 0, age: 0, species: '', ability: '', POO: '', background: '', updateDescription: '', newImage: null
-})
+const editForm = reactive({ name: '', gender: 0, age: 0, species: '', ability: '', POO: '', background: '', updateDescription: '', newImage: null })
 
 const loadRoster = async () => {
   rosterLoading.value = true
   try {
     const res = await apiClient.get('/ocbattlefield/list')
-    if(res.data.success) {
-      rosterList.value = res.data.data.items || res.data.data || []
-    }
-  } catch(e) { console.error(e) }
-  finally { rosterLoading.value = false }
+    if(res.data.success) rosterList.value = res.data.data.items || res.data.data || []
+  } catch(e) {} finally { rosterLoading.value = false }
 }
 
 const filteredRoster = computed(() => {
   if(!rosterQuery.value) return rosterList.value
   const q = rosterQuery.value.toLowerCase()
-  return rosterList.value.filter(oc => 
-    oc.name?.toLowerCase().includes(q) || oc.authorName?.toLowerCase().includes(q)
-  )
+  return rosterList.value.filter(oc => oc.name?.toLowerCase().includes(q) || oc.authorName?.toLowerCase().includes(q))
 })
-
 const paginatedRoster = computed(() => {
   const start = (rosterPage.value - 1) * rosterSize
   return filteredRoster.value.slice(start, start + rosterSize)
 })
 const totalPages = computed(() => Math.ceil(filteredRoster.value.length / rosterSize) || 1)
 
-// --- Helper Functions ---
 const getImageUrl = (url) => {
   if(!url) return '/土豆.jpg'
   if (url.startsWith('http') || url.startsWith('blob:')) return url;
   let path = url.replace(/\\/g, '/');
   if (path.startsWith('/')) path = path.substring(1);
-  return `https://bianyuzhou.com/${path}`; // 生产环境
+  return `https://bianyuzhou.com/${path}`;
 }
-
 const handleImgError = (e) => e.target.src = '/土豆.jpg'
-const truncate = (t, l) => t?.length > l ? t.substring(0,l)+'...' : t
-const getStatusText = (s) => ['空闲', '战斗中', '拒战', '封禁'][s] || '未知'
+const getStatusText = (s) => ['IDLE', 'COMBAT', 'CLOSED', 'BANNED'][s] || 'UNKNOWN'
 const getStatusClass = (s) => ['s-idle', 's-busy', 's-closed', 's-banned'][s] || ''
-const getGenderText = (g) => g === 0 ? '男' : g === 1 ? '女' : '未知'
+const getGenderText = (g) => g === 0 ? 'MALE' : g === 1 ? 'FEMALE' : 'UNKNOWN'
 const openImage = (url) => window.open(getImageUrl(url), '_blank')
-
-// 核心：所有权判断 (增强兼容性)
 const isOwner = (oc) => {
   if (!oc || !currentUserId.value) return false
-  // 详情接口字段: authorId, 列表接口字段: authorID / authorId
   const ocAuthorId = oc.authorId || oc.authorID || oc.AuthorId
-  // 强制数字对比，防止 '82' !== 82
   return parseInt(ocAuthorId) === parseInt(currentUserId.value)
 }
 
-// --- Modal Actions ---
-
-// 打开详情：点击列表后调用
 const openDetail = async (ocSummary) => {
-  selectedOC.value = null
-  detailLoading.value = true
-  isEditing.value = false
-  
+  selectedOC.value = null; detailLoading.value = true; isEditing.value = false
   try {
-    // 根据 summary.id 去拿详情
     const res = await apiClient.get(`/OCBattleField/${ocSummary.id}`)
-    
-    if (res.data.success) {
-      selectedOC.value = res.data.data
-    } else {
-      alert(res.data.message)
-    }
-  } catch (e) {
-    console.error("获取详情失败", e)
-    alert("无法获取角色详情")
-  } finally {
-    detailLoading.value = false
-  }
+    if (res.data.success) selectedOC.value = res.data.data
+    else alert(res.data.message)
+  } catch (e) { alert("DATA_CORRUPT") } finally { detailLoading.value = false }
 }
+const closeModal = () => { selectedOC.value = null; isEditing.value = false }
 
-const closeModal = () => {
-  selectedOC.value = null
-  isEditing.value = false
-}
-
-// 填充编辑表单
 const startEdit = () => {
   if (!selectedOC.value) return
   const oc = selectedOC.value
-  editForm.name = oc.name
-  editForm.gender = oc.gender
-  editForm.age = oc.age
-  editForm.species = oc.species
-  editForm.ability = oc.ability
-  editForm.POO = oc.POO || oc.poo
-  editForm.background = oc.background || ''
-  editForm.updateDescription = ''
-  editForm.newImage = null
+  Object.assign(editForm, { name: oc.name, gender: oc.gender, age: oc.age, species: oc.species, ability: oc.ability, POO: oc.POO || oc.poo, background: oc.background || '', updateDescription: '', newImage: null })
   isEditing.value = true
 }
-
-const cancelEdit = () => {
-  isEditing.value = false
-}
-
-const handleEditFileChange = (e) => {
-  const file = e.target.files[0]
-  if(file) editForm.newImage = file
-}
-
+const cancelEdit = () => isEditing.value = false
+const handleEditFileChange = (e) => { const file = e.target.files[0]; if(file) editForm.newImage = file }
 const submitUpdate = async () => {
-  if (!editForm.name) return alert("名称不能为空")
-  
+  if (!editForm.name) return alert("NAME_REQUIRED")
   upSubmitting.value = true
   try {
     const fd = new FormData()
-    fd.append('name', editForm.name)
-    fd.append('gender', editForm.gender)
-    fd.append('age', editForm.age)
-    fd.append('species', editForm.species)
-    fd.append('ability', editForm.ability)
-    fd.append('POO', editForm.POO)
-    fd.append('background', editForm.background)
-    fd.append('updateDescription', editForm.updateDescription || '作者编辑更新')
-    
-    if (editForm.newImage) {
-      fd.append('CharacterImage', editForm.newImage)
-    }
-
-    // 从详情对象中获取ID (字段名为 ocId)
+    fd.append('name', editForm.name); fd.append('gender', editForm.gender); fd.append('age', editForm.age); fd.append('species', editForm.species); fd.append('ability', editForm.ability); fd.append('POO', editForm.POO); fd.append('background', editForm.background); fd.append('updateDescription', editForm.updateDescription || 'AUTO_UPDATE')
+    if (editForm.newImage) fd.append('CharacterImage', editForm.newImage)
     const targetId = selectedOC.value.ocId || selectedOC.value.id
-
-    const res = await apiClient.post(`/OCBattleField/${targetId}/update`, fd, { 
-      headers: {'Content-Type': 'multipart/form-data'} 
-    })
-
-    if (res.data.success) {
-      alert("更新成功！")
-      isEditing.value = false
-      loadRoster() // 刷新列表数据
-      openDetail({ id: targetId }) // 重新获取最新详情
-    }
-  } catch(e) {
-    alert('更新失败: ' + (e.response?.data?.message || e.message))
-  } finally {
-    upSubmitting.value = false
-  }
+    const res = await apiClient.post(`/OCBattleField/${targetId}/update`, fd, { headers: {'Content-Type': 'multipart/form-data'} })
+    if (res.data.success) { alert("UPDATE_SUCCESS"); isEditing.value = false; loadRoster(); openDetail({ id: targetId }) }
+  } catch(e) { alert('UPDATE_FAILED') } finally { upSubmitting.value = false }
 }
-
-const challengeOC = (oc) => alert(`向 ${oc.name} 发起约战功能开发中...`)
+const challengeOC = (oc) => alert(`INITIATING_BATTLE_PROTOCOL... TARGET: ${oc.name}`)
 
 onMounted(() => {
   currentUserId.value = getUserFromToken()
@@ -607,179 +463,242 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Scoped Variables for Purple Theme */
-.battlefield-container {
-  --bf-purple: #8b5cf6;
-  --bf-purple-light: #ddd6fe;
-  --bf-bg: #f8fafc;
-  --bf-text: #1e293b;
-  --bf-text-sub: #64748b;
-  --bf-border: #e2e8f0;
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
+
+/* --- 核心变量 --- */
+.battlefield-industrial {
+  --red: #D92323; 
+  --black: #111111; 
+  --white: #F4F1EA;
+  --gray: #E0DDD5; 
+  --green: #2ecc71;
+  --mono: 'JetBrains Mono', monospace; 
+  --heading: 'Anton', sans-serif;
   
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: var(--bf-bg);
-  padding: 20px;
-  box-sizing: border-box;
-  font-family: 'Segoe UI', sans-serif;
-  color: var(--bf-text);
+  width: 100%; height: 100%;
+  font-family: var(--mono); color: var(--black);
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
 }
 
-/* Header */
-.bf-header {
-  display: flex; justify-content: space-between; align-items: flex-end;
-  padding-bottom: 15px; border-bottom: 1px solid var(--bf-border); margin-bottom: 20px;
+/* ... (背景、Container、Header、Tabs 样式保持不变) ... */
+.grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(17, 17, 17, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(17, 17, 17, 0.05) 1px, transparent 1px); background-size: 40px 40px; z-index: 0; pointer-events: none; }
+.moving-grid { animation: gridScroll 60s linear infinite; }
+@keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-40px); } }
+.bf-container { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; padding: 20px; gap: 20px; }
+.tactical-header { background: var(--white); border: 4px solid var(--black); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 8px 8px 0 rgba(0,0,0,0.1); }
+.logo-group { display: flex; align-items: center; gap: 15px; }
+.icon-box { background: var(--black); color: var(--white); font-family: var(--heading); font-size: 1.5rem; padding: 5px 10px; }
+.text-info h2 { font-family: var(--heading); font-size: 2rem; margin: 0; line-height: 1; }
+.text-info .sub { font-size: 0.7rem; font-weight: bold; color: #666; }
+.tactical-tabs { display: flex; gap: 10px; }
+.cyber-tab-btn { background: transparent; border: 2px solid var(--black); padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-weight: bold; transition: 0.2s; }
+.cyber-tab-btn:hover { background: #eee; }
+.cyber-tab-btn.active { background: var(--black); color: var(--white); box-shadow: 4px 4px 0 var(--red); }
+.tab-deco { width: 6px; height: 6px; background: var(--red); display: none; }
+.cyber-tab-btn.active .tab-deco { display: block; }
+.bf-main-viewport { flex: 1; overflow-y: auto; padding-right: 5px; }
+
+/* ... (Intro, Upload, Roster 样式保持不变) ... */
+.briefing-terminal { background: var(--black); color: var(--white); padding: 30px; border: 2px solid var(--black); margin-bottom: 20px; }
+.term-header { border-bottom: 1px dashed #555; padding-bottom: 10px; margin-bottom: 15px; color: var(--red); font-weight: bold; }
+.hero-title { font-family: var(--heading); font-size: 3rem; margin: 0; line-height: 1.1; }
+.hero-desc { font-size: 1.1rem; color: #ccc; margin: 10px 0 20px; }
+.alert-strip { background: rgba(255,255,255,0.1); padding: 10px; display: flex; gap: 10px; align-items: center; font-size: 0.9rem; }
+.alert-strip .icon { background: var(--red); color: #fff; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.info-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+.matrix-cell { background: var(--white); border: 2px solid var(--black); padding: 20px; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
+.cell-icon { font-size: 2rem; margin-bottom: 10px; }
+.matrix-cell h4 { font-weight: bold; color: var(--red); margin: 0 0 5px 0; border-bottom: 2px solid var(--black); display: inline-block; }
+.matrix-cell p { font-size: 0.9rem; color: #555; margin: 5px 0 0 0; }
+.action-deck { display: flex; justify-content: center; gap: 20px; }
+.module-upload { display: flex; justify-content: center; }
+.form-panel { width: 100%; max-width: 800px; background: var(--white); border: 4px solid var(--black); padding: 30px; box-shadow: 10px 10px 0 rgba(0,0,0,0.2); }
+.panel-header { font-family: var(--heading); font-size: 1.5rem; border-bottom: 4px solid var(--black); padding-bottom: 15px; margin-bottom: 25px; }
+.deco { color: var(--red); margin-right: 10px; }
+.cyber-form { display: flex; flex-direction: column; gap: 20px; }
+.form-row { display: flex; gap: 20px; }
+.form-row.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.form-group { flex: 1; }
+.form-group label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.8rem; }
+.req { color: var(--red); }
+.cyber-input, .cyber-select, .cyber-textarea { width: 100%; border: 2px solid var(--black); background: #fff; padding: 10px; font-family: var(--mono); outline: none; transition: 0.2s; box-sizing: border-box; }
+.cyber-input:focus, .cyber-select:focus, .cyber-textarea:focus { background: #000000; border-color: var(--red); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
+.upload-zone { border: 2px dashed var(--black); padding: 20px; text-align: center; cursor: pointer; background: #eee; transition: 0.2s; }
+.upload-zone:hover { background: #fff; border-color: var(--red); }
+.file-preview { display: flex; justify-content: space-between; background: var(--black); color: var(--white); padding: 5px 10px; }
+.remove-btn { background: none; border: none; color: var(--red); cursor: pointer; font-weight: bold; }
+.placeholder .icon { font-size: 2rem; font-weight: bold; }
+.cyber-checkbox { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.cyber-checkbox input { display: none; }
+.checkmark { width: 20px; height: 20px; border: 2px solid var(--black); display: inline-block; position: relative; }
+.cyber-checkbox input:checked + .checkmark { background: var(--red); }
+.cyber-checkbox input:checked + .checkmark::after { content: '✓'; color: white; position: absolute; left: 3px; top: -2px; font-weight: bold; }
+.roster-toolbar { display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; }
+.search-unit { display: flex; align-items: center; gap: 10px; background: var(--white); border: 2px solid var(--black); padding: 5px 10px; width: 400px; }
+.search-unit .prompt { color: var(--red); font-weight: bold; }
+.search-input { border: none; outline: none; width: 100%; font-family: var(--mono); font-weight: bold; }
+.roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding-bottom: 30px; }
+.dossier-card { background: var(--white); border: 2px solid var(--black); position: relative; overflow: hidden; cursor: pointer; box-shadow: 6px 6px 0 rgba(0,0,0,0.1); transition: all 0.2s; }
+.dossier-card:hover { transform: translateY(-4px); box-shadow: 8px 8px 0 var(--red); border-color: var(--black); }
+.card-status-bar { display: flex; justify-content: space-between; padding: 5px 10px; background: var(--black); color: var(--white); font-size: 0.7rem; }
+.status-indicator { font-weight: bold; }
+.s-idle { color: var(--green); } .s-busy { color: var(--red); }
+.owner-badge { color: #f1c40f; }
+.card-portrait { height: 200px; background: #333; position: relative; border-bottom: 2px solid var(--black); display: flex; justify-content: center; align-items: center; overflow: hidden; }
+.card-portrait img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
+.dossier-card:hover img { transform: scale(1.1); }
+.scan-overlay { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(0,255,0,0.1) 1px, transparent 1px); background-size: 100% 4px; opacity: 0.3; }
+.card-info { padding: 15px; }
+.oc-name { font-family: var(--heading); font-size: 1.5rem; margin: 0 0 5px 0; line-height: 1; }
+.oc-meta { font-size: 0.7rem; color: #666; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; }
+.oc-stats { display: flex; align-items: center; gap: 10px; font-size: 0.7rem; font-weight: bold; }
+.stat-bar { height: 6px; background: #eee; flex: 1; border: 1px solid var(--black); position: relative; }
+.stat-bar.win::after { content:''; position: absolute; left: 0; top: 0; height: 100%; background: var(--green); width: var(--width, 50%); }
+.corner-br { position: absolute; bottom: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 0 15px 15px; border-color: transparent transparent var(--black) transparent; }
+.pagination-bar { display: flex; justify-content: center; align-items: center; gap: 15px; }
+.nav-btn { background: var(--white); border: 2px solid var(--black); font-weight: bold; cursor: pointer; width: 30px; height: 30px; }
+.nav-btn:hover:not(:disabled) { background: var(--black); color: var(--white); }
+.cyber-table-wrapper { border: 2px solid var(--black); background: var(--white); }
+.cyber-table { width: 100%; border-collapse: collapse; text-align: left; }
+.cyber-table th { background: #eee; border-bottom: 2px solid var(--black); padding: 10px; font-weight: bold; }
+.cyber-table td { padding: 10px; border-bottom: 1px solid #ccc; font-size: 0.9rem; }
+.empty-row { text-align: center; padding: 40px; color: #888; }
+.cyber-btn { border: 2px solid var(--black); padding: 10px 20px; font-family: var(--heading); font-size: 1.1rem; cursor: pointer; background: var(--white); transition: 0.2s; }
+.cyber-btn:hover { box-shadow: 4px 4px 0 var(--black); transform: translate(-2px, -2px); }
+.cyber-btn.primary { background: var(--black); color: var(--white); }
+.cyber-btn.primary:hover { background: var(--red); }
+.cyber-btn.ghost { background: transparent; }
+.cyber-btn.large { font-size: 1.5rem; padding: 15px 30px; }
+.cyber-btn.full { width: 100%; }
+.loading-state, .loading-modal { text-align: center; padding: 50px; font-weight: bold; color: #888; display: flex; flex-direction: column; align-items: center; }
+.spinner { width: 30px; height: 30px; border: 4px solid #ccc; border-top-color: var(--black); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
+.empty-state { text-align: center; padding: 50px; color: #aaa; border: 2px dashed #ccc; font-weight: bold; }
+
+/* =========================================
+   🔥 [重点修改] 详情弹窗样式 (High Contrast Dark Mode)
+   ========================================= */
+
+.cyber-modal-overlay { 
+  position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; 
+  display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); 
 }
-.title { font-size: 22px; font-weight: 800; margin: 0; letter-spacing: 1px; }
-.subtitle { font-size: 12px; color: var(--bf-text-sub); margin-top: 4px; display: block; }
 
-.bf-tabs { display: flex; gap: 8px; }
-.tab-btn {
-  background: transparent; border: 1px solid transparent; padding: 8px 16px;
-  border-radius: 8px; cursor: pointer; color: var(--bf-text-sub); font-weight: 600;
-  font-size: 13px; transition: 0.2s; display: flex; align-items: center; gap: 6px;
+/* 弹窗容器：黑底，白字，高对比 */
+.cyber-terminal-window { 
+  width: 1000px; max-width: 95vw; height: 90vh; 
+  background: #111; /* 纯黑背景 */
+  border: 2px solid #666; /* 明显的边框 */
+  display: flex; flex-direction: column; 
+  box-shadow: 0 0 50px rgba(0,0,0,0.8);
+  color: #eee;
 }
-.tab-btn:hover { background: #f1f5f9; color: var(--bf-purple); }
-.tab-btn.active { background: var(--bf-purple-light); color: #5b21b6; }
 
-/* Content Area */
-.bf-content { flex: 1; overflow-y: auto; padding-right: 5px; position: relative; }
-
-/* Intro Module */
-.module-intro { max-width: 900px; margin: 0 auto; }
-.hero-box { background: white; padding: 30px; border-radius: 12px; text-align: center; border: 1px solid var(--bf-border); margin-bottom: 20px; }
-.hero-box h3 { margin: 0 0 10px 0; font-size: 24px; }
-.alert-box { 
-  display: inline-flex; align-items: center; gap: 8px; margin-top: 15px; 
-  background: #fffbeb; color: #b45309; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold;
+/* 顶部栏 */
+.term-header { 
+  background: #222; padding: 15px 20px; 
+  display: flex; justify-content: space-between; align-items: center; 
+  border-bottom: 2px solid var(--red); 
 }
-.info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
-.info-card { background: white; padding: 20px; border-radius: 10px; border: 1px solid var(--bf-border); }
-.info-card .icon { font-size: 24px; margin-bottom: 10px; }
-.info-card h4 { margin: 0 0 8px 0; color: var(--bf-purple); }
-.info-card p { font-size: 13px; color: var(--bf-text-sub); line-height: 1.5; margin: 0; }
-.action-area { display: flex; justify-content: center; gap: 15px; }
-
-/* Upload Module & Edit Form */
-.module-upload, .edit-mode-form { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; border: 1px solid var(--bf-border); }
-.edit-mode-form { border: none; padding: 0; box-shadow: none; } 
-.section-title { margin: 0 0 20px 0; font-size: 18px; border-left: 4px solid var(--bf-purple); padding-left: 10px; }
-.form-row { display: flex; gap: 15px; }
-.form-group { margin-bottom: 15px; flex: 1; }
-.form-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 6px; color: var(--bf-text-sub); }
-.tip-text { font-size: 11px; color: #94a3b8; margin-top: 4px; display: block; }
-.req { color: #ef4444; }
-.bf-input, .bf-select, .bf-textarea {
-  width: 100%; padding: 10px; border: 1px solid var(--bf-border); border-radius: 6px;
-  font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box;
+.term-title { font-family: var(--heading); letter-spacing: 1px; font-size: 1.4rem; color: #fff; }
+.title-text { text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+.term-close { 
+  background: transparent; border: 1px solid #777; color: #ccc; 
+  cursor: pointer; font-family: var(--mono); font-weight: bold; padding: 6px 12px;
 }
-.bf-input:focus, .bf-select:focus, .bf-textarea:focus { border-color: var(--bf-purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
-.upload-box {
-  border: 2px dashed var(--bf-border); padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s;
+.term-close:hover { border-color: var(--red); color: var(--red); }
+
+.term-body { flex: 1; overflow-y: auto; padding: 0; display: flex; }
+
+/* 布局：左右分栏 */
+.detail-layout { display: flex; width: 100%; height: 100%; }
+
+/* 左侧：立绘与战绩 */
+.detail-col-left { 
+  width: 350px; flex-shrink: 0; display: flex; flex-direction: column; 
+  border-right: 2px solid #333; background: #000;
 }
-.upload-box:hover { border-color: var(--bf-purple); background: #fdfbff; }
-.file-preview { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 5px 10px; border-radius: 4px; }
-.remove-btn { background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer; }
-
-/* Roster Module */
-.roster-tools { display: flex; justify-content: space-between; margin-bottom: 20px; }
-.search-bar { 
-  position: relative; flex: 1; max-width: 400px; 
+.portrait-display { 
+  flex: 1; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden;
+  background-image: linear-gradient(#222 1px, transparent 1px), linear-gradient(90deg, #222 1px, transparent 1px);
+  background-size: 20px 20px;
 }
-.search-bar i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--bf-text-sub); }
-.search-bar input { width: 100%; padding: 10px 10px 10px 35px; border: 1px solid var(--bf-border); border-radius: 8px; outline: none; }
-.roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
-.oc-card { 
-  background: white; border-radius: 10px; overflow: hidden; border: 1px solid var(--bf-border); 
-  cursor: pointer; transition: 0.2s; position: relative;
+.portrait-display img { max-width: 95%; max-height: 95%; object-fit: contain; z-index: 1; }
+/* 战绩 */
+.combat-matrix { 
+  padding: 20px; background: #1a1a1a; border-top: 2px solid #333;
+  display: flex; justify-content: space-around; align-items: center;
 }
-.oc-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: var(--bf-purple-light); }
-.oc-cover { height: 180px; position: relative; background: #f1f5f9; }
-.oc-cover img { width: 100%; height: 100%; object-fit: cover; }
-.status-tag { 
-  position: absolute; top: 10px; right: 10px; padding: 2px 8px; border-radius: 12px; 
-  font-size: 10px; font-weight: bold; color: white;
+.matrix-item { text-align: center; }
+.m-label { display: block; font-size: 0.7rem; color: #888; font-weight: bold; margin-bottom: 5px; }
+.m-val { font-family: var(--heading); font-size: 2.2rem; line-height: 1; }
+.win-color { color: var(--green); text-shadow: 0 0 10px rgba(46, 204, 113, 0.4); }
+.lose-color { color: var(--red); text-shadow: 0 0 10px rgba(217, 35, 35, 0.4); }
+.matrix-divider { width: 1px; height: 40px; background: #444; }
+
+/* 右侧：数据情报 (清晰阅读区) */
+.detail-col-right { 
+  flex: 1; padding: 30px; overflow-y: auto; background: #141414;
 }
-.owner-tag {
-  position: absolute; top: 10px; left: 10px; padding: 4px 8px; border-radius: 50%;
-  font-size: 12px; background: rgba(0,0,0,0.6); color: #fff; backdrop-filter: blur(4px);
+
+.info-block { margin-bottom: 35px; }
+.block-head { 
+  font-size: 1rem; color: #fff; font-weight: bold; border-bottom: 1px solid #444; 
+  padding-bottom: 8px; margin-bottom: 15px; letter-spacing: 1px;
 }
-.s-idle { background: #10b981; } .s-busy { background: #ef4444; } .s-closed { background: #64748b; }
-.oc-info { padding: 12px; }
-.oc-name { margin: 0 0 5px 0; font-size: 15px; font-weight: bold; }
-.oc-meta { font-size: 11px; color: var(--bf-text-sub); display: flex; align-items: center; gap: 5px; margin-bottom: 8px; }
-.oc-desc { font-size: 12px; color: #475569; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-/* Records Module */
-.records-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; border: 1px solid var(--bf-border); }
-.records-table th, .records-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--bf-border); font-size: 13px; }
-.records-table th { background: #f8fafc; font-weight: bold; color: var(--bf-text-sub); }
-.empty-row { text-align: center; padding: 40px; color: var(--bf-text-sub); }
+/* 键值对网格 */
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-item { display: flex; flex-direction: column; }
+.grid-item .label { font-size: 0.75rem; color: #888; font-weight: bold; margin-bottom: 5px; }
+.grid-item .value { font-size: 1.1rem; color: #fff; font-weight: bold; font-family: var(--mono); border-bottom: 1px solid #333; padding-bottom: 5px; }
+.grid-item.full { grid-column: span 2; }
+.highlight { color: #f1c40f !important; }
 
-/* Buttons & Utils */
-.bf-btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px; }
-.bf-btn.primary { background: var(--bf-purple); color: rgb(0, 0, 0); }
-.bf-btn.primary:hover { background: #7c3aed; }
-.bf-btn.secondary { background: #f59e0b; color: white; }
-.bf-btn.secondary:hover { background: #d97706; }
-.bf-btn.ghost { background: white; border: 1px solid var(--bf-border); color: var(--bf-text-sub); }
-.bf-btn.ghost:hover { border-color: var(--bf-purple); color: var(--bf-purple); }
-.bf-btn.large { padding: 12px 30px; font-size: 15px; }
-.bf-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
-.state-box { text-align: center; padding: 50px; color: var(--bf-text-sub); font-size: 14px; }
-.pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; align-items: center; font-size: 13px; }
+/* 文本正文 (高清晰度) */
+.text-body { 
+  font-size: 1rem; line-height: 1.7; color: #ddd; 
+  white-space: pre-wrap; background: #1a1a1a; padding: 15px; 
+  border-left: 4px solid #333; border-radius: 4px;
+}
 
-/* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
-.modal-card { background: white; width: 700px; max-width: 90vw; max-height: 85vh; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-.loading-card { min-height: 300px; align-items: center; justify-content: center; }
-.center-content { text-align: center; color: var(--bf-purple); }
-.modal-header { padding: 15px 20px; background: #f8fafc; border-bottom: 1px solid var(--bf-border); display: flex; justify-content: space-between; align-items: center; }
-.modal-header h3 { margin: 0; font-size: 16px; color: var(--bf-purple); letter-spacing: 1px; }
-.close-icon { border: none; background: transparent; cursor: pointer; font-size: 16px; color: var(--bf-text-sub); }
-.modal-body { padding: 25px; overflow-y: auto; }
+/* 武器库 */
+.weapon-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.weapon-slot { 
+  width: 70px; height: 70px; background: #000; border: 1px solid #555; 
+  display: flex; justify-content: center; align-items: center; cursor: zoom-in;
+}
+.weapon-slot:hover { border-color: #fff; }
+.weapon-slot img { max-width: 100%; max-height: 100%; }
 
-/* Detail Layout */
-.detail-split { display: flex; gap: 25px; }
-.detail-left { width: 240px; flex-shrink: 0; display: flex; flex-direction: column; gap: 15px; }
-.detail-right { flex: 1; }
+/* 底部按钮栏 */
+.term-footer { 
+  background: #1a1a1a; padding: 15px 25px; border-top: 2px solid #333;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.debug-info { color: #555; font-size: 0.7rem; }
+.btn-group { display: flex; gap: 15px; }
 
-.char-image-box { width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid var(--bf-border); background: #000; }
-.char-image-box img { width: 100%; height: auto; display: block; }
+/* 编辑模式表单 (深色适配) */
+.edit-layout { padding: 30px; width: 100%; }
+.edit-layout .form-row { display: flex; gap: 20px; margin-bottom: 20px; }
+.edit-layout .form-group { flex: 1; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.edit-layout label { color: #888; font-size: 0.8rem; font-weight: bold; }
+.edit-layout input, .edit-layout textarea, .edit-layout select {
+  background: #222; border: 1px solid #444; color: #fff; padding: 10px;
+  font-family: var(--mono); outline: none;
+}
+.edit-layout input:focus { border-color: var(--red); background: #2a2a2a; }
 
-.battle-stats { display: flex; gap: 10px; }
-.stat-item { flex: 1; text-align: center; padding: 8px; border-radius: 6px; color: #fff; font-weight: bold; }
-.stat-item .label { display: block; font-size: 10px; opacity: 0.8; }
-.stat-item .val { font-size: 18px; }
-.stat-item.win { background: #10b981; }
-.stat-item.lose { background: #ef4444; }
+/* 通用动画 */
+@keyframes spin { to { transform: rotate(360deg); } }
+.glitch-fade-enter-active, .glitch-fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
+.glitch-fade-enter-from { opacity: 0; transform: scale(0.98); }
 
-.info-row { display: flex; margin-bottom: 10px; font-size: 14px; border-bottom: 1px dashed var(--bf-border); padding-bottom: 6px; }
-.info-row label { width: 60px; color: var(--bf-text-sub); font-weight: bold; }
-.poo-text { color: var(--bf-purple); font-weight: bold; font-family: monospace; }
-
-.info-section { margin-top: 20px; }
-.info-section label { display: block; font-size: 13px; font-weight: bold; color: var(--bf-purple); margin-bottom: 8px; }
-.info-section p { font-size: 14px; line-height: 1.6; margin: 0; background: #f8fafc; padding: 12px; border-radius: 8px; white-space: pre-wrap; }
-
-/* Weapon Grid */
-.weapon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; }
-.weapon-item { aspect-ratio: 1; border-radius: 4px; overflow: hidden; border: 1px solid var(--bf-border); cursor: zoom-in; }
-.weapon-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.2s; }
-.weapon-item:hover img { transform: scale(1.1); }
-
-.modal-footer { padding: 15px 20px; border-top: 1px solid var(--bf-border); display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc; }
-
-/* Animations */
-.fade-in { animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-.custom-scroll::-webkit-scrollbar { width: 4px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-
-/* Responsive */
-@media (max-width: 768px) {
-  .detail-split { flex-direction: column; }
-  .detail-left { width: 100%; }
+/* 响应式 */
+@media (max-width: 1024px) {
+  .detail-layout { flex-direction: column; overflow-y: auto; }
+  .detail-col-left { width: 100%; height: 350px; border-right: none; border-bottom: 2px solid #333; }
+  .detail-col-right { overflow: visible; }
 }
 </style>

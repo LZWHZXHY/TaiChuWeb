@@ -1,72 +1,99 @@
 <template>
   <Teleport to="body">
-    <Transition name="fade">
-      <div v-if="visible" class="lightbox-overlay" @click="handleClose">
+    <Transition name="glitch-fade">
+      <div v-if="visible" class="cyber-lightbox-overlay" @click="handleClose">
         
-        <div class="lightbox-container" @click.stop>
+        <div class="cyber-terminal-window" @click.stop>
           
-          <div class="image-area" @click="handleClose">
-            <img 
-              :src="upgradeUrlToHttps(artwork.imageUrlFull || artwork.url)" 
-              class="lightbox-img" 
-              @click.stop 
-            />
-            
-            <button 
-              class="floating-like-btn"
-              :class="{ 'is-liked': artwork.isLiked }"
-              @click.stop="onLike"
-            >
-              <span :class="{ 'heart-bounce': artwork.isAnimating }">
-                <i class="fas fa-heart"></i>
-              </span>
+          <div class="terminal-header">
+            <div class="header-left">
+              <span class="status-dot blink"></span>
+              <span class="term-title">ASSET_VIEWER // {{ artwork.id || 'UNKNOWN_ID' }}</span>
+            </div>
+            <button class="term-close-btn" @click="handleClose">
+              [ ABORT / ESC ]
             </button>
           </div>
 
-          <div class="sidebar-area">
+          <div class="terminal-body">
             
-            <div class="artwork-header">
-              <div class="author-info">
-                <div class="avatar-placeholder">{{ (artwork.authorName || 'A')[0] }}</div>
-                <div class="author-text">
-                  <span class="name">@{{ artwork.authorName || artwork.author }}</span>
-                  <span class="time">{{ formatTime(artwork.uploadAt) }}</span>
-                </div>
+            <div class="image-viewport" @click="handleClose">
+              <div class="viewport-deco-tl"></div>
+              <div class="viewport-deco-br"></div>
+              
+              <img 
+                :src="upgradeUrlToHttps(artwork.imageUrlFull || artwork.url)" 
+                class="main-img" 
+                @click.stop 
+              />
+              
+              <div class="viewport-hud">
+                <span class="hud-text top-left">IMG_RENDER_MODE: HIGH_RES</span>
+                <span class="hud-text bottom-right">SCALE: 100%</span>
               </div>
-              <button class="close-btn-mobile" @click="handleClose"><i class="fas fa-times"></i></button>
+
+              <div class="hud-actions" @click.stop>
+                <button 
+                  class="hud-like-btn"
+                  :class="{ 'is-active': artwork.isLiked }"
+                  @click.stop="onLike"
+                >
+                  <span class="icon" :class="{ 'heart-beat': artwork.isAnimating }">
+                    {{ artwork.isLiked ? '♥' : '♡' }}
+                  </span>
+                  <span class="label">ACKNOWLEDGE</span>
+                </button>
+              </div>
             </div>
 
-            <div class="artwork-scroll-content custom-scroll">
+            <div class="data-sidebar custom-scroll">
               
-              <div class="artwork-details">
-                <h3 class="title">{{ artwork.title }}</h3>
-                <p class="desc" v-if="artwork.desc">{{ artwork.desc }}</p>
-                
-                <div class="action-bar-left">
-                  <button 
-                    class="sidebar-like-btn" 
-                    :class="{ 'is-liked': artwork.isLiked }" 
-                    @click="onLike"
-                  >
-                    <span :class="{ 'heart-bounce': artwork.isAnimating }" class="icon-wrap">
-                      <i class="fas fa-heart"></i>
-                    </span>
-                    <span class="label">{{ artwork.likes || 0 }} 喜欢</span>
-                  </button>
+              <div class="author-card">
+                <div class="avatar-frame">
+                  <div class="avatar-box">
+                    {{ (artwork.authorName || 'A')[0] }}
+                  </div>
+                </div>
+                <div class="author-meta">
+                  <div class="meta-label">UPLOADER_ID:</div>
+                  <div class="meta-name">@{{ artwork.authorName || artwork.author }}</div>
+                  <div class="meta-time">{{ formatTime(artwork.uploadAt) }}</div>
                 </div>
               </div>
 
-              <div class="comment-wrapper">
+              <div class="divider-line"></div>
+
+              <div class="artwork-meta-block">
+                <h3 class="meta-title">{{ artwork.title }}</h3>
+                <div class="meta-desc custom-scroll">
+                  <span class="prefix">>></span> {{ artwork.desc || 'NO_DESCRIPTION_DATA...' }}
+                </div>
+                
+                <button 
+                  class="cyber-action-btn" 
+                  :class="{ 'is-liked': artwork.isLiked }" 
+                  @click="onLike"
+                >
+                  <div class="btn-inner">
+                    <span class="btn-icon">{{ artwork.isLiked ? '★' : '☆' }}</span>
+                    <span class="btn-text">
+                      {{ artwork.isLiked ? 'APPROVED' : 'APPROVE_WORK' }}
+                    </span>
+                    <span class="btn-count">[{{ artwork.likes || 0 }}]</span>
+                  </div>
+                </button>
+              </div>
+
+              <div class="divider-line"></div>
+
+              <div class="comment-terminal-area">
+                <div class="area-label">// USER_FEEDBACK_LOGS</div>
                 <CommentSection :artworkId="artwork.id" />
               </div>
-            </div>
 
+            </div>
           </div>
         </div>
-
-        <button class="lightbox-close-desktop" @click="handleClose">
-          <i class="fas fa-times"></i>
-        </button>
 
       </div>
     </Transition>
@@ -74,8 +101,6 @@
 </template>
 
 <script setup>
-// 请根据你实际存放 CommentSection 的路径修改引用
-// 如果是在 src/CommentSection 下，则是 '@/CommentSection/CommentSection.vue'
 import CommentSection from '@/CommentSection/CommentSection.vue'
 
 const props = defineProps({
@@ -97,181 +122,182 @@ const upgradeUrlToHttps = (url) => {
   return url.replace('http://', 'https://')
 }
 
-const formatTime = (t) => t ? new Date(t).toLocaleDateString() : ''
+// 格式化为工业风格时间戳
+const formatTime = (t) => {
+  if (!t) return 'UNKNOWN_DATE'
+  const d = new Date(t)
+  return `${d.getFullYear()}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getDate().toString().padStart(2,'0')}`
+}
 </script>
 
 <style scoped>
-/* === 基础布局 (保持不变) === */
-.lightbox-overlay { 
-  position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; 
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
+
+/* --- 核心变量 --- */
+.cyber-lightbox-overlay { 
+  --red: #D92323; 
+  --black: #111111; 
+  --white: #F4F1EA;
+  --gray: #E0DDD5;
+  --mono: 'JetBrains Mono', monospace; 
+  --heading: 'Anton', sans-serif;
+
+  position: fixed; inset: 0; 
+  background: rgba(10, 10, 10, 0.95); /* 深色背景，高对比 */
+  z-index: 9999; 
   display: flex; justify-content: center; align-items: center; 
+  backdrop-filter: blur(5px);
+  padding: 20px;
 }
-.lightbox-container { 
-  display: flex; width: 90vw; height: 90vh; max-width: 1400px; 
-  background: #fff; border-radius: 12px; overflow: hidden; 
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
-}
-.image-area { 
-  flex: 1; background: #080808; display: flex; 
-  justify-content: center; align-items: center; 
-  overflow: hidden; position: relative; cursor: pointer; 
-}
-.lightbox-img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-/* === 侧边栏 === */
-.sidebar-area {
-  width: 340px; /* 稍微窄一点，更精致 */
-  background: #fff; display: flex; 
-  flex-direction: column; border-left: 1px solid #f0f0f0; 
-  flex-shrink: 0; overflow: hidden;
-}
-.artwork-header {
-  flex-shrink: 0; display: flex; justify-content: space-between; 
-  align-items: center; padding: 20px 24px; border-bottom: 1px solid #f8f9fa;
-}
-.artwork-scroll-content {
-  flex: 1; overflow-y: auto; padding: 24px; 
+/* --- 终端窗口 --- */
+.cyber-terminal-window {
+  width: 100%; max-width: 1400px; height: 90vh;
+  background: var(--white);
+  border: 4px solid var(--black);
+  box-shadow: 0 0 0 2px #333, 20px 20px 0 rgba(0,0,0,0.5);
   display: flex; flex-direction: column;
-}
-.artwork-details { margin-bottom: 24px; }
-.artwork-details .title { margin: 0 0 8px 0; font-size: 18px; color: #1a1a1a; font-weight: 800; letter-spacing: -0.5px; }
-.artwork-details .desc { font-size: 13px; color: #666; line-height: 1.7; margin-bottom: 20px; }
-.comment-wrapper { flex: 1; min-height: 200px; display: flex; flex-direction: column; }
-
-/* === 动画定义：高级贝塞尔曲线 === */
-@keyframes heartElastic {
-  0% { transform: scale(1); }
-  30% { transform: scale(1.35); } /* 蓄力 */
-  50% { transform: scale(0.9); }  /* 回弹 */
-  70% { transform: scale(1.1); }  /* 余震 */
-  100% { transform: scale(1); }
+  overflow: hidden;
+  font-family: var(--mono);
 }
 
-@keyframes gradientFlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+/* 1. 顶部栏 */
+.terminal-header {
+  height: 50px; flex-shrink: 0;
+  background: var(--black); color: var(--white);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 15px; border-bottom: 2px solid var(--red);
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.status-dot { width: 10px; height: 10px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 5px #00ff00; }
+.term-title { font-family: var(--heading); font-size: 1.2rem; letter-spacing: 1px; }
+
+.term-close-btn {
+  background: transparent; border: 1px solid #555; color: #aaa;
+  padding: 5px 15px; cursor: pointer; font-family: var(--mono);
+  font-weight: bold; transition: 0.2s;
+}
+.term-close-btn:hover { background: var(--red); color: var(--white); border-color: var(--red); }
+
+/* 2. 主体布局 */
+.terminal-body { flex: 1; display: flex; overflow: hidden; }
+
+/* 左侧：图片视口 */
+.image-viewport {
+  flex: 1; background: #050505; 
+  position: relative; overflow: hidden;
+  display: flex; justify-content: center; align-items: center;
+  /* 网格背景装饰 */
+  background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
-@keyframes rippleEffect {
-  0% { box-shadow: 0 0 0 0 rgba(255, 65, 108, 0.4); }
-  100% { box-shadow: 0 0 0 15px rgba(255, 65, 108, 0); }
+.main-img {
+  max-width: 95%; max-height: 95%; object-fit: contain;
+  border: 1px solid #333;
+  box-shadow: 0 0 30px rgba(0,0,0,0.8);
 }
 
-.heart-bounce {
-  display: inline-block;
-  animation: heartElastic 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+/* 视口 HUD 装饰 */
+.viewport-deco-tl { position: absolute; top: 10px; left: 10px; width: 30px; height: 30px; border-top: 2px solid var(--red); border-left: 2px solid var(--red); }
+.viewport-deco-br { position: absolute; bottom: 10px; right: 10px; width: 30px; height: 30px; border-bottom: 2px solid var(--red); border-right: 2px solid var(--red); }
+.hud-text { position: absolute; color: rgba(255,255,255,0.4); font-size: 0.7rem; pointer-events: none; }
+.top-left { top: 15px; left: 50px; }
+.bottom-right { bottom: 15px; right: 50px; }
+
+/* 视口悬浮按钮 (HUD Style) */
+.hud-actions {
+  position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 20px;
+}
+.hud-like-btn {
+  background: rgba(0,0,0,0.6); border: 1px solid #fff; color: #fff;
+  padding: 10px 20px; cursor: pointer; font-family: var(--mono);
+  display: flex; align-items: center; gap: 10px;
+  backdrop-filter: blur(4px); transition: 0.2s;
+}
+.hud-like-btn:hover { background: #fff; color: #000; }
+.hud-like-btn.is-active { background: var(--red); border-color: var(--red); color: #fff; box-shadow: 0 0 15px var(--red); }
+.hud-like-btn .icon { font-size: 1.2rem; }
+
+/* 右侧：数据侧边栏 */
+.data-sidebar {
+  width: 400px; background: var(--white);
+  border-left: 4px solid var(--black);
+  display: flex; flex-direction: column;
+  padding: 25px; gap: 20px;
+  overflow-y: auto; flex-shrink: 0;
 }
 
-/* ========================================= */
-/* === [核心修改] 按钮样式优化 === */
-/* ========================================= */
-
-/* 1. 侧边栏按钮：流体渐变 + 精致尺寸 */
-.sidebar-like-btn {
-  position: relative;
-  width: 100%; 
-  height: 40px; /* 减小高度，更精致 */
-  border-radius: 20px;
-  border: 1px solid #e2e8f0; 
-  background: #fff; 
-  color: #64748b;
-  font-size: 13px; font-weight: 600; 
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden; /* 必须有，为了流光 */
-  z-index: 1;
+/* 作者信息 */
+.author-card { display: flex; align-items: center; gap: 15px; }
+.avatar-frame {
+  width: 60px; height: 60px; border: 2px solid var(--black);
+  padding: 2px;
 }
-
-.sidebar-like-btn:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
-  transform: translateY(-1px);
+.avatar-box {
+  width: 100%; height: 100%; background: var(--black); color: var(--white);
+  display: flex; justify-content: center; align-items: center;
+  font-family: var(--heading); font-size: 1.5rem;
 }
+.author-meta { flex: 1; }
+.meta-label { font-size: 0.6rem; color: #888; font-weight: bold; }
+.meta-name { font-weight: bold; font-size: 1.1rem; color: var(--black); }
+.meta-time { font-size: 0.8rem; color: var(--red); font-weight: bold; margin-top: 2px; }
 
-.sidebar-like-btn:active {
-  transform: scale(0.98);
+.divider-line { height: 2px; background: #ccc; width: 100%; background-image: repeating-linear-gradient(90deg, #ccc 0, #ccc 5px, transparent 5px, transparent 10px); }
+
+/* 作品信息 */
+.artwork-meta-block { display: flex; flex-direction: column; gap: 15px; }
+.meta-title { font-family: var(--heading); font-size: 2rem; margin: 0; line-height: 1.1; text-transform: uppercase; }
+.meta-desc {
+  font-size: 0.9rem; color: #444; line-height: 1.6;
+  max-height: 150px; overflow-y: auto;
+  border-left: 2px solid #ccc; padding-left: 10px;
 }
+.prefix { color: var(--red); font-weight: bold; }
 
-/* 激活态：流光渐变 */
-.sidebar-like-btn.is-liked {
-  border: none;
-  color: #fff;
-  /* 300% 宽度的背景，实现流动感 */
-  background: linear-gradient(90deg, #ff416c, #ff4b2b, #ff416c);
-  background-size: 300% 100%;
-  animation: gradientFlow 3s ease infinite; /* 永久流动的背景 */
+/* 侧边栏大按钮 */
+.cyber-action-btn {
+  background: var(--white); border: 2px solid var(--black);
+  padding: 5px; cursor: pointer; transition: 0.2s;
+  width: 100%;
 }
-
-/* 激活瞬间的涟漪效果 (伪元素) */
-.sidebar-like-btn.is-liked::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  animation: rippleEffect 0.6s ease-out;
-  z-index: -1;
+.btn-inner {
+  background: var(--black); color: var(--white);
+  padding: 12px; display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-family: var(--heading); font-size: 1.2rem;
+  transition: 0.2s;
 }
+.cyber-action-btn:hover .btn-inner { background: var(--white); color: var(--black); }
+.cyber-action-btn.is-liked .btn-inner { background: var(--red); color: var(--white); }
+.cyber-action-btn.is-liked:hover { border-color: var(--red); }
 
-/* 2. 左侧悬浮按钮：极简玻璃态 */
-.floating-like-btn {
-  position: absolute; bottom: 25px; right: 25px;
-  width: 48px; height: 48px; /* 缩小尺寸 */
-  border-radius: 50%;
-  
-  /* 高级磨砂玻璃 */
-  background: rgba(255, 255, 255, 0.1); 
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  
-  color: #fff;
-  font-size: 20px; 
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* 弹性过渡 */
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+/* 评论区 */
+.comment-terminal-area { flex: 1; display: flex; flex-direction: column; }
+.area-label { font-size: 0.7rem; font-weight: bold; color: #888; margin-bottom: 10px; }
+
+/* 动画与响应式 */
+.blink { animation: blink 1s infinite; }
+.heart-beat { animation: heartBeat 0.3s ease-in-out; }
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes heartBeat { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
+
+.glitch-fade-enter-active, .glitch-fade-leave-active { transition: all 0.3s ease; }
+.glitch-fade-enter-from, .glitch-fade-leave-to { opacity: 0; transform: scale(0.95); }
+
+/* 滚动条 */
+.custom-scroll::-webkit-scrollbar { width: 6px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: var(--black); }
+.custom-scroll::-webkit-scrollbar-track { background: #eee; }
+
+@media (max-width: 900px) {
+  .cyber-terminal-window { height: 100%; border: none; max-width: 100%; }
+  .terminal-body { flex-direction: column; overflow-y: auto; }
+  .image-viewport { min-height: 40vh; flex: none; border-bottom: 4px solid var(--black); }
+  .data-sidebar { width: 100%; height: auto; border-left: none; overflow: visible; }
+  .viewport-hud { display: none; }
 }
-
-.floating-like-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1) rotate(5deg); /* 悬浮时轻微旋转放大 */
-}
-
-.floating-like-btn:active {
-  transform: scale(0.9);
-}
-
-.floating-like-btn.is-liked {
-  background: #ff4757; /* 鲜艳的西瓜红 */
-  border-color: #ff4757;
-  box-shadow: 0 10px 25px rgba(255, 71, 87, 0.5); /* 红色辉光 */
-}
-
-/* ========================================= */
-
-/* 其他辅助样式 */
-.author-info { display: flex; align-items: center; gap: 12px; }
-.avatar-placeholder { width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; box-shadow: 0 4px 10px rgba(118, 75, 162, 0.3); }
-.author-text { display: flex; flex-direction: column; justify-content: center; }
-.author-text .name { font-weight: 700; font-size: 14px; color: #1a1a1a; margin-bottom: 2px; }
-.author-text .time { font-size: 11px; color: #94a3b8; }
-.lightbox-close-desktop { position: absolute; top: 20px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.8); font-size: 30px; cursor: pointer; transition: 0.2s; }
-.lightbox-close-desktop:hover { color: #fff; transform: rotate(90deg); }
-.close-btn-mobile { display: none; }
-.custom-scroll::-webkit-scrollbar { width: 5px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
-.custom-scroll::-webkit-scrollbar-track { background: transparent; }
-
-@media screen and (max-width: 900px) {
-  .lightbox-container { flex-direction: column; width: 100%; height: 100%; border-radius: 0; }
-  .image-area { flex: 0 0 45%; }
-  .sidebar-area { width: 100%; flex: 1; border-left: none; }
-  .lightbox-close-desktop { display: none; }
-  .close-btn-mobile { display: block; background: none; border: none; font-size: 22px; color: #666; }
-  .floating-like-btn { bottom: 20px; right: 20px; width: 44px; height: 44px; font-size: 18px; }
-}
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

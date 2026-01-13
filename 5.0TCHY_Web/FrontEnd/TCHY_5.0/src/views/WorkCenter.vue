@@ -1,98 +1,164 @@
 <template>
-  <div class="tc-dashboard">
-    <header class="sys-info-bar">
-      <span class="pulse">●</span>
-      <span>TAICHU_ART_HALL // VISUAL_ARCHIVE // {{ currentTime }}</span>
-    </header>
+  <div class="art-industrial-system">
+    <div class="grid-bg moving-grid"></div>
 
-    <div class="main-bridge">
+    <div class="art-container">
       
-      <aside class="left-column">
-        <div class="section-label">CHANNELS // 频道</div>
-        <div class="nav-menu">
-          <div 
-            class="nav-item" 
-            :class="{ active: currentChannel === 'gallery' }"
-            @click="currentChannel = 'gallery'"
-          >
-            <i class="fas fa-palette"></i> 寰宇画廊 (Gallery)
-            <span class="count-badge">Live</span>
+      <header class="sys-header">
+        <div class="header-left">
+          <div class="logo-box">
+            <span class="icon">■</span> TAICHU_ART
           </div>
-
-          <div 
-            class="nav-item" 
-            :class="{ active: currentChannel === 'joint' }"
-            @click="currentChannel = 'joint'"
-          >
-            <i class="fas fa-handshake"></i> 柴圈联合 (Joint)
-            <span class="count-badge">New</span>
-          </div>
-
-          <div 
-            class="nav-item" 
-            :class="{ active: currentChannel === 'certification' }"
-            @click="currentChannel = 'certification'"
-          >
-            <i class="fas fa-certificate"></i> 创作认证 (Cert)
-            <span class="count-badge">System</span>
-          </div>
-
-          <div 
-            class="nav-item" 
-            :class="{ active: currentChannel === 'battlefield' }" 
-            @click="currentChannel = 'battlefield'"
-          >
-            <i class="fas fa-khanda"></i> 太初约战场 (Battle)
-            <span class="count-badge">Alpha</span>
-          </div>
-
-          <div 
-            class="nav-item" 
-            :class="{ active: currentChannel === 'society' }" 
-            @click="currentChannel = 'society'"
-          >
-            <i class="fas fa-users"></i> 柴圈社团 (Society)
-            <span class="count-badge">Beta</span>
+          <div class="sys-status">
+            <span class="pulse-dot"></span> VISUAL_ARCHIVE_ONLINE
           </div>
         </div>
-
-        <div class="section-label" style="margin-top: 30px;">MY_ARTWORK</div>
-        
-        <div class="user-stat-box">
-          <div class="stat" @click="currentChannel = 'gallery'" title="跳转至寰宇画廊">
-            <span class="num">{{artAmount}}</span>
-            <span class="txt">画廊作品</span>
-          </div>
-          <div class="stat" @click="currentChannel = 'joint'" title="跳转至柴圈联合">
-            <span class="num">{{JointAmount}}</span>
-            <span class="txt">已举行联合</span>
-          </div>
-          <div class="stat" @click="currentChannel = 'battlefield'" title="跳转至太初约战场">
-            <span class="num">{{OCAmount}}</span>
-            <span class="txt">已收录人设</span>
-          </div>
-          <div class="stat" @click="currentChannel = 'society'" title="跳转至柴圈社团">
-            <span class="num">{{SocietyAmount}}</span>
-            <span class="txt">已收录群聊</span>
-          </div>
+        <div class="header-right">
+          <div class="time-display">{{ currentTime }}</div>
+          <div class="sys-id">TERM_ID: 0X-ART-505</div>
         </div>
-      </aside>
+      </header>
 
-      <main class="mid-column full-width">
+      <div class="art-body">
         
-        <ArtGallery 
-          v-if="currentChannel === 'gallery'" 
-          @refresh-stats="refreshGlobalStats"
-        />
+        <aside class="art-sidebar custom-scroll">
+          <div class="sidebar-header">
+            // CHANNEL_SELECT
+          </div>
 
-        <JointBoard v-else-if="currentChannel === 'joint'" />
-        <Battlefield v-else-if="currentChannel === 'battlefield'" />
-        <SocietyPanel v-else-if="currentChannel === 'society'" />
-        <CertificationPanel v-else-if="currentChannel === 'certification'" />
+          <nav class="channel-nav">
+            <div 
+              class="cyber-channel-btn" 
+              :class="{ active: currentChannel === 'gallery' }"
+              @click="currentChannel = 'gallery'"
+            >
+              <div class="btn-deco"></div>
+              <div class="btn-content">
+                <span class="ch-code">CH_01</span>
+                <span class="ch-name">寰宇画廊 // GALLERY</span>
+              </div>
+              <div class="status-light"></div>
+            </div>
 
-      </main>
+            <div 
+              class="cyber-channel-btn" 
+              :class="{ active: currentChannel === 'joint' }"
+              @click="currentChannel = 'joint'"
+            >
+              <div class="btn-deco"></div>
+              <div class="btn-content">
+                <span class="ch-code">CH_02</span>
+                <span class="ch-name">柴圈联合 // JOINT</span>
+              </div>
+              <div class="status-light"></div>
+            </div>
+
+            <div 
+              class="cyber-channel-btn" 
+              :class="{ active: currentChannel === 'certification' }"
+              @click="currentChannel = 'certification'"
+            >
+              <div class="btn-deco"></div>
+              <div class="btn-content">
+                <span class="ch-code">CH_03</span>
+                <span class="ch-name">创作认证 // CERT</span>
+              </div>
+              <div class="status-light"></div>
+            </div>
+
+            <div 
+              class="cyber-channel-btn" 
+              :class="{ active: currentChannel === 'battlefield' }" 
+              @click="currentChannel = 'battlefield'"
+            >
+              <div class="btn-deco"></div>
+              <div class="btn-content">
+                <span class="ch-code">CH_04</span>
+                <span class="ch-name">太初约战 // BATTLE</span>
+              </div>
+              <div class="status-light"></div>
+            </div>
+
+            <div 
+              class="cyber-channel-btn" 
+              :class="{ active: currentChannel === 'society' }" 
+              @click="currentChannel = 'society'"
+            >
+              <div class="btn-deco"></div>
+              <div class="btn-content">
+                <span class="ch-code">CH_05</span>
+                <span class="ch-name">柴圈社团 // SOCIETY</span>
+              </div>
+              <div class="status-light"></div>
+            </div>
+          </nav>
+
+          <div class="monitor-panel">
+            <div class="panel-label">
+              <span class="icon">▼</span> MY_RESOURCES // 数据统计
+            </div>
+            <div class="stat-grid">
+              
+              <div class="stat-cell" @click="currentChannel = 'gallery'">
+                <div class="stat-label">ARTWORKS</div>
+                <div class="stat-val">{{ artAmount }}</div>
+                <div class="stat-bar"><div class="fill" style="width: 60%"></div></div>
+              </div>
+
+              <div class="stat-cell" @click="currentChannel = 'joint'">
+                <div class="stat-label">JOINTS</div>
+                <div class="stat-val">{{ JointAmount }}</div>
+                <div class="stat-bar"><div class="fill" style="width: 30%"></div></div>
+              </div>
+
+              <div class="stat-cell" @click="currentChannel = 'battlefield'">
+                <div class="stat-label">OC_DATA</div>
+                <div class="stat-val">{{ OCAmount }}</div>
+                <div class="stat-bar"><div class="fill" style="width: 80%"></div></div>
+              </div>
+
+              <div class="stat-cell" @click="currentChannel = 'society'">
+                <div class="stat-label">GROUPS</div>
+                <div class="stat-val">{{ SocietyAmount }}</div>
+                <div class="stat-bar"><div class="fill" style="width: 40%"></div></div>
+              </div>
+
+            </div>
+          </div>
+          
+          <div class="sidebar-footer">
+             SYSTEM_READY...<br>
+             WAITING_FOR_INPUT
+          </div>
+        </aside>
+
+        <main class="art-viewport custom-scroll">
+          <div class="view-frame">
+            <div class="corner-tl"></div>
+            <div class="corner-tr"></div>
+            <div class="corner-bl"></div>
+            <div class="corner-br"></div>
+            
+            <div class="component-renderer">
+              <Transition name="glitch-fade" mode="out-in">
+                
+                <ArtGallery 
+                  v-if="currentChannel === 'gallery'" 
+                  @refresh-stats="refreshGlobalStats"
+                />
+
+                <JointBoard v-else-if="currentChannel === 'joint'" />
+                <Battlefield v-else-if="currentChannel === 'battlefield'" />
+                <SocietyPanel v-else-if="currentChannel === 'society'" />
+                <CertificationPanel v-else-if="currentChannel === 'certification'" />
+                
+              </Transition>
+            </div>
+          </div>
+        </main>
 
       </div>
+    </div>
   </div>
 </template>
 
@@ -112,13 +178,12 @@ let clockTimer = null;
 
 const currentChannel = ref('gallery');
 
-// 统计数据 (保留全局统计)
+// 统计数据
 const artAmount = ref(0);
 const OCAmount = ref(0);
 const JointAmount = ref(0);
 const SocietyAmount = ref(0);
 
-// 获取各项总数
 const fetchTotalCount = async () => {
   try {
     const [galleryRes, jointRes, ocRes, societyRes] = await Promise.all([
@@ -134,14 +199,12 @@ const fetchTotalCount = async () => {
   } catch (error) { console.error("获取统计数据失败", error); }
 };
 
-// 刷新函数 (现在只需要刷新总数统计，不需要刷新排行榜了，因为排行榜是 gallery 内部的事)
 const refreshGlobalStats = () => {
   fetchTotalCount();
 }
 
 onMounted(() => {
   fetchTotalCount();
-  // fetchLeaderboard(); // 已删除
   clockTimer = setInterval(() => { currentTime.value = new Date().toLocaleTimeString(); }, 1000);
 });
 
@@ -149,61 +212,209 @@ onUnmounted(() => clearInterval(clockTimer));
 </script>
 
 <style scoped>
-/* 布局样式大大简化 */
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
 
-.tc-dashboard {
-  --bg-main: #f8fafc;
-  --accent-purple: #8b5cf6;
-  --accent-red: #ef4444;
-  --accent-dark: #0f172a;
-  --text-primary: #1e293b;
-  --text-sub: #64748b;
-  --border: #e2e8f0;
-  width: 100%; height: 100%; background-color: var(--bg-main);
-  display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box;
-}
-* { box-sizing: border-box; }
-
-.sys-info-bar { flex-shrink: 0; height: 36px; background: #fff; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 25px; font-size: 11px; font-weight: bold; color: var(--text-sub); }
-.main-bridge { flex: 1; display: flex; padding: 20px; gap: 20px; min-height: 0; width: 100%; max-width: 1920px; margin: 0 auto; box-sizing: border-box;}
-
-/* 左侧栏保持不变 */
-.left-column { width: 18%; display: flex; flex-direction: column; gap: 20px; }
-.nav-menu { display: flex; flex-direction: column; gap: 5px; }
-.nav-item { padding: 12px 15px; background: #fff; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: var(--text-primary); transition: 0.2s; }
-.nav-item:hover, .nav-item.active { background: var(--accent-dark); color: #fff; border-color: var(--accent-dark); }
-.count-badge { font-size: 10px; background: #f1f5f9; color: var(--text-sub); padding: 2px 6px; border-radius: 4px; }
-.nav-item.active .count-badge { background: rgba(255,255,255,0.2); color: #fff; }
-
-.user-stat-box { display: flex; justify-content: space-around; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
-.stat { display: flex; flex-direction: column; align-items: center; padding: 5px; transition: all 0.2s; border-radius: 6px; cursor: pointer; }
-.stat:hover { background-color: #f1f5f9; transform: translateY(-2px); }
-.stat:active { transform: translateY(0); }
-.stat .num { font-weight: 800; font-size: 16px; color: var(--accent-purple); }
-.stat .txt { font-size: 10px; color: var(--text-sub); }
-
-/* 中间区域 - 现在直接占满剩余宽度 */
-.mid-column { 
-  flex: 1; /* 自动占据除左侧栏外的所有空间 */
-  display: flex; 
-  flex-direction: column; 
-  gap: 20px; 
-  min-height: 0; 
-  overflow: hidden; 
+/* --- 核心变量 --- */
+.art-industrial-system {
+  --red: #D92323; 
+  --black: #111111; 
+  --white: #F4F1EA;
+  --gray: #E0DDD5;
+  --mono: 'JetBrains Mono', monospace; 
+  --heading: 'Anton', sans-serif;
+  
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--gray);
+  color: var(--black);
+  font-family: var(--mono);
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
-/* 删除了所有 .right-column, .tags-panel, .artist-row 等样式 */
-.section-label { font-size: 10px; font-weight: 800; color: #94a3b8; letter-spacing: 1.5px; margin-bottom: 10px; }
+/* 背景网格 */
+.grid-bg { 
+  position: absolute; inset: 0; 
+  background-image: 
+    linear-gradient(rgba(17, 17, 17, 0.1) 1px, transparent 1px), 
+    linear-gradient(90deg, rgba(17, 17, 17, 0.1) 1px, transparent 1px); 
+  background-size: 40px 40px; 
+  z-index: 0; 
+  pointer-events: none;
+}
+.moving-grid { animation: gridScroll 60s linear infinite; }
+@keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-40px); } }
 
-/* 响应式优化 */
-@media screen and (max-width: 1920px) {
-  .tc-dashboard {
-    font-size: 13px;
-    zoom: 1; 
-    padding: 15px;
-    gap: 15px;
-  }
-  .left-column { width: 220px; flex-shrink: 0; } 
-  /* 中间区域自适应即可 */
+/* 主容器 */
+.art-container {
+  width: 100%;
+  max-width: 1800px;
+  height: 92vh; /* 稍微留点边距 */
+  background: var(--white);
+  border: 4px solid var(--black);
+  box-shadow: 20px 20px 0 rgba(0,0,0,0.2);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+}
+
+/* --- 2. 顶部系统栏 --- */
+.sys-header {
+  height: 60px;
+  background: var(--black);
+  color: var(--white);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  border-bottom: 2px solid var(--red);
+  flex-shrink: 0;
+}
+
+.header-left { display: flex; align-items: center; gap: 20px; }
+.logo-box { font-family: var(--heading); font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+.logo-box .icon { color: var(--red); }
+.sys-status { font-size: 0.8rem; display: flex; align-items: center; gap: 8px; color: #aaa; }
+.pulse-dot { width: 8px; height: 8px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 5px #00ff00; animation: pulse 1s infinite; }
+
+.header-right { text-align: right; font-size: 0.8rem; }
+.time-display { font-weight: bold; font-size: 1.1rem; }
+.sys-id { color: #666; font-size: 0.7rem; }
+
+/* --- 主体布局 --- */
+.art-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* --- 3. 左侧控制台 --- */
+.art-sidebar {
+  width: 260px;
+  background: #f0f0f0;
+  border-right: 4px solid var(--black);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 15px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.sidebar-header {
+  font-size: 0.7rem; color: #888; border-bottom: 2px dashed #ccc; margin-bottom: 15px; padding-bottom: 5px;
+}
+
+.channel-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+/* 频道按钮 */
+.cyber-channel-btn {
+  background: #fff;
+  border: 2px solid var(--black);
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  transition: all 0.2s;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+}
+.cyber-channel-btn:hover {
+  transform: translateX(5px);
+  box-shadow: 6px 6px 0 var(--red);
+  z-index: 2;
+}
+.cyber-channel-btn.active {
+  background: var(--black);
+  color: var(--white);
+  border-color: var(--black);
+  transform: translateX(10px);
+  box-shadow: 6px 6px 0 var(--red);
+}
+
+.btn-content { display: flex; flex-direction: column; }
+.ch-code { font-size: 0.6rem; opacity: 0.6; font-weight: bold; }
+.ch-name { font-size: 0.9rem; font-weight: bold; }
+
+.status-light { width: 6px; height: 6px; border: 1px solid #999; background: #ccc; }
+.cyber-channel-btn.active .status-light { background: var(--red); border-color: var(--red); box-shadow: 0 0 5px var(--red); }
+
+/* 监控面板 */
+.monitor-panel {
+  background: var(--black);
+  color: var(--white);
+  padding: 15px;
+  border: 2px solid var(--black);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+}
+.panel-label { font-size: 0.8rem; border-bottom: 1px dashed #555; padding-bottom: 5px; margin-bottom: 15px; color: var(--red); font-weight: bold; }
+
+.stat-grid { display: flex; flex-direction: column; gap: 15px; }
+.stat-cell { cursor: pointer; transition: 0.2s; }
+.stat-cell:hover .stat-label { color: var(--red); }
+
+.stat-label { font-size: 0.7rem; color: #888; margin-bottom: 2px; }
+.stat-val { font-family: var(--heading); font-size: 1.5rem; line-height: 1; }
+.stat-bar { width: 100%; height: 4px; background: #333; margin-top: 4px; }
+.fill { height: 100%; background: var(--white); }
+
+.sidebar-footer { margin-top: auto; font-size: 0.7rem; color: #999; text-align: center; line-height: 1.5; opacity: 0.5; }
+
+/* --- 4. 主视口 --- */
+.art-viewport {
+  flex: 1;
+  background: #fff;
+  padding: 30px;
+  position: relative;
+  overflow-y: auto;
+  /* 扫描线背景 */
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.02) 50%);
+  background-size: 100% 4px;
+}
+
+.view-frame {
+  min-height: 100%;
+  position: relative;
+  /* 给内部组件一个干净的空间，但又带有边框约束 */
+}
+
+/* 视口四角装饰 */
+.corner-tl, .corner-tr, .corner-bl, .corner-br {
+  position: absolute; width: 20px; height: 20px; border: 4px solid var(--black); pointer-events: none; z-index: 10;
+}
+.corner-tl { top: -10px; left: -10px; border-right: none; border-bottom: none; }
+.corner-tr { top: -10px; right: -10px; border-left: none; border-bottom: none; }
+.corner-bl { bottom: -10px; left: -10px; border-right: none; border-top: none; }
+.corner-br { bottom: -10px; right: -10px; border-left: none; border-top: none; }
+
+.component-renderer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+/* 动画 */
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+@keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-40px); } }
+
+/* 响应式 */
+@media (max-width: 1024px) {
+  .art-container { height: auto; min-height: 95vh; }
+  .art-body { flex-direction: column; }
+  .art-sidebar { width: 100%; height: auto; border-right: none; border-bottom: 4px solid var(--black); flex-direction: row; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+  .channel-nav { flex-direction: row; flex-wrap: wrap; margin-bottom: 0; flex: 1; }
+  .cyber-channel-btn { flex: 1; min-width: 140px; }
+  .monitor-panel { width: 100%; max-width: 300px; }
+  .sidebar-footer { display: none; }
+  .art-viewport { padding: 15px; }
+  .corner-tl, .corner-tr, .corner-bl, .corner-br { display: none; } /* 移动端去掉边角装饰以节省空间 */
 }
 </style>

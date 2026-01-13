@@ -1,291 +1,322 @@
 <template>
-  <div class="joint-board-container">
-    <header class="board-header">
-      <div class="header-title">
-        <span class="pulse-dot"></span>
-        <h2>CHAI_JOINT_BOARD // 柴圈联合</h2>
-      </div>
+  <div class="joint-industrial">
+    <div class="grid-bg moving-grid"></div>
+
+    <div class="joint-container">
       
-      <div class="header-tools">
-        <div class="search-group">
-          <i class="fas fa-search"></i>
-          <input 
-            v-model="q" 
-            type="text" 
-            placeholder="SEARCH_EVENT..." 
-            @input="onSearchInput" 
-          />
-        </div>
-
-        <div class="status-tabs">
-          <button 
-            :class="{ active: tab === 'ongoing' }" 
-            @click="switchTab('ongoing')"
-          >进行中</button>
-          <button 
-            :class="{ active: tab === 'finished' }" 
-            @click="switchTab('finished')"
-          >已归档</button>
-        </div>
-
-        <button class="create-btn" @click="openCreate">
-          <i class="fas fa-plus"></i> 发起新联合
-        </button>
-      </div>
-
-      <div class="filter-bar">
-        <div class="filter-group">
-          <label><i class="fas fa-filter"></i> 类型:</label>
-          <select v-model="typeFilter" @change="onFilterChange">
-            <option value="">ALL_TYPES</option>
-            <option :value="1">联合 (Collab)</option>
-            <option :value="2">接力 (Relay)</option>
-            <option :value="3">比赛 (Match)</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label><i class="fas fa-sort"></i> 排序:</label>
-          <select v-model="sortBy" @change="onSortChange">
-            <option value="">默认排序</option>
-            <option value="startdate_desc">最新发起</option>
-            <option value="startdate_asc">最早发起</option>
-            <option value="enddate_asc">即将结束</option>
-          </select>
-        </div>
-      </div>
-    </header>
-
-    <div class="board-content custom-scroll">
-      
-      <div v-if="loading" class="state-box">
-        <i class="fas fa-circle-notch fa-spin"></i>
-        <span>正在读取联合数据...</span>
-      </div>
-
-      <div v-else-if="!items.length" class="state-box">
-        <i class="fas fa-folder-open"></i>
-        <span>暂无相关活动数据</span>
-      </div>
-
-      <div v-else class="event-grid">
-        <article 
-          v-for="it in items" 
-          :key="it.id" 
-          class="event-card" 
-          :class="`type-accent-${it.type}`"
-        >
-          <div class="card-status-strip"></div>
+      <header class="command-console">
+        <div class="console-row top">
+          <div class="title-block">
+            <span class="icon-box">JOINT</span>
+            <div class="text-group">
+              <h2>JOINT_OPERATIONS</h2>
+              <span class="sub">联合作战看板 // 柴圈联合</span>
+            </div>
+          </div>
           
-          <div class="card-main">
-            <div class="card-header">
-              <div class="header-row">
-                <span class="type-badge">{{ typeLabel(it.type) }}</span>
-                <span class="status-text" :class="`verify-${it.verify}`">{{ verifyLabel(it.verify) }}</span>
-              </div>
-              <h3 class="event-title" :title="it.name">{{ it.name }}</h3>
-              <div class="author-info">
-                <i class="fas fa-user-astronaut"></i> {{ it.host }}
-              </div>
+          <div class="action-block">
+            <button class="cyber-btn primary" @click="openCreate">
+              <span class="btn-icon">+</span> INITIATE_NEW_OP
+            </button>
+          </div>
+        </div>
+
+        <div class="console-row bottom">
+          <div class="search-terminal">
+            <span class="prompt">> SEARCH:</span>
+            <input 
+              v-model="q" 
+              type="text" 
+              class="terminal-input"
+              placeholder="INPUT_KEYWORDS..." 
+              @input="onSearchInput" 
+            />
+            <div class="scan-line"></div>
+          </div>
+
+          <div class="filter-deck">
+            <div class="toggle-switch">
+              <div class="switch-opt" :class="{ active: tab === 'ongoing' }" @click="switchTab('ongoing')">ACTIVE</div>
+              <div class="switch-opt" :class="{ active: tab === 'finished' }" @click="switchTab('finished')">ARCHIVED</div>
             </div>
-
-            <div class="card-body">
-              <p class="desc-text">{{ it.desc || '暂无简介...' }}</p>
-              
-              <div class="meta-grid">
-                <div class="meta-item">
-                  <span class="label">START</span>
-                  <span class="val">{{ shortDate(it.startdate) }}</span>
-                </div>
-                <div class="meta-item">
-                  <span class="label">END</span>
-                  <span class="val">{{ it.enddate ? shortDate(it.enddate) : '无限期' }}</span>
-                </div>
-                <div class="meta-item full-width" v-if="it.QQgroup">
-                  <span class="label">QQ GROUP</span>
-                  <span class="val highlight">{{ it.QQgroup }}</span>
-                </div>
-              </div>
+            <div class="cyber-select">
+              <span class="label">TYPE:</span>
+              <select v-model="typeFilter" @change="onFilterChange">
+                <option value="">ALL_CLASS</option>
+                <option :value="1">COLLAB // 联合</option>
+                <option :value="2">RELAY // 接力</option>
+                <option :value="3">MATCH // 比赛</option>
+              </select>
             </div>
-
-            <div class="card-actions">
-              <button class="action-btn outline" @click="viewDetail(it)">
-                详情
-              </button>
-              
-              <button 
-                v-if="tab === 'ongoing' && it.QQgroup" 
-                class="action-btn primary" 
-                @click="applyJoin(it)"
-              >
-                加入群聊
-              </button>
-              
-              <button 
-                class="action-btn secondary" 
-                @click="applyForEvent(it)"
-              >
-                申请联合
-              </button>
-
-              <div v-if="isMine(it) || isAdmin" class="admin-tools">
-                <button v-if="isMine(it)" class="icon-btn" title="编辑" @click="editItem(it)"><i class="fas fa-pen"></i></button>
-                <template v-if="isAdmin">
-                  <button v-if="it.verify !== 1" class="icon-btn success" title="通过" @click="approveItem(it)"><i class="fas fa-check"></i></button>
-                  <button v-if="it.verify !== 2" class="icon-btn danger" title="驳回" @click="rejectItem(it)"><i class="fas fa-times"></i></button>
-                  <button class="icon-btn danger" title="删除" @click="deleteItem(it.id)"><i class="fas fa-trash"></i></button>
-                </template>
-              </div>
+            <div class="cyber-select">
+              <span class="label">SORT:</span>
+              <select v-model="sortBy" @change="onSortChange">
+                <option value="">DEFAULT</option>
+                <option value="startdate_desc">NEWEST</option>
+                <option value="startdate_asc">OLDEST</option>
+                <option value="enddate_asc">ENDING_SOON</option>
+              </select>
             </div>
           </div>
-        </article>
+        </div>
+      </header>
+
+      <div class="mission-grid-wrapper custom-scroll">
+        
+        <div v-if="loading" class="system-msg">
+          <div class="loader-spinner"></div>
+          <span>LOADING_TACTICAL_DATA...</span>
+        </div>
+
+        <div v-else-if="!items.length" class="system-msg error">
+          [ NO_OPERATIONS_FOUND ]
+        </div>
+
+        <div v-else class="plate-grid">
+          <article 
+            v-for="it in items" 
+            :key="it.id" 
+            class="data-plate" 
+            :class="`status-${it.verify}`"
+          >
+            <div class="plate-header">
+              <div class="header-top">
+                <span class="op-code">OP-{{ padZero(it.id) }}</span>
+                <span class="verify-tag">{{ verifyLabelEn(it.verify) }}</span>
+              </div>
+              <h3 class="plate-title" :title="it.name">{{ it.name }}</h3>
+            </div>
+
+            <div class="data-cells">
+              <div class="cell">
+                <span class="c-label">TYPE</span>
+                <span class="c-val type-hl">{{ typeLabelEn(it.type) }}</span>
+              </div>
+              <div class="cell">
+                <span class="c-label">COMMANDER</span>
+                <span class="c-val">{{ it.host }}</span>
+              </div>
+              <div class="cell" v-if="it.QQgroup">
+                <span class="c-label">CHANNEL</span>
+                <span class="c-val group-hl">{{ it.QQgroup }}</span>
+              </div>
+            </div>
+
+            <div class="plate-desc">
+              {{ it.desc || 'NO_INTEL_AVAILABLE...' }}
+            </div>
+
+            <div class="progress-section">
+              <div class="prog-info">
+                <span class="prog-label">MISSION_PROGRESS: {{ calculateProgress(it) }}%</span>
+              </div>
+              <div class="prog-track">
+                <div class="prog-fill" :style="{ width: calculateProgress(it) + '%' }"></div>
+                <div class="prog-grid-mask"></div>
+              </div>
+            </div>
+
+            <div class="plate-footer">
+              <div class="footer-time">
+                <div class="time-row">S: {{ shortDate(it.startdate) }}</div>
+                <div class="time-row">E: {{ it.enddate ? shortDate(it.enddate) : '∞' }}</div>
+              </div>
+              
+              <div class="footer-actions">
+                <button class="icon-action" title="Detail" @click="viewDetail(it)">
+                  👁
+                </button>
+                
+                <button 
+                  v-if="tab === 'ongoing' && it.QQgroup" 
+                  class="icon-action primary" 
+                  title="Join Group"
+                  @click="applyJoin(it)"
+                >
+                  QQ
+                </button>
+                
+                <button 
+                  class="icon-action primary" 
+                  title="Apply"
+                  @click="applyForEvent(it)"
+                >
+                  APPLY
+                </button>
+
+                <div v-if="isMine(it) || isAdmin" class="more-actions">
+                  <button v-if="isMine(it)" class="icon-mini" @click="editItem(it)">✎</button>
+                  <template v-if="isAdmin">
+                    <button v-if="it.verify !== 1" class="icon-mini ok" @click="approveItem(it)">✓</button>
+                    <button v-if="it.verify !== 2" class="icon-mini no" @click="rejectItem(it)">✕</button>
+                    <button class="icon-mini del" @click="deleteItem(it.id)">🗑</button>
+                  </template>
+                </div>
+              </div>
+            </div>
+            
+            <div class="side-strip"></div>
+          </article>
+        </div>
+
+        <footer class="pagination-bar" v-if="items.length > 0">
+          <button class="nav-arrow" :disabled="page <= 1" @click="prevPage">&lt; PREV</button>
+          <div class="page-indicator">PAGE: {{ padZero(page) }} / {{ padZero(totalPages) }}</div>
+          <button class="nav-arrow" :disabled="page >= totalPages" @click="nextPage">NEXT &gt;</button>
+        </footer>
       </div>
 
-      <footer class="board-footer" v-if="items.length > 0">
-        <button class="page-btn" :disabled="page <= 1" @click="prevPage"><i class="fas fa-chevron-left"></i></button>
-        <span class="page-info">PAGE {{ page }} / {{ totalPages }}</span>
-        <button class="page-btn" :disabled="page >= totalPages" @click="nextPage"><i class="fas fa-chevron-right"></i></button>
-      </footer>
+      <Teleport to="body">
+        <Transition name="glitch-fade">
+          <div v-if="detail" class="cyber-modal-overlay" @click.self="detail = null">
+            <div class="cyber-terminal detail-mode">
+              <div class="term-header">
+                <span class="term-title">>> MISSION_INTEL // 详情</span>
+                <button class="term-close" @click="detail = null">[ CLOSE ]</button>
+              </div>
+              <div class="term-content custom-scroll">
+                <h1 class="detail-h1">{{ detail.name }}</h1>
+                <div class="detail-meta-row">
+                  <span class="meta-tag">TYPE: {{ typeLabelEn(detail.type) }}</span>
+                  <span class="meta-tag">HOST: {{ detail.host }}</span>
+                  <span class="meta-tag">STATUS: {{ verifyLabelEn(detail.verify) }}</span>
+                </div>
+
+                <div class="term-section">
+                  <div class="sec-title"># BRIEFING // 简介</div>
+                  <p class="sec-body">{{ detail.desc }}</p>
+                </div>
+
+                <div class="term-section" v-if="detail.rules">
+                  <div class="sec-title warning"># PROTOCOLS // 规则</div>
+                  <div class="code-block">{{ detail.rules }}</div>
+                </div>
+
+                <div class="term-section">
+                  <div class="sec-title"># LOGISTICS // 后勤信息</div>
+                  <div class="kv-grid">
+                    <div class="kv"><span>START:</span> {{ formatDate(detail.startdate) }}</div>
+                    <div class="kv"><span>END:</span> {{ detail.enddate ? formatDate(detail.enddate) : 'INDEFINITE' }}</div>
+                    <div class="kv"><span>QQ_GROUP:</span> {{ detail.QQgroup || 'N/A' }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="term-actions">
+                <button class="cyber-btn full" @click="applyForEvent(detail)">
+                  >>> SIGN_UP_FOR_MISSION
+                </button>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
+
+      <Teleport to="body">
+        <Transition name="glitch-fade">
+          <div v-if="showCreate" class="cyber-modal-overlay" @click.self="closeCreate">
+            <div class="cyber-terminal form-mode">
+              <div class="term-header">
+                <span class="term-title">{{ editMode ? '>> UPDATE_LOG' : '>> NEW_OPERATION' }}</span>
+                <button class="term-close" @click="closeCreate">[ ABORT ]</button>
+              </div>
+              <div class="term-content custom-scroll">
+                <form @submit.prevent="submitForm" id="createForm" class="cyber-form">
+                  <div class="form-row">
+                    <label>OPERATION_TYPE:</label>
+                    <select v-model.number="form.type" class="cyber-input">
+                      <option :value="1">COLLAB (联合)</option>
+                      <option :value="2">RELAY (接力)</option>
+                      <option :value="3">MATCH (比赛)</option>
+                    </select>
+                  </div>
+                  <div class="form-row">
+                    <label>CODENAME / 标题:</label>
+                    <input v-model="form.name" class="cyber-input" required placeholder="Enter Title..." />
+                  </div>
+                  <div class="form-row split">
+                    <div>
+                      <label>COMMANDER / 发起人:</label>
+                      <input v-model="form.host" class="cyber-input" required />
+                    </div>
+                    <div>
+                      <label>COMMS_CHANNEL / 群号:</label>
+                      <input v-model="form.QQgroup" class="cyber-input" />
+                    </div>
+                  </div>
+                  <div class="form-row split">
+                    <div>
+                      <label>START_TIME:</label>
+                      <input v-model="form.startdate" type="datetime-local" class="cyber-input" required />
+                    </div>
+                    <div>
+                      <label>END_TIME:</label>
+                      <input v-model="form.enddate" type="datetime-local" class="cyber-input" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <label>BRIEFING / 简介:</label>
+                    <textarea v-model="form.desc" class="cyber-input" rows="3"></textarea>
+                  </div>
+                  <div class="form-row">
+                    <label>PROTOCOLS / 规则:</label>
+                    <textarea v-model="form.rules" class="cyber-input" rows="3"></textarea>
+                  </div>
+                </form>
+              </div>
+              <div class="term-actions">
+                <button class="cyber-btn ghost" @click="closeCreate">CANCEL</button>
+                <button class="cyber-btn primary" type="submit" form="createForm" :disabled="submitting">
+                  {{ submitting ? 'PROCESSING...' : 'EXECUTE' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
+
+      <Teleport to="body">
+        <Transition name="glitch-fade">
+          <div v-if="showApplyModal" class="cyber-modal-overlay" @click.self="closeApplyModal">
+            <div class="cyber-terminal form-mode">
+              <div class="term-header">
+                <span class="term-title">>> APPLICATION_FORM</span>
+                <button class="term-close" @click="closeApplyModal">[ ABORT ]</button>
+              </div>
+              <div class="term-content custom-scroll">
+                <div class="target-info">
+                  APPLYING_TO: <span class="highlight">{{ selectedEvent?.name }}</span>
+                </div>
+                <form @submit.prevent="submitApplication" id="applyForm" class="cyber-form">
+                  <div class="form-row">
+                    <label>APPLICANT_ID:</label>
+                    <input v-model="applicationForm.applicantName" class="cyber-input" required />
+                  </div>
+                  <div class="form-row">
+                    <label>CONTACT_FREQ (QQ/Email):</label>
+                    <input v-model="applicationForm.contact" class="cyber-input" required />
+                  </div>
+                  <div class="form-row">
+                    <label>STATEMENT / 申请说明:</label>
+                    <textarea v-model="applicationForm.description" class="cyber-input" rows="4" required></textarea>
+                  </div>
+                  <div class="form-row">
+                    <label>PORTFOLIO_LINK (Optional):</label>
+                    <input v-model="applicationForm.portfolioUrl" class="cyber-input" placeholder="https://..." />
+                  </div>
+                </form>
+              </div>
+              <div class="term-actions">
+                <button class="cyber-btn ghost" @click="closeApplyModal">CANCEL</button>
+                <button class="cyber-btn primary" type="submit" form="applyForm" :disabled="submittingApplication">
+                  {{ submittingApplication ? 'TRANSMITTING...' : 'SEND_APPLICATION' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
+
     </div>
-
-    <Teleport to="body">
-      <Transition name="modal-fade">
-        <div v-if="detail" class="tc-modal-overlay" @click.self="detail = null">
-          <div class="tc-modal-card">
-            <header class="modal-head">
-              <h3>EVENT_DETAIL // 活动详情</h3>
-              <button class="close-icon" @click="detail = null"><i class="fas fa-times"></i></button>
-            </header>
-            <div class="modal-content custom-scroll">
-              <h2 class="detail-title">{{ detail.name }}</h2>
-              <div class="detail-meta-bar">
-                <span class="tag">{{ typeLabel(detail.type) }}</span>
-                <span class="host">Host: {{ detail.host }}</span>
-              </div>
-              
-              <div class="info-section">
-                <label>DESCRIPTION</label>
-                <p>{{ detail.desc }}</p>
-              </div>
-
-              <div class="info-section" v-if="detail.rules">
-                <label>RULES & REQUIREMENTS</label>
-                <div class="rules-box">{{ detail.rules }}</div>
-              </div>
-
-              <div class="info-grid">
-                <div><label>Time</label> {{ formatDate(detail.startdate) }} - {{ detail.enddate ? formatDate(detail.enddate) : 'TBD' }}</div>
-                <div><label>QQ Group</label> {{ detail.QQgroup || 'Not Set' }}</div>
-              </div>
-            </div>
-            <footer class="modal-foot">
-              <button class="tc-btn" @click="applyForEvent(detail)">填写申请表</button>
-            </footer>
-          </div>
-        </div>
-      </Transition>
-
-      <Transition name="modal-fade">
-        <div v-if="showCreate" class="tc-modal-overlay" @click.self="closeCreate">
-          <div class="tc-modal-card form-mode">
-            <header class="modal-head">
-              <h3>{{ editMode ? 'EDIT_PROTOCOL' : 'INITIATE_PROTOCOL' }} // {{ editMode ? '编辑' : '发起' }}</h3>
-              <button class="close-icon" @click="closeCreate"><i class="fas fa-times"></i></button>
-            </header>
-            <div class="modal-content custom-scroll">
-              <form @submit.prevent="submitForm" id="createForm">
-                <div class="form-group">
-                  <label>Type / 类型</label>
-                  <select v-model.number="form.type" class="tc-input">
-                    <option :value="1">联合 (Collaboration)</option>
-                    <option :value="2">接力 (Relay)</option>
-                    <option :value="3">竞标赛 (Tournament)</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label>Title / 名称</label>
-                  <input v-model="form.name" class="tc-input" required />
-                </div>
-                <div class="row-2">
-                  <div class="form-group">
-                    <label>Host / 发起人</label>
-                    <input v-model="form.host" class="tc-input" required />
-                  </div>
-                  <div class="form-group">
-                    <label>QQ Group / 群号</label>
-                    <input v-model="form.QQgroup" class="tc-input" />
-                  </div>
-                </div>
-                <div class="row-2">
-                  <div class="form-group">
-                    <label>Start / 开始时间</label>
-                    <input v-model="form.startdate" type="datetime-local" class="tc-input" required />
-                  </div>
-                  <div class="form-group">
-                    <label>End / 结束时间</label>
-                    <input v-model="form.enddate" type="datetime-local" class="tc-input" />
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label>Description / 简介</label>
-                  <textarea v-model="form.desc" class="tc-input" rows="4"></textarea>
-                </div>
-                <div class="form-group">
-                  <label>Rules / 规则</label>
-                  <textarea v-model="form.rules" class="tc-input" rows="4"></textarea>
-                </div>
-              </form>
-            </div>
-            <footer class="modal-foot">
-              <button class="tc-btn ghost" @click="closeCreate">CANCEL</button>
-              <button class="tc-btn primary" type="submit" form="createForm" :disabled="submitting">
-                {{ submitting ? 'PROCESSING...' : 'CONFIRM' }}
-              </button>
-            </footer>
-          </div>
-        </div>
-      </Transition>
-
-      <Transition name="modal-fade">
-        <div v-if="showApplyModal" class="tc-modal-overlay" @click.self="closeApplyModal">
-          <div class="tc-modal-card form-mode">
-            <header class="modal-head">
-              <h3>APPLY_LINK // 申请联合</h3>
-              <button class="close-icon" @click="closeApplyModal"><i class="fas fa-times"></i></button>
-            </header>
-            <div class="modal-content custom-scroll">
-              <div class="target-event-summary">
-                Applying for: <strong>{{ selectedEvent?.name }}</strong>
-              </div>
-              <form @submit.prevent="submitApplication" id="applyForm">
-                <div class="form-group">
-                  <label>Applicant / 申请人ID</label>
-                  <input v-model="applicationForm.applicantName" class="tc-input" required />
-                </div>
-                <div class="form-group">
-                  <label>Contact / 联系方式 (QQ/Email)</label>
-                  <input v-model="applicationForm.contact" class="tc-input" required />
-                </div>
-                <div class="form-group">
-                  <label>Reason / 申请说明</label>
-                  <textarea v-model="applicationForm.description" class="tc-input" rows="4" required></textarea>
-                </div>
-                <div class="form-group">
-                  <label>Portfolio / 作品链接 (可选)</label>
-                  <input v-model="applicationForm.portfolioUrl" class="tc-input" placeholder="https://..." />
-                </div>
-              </form>
-            </div>
-            <footer class="modal-foot">
-              <button class="tc-btn ghost" @click="closeApplyModal">CANCEL</button>
-              <button class="tc-btn primary" type="submit" form="applyForm" :disabled="submittingApplication">
-                {{ submittingApplication ? 'SENDING...' : 'SUBMIT APPLICATION' }}
-              </button>
-            </footer>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
   </div>
 </template>
 
@@ -298,18 +329,18 @@ import { useAuthStore } from '@/utils/auth'
 const router = useRouter()
 const auth = useAuthStore()
 
-// --- State ---
+// State
 const tab = ref('ongoing')
 const q = ref('')
 const typeFilter = ref('')
 const sortBy = ref('')
 const page = ref(1)
-const pageSize = ref(9) 
+const pageSize = ref(12) 
 const loading = ref(false)
 const items = ref([])
 const total = ref(0)
 
-// --- Modal States ---
+// Modal States
 const detail = ref(null)
 const showCreate = ref(false)
 const editMode = ref(false)
@@ -318,8 +349,7 @@ const showApplyModal = ref(false)
 const selectedEvent = ref(null)
 const submittingApplication = ref(false)
 
-// --- Forms ---
-// 修正6: form 初始化使用 QQgroup
+// Forms
 const form = reactive({
   id: null, name: '', host: '', type: 1, startdate: '', enddate: '', desc: '', rules: '', QQgroup: '', verify: 0, creatorId: null
 })
@@ -327,23 +357,55 @@ const applicationForm = reactive({
   applicantName: '', contact: '', description: '', portfolioUrl: ''
 })
 
-// --- Helpers ---
-const TYPE_MAP = { 1: '联合', 2: '接力', 3: '比赛' }
-const typeLabel = (t) => TYPE_MAP[t] || '其他'
-const verifyLabel = (v) => v === 0 ? '审核中' : v === 1 ? '进行中' : '已驳回'
+// Helpers
+const typeLabelEn = (t) => {
+  const map = { 1: 'COLLAB', 2: 'RELAY', 3: 'MATCH' }
+  return map[t] || 'UNKNOWN'
+}
+const verifyLabelEn = (v) => v === 0 ? 'PENDING' : v === 1 ? 'ACTIVE' : 'REJECTED'
+const padZero = (n) => n < 10 ? `0${n}` : n
+
 const isMine = (it) => auth.user?.id && it.creatorId === auth.user.id
 const isAdmin = computed(() => auth.user?.roles?.includes?.('Admin'))
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
+
 const parseSortBy = (val) => {
   if (!val) return { field: '', order: '' }
   const [field, order] = val.split('_')
   return { field, order }
 }
 
-const formatDate = (d) => d ? new Date(d).toLocaleString() : '-'
-const shortDate = (d) => d ? new Date(d).toLocaleDateString() : '-'
+const formatDate = (d) => {
+  if (!d) return 'N/A'
+  const date = new Date(d)
+  return `${date.getFullYear()}.${padZero(date.getMonth()+1)}.${padZero(date.getDate())} ${padZero(date.getHours())}:${padZero(date.getMinutes())}`
+}
+const shortDate = (d) => {
+  if (!d) return 'N/A'
+  const date = new Date(d)
+  return `${date.getFullYear()}.${padZero(date.getMonth()+1)}.${padZero(date.getDate())}`
+}
 
-// --- API Actions ---
+// 计算进度 (0-100)
+const calculateProgress = (it) => {
+  const start = new Date(it.startdate).getTime()
+  // 如果没有结束时间，进度条默认显示 10% 表示进行中，或者根据开始时间显示一个伪进度
+  if (!it.enddate) return 10 
+  
+  const end = new Date(it.enddate).getTime()
+  const now = new Date().getTime()
+  
+  if (now < start) return 0
+  const total = end - start
+  const current = now - start
+  
+  if (total <= 0) return 100 // 数据异常防错
+  if (current >= total) return 100
+  
+  return Math.floor((current / total) * 100)
+}
+
+// API Actions
 const basePath = 'ChaiLianHe'
 
 async function ensureAuth() {
@@ -358,113 +420,8 @@ async function ensureAuth() {
 async function fetchList() {
   loading.value = true
   try {
-    // ----------------------------------------------------
-    // MOCK DATA START (你的真实数据)
-    // ----------------------------------------------------
-    await new Promise(r => setTimeout(r, 400)); // 模拟一点点延迟，更有实感
-    const mockData = {
-        "data": [
-            {
-                "id": 19,
-                "name": "五天联合",
-                "host": "zetak",
-                "type": 1,
-                "startdate": "2026-01-10T00:00:00",
-                "enddate": "2026-02-01T00:00:00",
-                "desc": "计时五天，自律绘画，场景左边出开始，进右边结束。表现形式不限，屠杀室，11或者22都行。五天计时到请自觉结束，之后导出视频或者源文件@zetak即可。oc任意，发挥想象！没有限制水平",
-                "QQgroup": "",
-                "rules": "",
-                "verify": 1,
-                "report": 0
-            },
-            {
-                "id": 17,
-                "name": "不咕联合",
-                "host": "Applecat",
-                "type": 1,
-                "startdate": "2020-07-02T00:00:00",
-                "enddate": "2028-10-24T00:00:00",
-                "desc": "分为平面屠杀、平面对打、分镜对打三个部分；\n平面屠杀可以接力，也可以自己制作单独的片段，可以使用flash或fc软件制作\n另外两个部分仅限接力的方式，使用任意版本的flash(包括Adobe Animate)制作",
-                "QQgroup": "1108112956",
-                "rules": "进群，选择你想画的部分，让群主把文件发给你\n画布尺寸1920x1080像素，帧率24fps\n画完后提交fla文件；fc软件用户可以提交fc文件，或提交背景透明的序列帧文件",
-                "verify": 1,
-                "report": 0
-            },
-            {
-                "id": 15,
-                "name": "鹅鸭杀联合",
-                "host": "太初寰宇-太虚绘院",
-                "type": 1,
-                "startdate": "2025-11-05T00:00:00",
-                "enddate": "2025-11-28T00:00:00",
-                "desc": "只要内容有鹅鸭杀就行，要求不限制，很自由的一个联合。",
-                "QQgroup": "973380634",
-                "rules": "24fps，软件绘画，1080p，自行配音！\n要求上传到太虚绘院的五联群文件中！\n另外要求改名，将视频改为 用户圈名+B站UID！\n\n",
-                "verify": 1,
-                "report": 0
-            },
-            {
-                "id": 14,
-                "name": "火柴人文字联合2水水水",
-                "host": "紫刃-游风",
-                "type": 1,
-                "startdate": "2025-07-19T00:00:00",
-                "enddate": "2025-10-26T00:00:00",
-                "desc": "本次联合主题为：联合主角是一位脸上带有三点水类汉字的黑色火柴人...",
-                "QQgroup": "722466754",
-                "rules": "软件和技术没有限制，分辨率统一比例为:高清1920x1080或1280x720",
-                "verify": 1,
-                "report": 0
-            },
-            {
-                "id": 11,
-                "name": "自由接力练习",
-                "host": "援受",
-                "type": 2,
-                "startdate": "2025-07-01T00:00:00",
-                "desc": "画！",
-                "QQgroup": "973380634",
-                "rules": "",
-                "verify": 1,
-                "report": 0
-            },
-            {
-                "id": 6,
-                "name": "【永无止境的火柴人电影战斗】",
-                "host": "太初寰宇 - 太虚绘院",
-                "type": 3,
-                "startdate": "2025-07-01T00:00:00",
-                "enddate": "2025-10-01T00:00:00",
-                "desc": "选择一个带有动作的电影，比如说枪战，或者打戏，超能力都行...",
-                "QQgroup": "973380634",
-                "rules": "24fps,软件，1080p，至少5s以上的内容。",
-                "verify": 1,
-                "report": 0
-            },
-            {
-                "id": 1,
-                "name": "踢毽子联合",
-                "host": "太初寰宇-太虚绘院",
-                "type": 1,
-                "startdate": "2025-10-12T00:00:00",
-                "enddate": "2025-10-28T00:00:00",
-                "desc": "在画面中踢毽子，毽子要求从画面外飞进画面内开始...",
-                "QQgroup": "973380634",
-                "rules": "24fps。\n软件作画！\n提交视频！",
-                "verify": 1,
-                "report": 0
-            }
-        ],
-        "total": 7
-    };
-    items.value = mockData.data;
-    total.value = mockData.total;
-    // ----------------------------------------------------
-    // MOCK DATA END
-    // ----------------------------------------------------
-
-    /* // 原有的 API 逻辑（当你后端准备好后取消注释即可）
     const sort = parseSortBy(sortBy.value)
+    
     const params = {
       q: q.value || undefined,
       type: typeFilter.value !== '' ? typeFilter.value : undefined,
@@ -474,21 +431,24 @@ async function fetchList() {
       sortField: sort.field || undefined,
       sortOrder: sort.order || undefined
     }
+
     const resp = await apiClient.get(`${basePath}/list`, { params })
-    if (resp.data?.success || Array.isArray(resp.data)) {
-        const data = resp.data.data || resp.data
-        items.value = data
-        total.value = resp.data.total || data.length
+    
+    if (resp.data?.data) {
+        items.value = resp.data.data
+        total.value = resp.data.total
+    } else {
+        items.value = []
+        total.value = 0
     }
-    */
   } catch (err) {
-    console.error(err)
+    console.error("Fetch Error:", err)
+    items.value = []
   } finally {
     loading.value = false
   }
 }
 
-// --- Interaction Handlers ---
 const onSearchInput = () => { page.value = 1; fetchList() }
 const onFilterChange = () => { page.value = 1; fetchList() }
 const onSortChange = () => { page.value = 1; fetchList() }
@@ -499,16 +459,13 @@ const nextPage = () => { if (page.value < totalPages.value) { page.value++; fetc
 const viewDetail = (it) => { detail.value = it }
 
 const applyJoin = (it) => {
-  // 修正7: 跳转链接使用 QQgroup
-  if (!it.QQgroup) return alert('未设置群号')
+  if (!it.QQgroup) return alert('NO_COMMS_CHANNEL')
   window.open(`https://jq.qq.com/?_=${encodeURIComponent(it.QQgroup)}`, '_blank')
 }
 
-// --- Create / Edit Logic ---
 const openCreate = async () => {
   if(!(await ensureAuth())) return
   editMode.value = false
-  // 修正8: 初始化字段 QQgroup
   Object.assign(form, { 
     id: null, name: '', host: auth.user?.username || '', type: 1, startdate: '', enddate: '', desc: '', rules: '', QQgroup: '', verify: 0 
   })
@@ -518,17 +475,12 @@ const openCreate = async () => {
 const editItem = async (it) => {
     if(!(await ensureAuth())) return
     try {
-        // 如果后端返回的也是 QQgroup 大写，这里 form 赋值就没问题
-        // 这里如果是 Mock 模式，我们可以直接用 it 填充
         Object.assign(form, it)
-        
-        // Fix date format
         if(form.startdate) form.startdate = form.startdate.substring(0, 16)
         if(form.enddate) form.enddate = form.enddate.substring(0, 16)
-        
         editMode.value = true
         showCreate.value = true
-    } catch(e) { alert('加载详情失败') }
+    } catch(e) { alert('ERROR_LOADING_DATA') }
 }
 
 const submitForm = async () => {
@@ -538,19 +490,15 @@ const submitForm = async () => {
     payload.startdate = new Date(form.startdate).toISOString()
     if(form.enddate) payload.enddate = new Date(form.enddate).toISOString()
     
-    // 注意：这里发送给后端时，确保后端接收的是 QQgroup 还是 qQgroup
-    // 如果后端是用 C# 且属性名是 QQgroup，那么 JSON 序列化通常也是 QQgroup
     if (editMode.value) await apiClient.put(`${basePath}/${form.id}`, payload)
     else await apiClient.post(`${basePath}/create`, payload)
     
-    alert(editMode.value ? '已更新' : '已提交申请')
     showCreate.value = false
     fetchList()
-  } catch (e) { alert('提交失败') } 
+  } catch (e) { alert('TRANSMISSION_FAILED') } 
   finally { submitting.value = false }
 }
 
-// --- Application Logic ---
 const applyForEvent = async (it) => {
   if(!(await ensureAuth())) return
   selectedEvent.value = it
@@ -566,20 +514,19 @@ const submitApplication = async () => {
       ...applicationForm,
       applyTime: new Date().toISOString()
     })
-    alert('申请已发送')
+    alert('APPLICATION_SENT')
     closeApplyModal()
-  } catch(e) { alert('发送失败') }
+  } catch(e) { alert('SEND_FAILED') }
   finally { submittingApplication.value = false }
 }
 
 const closeCreate = () => showCreate.value = false
 const closeApplyModal = () => showApplyModal.value = false
 
-// --- Admin Logic ---
-const deleteItem = async (id) => { if(confirm('确认删除?')) { await apiClient.delete(`${basePath}/${id}`); fetchList() } }
-const approveItem = async (it) => { if(confirm('确认通过?')) { await apiClient.post(`${basePath}/moderation/approve`, { Id: it.id }); fetchList() } }
+const deleteItem = async (id) => { if(confirm('CONFIRM_DELETION?')) { await apiClient.delete(`${basePath}/${id}`); fetchList() } }
+const approveItem = async (it) => { if(confirm('CONFIRM_APPROVAL?')) { await apiClient.post(`${basePath}/moderation/approve`, { Id: it.id }); fetchList() } }
 const rejectItem = async (it) => { 
-    const reason = prompt('驳回理由:')
+    const reason = prompt('REJECTION_REASON:')
     if(reason) { await apiClient.post(`${basePath}/moderation/reject`, { Id: it.id, Note: reason }); fetchList() } 
 }
 
@@ -590,281 +537,266 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* ArtCenter Design System Variables */
-.joint-board-container {
-  --accent-purple: #8b5cf6;
-  --accent-light: #ddd6fe;
-  --text-main: #1e293b;
-  --text-sub: #64748b;
-  --bg-card: #ffffff;
-  --border: #e2e8f0;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
+
+/* --- 核心变量 --- */
+.joint-industrial {
+  --red: #D92323; 
+  --black: #111111; 
+  --white: #F4F1EA;
+  --gray: #E0DDD5; 
+  --mono: 'JetBrains Mono', monospace; 
+  --heading: 'Anton', sans-serif;
   
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: #f8fafc;
-  padding: 20px;
-  box-sizing: border-box;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-/* --- Header --- */
-.board-header {
-  margin-bottom: 25px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.header-title h2 {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--text-main);
-  margin: 0;
-  letter-spacing: 1px;
-}
-
-.pulse-dot {
-  width: 8px; height: 8px;
-  background: var(--accent-purple);
-  border-radius: 50%;
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
-}
-
-.header-tools {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-/* Search */
-.search-group {
+  width: 100%; height: 100%;
+  font-family: var(--mono);
+  color: var(--black);
   position: relative;
-  flex: 1;
-  max-width: 300px;
-}
-.search-group i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-sub); }
-.search-group input {
-  width: 100%;
-  padding: 10px 10px 10px 35px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  outline: none;
-  font-size: 13px;
-  transition: 0.2s;
-}
-.search-group input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
-
-/* Tabs */
-.status-tabs {
-  background: #fff;
-  padding: 4px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  display: flex;
-}
-.status-tabs button {
-  border: none;
-  background: transparent;
-  padding: 6px 15px;
-  font-size: 12px;
-  font-weight: bold;
-  color: var(--text-sub);
-  cursor: pointer;
-  border-radius: 6px;
-  transition: 0.2s;
-}
-.status-tabs button.active {
-  background: var(--accent-purple);
-  color: #fff;
-}
-
-/* Create Btn */
-.create-btn {
-  background: var(--text-main);
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: 0.2s;
-  box-shadow: var(--shadow-md);
-}
-.create-btn:hover { background: #000; transform: translateY(-2px); }
-
-/* Filters */
-.filter-bar {
-  display: flex;
-  gap: 20px;
-  padding: 10px 15px;
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  font-size: 12px;
-}
-.filter-group { display: flex; align-items: center; gap: 8px; color: var(--text-sub); }
-.filter-group select {
-  border: none;
-  background: transparent;
-  font-weight: bold;
-  color: var(--text-main);
-  cursor: pointer;
-  outline: none;
-}
-
-/* --- Content & Grid --- */
-.board-content {
-  flex: 1;
-  overflow-y: auto;
-  padding-right: 5px;
-}
-.event-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  padding-bottom: 20px;
-}
-
-/* --- Card Design (MD + Tech) --- */
-.event-card {
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid var(--border);
   overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+/* 背景 */
+.grid-bg { 
+  position: absolute; inset: 0; 
+  background-image: linear-gradient(rgba(17, 17, 17, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(17, 17, 17, 0.05) 1px, transparent 1px); 
+  background-size: 40px 40px; 
+  z-index: 0; pointer-events: none;
+}
+.moving-grid { animation: gridScroll 60s linear infinite; }
+@keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-40px); } }
+
+/* 容器 */
+.joint-container {
+  position: relative; z-index: 1;
+  flex: 1; display: flex; flex-direction: column;
+  padding: 20px; gap: 20px;
+}
+
+/* --- 1. 顶部样式 --- */
+.command-console {
+  background: var(--white);
+  border: 4px solid var(--black);
+  padding: 15px 20px;
+  display: flex; flex-direction: column; gap: 15px;
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.1);
+}
+.console-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+.console-row.bottom { align-items: flex-end; }
+.title-block { display: flex; align-items: center; gap: 15px; }
+.icon-box {
+  background: var(--black); color: var(--white);
+  font-family: var(--heading); font-size: 1.5rem;
+  padding: 5px 10px; transform: skew(-10deg);
+}
+.text-group h2 { font-family: var(--heading); font-size: 2rem; margin: 0; line-height: 1; }
+.text-group .sub { font-size: 0.7rem; font-weight: bold; color: #666; }
+.search-terminal {
+  flex: 1; max-width: 400px;
+  display: flex; align-items: center;
+  border-bottom: 2px solid var(--black);
   position: relative;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  display: flex;
-  flex-direction: column;
 }
-.event-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-hover);
-  border-color: var(--accent-light);
+.prompt { font-weight: bold; margin-right: 10px; color: var(--red); }
+.terminal-input {
+  border: none; background: transparent; outline: none;
+  font-family: var(--mono); font-size: 1rem; width: 100%;
+  padding: 5px; color: var(--black);
+}
+.scan-line {
+  position: absolute; bottom: -2px; left: 0; height: 2px; width: 0;
+  background: var(--red); transition: width 0.3s;
+}
+.terminal-input:focus + .scan-line { width: 100%; }
+.filter-deck { display: flex; gap: 20px; align-items: center; }
+.toggle-switch {
+  display: flex; border: 2px solid var(--black);
+  background: #ccc;
+}
+.switch-opt {
+  padding: 5px 15px; font-weight: bold; font-size: 0.8rem; cursor: pointer;
+  transition: 0.2s;
+}
+.switch-opt.active { background: var(--black); color: var(--white); }
+.switch-opt:hover:not(.active) { background: #fff; }
+.cyber-select { display: flex; flex-direction: column; }
+.cyber-select .label { font-size: 0.6rem; font-weight: bold; color: #666; margin-bottom: 2px; }
+.cyber-select select {
+  border: 2px solid var(--black); background: var(--white);
+  font-family: var(--mono); font-weight: bold; padding: 2px 5px;
+  outline: none; cursor: pointer;
+}
+.cyber-btn {
+  border: none; padding: 10px 20px; font-family: var(--heading); font-size: 1.1rem;
+  cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;
+  box-shadow: 4px 4px 0 #999;
+}
+.cyber-btn.primary { background: var(--black); color: var(--white); }
+.cyber-btn.primary:hover { background: var(--red); transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--black); }
+.cyber-btn.ghost { background: transparent; border: 2px solid var(--black); color: var(--black); }
+.cyber-btn.ghost:hover { background: #eee; }
+.cyber-btn.full { width: 100%; justify-content: center; }
+
+/* --- 2. 任务列表样式 (自适应 + 进度条) --- */
+.mission-grid-wrapper { flex: 1; overflow-y: auto; padding-right: 5px; }
+
+.plate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+  padding-bottom: 30px;
 }
 
-/* Type Accents */
-.type-accent-1 .card-status-strip { background: #8b5cf6; } /* Joint */
-.type-accent-1 .type-badge { background: #f3e8ff; color: #7e22ce; }
-
-.type-accent-2 .card-status-strip { background: #10b981; } /* Relay */
-.type-accent-2 .type-badge { background: #d1fae5; color: #047857; }
-
-.type-accent-3 .card-status-strip { background: #f59e0b; } /* Match */
-.type-accent-3 .type-badge { background: #fef3c7; color: #b45309; }
-
-.card-status-strip { height: 4px; width: 100%; }
-
-.card-main { padding: 20px; display: flex; flex-direction: column; flex: 1; }
-
-.card-header { margin-bottom: 15px; }
-.header-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 10px; font-weight: bold; }
-.status-text.verify-0 { color: #f59e0b; }
-.status-text.verify-1 { color: #10b981; }
-
-.event-title { margin: 0 0 5px 0; font-size: 16px; color: var(--text-main); line-height: 1.4; }
-.author-info { font-size: 11px; color: var(--text-sub); display: flex; align-items: center; gap: 5px; }
-
-.card-body { flex: 1; margin-bottom: 15px; }
-.desc-text { font-size: 13px; color: #475569; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 15px; }
-
-.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; }
-.meta-item { display: flex; flex-direction: column; }
-.meta-item.full-width { grid-column: span 2; border-top: 1px dashed #cbd5e1; padding-top: 5px; margin-top: 5px; }
-.meta-item .label { font-size: 9px; color: #94a3b8; font-weight: bold; letter-spacing: 0.5px; }
-.meta-item .val { font-size: 12px; font-weight: 600; color: var(--text-main); }
-.meta-item .val.highlight { color: var(--accent-purple); font-family: monospace; }
-
-.card-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.action-btn { flex: 1; border: none; padding: 8px 0; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-.action-btn.outline { background: transparent; border: 1px solid var(--border); color: var(--text-sub); }
-.action-btn.outline:hover { border-color: var(--text-main); color: var(--text-main); }
-.action-btn.primary { background: var(--accent-purple); color: #fff; }
-.action-btn.primary:hover { background: #7c3aed; }
-.action-btn.secondary { background: #f1f5f9; color: var(--text-main); }
-.action-btn.secondary:hover { background: #e2e8f0; }
-
-.admin-tools { display: flex; gap: 5px; margin-left: auto; }
-.icon-btn { border: none; background: transparent; color: var(--text-sub); cursor: pointer; padding: 5px; transition: 0.2s; }
-.icon-btn:hover { color: var(--accent-purple); transform: scale(1.1); }
-.icon-btn.danger:hover { color: #ef4444; }
-
-/* --- Footer --- */
-.board-footer { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; }
-.page-btn { background: #fff; border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: var(--text-sub); transition: 0.2s; }
-.page-btn:hover:not(:disabled) { border-color: var(--accent-purple); color: var(--accent-purple); }
-.page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.page-info { font-size: 11px; font-weight: bold; color: var(--text-sub); letter-spacing: 1px; }
-
-/* --- States --- */
-.state-box { text-align: center; padding: 50px; color: var(--text-sub); font-size: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.state-box i { font-size: 24px; color: #cbd5e1; }
-
-/* --- Modal Styles (Global Reuse Potential) --- */
-.tc-modal-overlay {
-  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 2000;
-  display: flex; justify-content: center; align-items: center;
+/* 卡片 */
+.data-plate {
+  background: #fff;
+  border: 2px solid var(--black);
+  display: flex; flex-direction: column;
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  height: auto; 
+  min-height: 100%;
 }
-.tc-modal-card {
-  background: #fff; width: 500px; max-width: 90vw; max-height: 85vh; border-radius: 12px;
-  display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  animation: modalUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+.data-plate:hover {
+  transform: translateY(-4px);
+  box-shadow: 8px 8px 0 var(--red);
+  border-color: var(--black);
 }
-.tc-modal-card.form-mode { width: 600px; }
 
-.modal-head {
-  padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
-  background: #f8fafc; border-radius: 12px 12px 0 0;
+.side-strip {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+  background: var(--black);
 }
-.modal-head h3 { margin: 0; font-size: 13px; font-weight: 800; color: #64748b; letter-spacing: 1px; }
-.close-icon { border: none; background: none; font-size: 16px; color: #94a3b8; cursor: pointer; }
+.status-1 .side-strip { background: #27ae60; }
+.status-2 .side-strip { background: var(--red); }
+.status-0 .side-strip { background: #f39c12; }
 
-.modal-content { padding: 25px; overflow-y: auto; }
-.detail-title { margin: 0 0 10px 0; font-size: 20px; color: var(--text-main); }
-.detail-meta-bar { display: flex; gap: 10px; font-size: 12px; color: var(--text-sub); margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
-.tag { background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+/* 内容区域 */
+.plate-header, .data-cells, .plate-desc, .progress-section {
+  padding: 10px 15px 10px 20px; /* 左边留出 side-strip 空间 */
+}
 
-.info-section { margin-bottom: 20px; }
-.info-section label { display: block; font-size: 10px; font-weight: bold; color: #94a3b8; margin-bottom: 5px; letter-spacing: 0.5px; }
-.info-section p { font-size: 14px; line-height: 1.6; color: var(--text-main); margin: 0; }
-.rules-box { background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 6px; font-size: 13px; color: #92400e; white-space: pre-wrap; }
+/* Header */
+.plate-header { border-bottom: 1px dashed #ccc; }
+.header-top { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.7rem; color: #888; }
+.verify-tag { font-weight: bold; color: var(--black); text-transform: uppercase; }
+.plate-title { 
+  font-family: var(--heading); font-size: 1.5rem; margin: 0; 
+  line-height: 1.1; 
+  white-space: normal; overflow: visible; 
+}
 
-.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; font-size: 13px; }
-.info-grid label { display: block; font-size: 10px; color: #94a3b8; font-weight: bold; }
+/* Data Cells */
+.data-cells {
+  display: flex; flex-wrap: wrap; gap: 15px; 
+  background: #f9f9f9; border-bottom: 1px solid var(--black);
+}
+.cell { display: flex; flex-direction: column; min-width: 80px; flex: 1; }
+.c-label { font-size: 0.6rem; font-weight: bold; color: #888; margin-bottom: 2px; }
+.c-val { font-size: 0.8rem; font-weight: bold; color: var(--black); word-break: break-all; }
+.type-hl { color: var(--red); }
+.group-hl { font-family: monospace; }
 
-.modal-foot { padding: 15px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc; border-radius: 0 0 12px 12px; }
+/* Desc */
+.plate-desc {
+  font-size: 0.85rem; color: #555; line-height: 1.5;
+  height: auto; overflow: visible; margin-bottom: 0; /* 下方有进度条，取消 margin */
+}
 
-/* Form Elements */
-.tc-input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-size: 14px; transition: 0.2s; background: #fff; color: var(--text-main); }
-.tc-input:focus { border-color: var(--accent-purple); box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
-.form-group { margin-bottom: 15px; }
-.form-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 6px; color: var(--text-sub); }
-.row-2 { display: flex; gap: 15px; } .row-2 > * { flex: 1; }
+/* 🔥 Progress Section */
+.progress-section {
+  padding-top: 0; /* 紧接描述 */
+  padding-bottom: 15px;
+}
+.prog-info {
+  font-size: 0.6rem; font-weight: bold; color: #888; margin-bottom: 4px;
+}
+.prog-track {
+  height: 8px; width: 100%; background: #e0e0e0;
+  border: 1px solid var(--black);
+  position: relative;
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%; background: var(--black);
+  transition: width 0.5s ease;
+  position: relative; z-index: 1;
+}
+/* 状态色覆盖 */
+.status-1 .prog-fill { background: #27ae60; }
+.status-2 .prog-fill { background: var(--red); }
 
-.tc-btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 13px; }
-.tc-btn.primary { background: var(--accent-purple); color: #fff; }
-.tc-btn.ghost { background: transparent; color: var(--text-sub); }
-.tc-btn:disabled { opacity: 0.6; cursor: wait; }
+/* 刻度纹理 */
+.prog-grid-mask {
+  position: absolute; inset: 0; z-index: 2;
+  background-image: repeating-linear-gradient(90deg, transparent, transparent 19px, #fff 19px, #fff 20px);
+  opacity: 0.3; pointer-events: none;
+}
 
-@keyframes modalUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.2s; }
-.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
+/* Footer */
+.plate-footer {
+  margin-top: auto;
+  background: var(--black);
+  color: var(--white);
+  padding: 10px 15px 10px 20px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-time { font-size: 0.7rem; font-family: monospace; color: #aaa; }
+.time-row { line-height: 1.2; }
+.footer-actions { display: flex; gap: 8px; align-items: center; }
+.icon-action {
+  background: #333; border: 1px solid #555; color: #fff;
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: 0.2s; font-size: 1rem;
+}
+.icon-action:hover { background: #fff; color: var(--black); border-color: #fff; }
+.icon-action.primary { background: var(--red); border-color: var(--red); font-weight: bold; font-size: 0.7rem; width: auto; padding: 0 10px; }
+.icon-action.primary:hover { background: #fff; color: var(--red); }
+.more-actions { display: flex; gap: 4px; margin-left: 5px; padding-left: 5px; border-left: 1px solid #555; }
+.icon-mini { background: transparent; border: none; color: #888; cursor: pointer; font-size: 0.8rem; padding: 2px; }
+.icon-mini:hover { color: #fff; }
+.icon-mini.del:hover { color: var(--red); }
 
-.custom-scroll::-webkit-scrollbar { width: 4px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+/* Pagination & Msg */
+.pagination-bar { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 20px; }
+.nav-arrow { background: none; border: none; font-weight: bold; cursor: pointer; font-family: var(--mono); }
+.nav-arrow:hover:not(:disabled) { color: var(--red); }
+.page-indicator { font-weight: bold; border: 2px solid var(--black); padding: 2px 10px; background: #fff; }
+.system-msg { text-align: center; padding: 50px; color: #999; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.loader-spinner { width: 20px; height: 20px; border: 3px solid #ccc; border-top-color: var(--black); border-radius: 50%; animation: spin 1s linear infinite; }
+
+/* Modals (保持不变) */
+.cyber-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+.cyber-terminal { width: 500px; max-width: 95vw; background: #f4f4f4; border: 4px solid var(--black); box-shadow: 15px 15px 0 rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 85vh; }
+.cyber-terminal.form-mode { width: 600px; }
+.term-header { background: var(--black); color: var(--white); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--red); }
+.term-title { font-family: var(--heading); letter-spacing: 1px; }
+.term-close { background: none; border: none; color: #aaa; cursor: pointer; font-family: var(--mono); font-weight: bold; }
+.term-close:hover { color: var(--red); }
+.term-content { padding: 25px; overflow-y: auto; flex: 1; }
+.detail-h1 { font-family: var(--heading); font-size: 2rem; margin: 0 0 10px 0; line-height: 1; }
+.detail-meta-row { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
+.meta-tag { background: #ddd; font-size: 0.7rem; padding: 2px 6px; font-weight: bold; }
+.term-section { margin-bottom: 20px; }
+.sec-title { font-weight: bold; margin-bottom: 5px; color: var(--black); border-left: 3px solid var(--black); padding-left: 8px; }
+.sec-title.warning { border-color: var(--red); color: var(--red); }
+.sec-body { font-size: 0.9rem; line-height: 1.6; color: #333; }
+.code-block { background: #e0e0e0; padding: 10px; font-size: 0.85rem; border: 1px solid #ccc; color: #8b0000; }
+.kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #fff; padding: 10px; border: 1px solid #ccc; }
+.kv span { font-weight: bold; color: #888; font-size: 0.7rem; display: block; }
+.term-actions { padding: 15px 25px; border-top: 2px solid #ccc; background: #eee; display: flex; justify-content: flex-end; gap: 10px; }
+.cyber-form { display: flex; flex-direction: column; gap: 15px; }
+.form-row label { display: block; font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; }
+.form-row.split { display: flex; gap: 15px; } .form-row.split > * { flex: 1; }
+.cyber-input { width: 100%; border: 2px solid #999; background: #fff; padding: 8px; font-family: var(--mono); font-size: 0.9rem; outline: none; }
+.cyber-input:focus { border-color: var(--black); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
+.target-info { background: var(--black); color: var(--white); padding: 10px; margin-bottom: 20px; font-size: 0.9rem; }
+.target-info .highlight { color: var(--red); font-weight: bold; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.glitch-fade-enter-active, .glitch-fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
+.glitch-fade-enter-from { opacity: 0; transform: scale(0.95); }
+.custom-scroll::-webkit-scrollbar { width: 5px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: var(--black); }
 </style>
