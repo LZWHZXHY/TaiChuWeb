@@ -1,250 +1,298 @@
 <template>
-  <div class="fb-root">
-    <header class="fb-header">
-      <h1 class="fb-h1">意见箱</h1>
-      <p class="fb-sub">欢迎留下你的想法或问题，我们重视每一条反馈。</p>
-    </header>
+  <div class="cyber-feedback-root">
+    <div class="grid-bg moving-grid"></div>
 
-    <main class="fb-layout">
-      <section class="fb-panel fb-form">
-        <h2 class="fb-h2">提交反馈</h2>
-
-        <form @submit.prevent="onSubmit" novalidate @paste="handlePaste">
-          <div class="fb-field">
-            <label for="type" class="fb-label required">分类</label>
-            <select
-              id="type"
-              v-model="form.type"
-              class="fb-select"
-              :class="{ invalid: touched.type && !valid.type }"
-              @blur="touched.type = true"
-            >
-              <option disabled value="0">请选择分类</option>
-              <option v-for="category in categories" :key="category.value" :value="category.value">
-                {{ category.label }}
-              </option>
-            </select>
-            <p v-if="touched.type && !valid.type" class="fb-error">请选择分类</p>
-          </div>
-
-          <div class="fb-field">
-            <label for="title" class="fb-label required">标题</label>
-            <input
-              id="title"
-              type="text"
-              v-model.trim="form.title"
-              :maxlength="rules.title.max"
-              class="fb-input"
-              placeholder="简要概括你的反馈"
-              @blur="touched.title = true"
-              :class="{ invalid: touched.title && !valid.title }"
-            />
-            <div class="fb-hint-row">
-              <span class="fb-hint">建议 {{ rules.title.min }}-{{ rules.title.max }} 字</span>
-              <span class="fb-count">{{ form.title.length }}/{{ rules.title.max }}</span>
-            </div>
-            <p v-if="touched.title && !valid.title" class="fb-error">
-              标题需 {{ rules.title.min }}-{{ rules.title.max }} 字
+    <div class="panel-scroll-container custom-scroll">
+      
+      <header class="main-header">
+        <div class="header-split left">
+          <h1 class="giant-text glitch-hover">
+            <div class="text-row">USER</div>
+            <div class="text-row outline">FEEDBACK</div>
+            <div class="text-row red-fill">意见箱</div>
+          </h1>
+        </div>
+        <div class="header-split right">
+          <div class="info-block">
+            <h2 class="cn-title">反馈传输协议 // UPLOAD_PROTOCOL</h2>
+            <div class="live-indicator"><span class="dot"></span> SYSTEM LISTENING</div>
+            <p class="desc">
+              你的声音将被编码并传输至核心数据库。<br>
+              <span class="highlight">BUG_REPORT</span> / <span class="highlight red">SUGGESTION</span>
             </p>
           </div>
+        </div>
+      </header>
 
-          <div class="fb-field">
-            <label for="content" class="fb-label required">详细描述</label>
-            <textarea
-              id="content"
-              v-model.trim="form.content"
-              :maxlength="rules.content.max"
-              rows="6"
-              class="fb-textarea"
-              placeholder="描述问题现象、复现步骤、期望结果等"
-              @blur="touched.content = true"
-              :class="{ invalid: touched.content && !valid.content }"
-            ></textarea>
-            <div class="fb-hint-row">
-              <span class="fb-hint">至少 {{ rules.content.min }} 字</span>
-              <span class="fb-count">{{ form.content.length }}/{{ rules.content.max }}</span>
-            </div>
-            <p v-if="touched.content && !valid.content" class="fb-error">
-              内容需 {{ rules.content.min }}-{{ rules.content.max }} 字
-            </p>
+      <div class="tech-strip">
+        <div class="strip-content">
+          // AWAITING_INPUT // FEEDBACK_LOOP_OPEN // WE_VALUE_YOUR_DATA // TRANSMIT_NOW // 
+          // AWAITING_INPUT // FEEDBACK_LOOP_OPEN // WE_VALUE_YOUR_DATA // TRANSMIT_NOW //
+        </div>
+      </div>
+
+      <main class="fb-layout">
+        
+        <section class="cyber-card fb-form-panel">
+          <div class="card-label-strip">
+            <span>// INPUT_TERMINAL</span>
           </div>
-
-          <div class="fb-field">
-            <label class="fb-label">图片 / 截图（可选）</label>
-            <div class="fb-upload-area">
-              <label v-if="!imagePreview" class="fb-upload-tile">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  @change="handleImageSelect"
-                  class="fb-file-input"
-                />
-                <span class="fb-upload-plus">+</span>
-                <span class="fb-upload-text">点击上传或粘贴图片</span>
-                <span class="fb-upload-hint">支持 JPG、PNG、GIF、WebP，最大 5MB</span>
-              </label>
+          
+          <div class="card-inner-pad">
+            <form @submit.prevent="onSubmit" novalidate @paste="handlePaste">
               
-              <div v-else class="fb-image-preview">
-                <img :src="imagePreview.previewUrl" :alt="imagePreview.file.name" class="fb-preview-image" />
-                <div class="fb-preview-info">
-                  <span class="fb-file-name">{{ imagePreview.file.name }}</span>
-                  <span class="fb-file-size">{{ (imagePreview.file.size / 1024).toFixed(1) }} KB</span>
+              <div class="fb-field">
+                <label for="type" class="cyber-label required">> SELECT_CATEGORY / 分类</label>
+                <div class="cyber-select-wrapper">
+                  <select
+                    id="type"
+                    v-model="form.type"
+                    class="cyber-select"
+                    :class="{ invalid: touched.type && !valid.type }"
+                    @blur="touched.type = true"
+                  >
+                    <option disabled value="0">-- CHOOSE_OPTION --</option>
+                    <option v-for="category in categories" :key="category.value" :value="category.value">
+                      [ {{ category.label }} ]
+                    </option>
+                  </select>
+                  <div class="select-arrow">▼</div>
                 </div>
-                <button type="button" class="fb-remove-btn" @click="removeImage" title="移除图片">
-                  ×
+                <div v-if="touched.type && !valid.type" class="error-msg">>> ERROR: CATEGORY_REQUIRED</div>
+              </div>
+
+              <div class="fb-field">
+                <label for="title" class="cyber-label required">> HEADLINE / 标题</label>
+                <input
+                  id="title"
+                  type="text"
+                  v-model.trim="form.title"
+                  :maxlength="rules.title.max"
+                  class="cyber-input"
+                  placeholder="INPUT_SUMMARY..."
+                  @blur="touched.title = true"
+                  :class="{ invalid: touched.title && !valid.title }"
+                />
+                <div class="fb-hint-row">
+                  <span class="fb-hint">REQ: {{ rules.title.min }}-{{ rules.title.max }} CHARS</span>
+                  <span class="fb-count">{{ form.title.length }}/{{ rules.title.max }}</span>
+                </div>
+              </div>
+
+              <div class="fb-field">
+                <label for="content" class="cyber-label required">> DETAILS / 详细描述</label>
+                <textarea
+                  id="content"
+                  v-model.trim="form.content"
+                  :maxlength="rules.content.max"
+                  rows="6"
+                  class="cyber-textarea custom-scroll"
+                  placeholder="DESCRIBE_ISSUE_OR_SUGGESTION..."
+                  @blur="touched.content = true"
+                  :class="{ invalid: touched.content && !valid.content }"
+                ></textarea>
+                <div class="fb-hint-row">
+                  <span class="fb-hint">MIN: {{ rules.content.min }} CHARS</span>
+                  <span class="fb-count">{{ form.content.length }}/{{ rules.content.max }}</span>
+                </div>
+              </div>
+
+              <div class="fb-field">
+                <label class="cyber-label">> ATTACHMENT / 附件 (OPTIONAL)</label>
+                <div class="cyber-upload-zone" :class="{ 'has-file': imagePreview }">
+                  
+                  <label v-if="!imagePreview" class="upload-trigger">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      @change="handleImageSelect"
+                      class="hidden-input"
+                    />
+                    <div class="upload-icon">[ + ]</div>
+                    <div class="upload-text">CLICK_OR_PASTE_IMAGE</div>
+                    <div class="upload-sub">SUPPORT: JPG/PNG/GIF | MAX: 5MB</div>
+                  </label>
+                  
+                  <div v-else class="upload-preview">
+                    <div class="preview-frame">
+                      <img :src="imagePreview.previewUrl" :alt="imagePreview.file.name" />
+                    </div>
+                    <div class="preview-info">
+                      <span class="file-name">{{ imagePreview.file.name }}</span>
+                      <span class="file-size">{{ (imagePreview.file.size / 1024).toFixed(1) }} KB</span>
+                    </div>
+                    <button type="button" class="remove-btn" @click="removeImage">REMOVE [X]</button>
+                  </div>
+                </div>
+                <div v-if="imageError" class="error-msg">>> ERROR: {{ imageError }}</div>
+              </div>
+
+              <div class="fb-field">
+                <label for="ContactQQ" class="cyber-label">> CONTACT_QQ / 联系方式 (OPTIONAL)</label>
+                <input
+                  id="ContactQQ"
+                  type="text"
+                  v-model.trim="form.ContactQQ"
+                  class="cyber-input"
+                  placeholder="DIGITAL_ID..."
+                  @blur="touched.ContactQQ = true"
+                  :class="{ invalid: touched.ContactQQ && !valid.ContactQQ }"
+                />
+                <div v-if="touched.ContactQQ && !valid.ContactQQ" class="error-msg">>> ERROR: INVALID_FORMAT</div>
+              </div>
+
+              <div class="fb-actions">
+                <button type="submit" class="cyber-btn primary" :disabled="!formValid || loading">
+                  <span v-if="loading" class="btn-spinner">[/]</span>
+                  <span class="btn-text">{{ loading ? 'TRANSMITTING...' : 'INITIATE_UPLOAD / 提交' }}</span>
+                </button>
+                <button type="button" class="cyber-btn secondary" @click="onReset" :disabled="loading">
+                  RESET / 重置
                 </button>
               </div>
-            </div>
-            <p v-if="imageError" class="fb-error">{{ imageError }}</p>
-            <p v-else class="fb-hint">支持粘贴截图，单张图片最大 5MB</p>
+
+              <div v-if="message.text" :class="['status-readout', message.type]">
+                <span class="blink">></span> {{ message.text }}
+              </div>
+            </form>
           </div>
+        </section>
 
-          <div class="fb-field">
-            <label for="ContactQQ" class="fb-label">联系QQ（可选）</label>
-            <input
-              id="ContactQQ"
-              type="text"
-              v-model.trim="form.ContactQQ"
-              class="fb-input"
-              placeholder="请输入QQ号码"
-              @blur="touched.ContactQQ = true"
-              :class="{ invalid: touched.ContactQQ && !valid.ContactQQ }"
-            />
-            <p v-if="touched.ContactQQ && !valid.ContactQQ" class="fb-error">
-              QQ号码格式不正确（5-15位数字）
-            </p>
+        <section class="cyber-card fb-list-panel">
+          <div class="card-label-strip">
+            <span>// ARCHIVE_LOGS</span>
           </div>
-
-          <div class="fb-actions">
-            <button type="submit" class="fb-btn primary" :disabled="!formValid || loading">
-              <span v-if="loading" class="fb-spinner" aria-hidden="true"></span>
-              提交反馈
-            </button>
-            <button type="button" class="fb-btn" @click="onReset" :disabled="loading">清空</button>
-          </div>
-
-          <p v-if="message.text" :class="['fb-msg', message.type]">{{ message.text }}</p>
-        </form>
-      </section>
-
-      <section class="fb-panel fb-list">
-        <div class="fb-list-header">
-          <h2 class="fb-h2">已提交的意见</h2>
-          <div class="fb-list-controls">
-            <div class="fb-tabs">
-              <button 
-                v-for="tab in tabs" 
-                :key="tab.value"
-                class="fb-tab"
-                :class="{ active: activeTab === tab.value }"
-                @click="changeTab(tab.value)"
-              >
-                {{ tab.label }}
+          
+          <div class="list-header-row">
+            <h2 class="list-title">已提交反馈 / SUBMISSIONS</h2>
+            <div class="list-controls">
+              <div class="cyber-tabs">
+                <button 
+                  v-for="tab in tabs" 
+                  :key="tab.value"
+                  class="cyber-tab"
+                  :class="{ active: activeTab === tab.value }"
+                  @click="changeTab(tab.value)"
+                >
+                  {{ tab.label }}
+                </button>
+              </div>
+              <button class="cyber-mini-btn" @click="loadFeedbacks" :disabled="loadingList">
+                <span v-if="loadingList" class="btn-spinner-sm">~</span> REFRESH
               </button>
             </div>
-            <button class="fb-btn small" @click="loadFeedbacks" :disabled="loadingList">
-              <span v-if="loadingList" class="fb-spinner" aria-hidden="true"></span>
-              刷新
-            </button>
           </div>
-        </div>
 
-        <div v-if="loadingList" class="fb-loading">
-          <div class="fb-spinner large"></div>
-          <span>加载中...</span>
-        </div>
+          <div class="list-content-area custom-scroll">
+            <div v-if="loadingList" class="loading-state">
+              <div class="cyber-spinner"></div>
+              <span>SYNCING_DATABASE...</span>
+            </div>
 
-        <div v-else-if="feedbacks.length === 0" class="fb-empty">
-          <div class="fb-empty-icon">📝</div>
-          <p class="fb-empty-text">暂无提交的意见</p>
-          <p class="fb-empty-hint">提交第一条反馈后，将在这里显示</p>
-        </div>
+            <div v-else-if="feedbacks.length === 0" class="empty-state">
+              <div class="empty-icon">NULL</div>
+              <p>NO DATA FOUND IN SECTOR.</p>
+            </div>
 
-        <div v-else class="fb-feedbacks">
-          <div 
-            v-for="feedback in feedbacks" 
-            :key="feedback.id" 
-            class="fb-feedback-item"
-            :class="getStatusClass(feedback.status)"
-          >
-            <div class="fb-feedback-header">
-              <h3 class="fb-feedback-title">{{ feedback.title }}</h3>
-              <span class="fb-feedback-badge" :class="getTypeClass(feedback.type)">
-                {{ getTypeLabel(feedback.type) }}
-              </span>
+            <div v-else class="feedback-feed">
+              <div 
+                v-for="feedback in feedbacks" 
+                :key="feedback.id" 
+                class="feedback-entry"
+                :class="`status-${feedback.status}`"
+              >
+                <div class="entry-scanline"></div>
+
+                <div class="entry-header">
+                  <div class="title-row">
+                    <span class="entry-id">#{{ feedback.id }}</span>
+                    <h3 class="entry-title">{{ feedback.title }}</h3>
+                  </div>
+                  <div class="badge-row">
+                    <span class="cyber-badge type">{{ getTypeLabel(feedback.type) }}</span>
+                    <span class="cyber-badge status" :class="`st-${feedback.status}`">
+                      {{ getStatusLabel(feedback.status) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="entry-meta">
+                  <span class="meta-item">TIME: {{ formatDate(feedback.createTime) }}</span>
+                  <button 
+                    v-if="feedback.contactQQ" 
+                    class="meta-action"
+                    @click="copyQQ(feedback.contactQQ)"
+                  >
+                    QQ: {{ feedback.contactQQ }} [COPY]
+                  </button>
+                </div>
+
+                <div class="entry-content">
+                  {{ truncateContent(feedback.content) }}
+                </div>
+
+                <div v-if="feedback.imageFullUrl" class="entry-attachment">
+                  <div class="att-label">> IMAGE_DETECTED:</div>
+                  <img 
+                    :src="feedback.imageFullUrl" 
+                    :alt="feedback.title" 
+                    class="att-thumb"
+                    @click="previewImage(feedback.imageFullUrl)"
+                  />
+                </div>
+
+                <div v-if="feedback.adminReply" class="admin-reply-terminal">
+                  <div class="reply-header">
+                    <span class="icon">★</span> SYS_ADMIN_RESPONSE:
+                  </div>
+                  <div class="reply-body">
+                    {{ feedback.adminReply }}
+                  </div>
+                </div>
+
+              </div>
             </div>
             
-            <div class="fb-feedback-meta">
-              <span class="fb-feedback-time">{{ formatDate(feedback.createTime) }}</span>
-              <span class="fb-feedback-status" :class="getStatusClass(feedback.status)">
-                {{ getStatusLabel(feedback.status) }}
-              </span>
-            </div>
-
-            <p class="fb-feedback-content">{{ truncateContent(feedback.content) }}</p>
-
-            <div v-if="feedback.imageFullUrl" class="fb-feedback-image">
-              <img 
-                :src="feedback.imageFullUrl" 
-                :alt="feedback.title" 
-                class="fb-feedback-thumb"
-                @click="previewImage(feedback.imageFullUrl)"
-              />
-              <span class="fb-image-hint">点击查看图片</span>
-            </div>
-
-            <div v-if="feedback.adminReply" class="fb-admin-reply-box">
-              <div class="fb-reply-title">
-                <span class="fb-reply-icon">💬</span> 
-                <span>管理员回复：</span>
-              </div>
-              <div class="fb-reply-text">{{ feedback.adminReply }}</div>
-            </div>
-
-            <div class="fb-feedback-footer">
-              <span class="fb-feedback-id">ID: {{ feedback.id }}</span>
+            <div v-if="totalPages > 1" class="cyber-pagination">
               <button 
-                v-if="feedback.contactQQ" 
-                class="fb-qq-btn"
-                @click="copyQQ(feedback.contactQQ)"
-                title="复制QQ号"
+                class="page-btn" 
+                :disabled="currentPage === 1" 
+                @click="changePage(currentPage - 1)"
               >
-                QQ: {{ feedback.contactQQ }}
+                &lt; PREV
+              </button>
+              <span class="page-info">PAGE {{ currentPage }} / {{ totalPages }}</span>
+              <button 
+                class="page-btn" 
+                :disabled="currentPage === totalPages" 
+                @click="changePage(currentPage + 1)"
+              >
+                NEXT &gt;
               </button>
             </div>
+
+          </div>
+        </section>
+      </main>
+
+      <div v-if="previewImageUrl" class="cyber-modal-overlay" @click="previewImageUrl = null">
+        <div class="cyber-modal-window" @click.stop>
+          <div class="modal-header">
+            <span>> IMAGE_VIEWER.exe</span>
+            <button class="modal-close" @click="previewImageUrl = null">[ X ]</button>
+          </div>
+          <div class="modal-body">
+             <img :src="previewImageUrl" alt="预览图片" />
           </div>
         </div>
-
-        <div v-if="totalPages > 1" class="fb-pagination">
-          <button 
-            class="fb-btn small" 
-            :disabled="currentPage === 1" 
-            @click="changePage(currentPage - 1)"
-          >
-            上一页
-          </button>
-          <span class="fb-page-info">第 {{ currentPage }} 页 / 共 {{ totalPages }} 页</span>
-          <button 
-            class="fb-btn small" 
-            :disabled="currentPage === totalPages" 
-            @click="changePage(currentPage + 1)"
-          >
-            下一页
-          </button>
-        </div>
-      </section>
-    </main>
-
-    <div v-if="previewImageUrl" class="fb-image-modal" @click="previewImageUrl = null">
-      <div class="fb-modal-content" @click.stop>
-        <img :src="previewImageUrl" alt="预览图片" class="fb-modal-image" />
-        <button class="fb-modal-close" @click="previewImageUrl = null" title="关闭">×</button>
       </div>
+
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+// --- 逻辑部分保持完全一致，仅 TypeScript 接口和逻辑复用 ---
 import { reactive, ref, computed, onMounted } from 'vue'
 import apiClient from '@/utils/api'
 
@@ -271,7 +319,7 @@ interface FeedbackItem {
   contactQQ?: number
   imagesUrl?: string
   imageFullUrl?: string
-  adminReply?: string // 新增：管理员回复字段
+  adminReply?: string
 }
 
 const rules = {
@@ -281,24 +329,24 @@ const rules = {
 }
 
 const categories = [
-  { value: 1, label: '网站BUG反馈' },
-  { value: 2, label: '社区意见' },
-  { value: 3, label: '内容举报' },
-  { value: 4, label: '其他' }
+  { value: 1, label: 'BUG / 漏洞' },
+  { value: 2, label: 'OPINION / 建议' },
+  { value: 3, label: 'REPORT / 举报' },
+  { value: 4, label: 'OTHER / 其他' }
 ]
 
 const tabs = [
-  { value: -1, label: '全部' },
-  { value: 0, label: '待处理' },
-  { value: 1, label: '处理中' },
-  { value: 2, label: '已解决' }
+  { value: -1, label: 'ALL' },
+  { value: 0, label: 'PENDING' },
+  { value: 1, label: 'PROCESS' },
+  { value: 2, label: 'SOLVED' }
 ]
 
 const statusLabels = {
-  0: '待处理',
-  1: '处理中', 
-  2: '已解决',
-  3: '已关闭'
+  0: 'PENDING',
+  1: 'PROCESSING', 
+  2: 'SOLVED',
+  3: 'CLOSED'
 }
 
 const form = reactive<FeedbackForm>({
@@ -350,19 +398,12 @@ const formValid = computed(() => valid.type && valid.title && valid.content && v
 // 工具函数
 function getTypeLabel(type: number): string {
   const category = categories.find(c => c.value === type)
-  return category ? category.label : '未知类型'
+  // 简化显示，去掉英文前缀用于列表
+  return category ? category.label.split(' / ')[0] : 'UNKNOWN'
 }
 
 function getStatusLabel(status: number): string {
-  return statusLabels[status as keyof typeof statusLabels] || '未知状态'
-}
-
-function getTypeClass(type: number): string {
-  return `type-${type}`
-}
-
-function getStatusClass(status: number): string {
-  return `status-${status}`
+  return statusLabels[status as keyof typeof statusLabels] || 'UNKNOWN'
 }
 
 function formatDate(dateString: string): string {
@@ -376,7 +417,7 @@ function formatDate(dateString: string): string {
   })
 }
 
-function truncateContent(content: string, maxLength: number = 100): string {
+function truncateContent(content: string, maxLength: number = 80): string {
   if (content.length <= maxLength) return content
   return content.substring(0, maxLength) + '...'
 }
@@ -399,7 +440,7 @@ function previewImage(url: string) {
 async function copyQQ(qq: number) {
   try {
     await navigator.clipboard.writeText(qq.toString())
-    setMessage('QQ号已复制到剪贴板', 'success', 1500)
+    setMessage('QQ COPIED TO CLIPBOARD', 'success', 1500)
   } catch (err) {
     console.error('复制失败:', err)
   }
@@ -424,12 +465,12 @@ async function loadFeedbacks() {
       feedbacks.value = response.data.data.items || []
       totalPages.value = response.data.data.totalPages || 1
     } else {
-      setMessage('加载反馈列表失败', 'error')
+      setMessage('LOAD FAILED', 'error')
       feedbacks.value = []
     }
   } catch (error: any) {
     console.error('加载反馈列表失败:', error)
-    setMessage('加载失败，请重试', 'error')
+    setMessage('NETWORK ERROR', 'error')
     feedbacks.value = []
   } finally {
     loadingList.value = false
@@ -468,13 +509,13 @@ function handleImageSelect(event: Event) {
   
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
   if (!allowedTypes.includes(file.type)) {
-    imageError.value = '只支持 JPG、PNG、GIF、WebP 格式的图片'
+    imageError.value = 'INVALID FORMAT. USE JPG/PNG/WEBP.'
     input.value = ''
     return
   }
   
   if (file.size > rules.images.maxSize) {
-    imageError.value = `图片大小不能超过 ${(rules.images.maxSize / 1024 / 1024).toFixed(0)}MB`
+    imageError.value = `FILE TOO LARGE. MAX ${(rules.images.maxSize / 1024 / 1024).toFixed(0)}MB.`
     input.value = ''
     return
   }
@@ -529,7 +570,7 @@ async function onSubmit() {
   Object.keys(touched).forEach(key => (touched as any)[key] = true)
   
   if (!formValid.value) {
-    setMessage('请检查表单填写', 'error')
+    setMessage('FORM INVALID. CHECK INPUTS.', 'error')
     return
   }
   
@@ -556,15 +597,15 @@ async function onSubmit() {
     })
     
     if (response.data && response.data.success) {
-      setMessage(response.data.message || '提交成功', 'success')
+      setMessage(response.data.message || 'UPLOAD COMPLETE', 'success')
       onReset()
       await loadFeedbacks()
     } else {
-      setMessage(response.data?.message || '提交失败', 'error')
+      setMessage(response.data?.message || 'UPLOAD FAILED', 'error')
     }
   } catch (error: any) {
     console.error('提交反馈失败:', error)
-    const errorMessage = error.response?.data?.message || '提交失败，请重试'
+    const errorMessage = error.response?.data?.message || 'SYSTEM ERROR. RETRY.'
     setMessage(errorMessage, 'error')
   } finally {
     loading.value = false
@@ -577,845 +618,270 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.fb-root {
-  --font-stack: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  --bg: #f9fafb;
-  --panel-bg: #ffffff;
-  --border: #e5e7eb;
-  --border-strong: #d1d5db;
-  --fg: #111827;
-  --fg-soft: #374151;
-  --mute: #6b7280;
-  --accent: #2563eb;
-  --accent-bg: #eff6ff;
-  --danger: #dc2626;
-  --success: #059669;
-  --warning: #d97706;
-  --info: #0369a1;
-  --radius-sm: 4px;
-  --radius: 8px;
-  --radius-lg: 12px;
-  --focus: 2px solid var(--accent);
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  font-family: var(--font-stack);
-  color: var(--fg);
-  background: transparent;
-  padding: 25px;
-  min-height: 100vh;
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+/* --- 核心变量 --- */
+.cyber-feedback-root {
+  --red: #D92323; 
+  --black: #111111; 
+  --off-white: #F4F1EA; 
+  --gray: #E0DDD5; 
+  --mono: 'JetBrains Mono', monospace; 
+  --heading: 'Anton', sans-serif;
+  --body: 'Inter', sans-serif;
+  --shadow-hard: 4px 4px 0 rgba(0,0,0,0.15);
+  --border-thick: 2px solid var(--black);
+  
+  width: 100%; height: 100vh; 
+  background-color: var(--off-white); 
+  display: flex; flex-direction: column; overflow: hidden; 
+  font-family: var(--body);
+  color: var(--black);
 }
 
-/* 头部样式 */
-.fb-header { 
-  margin-bottom: 28px; 
-  text-align: center;
+/* --- 背景动画 --- */
+.grid-bg { 
+  position: absolute; inset: 0; 
+  background-image: linear-gradient(var(--gray) 1px, transparent 1px), linear-gradient(90deg, var(--gray) 1px, transparent 1px); 
+  background-size: 50px 50px; opacity: 0.4; pointer-events: none; z-index: 0; 
 }
-.fb-h1 {
-  margin: 0 0 6px;
-  font-size: 26px;
-  letter-spacing: .5px;
-  font-weight: 600;
-  color: var(--fg);
-  line-height: 1.2;
-}
-.fb-sub {
-  margin: 0;
-  font-size: 14px;
-  color: var(--mute);
-  line-height: 1.5;
+.moving-grid { animation: gridScroll 30s linear infinite; }
+@keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-50px); } }
+
+.panel-scroll-container { 
+  flex: 1; overflow-y: auto; position: relative; z-index: 1; display: flex; flex-direction: column; 
 }
 
-/* 布局样式 */
+/* --- 头部设计 --- */
+.main-header { 
+  display: flex; flex-wrap: wrap; 
+  border-bottom: 4px solid var(--black); 
+  background: var(--off-white); position: relative; z-index: 10;
+}
+.header-split { padding: 30px; }
+.header-split.left { 
+  background: var(--black); color: var(--off-white); 
+  display: flex; justify-content: center; align-items: center; 
+  flex: 0 0 320px;
+}
+.giant-text { 
+  font-family: var(--heading); font-size: 3.5rem; line-height: 0.9; 
+  text-transform: uppercase; transform: rotate(-2deg); 
+}
+.text-row.outline { color: var(--black); -webkit-text-stroke: 1px var(--off-white); }
+.text-row.red-fill { color: var(--red); margin-left: 20px; }
+
+.header-split.right { flex: 1; display: flex; align-items: center; }
+.cn-title { font-weight: 900; margin: 0 0 5px 0; font-size: 1.5rem; letter-spacing: -1px; font-family: var(--mono); }
+.live-indicator { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.8rem; color: var(--red); border: 1px solid var(--red); padding: 4px 8px; margin-bottom: 5px; background: rgba(217, 35, 35, 0.05); }
+.dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: pulse 1s infinite; }
+.desc { margin: 10px 0 0; font-family: var(--mono); font-size: 0.8rem; color: #555; }
+.highlight { background: var(--black); color: #fff; padding: 0 4px; }
+.highlight.red { background: var(--red); }
+
+/* --- 跑马灯 --- */
+.tech-strip { 
+  background: var(--black); color: var(--off-white); 
+  padding: 6px 0; border-bottom: 4px solid var(--black); 
+  overflow: hidden; white-space: nowrap; font-family: var(--mono); font-size: 0.8rem; 
+}
+.strip-content { display: inline-block; animation: marquee 20s linear infinite; }
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+/* --- 主布局 --- */
 .fb-layout {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 28px;
-  align-items: start;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* 面板样式 */
-.fb-panel {
-  background: var(--panel-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 24px 24px 28px;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.3s ease;
-}
-.fb-panel:hover {
-  box-shadow: var(--shadow);
-}
-
-/* 表单样式 */
-.fb-form { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 18px; 
-}
-.fb-h2 {
-  margin: 0 0 8px;
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: .3px;
-  color: var(--fg);
-  line-height: 1.3;
-}
-
-/* 表单字段样式 */
-.fb-field { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 6px; 
-}
-.fb-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--fg-soft);
-  display: inline-flex;
-  gap: 4px;
-  line-height: 1.4;
-}
-.fb-label.required::after {
-  content:"*";
-  color: var(--danger);
-  font-weight: 400;
-}
-
-/* 输入框样式 */
-.fb-input, .fb-select, .fb-textarea {
-  width: 100%;
-  font: inherit;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: #fff;
-  color: var(--fg);
-  line-height: 1.4;
-  transition: all 0.3s ease;
-  font-size: 14px;
-}
-.fb-input:focus, .fb-select:focus, .fb-textarea:focus {
-  outline: var(--focus);
-  outline-offset: 0;
-  background: var(--accent-bg);
-  border-color: var(--accent);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
-.invalid { 
-  border-color: var(--danger) !important; 
-  background: #fef2f2 !important;
-}
-.fb-textarea { 
-  resize: vertical; 
-  min-height: 148px; 
-  line-height: 1.6;
-}
-
-/* 提示信息样式 */
-.fb-hint-row {
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center;
-}
-.fb-hint, .fb-count {
-  font-size: 12px;
-  color: var(--mute);
-  line-height: 1.4;
-}
-.fb-error {
-  font-size: 12px;
-  color: var(--danger);
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* 图片上传区域样式 */
-.fb-upload-area {
-  border: 2px dashed var(--border);
-  border-radius: var(--radius-sm);
-  padding: 20px;
-  background: var(--accent-bg);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  position: relative;
-}
-.fb-upload-area:hover {
-  border-color: var(--accent);
-  background: #dbeafe;
-}
-
-.fb-upload-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 20px;
-  text-align: center;
-  color: var(--mute);
-  transition: all 0.3s ease;
-}
-.fb-upload-tile:hover {
-  color: var(--accent);
-  transform: scale(1.02);
-}
-
-.fb-file-input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.fb-upload-plus {
-  font-size: 32px;
-  line-height: 1;
-  font-weight: 300;
-  transition: transform 0.3s ease;
-}
-.fb-upload-tile:hover .fb-upload-plus {
-  transform: scale(1.1);
-}
-.fb-upload-text {
-  font-size: 14px;
-  font-weight: 500;
-}
-.fb-upload-hint {
-  font-size: 12px;
-  opacity: 0.7;
-}
-
-/* 图片预览样式 */
-.fb-image-preview {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  transition: all 0.3s ease;
-}
-.fb-image-preview:hover {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-sm);
-}
-.fb-preview-image {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  transition: transform 0.3s ease;
-}
-.fb-preview-image:hover {
-  transform: scale(1.05);
-}
-.fb-preview-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.fb-file-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--fg);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.fb-file-size {
-  font-size: 12px;
-  color: var(--mute);
-}
-.fb-remove-btn {
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: var(--danger);
-  color: white;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  line-height: 1;
-  transition: all 0.3s ease;
-  position: absolute;
-  top: -8px;
-  right: -8px;
-}
-.fb-remove-btn:hover {
-  background: #b91c1c;
-  transform: scale(1.1);
-}
-
-/* 按钮样式 */
-.fb-actions { 
-  display: flex; 
-  gap: 10px; 
-  margin-top: 4px; 
-}
-.fb-btn {
-  font: inherit;
-  padding: 10px 18px;
-  border: 1px solid var(--border);
-  background: #fff;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 14px;
-  color: var(--fg-soft);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-.fb-btn:hover:not(:disabled) {
-  background: var(--accent-bg);
-  border-color: var(--accent);
-  color: var(--accent);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
-.fb-btn.primary {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-  font-weight: 500;
-}
-.fb-btn.primary:hover:not(:disabled) {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow);
-}
-.fb-btn:disabled { 
-  opacity:.55; 
-  cursor: not-allowed; 
-  transform: none !important;
-}
-.fb-btn.small {
-  padding: 6px 12px;
-  font-size: 13px;
-}
-
-/* 加载动画 */
-.fb-spinner {
-  width: 16px; 
-  height:16px;
-  border: 2px solid rgba(255,255,255,.6);
-  border-right-color: transparent;
-  border-radius: 50%;
-  display:inline-block;
-  margin-right:6px;
-  animation: fb-spin .8s linear infinite;
-}
-.fb-spinner.large {
-  width: 24px;
-  height: 24px;
-  border-width: 3px;
-  margin-right: 0;
-  margin-bottom: 8px;
-}
-@keyframes fb-spin { 
-  to { 
-    transform: rotate(360deg); 
-  } 
-}
-
-/* 消息提示样式 */
-.fb-msg {
-  margin: 10px 0 0;
-  padding: 10px 14px;
-  font-size: 13px;
-  border-radius: var(--radius-sm);
-  border: 1px solid;
-  line-height: 1.4;
-  animation: slideDown 0.3s ease;
-}
-.fb-msg.success {
-  color: var(--success);
-  background: #ecfdf5;
-  border-color: #d1fae5;
-}
-.fb-msg.error {
-  color: var(--danger);
-  background: #fef2f2;
-  border-color: #fecaca;
-}
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 列表区域样式 */
-.fb-list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-.fb-list-controls {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-/* 标签页样式 */
-.fb-tabs {
-  display: flex;
-  background: var(--accent-bg);
-  border-radius: var(--radius-sm);
-  padding: 4px;
-  gap: 4px;
-}
-.fb-tab {
-  padding: 6px 16px;
-  border: none;
-  background: transparent;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--mute);
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-.fb-tab:hover {
-  color: var(--accent);
-}
-.fb-tab.active {
-  background: white;
-  color: var(--accent);
-  box-shadow: var(--shadow-sm);
-  font-weight: 500;
-}
-
-/* 加载状态 */
-.fb-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  color: var(--mute);
-  gap: 10px;
-  text-align: center;
-}
-
-/* 空状态 */
-.fb-empty {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--mute);
-}
-.fb-empty-icon {
-  font-size: 48px;
-  margin-bottom: 10px;
-  opacity: 0.5;
-}
-.fb-empty-text {
-  font-size: 16px;
-  font-weight: 500;
-  margin-bottom: 5px;
-  color: var(--fg-soft);
-}
-.fb-empty-hint {
-  font-size: 14px;
-  opacity: 0.7;
-}
-
-/* 反馈列表样式 */
-.fb-feedbacks {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.fb-feedback-item {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-.fb-feedback-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--border);
-  transition: background-color 0.3s ease;
-}
-.fb-feedback-item:hover {
-  border-color: var(--accent);
-  box-shadow: var(--shadow);
-  transform: translateY(-2px);
-}
-.fb-feedback-item:hover::before {
-  background: var(--accent);
-}
-
-.fb-feedback-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 15px;
-  margin-bottom: 10px;
-}
-.fb-feedback-title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--fg);
-  flex: 1;
-  line-height: 1.4;
-}
-.fb-feedback-badge {
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-.fb-feedback-badge.type-1 { background: #fef2f2; color: #dc2626; }
-.fb-feedback-badge.type-2 { background: #f0f9ff; color: #0369a1; }
-.fb-feedback-badge.type-3 { background: #fefce8; color: #ca8a04; }
-.fb-feedback-badge.type-4 { background: #f3f4f6; color: #374151; }
-
-.fb-feedback-meta {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 12px;
-  font-size: 13px;
-  color: var(--mute);
-  flex-wrap: wrap;
-}
-.fb-feedback-time {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.fb-feedback-time::before {
-  content: '🕒';
-  font-size: 12px;
-}
-.fb-feedback-status {
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 500;
-}
-.fb-feedback-status.status-0 { background: #fef3c7; color: #d97706; }
-.fb-feedback-status.status-1 { background: #dbeafe; color: #1d4ed8; }
-.fb-feedback-status.status-2 { background: #dcfce7; color: #16a34a; }
-.fb-feedback-status.status-3 { background: #f3f4f6; color: #6b7280; }
-
-.fb-feedback-content {
-  margin: 0 0 15px 0;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--fg-soft);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.fb-feedback-image {
-  margin-bottom: 15px;
-}
-.fb-feedback-thumb {
-  width: 80px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-.fb-feedback-thumb:hover {
-  transform: scale(1.05);
-  box-shadow: var(--shadow);
-}
-.fb-image-hint {
-  display: block;
-  font-size: 12px;
-  color: var(--mute);
-  margin-top: 4px;
-}
-
-/* 🔥 管理员回复样式 🔥 */
-.fb-admin-reply-box {
-  margin-top: 15px;
-  padding: 12px 15px;
-  background-color: #f8fafc; /* 浅灰色背景 */
-  border-left: 3px solid var(--accent); /* 左侧强调线 */
-  border-radius: 0 4px 4px 0;
-  font-size: 14px;
-  color: var(--fg);
-}
-
-.fb-reply-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-  color: var(--accent);
-  margin-bottom: 6px;
-  font-size: 13px;
-}
-
-.fb-reply-icon {
-  font-size: 14px;
-}
-
-.fb-reply-text {
-  line-height: 1.6;
-  white-space: pre-wrap; /* 保留换行符 */
-  color: var(--fg-soft);
-}
-
-.fb-feedback-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  color: var(--mute);
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-}
-.fb-feedback-id {
-  opacity: 0.7;
-}
-.fb-qq-btn {
-  background: #ffe6e6;
-  border: 1px solid #ffcccc;
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: 11px;
-  color: #d63384;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-.fb-qq-btn:hover {
-  background: #ffcccc;
-  transform: translateY(-1px);
-}
-
-/* 分页样式 */
-.fb-pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  grid-template-columns: 400px 1fr;
   gap: 20px;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
-}
-.fb-page-info {
-  font-size: 14px;
-  color: var(--mute);
-  font-weight: 500;
+  max-width: 1600px;
+  width: 100%;
+  margin: 20px auto;
+  padding: 0 20px 40px;
+  box-sizing: border-box;
 }
 
-/* 图片预览模态框 */
-.fb-image-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.8);
+/* --- 卡片通用 --- */
+.cyber-card {
+  background: #fff;
+  border: 2px solid var(--black);
+  box-shadow: var(--shadow-hard);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-  animation: fadeIn 0.3s ease;
+  flex-direction: column;
+  overflow: hidden;
 }
-.fb-modal-content {
+.card-label-strip {
+  background: var(--black); color: var(--off-white);
+  padding: 5px 15px; font-family: var(--mono); font-size: 0.8rem;
+  border-bottom: 2px solid var(--black);
+}
+.card-inner-pad { padding: 25px; }
+
+/* --- 表单样式 --- */
+.cyber-label {
+  display: block; font-family: var(--mono); font-weight: 700;
+  font-size: 0.8rem; margin-bottom: 6px; color: #444;
+}
+.cyber-label.required::after { content: " *"; color: var(--red); }
+
+.fb-field { margin-bottom: 20px; }
+
+.cyber-input, .cyber-textarea, .cyber-select {
+  width: 100%;
+  padding: 10px;
+  background: #fff;
+  border: 2px solid var(--black);
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  color: var(--black);
+  box-sizing: border-box;
+  transition: 0.2s;
+  border-radius: 0;
+}
+.cyber-input:focus, .cyber-textarea:focus, .cyber-select:focus {
+  outline: none;
+  border-color: var(--red);
+  background: #fffbfb;
+  box-shadow: 2px 2px 0 var(--red);
+}
+.invalid { border-color: var(--red) !important; background: #ffe6e6 !important; }
+
+.cyber-select-wrapper { position: relative; }
+.cyber-select { appearance: none; cursor: pointer; }
+.select-arrow { position: absolute; right: 10px; top: 12px; pointer-events: none; font-size: 0.7rem; }
+
+.fb-hint-row { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.7rem; color: #888; margin-top: 4px; }
+.error-msg { font-family: var(--mono); color: var(--red); font-size: 0.75rem; margin-top: 4px; font-weight: 700; }
+
+/* --- 上传区域 --- */
+.cyber-upload-zone {
+  border: 2px dashed #999;
+  background: repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 10px, #e9e9e9 10px, #e9e9e9 20px);
+  padding: 15px;
+  text-align: center;
   position: relative;
-  max-width: 90vw;
-  max-height: 90vh;
-  animation: scaleIn 0.3s ease;
+  transition: 0.3s;
 }
-.fb-modal-image {
-  max-width: 100%;
-  max-height: 100%;
-  border-radius: 8px;
-  box-shadow: var(--shadow-md);
+.cyber-upload-zone:hover { border-color: var(--black); background: #e0e0e0; }
+.cyber-upload-zone.has-file { border-style: solid; border-color: var(--black); background: #fff; padding: 10px; }
+
+.upload-trigger { cursor: pointer; display: block; }
+.hidden-input { display: none; }
+.upload-icon { font-size: 1.5rem; font-weight: 700; margin-bottom: 5px; }
+.upload-text { font-family: var(--heading); font-size: 1.1rem; }
+.upload-sub { font-family: var(--mono); font-size: 0.7rem; color: #666; margin-top: 5px; }
+
+.upload-preview { display: flex; align-items: center; gap: 10px; }
+.preview-frame { width: 60px; height: 60px; border: 1px solid var(--black); padding: 2px; }
+.preview-frame img { width: 100%; height: 100%; object-fit: cover; }
+.preview-info { flex: 1; text-align: left; display: flex; flex-direction: column; font-family: var(--mono); font-size: 0.8rem; }
+.file-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+.remove-btn { background: var(--red); color: #fff; border: none; font-family: var(--mono); font-size: 0.7rem; cursor: pointer; padding: 4px 8px; }
+
+/* --- 按钮 --- */
+.fb-actions { display: flex; gap: 10px; margin-top: 10px; }
+.cyber-btn {
+  flex: 1; height: 44px; border: 2px solid var(--black);
+  font-family: var(--heading); font-size: 1rem; letter-spacing: 1px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: 0.2s; box-shadow: 3px 3px 0 var(--black);
 }
-.fb-modal-close {
-  position: absolute;
-  top: -40px;
-  right: 0;
-  background: rgba(255,255,255,0.9);
-  border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  font-size: 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #333;
-  transition: all 0.3s ease;
+.cyber-btn.primary { background: var(--black); color: #fff; }
+.cyber-btn.primary:hover:not(:disabled) { background: var(--red); border-color: var(--black); transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--black); }
+.cyber-btn.secondary { background: #fff; color: var(--black); }
+.cyber-btn.secondary:hover { background: #f0f0f0; transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--black); }
+.cyber-btn:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform: none; }
+
+.status-readout { margin-top: 15px; font-family: var(--mono); font-size: 0.8rem; padding: 8px; border: 1px solid currentColor; }
+.status-readout.success { color: green; background: #e6fffa; }
+.status-readout.error { color: var(--red); background: #ffe6e6; }
+
+/* --- 列表区域 --- */
+.list-header-row { padding: 20px; border-bottom: 2px solid var(--black); display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; }
+.list-title { font-family: var(--heading); font-size: 1.4rem; margin: 0; }
+.list-controls { display: flex; gap: 15px; align-items: center; }
+
+.cyber-tabs { display: flex; gap: -2px; }
+.cyber-tab {
+  background: transparent; border: 1px solid var(--black);
+  font-family: var(--mono); font-size: 0.8rem; padding: 6px 12px;
+  cursor: pointer; font-weight: 700; color: #888;
 }
-.fb-modal-close:hover {
-  background: white;
-  transform: scale(1.1);
+.cyber-tab.active { background: var(--black); color: #fff; z-index: 1; }
+.cyber-mini-btn { background: #fff; border: 1px solid var(--black); font-family: var(--mono); cursor: pointer; padding: 6px 10px; font-size: 0.8rem; }
+.cyber-mini-btn:hover { background: var(--black); color: #fff; }
+
+.list-content-area { flex: 1; overflow-y: auto; background: #f0f0f0; padding: 20px; max-height: 800px; }
+
+.loading-state, .empty-state { text-align: center; padding: 40px; font-family: var(--mono); color: #888; }
+.cyber-spinner { width: 30px; height: 30px; border: 4px solid #ccc; border-top-color: var(--black); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty-icon { font-size: 3rem; font-weight: 900; color: #ddd; margin-bottom: 10px; }
+
+/* --- 反馈条目 --- */
+.feedback-entry {
+  background: #fff; border: 1px solid var(--black); padding: 20px; margin-bottom: 15px;
+  position: relative; overflow: hidden; transition: transform 0.2s;
+}
+.feedback-entry:hover { transform: translateX(5px); box-shadow: -4px 4px 0 rgba(0,0,0,0.1); }
+.entry-scanline { position: absolute; left: 0; top: 0; width: 4px; height: 100%; background: #ccc; }
+.status-0 .entry-scanline { background: #EAB308; } /* Pending - Yellow */
+.status-1 .entry-scanline { background: #3B82F6; } /* Process - Blue */
+.status-2 .entry-scanline { background: #10B981; } /* Solved - Green */
+.status-3 .entry-scanline { background: #6B7280; } /* Closed - Grey */
+
+.entry-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.title-row { display: flex; align-items: baseline; gap: 10px; }
+.entry-id { font-family: var(--mono); color: #888; font-size: 0.9rem; }
+.entry-title { font-family: var(--body); font-weight: 800; font-size: 1.1rem; margin: 0; }
+
+.badge-row { display: flex; gap: 5px; }
+.cyber-badge { font-family: var(--mono); font-size: 0.7rem; padding: 2px 6px; border: 1px solid var(--black); font-weight: 700; }
+.cyber-badge.type { background: #eee; }
+.st-0 { background: #FEF3C7; color: #92400E; }
+.st-1 { background: #DBEAFE; color: #1E40AF; }
+.st-2 { background: #D1FAE5; color: #065F46; }
+.st-3 { background: #F3F4F6; color: #374151; }
+
+.entry-meta { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.75rem; color: #666; margin-bottom: 10px; border-bottom: 1px dashed #ddd; padding-bottom: 8px; }
+.meta-action { background: none; border: none; color: var(--red); cursor: pointer; text-decoration: underline; font-family: inherit; }
+
+.entry-content { font-size: 0.95rem; line-height: 1.6; color: #333; margin-bottom: 15px; }
+
+.entry-attachment { background: #f9f9f9; padding: 10px; border: 1px solid #ddd; display: inline-block; }
+.att-label { font-family: var(--mono); font-size: 0.7rem; color: #888; margin-bottom: 5px; }
+.att-thumb { height: 60px; border: 1px solid var(--black); cursor: pointer; transition: 0.2s; }
+.att-thumb:hover { transform: scale(1.1); }
+
+/* --- 管理员回复 (终端风格) --- */
+.admin-reply-terminal {
+  background: #1e1e1e; color: #0f0; font-family: var(--mono); 
+  padding: 12px; margin-top: 15px; border-left: 4px solid var(--red);
+  font-size: 0.85rem;
+}
+.reply-header { font-weight: 700; margin-bottom: 6px; color: #fff; border-bottom: 1px dashed #444; padding-bottom: 4px; }
+.reply-body { line-height: 1.5; color: #ccc; white-space: pre-wrap; }
+
+/* --- 分页 --- */
+.cyber-pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; font-family: var(--mono); }
+.page-btn { background: #fff; border: 1px solid var(--black); cursor: pointer; padding: 5px 10px; font-weight: 700; }
+.page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* --- 模态框 --- */
+.cyber-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+.cyber-modal-window { background: #fff; border: 4px solid var(--black); padding: 0; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; }
+.modal-header { background: var(--black); color: #fff; padding: 10px 15px; display: flex; justify-content: space-between; font-family: var(--mono); }
+.modal-close { background: transparent; border: none; color: #fff; cursor: pointer; font-family: var(--mono); }
+.modal-close:hover { color: var(--red); }
+.modal-body { padding: 10px; background: #333; overflow: auto; display: flex; justify-content: center; }
+.modal-body img { max-width: 100%; max-height: 80vh; border: 1px solid #fff; }
+
+/* --- 响应式 --- */
+@media (max-width: 1024px) {
+  .fb-layout { grid-template-columns: 1fr; }
+  .header-split.left { flex: 0 0 100%; justify-content: center; text-align: center; }
+  .header-split.right { display: none; }
+  .giant-text { font-size: 2.5rem; }
 }
 
-/* 动画效果 */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* 响应式设计 */
-@media (min-width: 1024px) {
-  .fb-layout {
-    grid-template-columns: 1fr 1fr;
-    gap: 32px;
-  }
-}
-
-@media (max-width: 768px) {
-  .fb-root {
-    padding: 15px;
-  }
-  
-  .fb-layout {
-    gap: 20px;
-  }
-  
-  .fb-panel {
-    padding: 20px;
-  }
-  
-  .fb-list-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-  
-  .fb-list-controls {
-    justify-content: space-between;
-  }
-  
-  .fb-tabs {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .fb-feedback-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  
-  .fb-feedback-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-  }
-  
-  .fb-feedback-footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-  }
-  
-  .fb-pagination {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .fb-actions {
-    flex-direction: column;
-  }
-  
-  .fb-image-preview {
-    flex-direction: column;
-    text-align: center;
-    gap: 8px;
-  }
-  
-  .fb-preview-info {
-    align-items: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .fb-root {
-    padding: 10px;
-  }
-  
-  .fb-h1 {
-    font-size: 22px;
-  }
-  
-  .fb-h2 {
-    font-size: 16px;
-  }
-  
-  .fb-panel {
-    padding: 16px;
-  }
-  
-  .fb-feedback-item {
-    padding: 16px;
-  }
-}
-
-/* 打印样式 */
-@media print {
-  .fb-root {
-    padding: 0;
-  }
-  
-  .fb-panel {
-    border: none;
-    box-shadow: none;
-    page-break-inside: avoid;
-  }
-  
-  .fb-actions,
-  .fb-list-controls,
-  .fb-remove-btn,
-  .fb-modal-close {
-    display: none;
-  }
-}
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 </style>

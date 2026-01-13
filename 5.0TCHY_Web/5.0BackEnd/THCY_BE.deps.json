@@ -22,7 +22,8 @@
           "SixLabors.ImageSharp": "3.1.12",
           "SixLabors.ImageSharp.Drawing": "2.1.3",
           "Swashbuckle.AspNetCore": "9.0.1",
-          "System.IdentityModel.Tokens.Jwt": "8.14.0"
+          "System.IdentityModel.Tokens.Jwt": "8.14.0",
+          "Tencent.QCloud.Cos.Sdk": "5.4.49"
         },
         "runtime": {
           "THCY_BE.dll": {}
@@ -947,7 +948,15 @@
           }
         }
       },
-      "System.Threading.Channels/7.0.0": {}
+      "System.Threading.Channels/7.0.0": {},
+      "Tencent.QCloud.Cos.Sdk/5.4.49": {
+        "runtime": {
+          "lib/netstandard2.0/COSXML.dll": {
+            "assemblyVersion": "5.4.49.0",
+            "fileVersion": "5.4.49.0"
+          }
+        }
+      }
     }
   },
   "libraries": {
@@ -1494,6 +1503,13 @@
       "sha512": "sha512-qmeeYNROMsONF6ndEZcIQ+VxR4Q/TX/7uIVLJqtwIWL7dDWeh0l1UIqgo4wYyjG//5lUNhwkLDSFl+pAWO6oiA==",
       "path": "system.threading.channels/7.0.0",
       "hashPath": "system.threading.channels.7.0.0.nupkg.sha512"
+    },
+    "Tencent.QCloud.Cos.Sdk/5.4.49": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-LOl2B1qJ25zw5x1eimovZYBrTS/h2+CjNnMoRSrKkiODWPwdublEm3Nl12FAEZaOZ78qHAo3WdyPl030cUZM7w==",
+      "path": "tencent.qcloud.cos.sdk/5.4.49",
+      "hashPath": "tencent.qcloud.cos.sdk.5.4.49.nupkg.sha512"
     }
   }
 }
