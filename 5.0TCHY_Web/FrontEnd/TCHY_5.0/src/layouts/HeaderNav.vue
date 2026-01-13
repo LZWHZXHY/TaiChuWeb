@@ -78,7 +78,7 @@
                 <span class="row-icon">-></span>
               </div>
               <div class="menu-row" @click="goToSettings">
-                <span class="row-label">个人设置</span>
+                <span class="row-label">个人主页</span>
                 <span class="row-icon">-></span>
               </div>
               <div class="menu-divider">----------------</div>
