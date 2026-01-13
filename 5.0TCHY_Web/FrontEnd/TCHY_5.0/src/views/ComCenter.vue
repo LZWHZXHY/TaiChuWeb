@@ -78,69 +78,98 @@
             <div class="banner-pattern"></div>
           </section>
 
-          <div class="mid-content-split">
-            <section class="posts-container cyber-card">
-              <div class="flow-header">
-                <span class="header-title">
-                  <span class="icon">■</span> COMMUNITY_POSTS
-                </span>
-                <div class="header-tabs">
-                  <span class="tab active">LATEST / 最新</span>
-                  <span class="tab">HOT / 热门</span>
-                </div>
-              </div>
-              
-              <div class="posts-scroll-area custom-scroll" @scroll="handleScroll">
-                <div v-if="loading && posts.length === 0" class="status-text">[ SIGNAL_CONNECTING... ]</div>
-                
-                <div v-for="p in posts" :key="p.id" class="post-entry" @click="openPostDetail(p.id)">
-                  <div class="entry-scanline"></div>
-                  <div class="entry-main">
-                    <div class="entry-user-row">
-                      <div class="avatar-box">
-                         <img :src="fixAvatarUrl(p.author?.avatar)" @error="handleImgError" />
-                      </div>
-                      <div class="user-info">
-                        <span class="username">{{ p.author?.username || 'UNKNOWN_USER' }}</span>
-                        <span class="post-time">{{ formatTime(p.createTime) }}</span>
-                      </div>
-                    </div>
-                    <h3 class="entry-title">{{ p.post_title }}</h3>
-                    <div class="entry-actions">
-                      <span class="action-item"><i class="far fa-comment-alt"></i> REPLIES: {{ p.comment_count }}</span>
-                      <span class="action-item"><i class="far fa-eye"></i> VISITS: {{ p.view_count }}</span>
-                    </div>
-                  </div>
-                  <div v-if="p.images?.length" class="entry-thumb-wrapper">
-                    <img :src="p.images[0]" @error="handleImgError" class="entry-thumb" />
-                    <span v-if="p.images.length > 1" class="img-count-badge">+{{ p.images.length }}</span>
-                  </div>
-                </div>
-                
-                <div v-if="loading" class="loading-status">
-                  <i class="fas fa-circle-notch fa-spin"></i> SYNCING_STREAM...
-                </div>
-              </div>
-            </section>
-
-            <aside class="action-sidebar">
-              <div class="section-label">// QUICK_ACTIONS</div>
-              <div class="action-grid">
-                <button class="cyber-btn" @click="router.push('/blogCreater')">
-                  <span class="btn-icon"><i class="fas fa-edit"></i></span>
-                  <div class="btn-text"><span class="main">发布博客</span><span class="sub">POST_BLOG</span></div>
-                </button>
-                <button class="cyber-btn red-mode" @click="showPostForm = true">
-                  <span class="btn-icon"><i class="fas fa-paper-plane"></i></span>
-                  <div class="btn-text"><span class="main">发布帖子</span><span class="sub">POST_THREAD</span></div>
-                </button>
-                <button class="cyber-btn" @click="router.push('/trade')">
-                  <span class="btn-icon"><i class="fas fa-exchange-alt"></i></span>
-                  <div class="btn-text"><span class="main">交易站</span><span class="sub">MARKET_PLACE</span></div>
-                </button>
-              </div>
-            </aside>
+          <div class="module-switcher-bar">
+            <button 
+              class="module-tab" 
+              :class="{ active: currentModule === 'post' }" 
+              @click="switchModule('post')"
+            >
+              <span class="tab-icon">■</span>
+              <span class="tab-text">POST_STREAM // 社区流</span>
+            </button>
+            
+            <button 
+              class="module-tab" 
+              :class="{ active: currentModule === 'chat' }" 
+              @click="switchModule('chat')"
+            >
+              <span class="tab-icon">●</span>
+              <span class="tab-text">SECURE_CHAT // 加密通讯</span>
+              <span class="unread-dot"></span> 
+            </button>
           </div>
+
+          <Transition name="fade-slide" mode="out-in">
+            
+            <div v-if="currentModule === 'post'" class="mid-content-split" key="post">
+              <section class="posts-container cyber-card">
+                <div class="flow-header">
+                  <span class="header-title">
+                    <span class="icon">■</span> COMMUNITY_POSTS
+                  </span>
+                  <div class="header-tabs">
+                    <span class="tab active">LATEST / 最新</span>
+                    <span class="tab">HOT / 热门</span>
+                  </div>
+                </div>
+                
+                <div class="posts-scroll-area custom-scroll" @scroll="handleScroll">
+                  <div v-if="loading && posts.length === 0" class="status-text">[ SIGNAL_CONNECTING... ]</div>
+                  
+                  <div v-for="p in posts" :key="p.id" class="post-entry" @click="openPostDetail(p.id)">
+                    <div class="entry-scanline"></div>
+                    <div class="entry-main">
+                      <div class="entry-user-row">
+                        <div class="avatar-box">
+                           <img :src="fixAvatarUrl(p.author?.avatar)" @error="handleImgError" />
+                        </div>
+                        <div class="user-info">
+                          <span class="username">{{ p.author?.username || 'UNKNOWN_USER' }}</span>
+                          <span class="post-time">{{ formatTime(p.createTime) }}</span>
+                        </div>
+                      </div>
+                      <h3 class="entry-title">{{ p.post_title }}</h3>
+                      <div class="entry-actions">
+                        <span class="action-item"><i class="far fa-comment-alt"></i> REPLIES: {{ p.comment_count }}</span>
+                        <span class="action-item"><i class="far fa-eye"></i> VISITS: {{ p.view_count }}</span>
+                      </div>
+                    </div>
+                    <div v-if="p.images?.length" class="entry-thumb-wrapper">
+                      <img :src="p.images[0]" @error="handleImgError" class="entry-thumb" />
+                      <span v-if="p.images.length > 1" class="img-count-badge">+{{ p.images.length }}</span>
+                    </div>
+                  </div>
+                  
+                  <div v-if="loading" class="loading-status">
+                    <i class="fas fa-circle-notch fa-spin"></i> SYNCING_STREAM...
+                  </div>
+                </div>
+              </section>
+
+              <aside class="action-sidebar">
+                <div class="section-label">// QUICK_ACTIONS</div>
+                <div class="action-grid">
+                  <button class="cyber-btn" @click="router.push('/blogCreater')">
+                    <span class="btn-icon"><i class="fas fa-edit"></i></span>
+                    <div class="btn-text"><span class="main">发布博客</span><span class="sub">POST_BLOG</span></div>
+                  </button>
+                  <button class="cyber-btn red-mode" @click="showPostForm = true">
+                    <span class="btn-icon"><i class="fas fa-paper-plane"></i></span>
+                    <div class="btn-text"><span class="main">发布帖子</span><span class="sub">POST_THREAD</span></div>
+                  </button>
+                  <button class="cyber-btn" @click="router.push('/trade')">
+                    <span class="btn-icon"><i class="fas fa-exchange-alt"></i></span>
+                    <div class="btn-text"><span class="main">交易站</span><span class="sub">MARKET_PLACE</span></div>
+                  </button>
+                </div>
+              </aside>
+            </div>
+
+            <div v-else class="chat-module-wrapper" key="chat">
+              <ChatRoom class="embedded-chat" />
+            </div>
+
+          </Transition>
         </main>
 
         <aside class="right-column">
@@ -296,7 +325,6 @@
 </template>
 
 <script setup>
-// --- Script 部分保持原样，仅做视觉层重构，逻辑完全保留 ---
 import { ref, computed, reactive, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import apiClient from '@/utils/api';
@@ -304,6 +332,8 @@ import CreatePost from '@/comminicateCenter/CreatePost.vue';
 import ActivityRanking from '@/comminicateCenter/ActivityRanking.vue';
 import { marked } from 'marked';
 import { useOnlineStore } from '@/stores/online';
+// [NEW] 引入聊天室组件
+import ChatRoom from '@/ChatRoom/ChatRoom.vue';
 
 const router = useRouter(); 
 const currentTime = ref(new Date().toLocaleTimeString());
@@ -314,6 +344,16 @@ const onlineStore = useOnlineStore();
 const isDev = window.location.hostname === 'localhost';
 const BASE_URL = isDev ? 'https://localhost:44359' : 'https://bianyuzhou.com';
 
+// --- 模块切换状态 ---
+const currentModule = ref('post'); // 'post' | 'chat'
+
+const switchModule = (module) => {
+  if (currentModule.value === module) return;
+  // 这里可以加一些切换时的预加载逻辑
+  currentModule.value = module;
+};
+
+// --- 原有逻辑 ---
 const posts = ref([]);
 const blogs = ref([]);
 const stats = reactive({ blogs: 0, posts: 0 });
@@ -561,6 +601,54 @@ onUnmounted(() => {
 .action-sidebar { width: 220px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
 .posts-container { flex: 1; min-width: 0; }
 
+/* --- [NEW] 模块切换与聊天室样式 --- */
+.module-switcher-bar {
+  display: flex; gap: 10px; margin-bottom: 5px;
+  border-bottom: 2px solid var(--black); padding-bottom: 15px;
+}
+.module-tab {
+  flex: 1; height: 50px; background: transparent;
+  border: 1px solid var(--black);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  cursor: pointer; font-family: var(--mono); font-size: 0.9rem;
+  transition: all 0.2s; position: relative; color: #666;
+  background: rgba(255,255,255,0.5);
+}
+.module-tab:hover { background: #fff; color: var(--black); }
+.module-tab.active {
+  background: var(--black); color: var(--off-white);
+  border: 2px solid var(--black); box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+  transform: translate(-2px, -2px); font-weight: 700;
+}
+.unread-dot {
+  width: 8px; height: 8px; background: var(--red);
+  border-radius: 50%; position: absolute; top: 6px; right: 6px;
+  animation: pulse 1s infinite;
+}
+
+.chat-module-wrapper {
+  height: 600px; /* 与帖子列表高度对齐 */
+  width: 100%; border: 2px solid var(--black);
+  background: #fff; box-shadow: var(--shadow-hard);
+  overflow: hidden; position: relative;
+}
+
+/* 强制覆盖 ChatRoom 内部样式以适应嵌入 */
+:deep(.embedded-chat) {
+  height: 100% !important;
+  width: 100% !important;
+  min-height: 0 !important;
+}
+:deep(.embedded-chat .cyber-chat-container) {
+  height: 100%;
+}
+
+/* 切换动画 */
+.fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.3s ease; }
+.fade-slide-enter-from { opacity: 0; transform: translateY(10px); }
+.fade-slide-leave-to { opacity: 0; transform: translateY(-10px); }
+
+
 /* --- 通用卡片样式 (Cyber Card) --- */
 .cyber-card { 
   background: #fff; border: 2px solid var(--black); 
@@ -597,7 +685,7 @@ onUnmounted(() => {
 .activity-banner { 
   height: 160px; background: var(--black); color: var(--off-white); 
   border: 2px solid var(--black); position: relative; display: flex; align-items: center; 
-  padding: 0 40px; overflow: hidden; box-shadow: var(--shadow-hard);
+  padding: 0 40px; overflow: hidden; box-shadow: var(--shadow-hard); margin-bottom: 20px;
 }
 .banner-content { position: relative; z-index: 2; }
 .banner-badge { background: var(--red); color: #fff; font-family: var(--mono); font-size: 0.75rem; padding: 2px 6px; display: inline-block; margin-bottom: 10px; }
