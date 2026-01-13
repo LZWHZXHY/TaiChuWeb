@@ -1,110 +1,106 @@
 <template>
-  <div class="settings-panel">
-    <!-- 面板内容 -->
-    <div class="panel-content">
-      <!-- 侧边导航 -->
-      <nav class="settings-nav">
-        <div class="nav-section">
-          <h3 class="section-title">信息分类</h3>
+  <div class="cyber-archive-system">
+    <div class="grid-bg moving-grid"></div>
+
+    <div class="archive-container">
+      
+      <header class="sys-header">
+        <div class="sys-title">
+          <span class="icon">■</span>
+          <span class="text">COMMUNITY_ARCHIVES // 社区档案库</span>
+        </div>
+        <div class="sys-meta">
+          <span>OP_MODE: READ_ONLY</span>
+          <span class="blink">_</span>
+        </div>
+      </header>
+
+      <div class="archive-body">
+        <nav class="cyber-sidebar custom-scroll">
+          <div class="sidebar-deco">
+            // NAV_PROTOCOL_V2 <br>
+            // SELECT_MODULE
+          </div>
+          
           <ul class="nav-list">
             <li
               v-for="item in navItems"
               :key="item.id"
-              class="nav-item"
-              :class="{ 'nav-item--active': activeTab === item.id }"
+              class="cyber-tab"
+              :class="{ 'active': activeTab === item.id }"
               @click="setActiveTab(item.id)"
             >
-              <span class="nav-text">{{ item.name }}</span>
+              <div class="tab-marker">>></div>
+              <div class="tab-content">
+                <span class="tab-en">{{ item.id.toUpperCase() }}</span>
+                <span class="tab-cn">{{ item.name }}</span>
+              </div>
+              <div class="tab-status-light"></div>
             </li>
           </ul>
-        </div>
-      </nav>
 
-      <!-- 内容区域 -->
-      <main class="settings-main">
-        <!-- 社区介绍 -->
-        <section v-if="activeTab === 'intro'" class="content-section">
-          <div class="content-body">
-            <CommunityIntro />
+          <div class="sidebar-footer">
+            <div class="barcode">||| || ||| |</div>
+            <div>TAICHU_OS</div>
           </div>
-        </section>
+        </nav>
 
-        <!-- 社区规则 -->
-        <section v-if="activeTab === 'rules'" class="content-section">
-          <div class="content-header">
-            <h3>社区规则</h3>
-            <p>请遵守以下规则，共同维护良好社区环境</p>
-          </div>
-          <div class="content-body">
-            <CommunityRules />
-          </div>
-        </section>
-
-        <!-- 日历 -->
-        <section v-if="activeTab === 'calendar'" class="content-section">
-          <div class="content-header">
-            <h3>社区日历</h3>
-            <p>查看社区活动和重要日期安排</p>
+        <main class="cyber-viewport">
+          <div class="viewport-header">
+            <span class="current-path">ROOT / ARCHIVES / {{ activeTab.toUpperCase() }}</span>
+            <span class="deco-line">----------------------------------------</span>
           </div>
 
+          <div class="viewport-content custom-scroll">
+            <transition name="glitch-fade" mode="out-in">
+              
+              <section v-if="activeTab === 'intro'" key="intro" class="content-wrapper">
+                <CommunityIntro />
+              </section>
 
+              <section v-else-if="activeTab === 'rules'" key="rules" class="content-wrapper">
+                <CommunityRules />
+              </section>
 
+              <section v-else-if="activeTab === 'calendar'" key="calendar" class="content-wrapper">
+                <CommunityCalendar />
+              </section>
 
-          <div class="content-body">
-            <CommunityCalendar />
-            
+              <section v-else-if="activeTab === 'update'" key="update" class="content-wrapper">
+                <CommnuityUpdate />
+              </section>
+
+              <section v-else-if="activeTab === 'about'" key="about" class="content-wrapper full-width-mode">
+                 <div class="section-header-block">
+                  <h3 class="giant-text">CORE_KERNEL</h3>
+                  <div class="sub-text">// 开发组 // 核心架构 // 愿景协议</div>
+                </div>
+                <CommunityAbout />
+              </section>
+
+              <section v-else-if="activeTab === 'finance'" key="finance" class="content-wrapper">
+                <CommunityFinancial />
+              </section>
+
+            </transition>
           </div>
-        </section>
-
-        <!-- 关于我们 -->
-        <section v-if="activeTab === 'update'" class="content-section">
-          
-          <div class="content-body">
-            <CommnuityUpdate />
-          </div>
-        </section>
-
-
-
-
-        <!-- 关于我们 -->
-        <section v-if="activeTab === 'about'" class="content-section">
-          <div class="content-header">
-            <h3>关于我们</h3>
-            <p>了解太初寰宇团队的使命和愿景</p>
-          </div>
-          <div class="content-body">
-            <div class="content-placeholder">
-              <p>关于我们内容将在这里显示</p>
-            </div>
-          </div>
-        </section>
-
-        <!-- 财政记录 -->
-        <section v-if="activeTab === 'finance'" class="content-section">
-          <div class="content-header">
-            <h3>财政记录</h3>
-            <p>平台运营收支透明公开</p>
-          </div>
-          <div class="content-body">
-            <CommunityFinancial />
-          </div>
-        </section>
-      </main>
+        </main>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+// 引入所有优化后的子组件
 import CommunityIntro from '@/homeComponents/CommunityIntro.vue'
 import CommunityRules from '@/homeComponents/CommunityRules.vue'
 import CommunityCalendar from '@/homeComponents/CommunityCalendar.vue'
 import CommunityFinancial from '@/homeComponents/CommunityFinancial.vue'
 import CommnuityUpdate from '@/homeComponents/CommnuityUpdate.vue'
+import CommunityAbout from '@/homeComponents/CommunityAbout.vue'
 
-
-// 导航项配置
+// 导航配置
 const navItems = [
   { id: 'intro', name: '社区介绍' },
   { id: 'rules', name: '社区规则' },
@@ -122,450 +118,197 @@ const setActiveTab = (tabId) => {
 </script>
 
 <style scoped>
-/* 日历容器样式 */
-.calendar-container {
-  max-width: 100%;
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
+
+/* --- 核心变量 --- */
+.cyber-archive-system {
+  --red: #D92323; 
+  --black: #111111; 
+  --white: #F4F1EA;
+  --gray: #E0DDD5;
+  --mono: 'JetBrains Mono', monospace; 
+  --heading: 'Anton', sans-serif;
+  
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--gray);
+  color: var(--black);
+  font-family: var(--mono);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
-/* 日历头部 */
-.calendar-header {
+/* 动态背景 */
+.grid-bg { 
+  position: absolute; inset: 0; 
+  background-image: 
+    linear-gradient(rgba(17, 17, 17, 0.1) 1px, transparent 1px), 
+    linear-gradient(90deg, rgba(17, 17, 17, 0.1) 1px, transparent 1px); 
+  background-size: 40px 40px; 
+  z-index: 0; 
+  pointer-events: none;
+}
+.moving-grid { animation: gridScroll 60s linear infinite; }
+@keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-40px); } }
+
+/* 主容器 */
+.archive-container {
+  width: 100%;
+  max-width: 1600px;
+  height: 90vh;
+  background: var(--white);
+  border: 4px solid var(--black);
+  box-shadow: 15px 15px 0 rgba(0,0,0,0.2);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- 系统 Header --- */
+.sys-header {
+  height: 60px;
+  background: var(--black);
+  color: var(--white);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.calendar-nav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.nav-btn {
-  background: #f8f9fa;
-  border: 1px solid #ddd;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.nav-btn:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
-}
-
-.current-month {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #333;
-  min-width: 150px;
-  text-align: center;
-}
-
-.calendar-actions {
-  display: flex;
-  gap: 1rem;
-}
-
-.action-btn {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: background 0.2s ease;
-}
-
-.action-btn:hover {
-  background: #0056b3;
-}
-
-/* 星期标题 */
-.calendar-week-header {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 1rem;
-  text-align: center;
-  font-weight: 600;
-  color: #666;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.week-day {
-  padding: 0.5rem;
-}
-
-/* 日历网格 */
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.5rem;
-  margin-bottom: 2rem;
-}
-
-.calendar-cell {
-  aspect-ratio: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  padding: 0.75rem;
-  position: relative;
-  border: 1px solid #f0f0f0;
-  transition: all 0.2s ease;
-}
-
-.calendar-cell.current-month {
-  background: white;
-  color: #333;
-}
-
-.calendar-cell.other-month {
-  background: #f8f9fa;
-  color: #999;
-}
-
-.calendar-cell.today {
-  background: #e3f2fd;
-  border-color: #2196f3;
-  font-weight: 600;
-}
-
-.calendar-cell.has-event {
-  background: #fff3e0;
-  border-color: #ff9800;
-}
-
-.date-number {
-  font-size: 1.1rem;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-}
-
-.event-indicator {
-  position: absolute;
-  bottom: 0.25rem;
-}
-
-.event-dot {
-  display: block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #ff9800;
-}
-
-/* 事件列表 */
-.events-section {
-  border-top: 2px solid #f0f0f0;
-  padding-top: 1.5rem;
-}
-
-.events-section h4 {
-  margin: 0 0 1rem 0;
-  color: #333;
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
-.events-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.event-item {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #007bff;
-}
-
-.event-date {
-  font-weight: 600;
-  color: #007bff;
-  min-width: 80px;
-}
-
-.event-title {
-  flex: 1;
-  color: #333;
-  font-weight: 500;
-}
-
-.event-type {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.event-type-tech {
-  background: #e3f2fd;
-  color: #1976d2;
-}
-
-.event-type-social {
-  background: #f3e5f5;
-  color: #7b1fa2;
-}
-
-.event-type-update {
-  background: #e8f5e8;
-  color: #388e3c;
-}
-
-.no-events {
-  text-align: center;
-  padding: 2rem;
-  color: #999;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .calendar-container {
-    padding: 1rem;
-  }
-  
-  .calendar-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-  
-  .calendar-nav {
-    justify-content: center;
-  }
-  
-  .calendar-actions {
-    justify-content: center;
-  }
-  
-  .calendar-grid {
-    gap: 0.25rem;
-  }
-  
-  .calendar-cell {
-    padding: 0.5rem;
-  }
-  
-  .date-number {
-    font-size: 0.9rem;
-  }
-  
-  .event-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  
-  .event-date {
-    min-width: auto;
-  }
-}
-
-/* 保持原有的样式不变 */
-.settings-panel {
-  width: 100%;
-  margin: 0;
-  background: white;
-  border-radius: 0;
-  box-shadow: none;
-  overflow: hidden;
-  min-height: 100vh;
-}
-
-.panel-content {
-  display: grid;
-  grid-template-columns: minmax(250px, 300px) 1fr;
-  min-height: calc(100vh - 200px);
-  width: 100%; 
-  margin-left: -50vw;
-  left: 50%;
-  position: relative;
-}
-
-.settings-nav {
-  background: #f8f9fa;
-  border-right: 1px solid #e0e0e0;
-  padding: 2rem;
-  height: 100%;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.section-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 1.5rem;
-  padding: 0;
-}
-
-.nav-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  padding: 1.5rem 2rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #555;
-  margin-bottom: 0.75rem;
-  font-size: 1.2rem;
-  font-weight: 500;
-  border: 1px solid transparent;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.nav-item:hover {
-  background: #e9ecef;
-  color: #333;
-  border-color: #d0d7de;
-}
-
-.nav-item--active {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
-  box-shadow: 0 2px 12px rgba(0, 123, 255, 0.3);
-}
-
-.nav-text {
-  flex: 1;
-  font-weight: 500;
-}
-
-.settings-main {
-  padding: 3rem;
-  background: rgb(255, 255, 255);
-  min-height: 100%;
-  width: 100%;
-  overflow-x: hidden;
-  box-sizing: border-box;
-}
-
-.content-section {
-  animation: fadeIn 0.3s ease;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 100%;
-}
-
-.content-header {
-  margin-bottom: 3rem;
-  padding-bottom: 2rem;
-  border-bottom: 2px solid #f0f0f0;
-  width: 100%;
-  max-width: 100%;
-}
-
-.content-header h3 {
-  font-size: 2.2rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 1rem 0;
-  word-wrap: break-word;
-}
-
-.content-header p {
-  color: #666;
-  margin: 0;
-  font-size: 1.3rem;
-  font-weight: 400;
-  word-wrap: break-word;
-}
-
-.content-body {
-  flex: 1;
-  min-height: 500px;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.content-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  min-height: 500px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  color: #999;
+  padding: 0 20px;
+  font-family: var(--heading);
   font-size: 1.5rem;
-  border: 2px dashed #ddd;
-  font-weight: 500;
+  letter-spacing: 1px;
+}
+.sys-title { display: flex; align-items: center; gap: 10px; }
+.sys-title .icon { color: var(--red); }
+.sys-meta { font-family: var(--mono); font-size: 0.9rem; color: #888; }
+.blink { animation: blink 1s infinite; }
+
+/* --- 核心布局 --- */
+.archive-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* 侧边栏 */
+.cyber-sidebar {
+  width: 280px;
+  background: #f0f0f0;
+  border-right: 4px solid var(--black);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.sidebar-deco {
+  padding: 0 20px 20px;
+  font-size: 0.7rem;
+  color: #888;
+  border-bottom: 2px dashed #ccc;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.nav-list { list-style: none; padding: 0; margin: 0; }
+
+.cyber-tab {
+  padding: 15px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s;
+  border-bottom: 1px solid #ddd;
+  position: relative;
+  background: #f0f0f0;
+}
+.cyber-tab:hover { background: #fff; padding-left: 25px; }
+.cyber-tab.active { background: var(--black); color: var(--white); border-bottom: 1px solid var(--black); }
+
+.tab-marker { font-weight: bold; opacity: 0; color: var(--red); font-size: 0.8rem; }
+.cyber-tab.active .tab-marker { opacity: 1; }
+
+.tab-content { flex: 1; display: flex; flex-direction: column; }
+.tab-en { font-size: 0.7rem; opacity: 0.6; font-weight: bold; }
+.tab-cn { font-size: 1.1rem; font-weight: bold; }
+
+.tab-status-light { width: 8px; height: 8px; background: #ccc; border: 1px solid #999; }
+.cyber-tab.active .tab-status-light { background: var(--red); border-color: var(--red); box-shadow: 0 0 5px var(--red); }
+
+.sidebar-footer { margin-top: auto; padding: 20px; text-align: center; opacity: 0.3; font-size: 0.8rem; }
+.barcode { font-family: 'Libre Barcode 39', cursive; font-size: 2rem; transform: scaleY(0.5); }
+
+/* --- 主视口 --- */
+.cyber-viewport {
+  flex: 1;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden; /* 防止双滚动条 */
+}
+
+.viewport-header {
+  padding: 15px 30px;
+  border-bottom: 2px solid var(--black);
+  font-size: 0.8rem;
+  color: #666;
+  display: flex;
+  justify-content: space-between;
+  background: #fafafa;
+  flex-shrink: 0;
+}
+
+.viewport-content {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+  position: relative;
+  /* 内部细微扫描线背景，增加质感 */
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.02) 50%);
+  background-size: 100% 4px;
+}
+
+/* 内容容器调整 */
+.content-wrapper {
+  /* 不再限制最大宽度，让子组件自己决定布局，适应工业风的全屏感 */
   width: 100%;
-  box-sizing: border-box;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.section-header-block {
+  margin-bottom: 40px;
+  border-bottom: 4px solid var(--black);
+  padding-bottom: 10px;
+}
+.giant-text {
+  font-family: var(--heading); font-size: 3rem; margin: 0; line-height: 1; text-transform: uppercase;
+}
+.sub-text {
+  font-family: var(--mono); color: var(--red); margin-top: 5px; font-weight: bold;
 }
 
-@media (max-width: 1200px) {
-  .panel-content {
-    grid-template-columns: minmax(220px, 250px) 1fr;
-    width: 100vw;
-  }
-  
-  .settings-nav {
-    padding: 1.5rem;
-  }
-  
-  .nav-item {
-    padding: 1.25rem 1.5rem;
-    font-size: 1.1rem;
-  }
-  
-  .settings-main {
-    padding: 2rem;
-    max-width: calc(100vw - 250px);
-  }
-  
-  .content-header h3 {
-    font-size: 2rem;
-  }
+/* 动画 */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* 响应式适配 */
+@media (max-width: 1024px) {
+  .archive-container { height: auto; min-height: 90vh; }
+  .archive-body { flex-direction: column; }
+  .cyber-sidebar { width: 100%; height: auto; border-right: none; border-bottom: 4px solid var(--black); }
+  .nav-list { display: flex; overflow-x: auto; }
+  .cyber-tab { flex: 0 0 auto; padding: 10px; min-width: 140px; border-right: 1px solid #ddd; }
+  .viewport-content { padding: 20px; }
 }
 </style>

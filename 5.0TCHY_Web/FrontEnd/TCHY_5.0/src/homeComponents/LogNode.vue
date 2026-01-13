@@ -1,117 +1,275 @@
 <template>
-  <div class="version-group">
-    <div class="version-tag">{{ node.version }}</div>
-    <div v-if="node.logs && node.logs.length > 0">
-      <div v-for="log in node.logs" :key="log.id" class="single-log-card">
-        <div class="log-header">
-          <span class="log-version">{{ log.version }}</span>
-          <span class="log-type" :class="'type-' + log.type">{{ typeMap[log.type] || '其他' }}</span>
-          <span class="log-date">{{ formatDate(log.created_at) }}</span>
+  <div class="log-node-industrial">
+    
+    <div class="version-indicator" v-if="node.version">
+      <span class="v-line"></span>
+      <span class="v-text">## REVISION_{{ node.version }}</span>
+    </div>
+
+    <div v-if="node.logs && node.logs.length > 0" class="logs-container">
+      <div 
+        v-for="log in node.logs" 
+        :key="log.id" 
+        class="cyber-log-card"
+        :class="getTypeClass(log.type)"
+      >
+        <div class="connector-line"></div>
+        <div class="connector-dot"></div>
+
+        <div class="card-inner">
+          <div class="log-meta-row">
+            <div class="meta-left">
+              <span class="version-chip">v{{ log.version }}</span>
+              <span class="type-tag">[{{ typeMap[log.type] || 'UNKNOWN' }}]</span>
+            </div>
+            <div class="meta-right">
+              <span class="date-stamp">{{ formatDate(log.created_at) }}</span>
+            </div>
+          </div>
+
+          <div class="log-title">
+            <span class="arrow">></span> {{ log.title }}
+          </div>
+
+          <div class="log-body">
+            {{ log.content }}
+          </div>
         </div>
-        <div class="log-title">{{ log.title }}</div>
-        <div class="log-content">{{ log.content }}</div>
       </div>
     </div>
-    <div v-if="node.children && node.children.length > 0" class="log-children">
+
+    <div v-if="node.children && node.children.length > 0" class="nested-children">
       <LogNode v-for="child in node.children" :key="child.version" :node="child" />
     </div>
   </div>
 </template>
 
 <script setup>
+import { defineProps } from 'vue'
+
 const props = defineProps({ node: Object })
+
 const typeMap = {
-  1: 'Bug修复',
-  2: '小内容更新',
-  3: '网站优化',
-  4: '重大更新',
-  5: '其他'
+  1: 'FIX',         // Bug修复
+  2: 'UPDATE',      // 小内容更新
+  3: 'OPTIMIZE',    // 网站优化
+  4: 'MAJOR',       // 重大更新
+  5: 'MISC'         // 其他
 }
+
+// 返回对应的样式类名
+function getTypeClass(type) {
+  switch (type) {
+    case 1: return 'mode-fix'     // 红色
+    case 2: return 'mode-update'  // 蓝色/黑色
+    case 3: return 'mode-opt'     // 绿色/橙色
+    case 4: return 'mode-major'   // 反色(黑底白字)
+    default: return 'mode-misc'   // 灰色
+  }
+}
+
 function formatDate(ts) {
-  if (!ts) return '-'
+  if (!ts) return 'N/A'
   const d = new Date(ts)
-  return d.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+  // 格式化为工业风格: 2026.01.13 14:30
+  const pad = (n) => n.toString().padStart(2, '0')
+  return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 </script>
 
 <style scoped>
-.version-group {
-  margin-bottom: 26px;
-  padding-left: 0;
-}
-.version-tag {
-  font-size: 1.18rem;
-  font-weight: 700;
-  color: #44a3eb;
-  text-shadow: 0 1px 7px rgba(80,180,255,0.10);
-  margin-bottom: 12px;
-  margin-left: 2px;
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+/* --- 基础变量 --- */
+.log-node-industrial {
+  --red: #D92323; 
+  --black: #111111; 
+  --white: #ffffff;
+  --bg-gray: #f4f4f4;
+  --mono: 'JetBrains Mono', monospace;
+  
+  font-family: var(--mono);
   position: relative;
-  letter-spacing: .4px;
+  margin-bottom: 20px;
 }
-.log-children {
-  margin-left: 32px;
-}
-.single-log-card {
-  background: #fff;
-  box-shadow: 0 2px 14px rgba(40,130,220,0.09);
-  border-radius: 10px;
-  padding: 16px 18px 8px 15px;
-  margin-bottom: 14px;
-  border-left: 5px solid #46acef;
-  border-bottom: 1.6px solid #e5edf6;
-  transition: box-shadow .16s;
-}
-.single-log-card:hover {
-  box-shadow: 0 7px 32px rgba(40,130,220,0.18);
-  border-left: 5px solid #2376ee;
-}
-.log-header {
+
+/* --- 版本号标头 --- */
+.version-indicator {
   display: flex;
   align-items: center;
-  gap: 14px;
-  font-size: 0.97rem;
-  margin-bottom: 2px;
+  margin-bottom: 15px;
+  margin-left: -5px; /* 微调对齐 */
 }
-.log-version {
-  background: linear-gradient(90deg,#2376ee, #5bc5fa 90%);
-  color: #fff;
-  font-size: 0.98rem;
-  font-weight: 600;
-  border-radius: 5px;
-  padding: 1px 8px;
-  margin-right: 3px;
-  letter-spacing: .3px;
+.v-line {
+  width: 15px;
+  height: 4px;
+  background: var(--black);
+  margin-right: 8px;
 }
-.log-type {
-  padding: 2px 12px;
-  border-radius: 4px;
-  font-size: 0.97rem;
-  font-weight: 600;
-  margin-right: 6px;
-  letter-spacing: .28px;
+.v-text {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--black);
+  background: #eee;
+  padding: 2px 8px;
 }
-.type-1 { background: #d5eafe; color: #2376ee; }
-.type-2 { background: #e3ffef; color: #17b968; }
-.type-3 { background: #fef9db; color: #ea9907; }
-.type-4 { background: #ffe1e1; color: #d63e3e; }
-.type-5 { background: #f3f3f3; color: #666; }
-.log-date {
-  color: #979797;
-  font-size: 0.92rem;
+
+/* --- 卡片容器 --- */
+.logs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
+
+/* --- 核心卡片样式 --- */
+.cyber-log-card {
+  position: relative;
+  margin-left: 20px; /* 给连接线留位置 */
+}
+
+/* 装饰：水平连接线 (连接到父级的时间轴) */
+.connector-line {
+  position: absolute;
+  left: -24px; /* 向左延伸，连接到父组件的竖线 */
+  top: 24px;
+  width: 24px;
+  height: 2px;
+  background: var(--black);
+  z-index: 1;
+}
+
+/* 装饰：节点方块 */
+.connector-dot {
+  position: absolute;
+  left: -28px;
+  top: 20px;
+  width: 8px;
+  height: 8px;
+  background: var(--black);
+  border: 1px solid var(--white);
+  z-index: 2;
+}
+
+/* 卡片本体 */
+.card-inner {
+  background: var(--white);
+  border: 2px solid var(--black);
+  padding: 16px;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.1); /* 硬阴影 */
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 悬停效果 */
+.card-inner:hover {
+  transform: translateX(4px) translateY(-2px);
+  box-shadow: 6px 6px 0 var(--red);
+  border-color: var(--black);
+}
+
+/* 激活连接点变红 */
+.cyber-log-card:hover .connector-dot {
+  background: var(--red);
+}
+.cyber-log-card:hover .connector-line {
+  background: var(--black); /* 也可以变红，看喜好 */
+}
+
+/* --- 卡片内部布局 --- */
+
+/* 顶部 Meta 信息 */
+.log-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed #ccc;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  font-size: 0.8rem;
+}
+
+.meta-left { display: flex; gap: 8px; align-items: center; }
+
+.version-chip {
+  background: var(--black);
+  color: var(--white);
+  padding: 1px 6px;
+  font-weight: bold;
+}
+
+.type-tag {
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.date-stamp {
+  color: #888;
+  font-size: 0.75rem;
+}
+
+/* 标题 */
 .log-title {
-  font-size: 1.08rem;
-  font-weight: 600;
-  color: #256cc1;
-  margin-bottom: 6px;
-  margin-top: 3px;
-  letter-spacing: 0.2px;
-}
-.log-content {
-  color: #244e6c;
   font-size: 1rem;
-  margin-bottom: 3px;
-  word-break: break-word;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+.arrow { color: var(--red); margin-right: 5px; }
+
+/* 内容 */
+.log-body {
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* --- 不同类型的变体样式 --- */
+
+/* 1. BUG FIX (警告色/红色) */
+.mode-fix .type-tag { color: var(--red); }
+.mode-fix .card-inner { border-left: 4px solid var(--red); }
+
+/* 2. UPDATE (常规/蓝色变体 -> 工业风里用黑色或深蓝) */
+.mode-update .type-tag { color: #000; }
+.mode-update .card-inner { border-left: 4px solid #000; }
+
+/* 3. OPTIMIZE (优化/绿色 -> 工业风用灰色或条纹) */
+.mode-opt .type-tag { color: #555; text-decoration: underline; }
+.mode-opt .card-inner { border-left: 4px solid #888; }
+
+/* 4. MAJOR (重大更新 -> 反色) */
+.mode-major .card-inner {
+  background: var(--black);
+  color: var(--white);
+  border: 2px solid var(--black);
+}
+.mode-major .version-chip { background: var(--red); }
+.mode-major .type-tag { color: var(--red); }
+.mode-major .log-title { color: var(--white); font-size: 1.2rem; text-transform: uppercase; }
+.mode-major .log-body { color: #ccc; }
+.mode-major .arrow { color: var(--red); }
+.mode-major .log-meta-row { border-bottom: 1px dashed #555; }
+.mode-major:hover .card-inner {
+  box-shadow: 6px 6px 0 var(--red); /* 保持红色阴影 */
+  border-color: var(--black);
+}
+
+/* --- 递归子节点 --- */
+.nested-children {
+  margin-left: 40px; /* 缩进 */
+  padding-left: 20px;
+  border-left: 1px dashed #ccc; /* 虚线表示层级关系 */
+  margin-top: 20px;
+}
+
+/* 响应式微调 */
+@media (max-width: 768px) {
+  .cyber-log-card { margin-left: 10px; }
+  .connector-line { width: 14px; left: -14px; }
+  .connector-dot { left: -18px; }
+  .nested-children { margin-left: 15px; padding-left: 10px; }
 }
 </style>

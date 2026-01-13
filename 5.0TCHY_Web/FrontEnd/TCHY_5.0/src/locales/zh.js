@@ -13,7 +13,7 @@ export default{
     members:'注册成员'
   },
     nav:{
-    home: '首页',
+    home: '介绍',
     community: '寰宇社区',
     data_center: '交流中枢',
     work_center: '作品大厅',

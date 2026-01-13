@@ -1,40 +1,86 @@
 <template>
-  <div class="rules-page">
-    <div class="title">社区规则</div>
-    <el-input
-      v-model="search"
-      placeholder="搜索规则内容/编号/惩罚..."
-      clearable
-      prefix-icon="el-icon-search"
-      class="rule-search"
-      @input="filterTree"
-    />
-    <el-tree
-      ref="treeRef"
-      class="rules-tree"
-      node-key="Id"
-      :data="rules"
-      :props="treeProps"
-      :expand-on-click-node="false"
-      :default-expand-all="true"
-      :filter-node-method="filterNode"
-    >
-      <template #default="{ data }">
-        <div class="rule-item">
-          <div class="rule-header">
-            <span class="rule-title">{{ data.Title }}</span>
-            <span v-if="data.RuleNumber" class="rule-number">〔{{ data.RuleNumber }}〕</span>
-            <span v-if="data.Version" class="rule-version">v{{ data.Version }}</span>
-          </div>
-          <div class="rule-meta">
-            <span v-if="data.Penalty" class="rule-penalty">处罚：{{ data.Penalty }}</span>
-            <span>排序：{{ data.OrderNum }}</span>
-            <span>创建时间：{{ formatDate(data.CreateAt) }}</span>
-          </div>
-          <div class="rule-content">{{ data.Content }}</div>
+  <div class="rules-industrial">
+    <div class="grid-bg moving-grid"></div>
+
+    <div class="rules-container">
+      <header class="page-header">
+        <div class="header-main">
+          <h1 class="giant-text">
+            <span class="prefix">///</span> RULES_PROTOCOL
+          </h1>
+          <div class="sub-text">社区律法 // 行为准则数据库</div>
         </div>
-      </template>
-    </el-tree>
+        <div class="header-meta">
+          <div class="status-badge">SYSTEM: ACTIVE</div>
+          <div class="version-tag">VER: 5.0</div>
+        </div>
+      </header>
+
+      <div class="search-section">
+        <div class="search-box">
+          <span class="search-icon">>></span>
+          <input 
+            v-model="search" 
+            placeholder="INPUT_QUERY..." 
+            class="cyber-input"
+            @input="filterTree"
+          />
+          <button class="search-btn" @click="filterTree">SEARCH</button>
+        </div>
+      </div>
+
+      <div class="tree-wrapper custom-scroll">
+        <el-tree
+          ref="treeRef"
+          class="industrial-tree"
+          node-key="Id"
+          :data="rules"
+          :props="treeProps"
+          :expand-on-click-node="false"
+          :default-expand-all="true"
+          :filter-node-method="filterNode"
+          :indent="0"
+        >
+          <template #default="{ data, node }">
+            <div v-if="node.level === 1" class="rule-root-block">
+              <div class="root-label">SECTION_{{ padZero(data.OrderNum) }}</div>
+              <h2 class="root-title">{{ data.Title }}</h2>
+              <div class="root-deco-line"></div>
+            </div>
+
+            <div v-else class="rule-leaf-card" :style="{ marginLeft: (node.level - 1) * 20 + 'px' }">
+              <div class="connection-line"></div>
+
+              <div class="card-inner">
+                <div class="card-header">
+                  <span class="rule-id-tag" v-if="data.RuleNumber">NO.{{ data.RuleNumber }}</span>
+                  <span class="rule-title">{{ data.Title }}</span>
+                  <span class="version-badge" v-if="data.Version">v{{ data.Version }}</span>
+                </div>
+
+                <div class="card-content-box" v-if="data.Content">
+                  {{ data.Content }}
+                </div>
+
+                <div class="penalty-strip" v-if="data.Penalty">
+                  <span class="icon">⚠</span>
+                  <span class="label">VIOLATION_PENALTY:</span>
+                  <span class="value">{{ data.Penalty }}</span>
+                </div>
+
+                <div class="card-footer">
+                  <span>// UPDATE: {{ formatDate(data.UpdateAt || data.CreateAt) }}</span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </el-tree>
+        
+        <div v-if="rules.length === 0" class="empty-state">
+          [ DATA_NOT_FOUND ]
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -46,18 +92,20 @@ const rules = ref([])
 const search = ref('')
 const treeRef = ref(null)
 
-// 修改点 1：配置树形结构对应的字段名（必须大写）
 const treeProps = { children: 'Children', label: 'Title' }
 
+function padZero(num) {
+  return num < 10 ? `0${num}` : num
+}
+
 function formatDate(val) {
-  if (!val) return ''
-  try { return new Date(val).toLocaleString() } catch { return val }
+  if (!val) return 'N/A'
+  try { return new Date(val).toLocaleDateString() } catch { return val }
 }
 
 function filterNode(value, data) {
   if (!value) return true
   const v = value.trim()
-  // 修改点 2：过滤逻辑中的字段名改为大写
   return (
     (data.Title && data.Title.includes(v)) ||
     (data.Content && data.Content.includes(v)) ||
@@ -70,11 +118,9 @@ function filterTree() {
   treeRef.value && treeRef.value.filter(search.value)
 }
 
-// 递归过滤掉 Enabled=false 的规则及其所有后代
 function filterEnabled(arr) {
   if (!Array.isArray(arr)) return []
   return arr
-    // 修改点 3：属性名改为大写 Enabled, Children
     .filter(item => item.Enabled !== false)
     .map(item => ({
       ...item,
@@ -82,11 +128,9 @@ function filterEnabled(arr) {
     }))
 }
 
-// 保证 Children 字段始终是数组
 function fixChildren(arr) {
   if (!Array.isArray(arr)) return []
   arr.forEach(item => {
-    // 修改点 4：属性名改为大写 Children
     if (!Array.isArray(item.Children)) item.Children = []
     fixChildren(item.Children)
   })
@@ -96,7 +140,6 @@ function fixChildren(arr) {
 onMounted(async () => {
   try {
     const res = await apiClient.get('/rules/tree')
-    // 注意：res.data.data 是你的 API 响应结构，通常 axios 这一层还是小写的 data
     const origin = fixChildren(Array.isArray(res.data?.data) ? res.data.data : [])
     rules.value = filterEnabled(origin)
   } catch (error) {
@@ -106,487 +149,282 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.rules-page {
-  --primary-color: #7a87d7;
-  --primary-light: #b6c8f2;
-  --primary-lighter: #d5e4fa;
-  --primary-glass: rgba(169, 183, 228, 0.12);
-  --danger-color: #f7898c;
-  --danger-light: #e9636c;
-  --danger-glass: rgba(251, 207, 210, 0.12);
-  --warning-color: #fcd38c;
-  --success-color: #b9f2ca;
-  --info-color: #99cdfa;
-  --text-primary: #505a7f;
-  --text-secondary: #6678a4;
-  --text-tertiary: #90a4c2;
-  --text-muted: #bfcde5;
-  --text-light: #dee6f5;
-  --bg-blur: blur(18px);
-  --glass-bg: rgba(240, 244, 250, 0.88);
-  --glass-border: rgba(210, 220, 255, 0.19);
-  --glass-shadow: 0 8px 32px rgba(150, 180, 255, 0.08);
-  --glass-hover: rgba(247, 250, 255, 0.96);
-  --content-bg: rgba(242, 246, 255, 0.6);
-  --hover-bg: rgba(169, 183, 228, 0.22);
-  --bg-gradient-start: #e7ecf9;
-  --bg-gradient-mid: #f3f6fc;
-  --bg-gradient-end: #fbfcff;
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 12px;
-  --spacing-lg: 16px;
-  --spacing-xl: 20px;
-  --spacing-xxl: 24px;
-  --spacing-xxxl: 32px;
-  --spacing-xxxxl: 40px;
-  --spacing-page: 60px;
-  --font-size-xs: 0.875rem;
-  --font-size-sm: 0.9375rem;
-  --font-size-md: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.5rem;
-  --font-size-xxl: 2rem;
-  --border-radius-sm: 8px;
-  --border-radius-md: 12px;
-  --border-radius-lg: 20px;
-  --border-radius-pill: 999px;
-  --border-radius-blur: 16px;
-  --max-width-xs: 480px;
-  --max-width-md: 860px;
-  --max-width-mobile: 92vw;
-  --tree-indent: 28px;
-  --transition-fast: 0.2s ease;
-  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: var(--spacing-xxxxl) 0 var(--spacing-page) 0;
-  min-height: 100vh;
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
+
+/* --- 核心变量 (与 ComCenter 一致) --- */
+.rules-industrial {
+  --red: #D92323; 
+  --black: #111111; 
+  --white: #F4F1EA;
+  --gray: #E0DDD5; 
+  --mono: 'JetBrains Mono', monospace; 
+  --heading: 'Anton', sans-serif;
+  
+  width: 100%;
+  min-height: 100vh; /* 确保填满 */
   position: relative;
-  overflow-x: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  backdrop-filter: var(--bg-blur);
-  -webkit-backdrop-filter: var(--bg-blur);
-  background: transparent !important;
-  border-radius: 15px;
-}
-.rules-page::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 22% 78%, rgba(169, 183, 228, 0.08) 0%, transparent 60%),
-    radial-gradient(circle at 85% 8%, rgba(230, 235, 255, 0.18) 0%, transparent 60%),
-    linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 55%, var(--bg-gradient-end) 100%);
-  z-index: -1;
-  pointer-events: none;
-}
-.rules-page::after {
-  content: '';
-  position: fixed;
-  width: 410px;
-  height: 410px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(170,200,240,0.07) 0%, rgba(190,218,255,0.04) 60%, rgba(255,255,255,0.03) 100%);
-  top: -110px;
-  right: -110px;
-  z-index: -1;
-  pointer-events: none;
-}
-.title {
-  font-size: var(--font-size-xxl);
-  color: var(--primary-color);
-  font-weight: 700;
-  margin: 0 auto var(--spacing-xxxxl) auto;
-  text-align: center;
-  letter-spacing: 1px;
-  position: relative;
-  display: inline-block;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: var(--spacing-lg) var(--spacing-xxxl);
-  backdrop-filter: var(--bg-blur);
-  -webkit-backdrop-filter: var(--bg-blur);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--border-radius-lg);
-  box-shadow: 
-    0 4px 30px rgba(170,200,240,0.11),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  z-index: 1;
-  transition: all var(--transition-normal);
-}
-.title:hover {
-  background: var(--glass-hover);
-  box-shadow: 
-    0 8px 40px rgba(170,200,240,0.15),
-    inset 0 1px 0 rgba(255,255,255,0.8);
-  transform: translateX(-50%) translateY(-2px);
-}
-.title::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 52px;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
-  border-radius: var(--border-radius-pill);
-  opacity: 0.7;
-}
-.rule-search {
-  max-width: var(--max-width-xs);
-  margin: 0 auto var(--spacing-xxxl) auto;
-  display: block;
-  border-radius: var(--border-radius-pill);
+  background-color: var(--white);
+  color: var(--black);
+  font-family: var(--mono);
   overflow: hidden;
-  transition: all var(--transition-normal);
-  backdrop-filter: var(--bg-blur);
-  -webkit-backdrop-filter: var(--bg-blur);
-  background: var(--glass-bg) !important;
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: 
-    0 4px 20px rgba(170,200,240,0.08),
-    inset 0 1px 0 rgba(255,255,255,0.6) !important;
+  display: flex;
+  flex-direction: column;
 }
-.rule-search:hover,
-.rule-search:focus-within {
-  background: var(--glass-hover) !important;
-  box-shadow: 
-    0 8px 30px rgba(170,200,240,0.12),
-    inset 0 1px 0 rgba(255,255,255,0.8) !important;
-  transform: translateY(-1px);
-  border-color: rgba(169, 183, 228, 0.23) !important;
+
+/* --- 背景网格 --- */
+.grid-bg { 
+  position: absolute; inset: 0; 
+  background-image: linear-gradient(rgba(17, 17, 17, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(17, 17, 17, 0.05) 1px, transparent 1px); 
+  background-size: 40px 40px; 
+  z-index: 0; pointer-events: none;
 }
-.rules-tree {
-  max-width: var(--max-width-md);
+.moving-grid { animation: gridScroll 60s linear infinite; }
+@keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-40px); } }
+
+/* --- 主容器 --- */
+.rules-container {
+  position: relative;
+  z-index: 1;
+  max-width: 1000px;
   margin: 0 auto;
-  backdrop-filter: var(--bg-blur);
-  -webkit-backdrop-filter: var(--bg-blur);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--border-radius-blur);
-  box-shadow: var(--glass-shadow);
-  padding: var(--spacing-lg) 0;
-  transition: all var(--transition-normal);
-  position: relative;
-  overflow: hidden;
+  width: 100%;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 }
-.rules-tree::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(255,255,255,0.7), 
-    transparent);
-  z-index: 1;
+
+/* --- 头部 --- */
+.page-header {
+  border-bottom: 4px solid var(--black);
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
 }
-.rules-tree:hover {
-  box-shadow: 
-    0 12px 40px rgba(170,200,240,0.13),
-    inset 0 1px 0 rgba(255,255,255,0.88);
-  background: var(--glass-hover);
-  transform: translateY(-2px);
+.giant-text {
+  font-family: var(--heading);
+  font-size: 3.5rem;
+  margin: 0;
+  line-height: 0.9;
+  letter-spacing: -1px;
 }
-.rule-item {
-  padding: var(--spacing-lg) var(--spacing-xxl) var(--spacing-lg) var(--spacing-xl);
-  border-radius: var(--border-radius-md);
-  margin: var(--spacing-xs) var(--spacing-lg);
-  transition: all var(--transition-normal);
-  border-left: 3px solid transparent;
-  position: relative;
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
-  background: rgba(242, 246, 255, 0.6);
-  border: 1px solid rgba(210, 220, 255, 0.12);
+.prefix { color: var(--red); margin-right: 10px; }
+.sub-text {
+  font-family: var(--mono);
+  font-weight: bold;
+  margin-top: 5px;
+  color: #666;
 }
-.rule-item:hover {
-  background: var(--glass-hover);
-  transform: translateX(2px);
-  border-left-color: var(--primary-light);
-  box-shadow: 
-    0 4px 20px rgba(170,200,240,0.10),
-    inset 0 1px 0 rgba(255,255,255,0.88);
-  border-color: rgba(210,220,255,0.17);
+.header-meta { text-align: right; font-size: 0.8rem; font-weight: bold; }
+.status-badge { background: var(--black); color: var(--white); padding: 2px 6px; display: inline-block; margin-bottom: 4px; }
+.version-tag { color: var(--red); }
+
+/* --- 搜索框 --- */
+.search-section { margin-bottom: 30px; }
+.search-box {
+  display: flex;
+  border: 2px solid var(--black);
+  background: #fff;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+  height: 50px;
 }
-.rule-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255,255,255,0.85) 0%, 
-    rgba(255,255,255,0.67) 100%);
-  border-radius: var(--border-radius-md);
-  z-index: -1;
-  opacity: 0.47;
-}
-.rule-header {
+.search-icon {
+  background: var(--black);
+  color: var(--white);
+  width: 50px;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm) var(--spacing-lg);
-  margin-bottom: var(--spacing-xs);
-  position: relative;
+  justify-content: center;
+  font-weight: bold;
 }
-.rule-title {
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  color: var(--primary-color);
-  line-height: 1.4;
-  position: relative;
-  padding-left: var(--spacing-lg);
-  text-shadow: 0 1px 1px rgba(240,245,255,0.7);
+.cyber-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0 15px;
+  font-family: var(--mono);
+  font-size: 1rem;
+  background: transparent;
 }
-.rule-title::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 8px;
-  height: 8px;
-  background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(169, 183, 228, 0.18);
+.search-btn {
+  background: var(--white);
+  border: none;
+  border-left: 2px solid var(--black);
+  font-family: var(--heading);
+  font-size: 1.2rem;
+  padding: 0 20px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.rule-meta {
-  margin-bottom: var(--spacing-sm);
-  color: var(--text-tertiary);
-  font-size: var(--font-size-sm);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-lg);
-  padding-left: var(--spacing-lg);
-  text-shadow: 0 1px 1px rgba(255,255,255,0.6);
+.search-btn:hover { background: var(--red); color: var(--white); }
+
+/* --- 树形列表容器 --- */
+.tree-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 50px;
 }
-.rule-content {
-  color: var(--text-secondary);
-  font-size: var(--font-size-md);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  background: var(--content-bg);
-  border-radius: var(--border-radius-sm);
-  line-height: 1.7;
-  margin: var(--spacing-md) 0 var(--spacing-sm) 0;
-  padding: var(--spacing-lg) var(--spacing-xl);
-  word-break: break-word;
-  white-space: pre-line;
-  min-height: 20px;
-  overflow-x: auto;
-  transition: all var(--transition-normal);
-  border: 1px solid rgba(210, 220, 255, 0.17);
-  box-shadow: 
-    inset 0 1px 2px rgba(240,245,255,0.5),
-    0 2px 8px rgba(170,200,240,0.03);
-  position: relative;
-  overflow: hidden;
-}
-.rule-content::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(to bottom, 
-    transparent, 
-    var(--primary-glass), 
-    transparent);
-  border-radius: var(--border-radius-pill);
-  z-index: 1;
-}
-.rule-content::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255,255,255,0.97) 0%, 
-    rgba(255,255,255,0.75) 100%);
-  z-index: -1;
-  border-radius: var(--border-radius-sm);
-}
-.rule-number {
-  color: var(--primary-color);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  background: var(--primary-glass);
-  padding: 4px var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  border: 1px solid rgba(169,183,228,0.14);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-.rule-version {
-  color: var(--text-tertiary);
-  font-size: var(--font-size-xs);
-  font-style: italic;
-  opacity: 0.7;
-}
-.rule-disabled {
-  display: none;
-}
-.rule-penalty {
-  color: var(--danger-light);
-  font-weight: 600;
-  background: var(--danger-glass);
-  padding: 4px var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  border: 1px solid rgba(251,207,210,0.17);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-:deep(.el-tree) {
-  --el-tree-node-content-height: auto;
-  --el-tree-node-hover-bg-color: transparent;
-  --el-tree-text-color: var(--text-primary);
+
+/* 覆盖 Element UI Tree 的默认样式 */
+.industrial-tree {
   background: transparent;
 }
 :deep(.el-tree-node__content) {
   height: auto !important;
-  min-height: 48px;
-  align-items: stretch;
-  padding: 0;
-  margin: 4px 0;
-  border-radius: var(--border-radius-sm);
-  transition: all var(--transition-fast);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  background: rgba(240, 244, 250, 0.42);
-  border: 1px solid rgba(210,220,255,0.12);
+  background: transparent !important;
+  align-items: flex-start !important;
+  padding: 0 !important;
+  margin-bottom: 15px;
+  cursor: default;
 }
-:deep(.el-tree-node__content:hover) {
-  background: var(--hover-bg);
-  border-color: rgba(169,183,228,0.22);
-  box-shadow: 0 2px 8px rgba(170,200,240,0.06);
+:deep(.el-tree-node__expand-icon) { display: none; } /* 隐藏展开箭头，默认全展开 */
+
+/* --- 根节点 (章节) 样式 --- */
+.rule-root-block {
+  width: 100%;
+  margin-top: 30px;
+  margin-bottom: 20px;
 }
-:deep(.el-tree-node.is-current > .el-tree-node__content) {
-  background: var(--hover-bg);
-  border-left: 3px solid var(--primary-light);
-  border-color: rgba(169,183,228,0.33);
+.root-label {
+  background: var(--black);
+  color: var(--white);
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
 }
-:deep(.el-tree-node__children) {
-  margin-left: var(--tree-indent);
-  border-left: 2px dashed rgba(210,220,255,0.17);
-  padding-left: var(--spacing-lg);
-  margin-top: var(--spacing-xs);
+.root-title {
+  font-family: var(--heading);
+  font-size: 2rem;
+  margin: 10px 0;
+  text-transform: uppercase;
+}
+.root-deco-line {
+  height: 4px;
+  background: repeating-linear-gradient(45deg, var(--black), var(--black) 10px, transparent 10px, transparent 20px);
+}
+
+/* --- 子节点 (规则卡片) 样式 --- */
+.rule-leaf-card {
+  width: 100%;
   position: relative;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  padding-left: 20px; /* 给连接线留位置 */
+  margin-bottom: 10px;
 }
-:deep(.el-tree-node__children::before) {
-  content: '';
+
+/* 左侧连接线 */
+.connection-line {
   position: absolute;
-  left: -1px;
+  left: 0;
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(to bottom, 
-    transparent, 
-    rgba(228,235,255,0.5), 
-    transparent);
-  z-index: 1;
+  background: #ccc;
 }
-:deep(.el-tree-node__expand-icon) {
-  color: var(--primary-light);
+.connection-line::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 15px;
+  width: 10px;
+  height: 10px;
+  background: var(--white);
+  border: 2px solid var(--black);
+}
+
+.card-inner {
+  border: 2px solid var(--black);
+  background: #fff;
+  padding: 15px;
+  transition: transform 0.2s;
+  /* 硬阴影 */
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+}
+.card-inner:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--red);
+  border-color: var(--black);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px dashed #ccc;
+  padding-bottom: 8px;
+}
+.rule-id-tag {
+  background: var(--black);
+  color: var(--white);
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  font-weight: bold;
+}
+.rule-title {
+  font-weight: 700;
   font-size: 1.1rem;
-  transition: all var(--transition-normal);
-  padding: 6px;
-  border-radius: 6px;
-  margin-right: var(--spacing-sm);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  background: rgba(247,250,255,0.53);
-  border: 1px solid rgba(210,220,255,0.12);
 }
-:deep(.el-tree-node__expand-icon:hover) {
-  background: var(--primary-light);
-  color: white;
-  transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(169,183,228,0.22);
-  border-color: var(--primary-light);
+.version-badge {
+  font-size: 0.7rem;
+  border: 1px solid #ccc;
+  padding: 0 4px;
+  color: #888;
 }
-:deep(.el-tree-node__expand-icon.is-leaf) {
-  color: var(--text-light);
-  opacity: 0.33;
-  background: transparent;
-  border: none;
+
+.card-content-box {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap;
+  margin-bottom: 15px;
 }
-:deep(.el-tree-node__expand-icon.expanded) {
-  transform: rotate(90deg);
-  background: rgba(169,183,228,0.13);
+
+/* 惩罚条 */
+.penalty-strip {
+  background: rgba(217, 35, 35, 0.05);
+  border: 1px solid var(--red);
+  color: var(--red);
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
+.penalty-strip .icon { font-weight: bold; }
+.penalty-strip .label { font-weight: 800; }
+.penalty-strip .value { font-weight: 500; }
+
+.card-footer {
+  margin-top: 10px;
+  text-align: right;
+  font-size: 0.7rem;
+  color: #999;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  border: 2px dashed #ccc;
+  margin-top: 20px;
+}
+
+/* 滚动条 */
+.custom-scroll::-webkit-scrollbar { width: 6px; }
+.custom-scroll::-webkit-scrollbar-track { background: #eee; }
+.custom-scroll::-webkit-scrollbar-thumb { background: var(--black); }
+.custom-scroll::-webkit-scrollbar-thumb:hover { background: var(--red); }
+
+/* 响应式 */
 @media (max-width: 768px) {
-  .rules-page {
-    --max-width-md: 96vw;
-    --tree-indent: 20px;
-    padding: var(--spacing-xxl) 0 var(--spacing-xxxl) 0;
-  }
-  .title {
-    font-size: 1.75rem;
-    margin-bottom: var(--spacing-xxxl);
-    padding: var(--spacing-md) var(--spacing-xxl);
-  }
-  .rules-tree {
-    max-width: var(--max-width-md);
-    padding: var(--spacing-md) 0;
-    border-radius: var(--border-radius-md);
-  }
-  .rule-search {
-    max-width: var(--max-width-mobile);
-    margin: 0 var(--spacing-md) var(--spacing-xxl) var(--spacing-md);
-  }
-  .rule-header {
-    gap: var(--spacing-xs) var(--spacing-md);
-  }
-  .rule-meta {
-    gap: var(--spacing-md);
-    font-size: var(--font-size-xs);
-  }
-  .rule-item {
-    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-md) var(--spacing-md);
-    margin: var(--spacing-xs) var(--spacing-sm);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-  }
-  .rule-content {
-    padding: var(--spacing-md) var(--spacing-lg);
-    font-size: var(--font-size-sm);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-  }
-  :deep(.el-tree-node__children) {
-    margin-left: var(--tree-indent);
-    padding-left: var(--spacing-md);
-  }
-  :deep(.el-tree-node__content) {
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-  }
-}
-@media (max-width: 480px) {
-  .title {
-    font-size: 1.5rem;
-    margin-bottom: var(--spacing-xxl);
-    padding: var(--spacing-sm) var(--spacing-xl);
-  }
-  .title::after { width: 36px; height: 2px; }
-  .rule-header { flex-direction: column; align-items: flex-start; gap: var(--spacing-xs); }
-  .rule-meta { flex-direction: column; align-items: flex-start; gap: var(--spacing-xs); }
-  .rule-content { line-height: 1.6; padding: var(--spacing-sm) var(--spacing-md); }
-  .rule-item { border-radius: var(--border-radius-sm); }
-  :deep(.el-tree-node__content) { min-height: 38px; }
+  .giant-text { font-size: 2.5rem; }
+  .rules-container { padding: 20px 10px; }
+  .card-inner { padding: 10px; }
+  .rule-leaf-card { padding-left: 10px; margin-left: 0 !important; }
+  .connection-line { display: none; }
 }
 </style>

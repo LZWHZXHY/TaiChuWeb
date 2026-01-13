@@ -232,7 +232,7 @@ const initSignalR = async () => {
   }
 
   // ⚠️ 这里的 URL 必须和你后端 launchSettings.json 里的 https 端口一致
-  const hubUrl = "https://localhost:44359/chatHub"; 
+  const hubUrl = "https://bianyuzhou.com/chatHub"; 
 
   connection.value = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {
@@ -385,7 +385,7 @@ const fixAvatarUrl = (url) => {
   if (url.startsWith('http') || url.startsWith('data:')) return url;
   
   // ⚠️ 替换为你的后端实际地址，确保图片能访问
-  const BASE_URL = 'https://localhost:44359/'; 
+  const BASE_URL = 'https://bianyuzhou.com/'; 
   
   // 处理路径前面的斜杠，防止双斜杠
   let cleanUrl = url.startsWith('/') ? url.substring(1) : url;
