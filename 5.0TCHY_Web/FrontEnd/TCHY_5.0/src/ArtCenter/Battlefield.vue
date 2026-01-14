@@ -94,7 +94,7 @@
                   <textarea v-model="upForm.ability" class="cyber-textarea" rows="5" required></textarea>
                 </div>
                 <div class="form-group">
-                  <label>P.O.O (ORIGIN_POWER)</label>
+                  <label>P.O.O (Place of Origin)</label>
                   <input v-model="upForm.poo" class="cyber-input" required />
                 </div>
                 <div class="form-group">
@@ -485,7 +485,7 @@ onMounted(() => {
 .grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(17, 17, 17, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(17, 17, 17, 0.05) 1px, transparent 1px); background-size: 40px 40px; z-index: 0; pointer-events: none; }
 .moving-grid { animation: gridScroll 60s linear infinite; }
 @keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-40px); } }
-.bf-container { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; padding: 20px; gap: 20px; }
+.bf-container { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; padding: 20px; gap: 20px; overflow-y: scroll;}
 .tactical-header { background: var(--white); border: 4px solid var(--black); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 8px 8px 0 rgba(0,0,0,0.1); }
 .logo-group { display: flex; align-items: center; gap: 15px; }
 .icon-box { background: var(--black); color: var(--white); font-family: var(--heading); font-size: 1.5rem; padding: 5px 10px; }
@@ -608,10 +608,22 @@ onMounted(() => {
 }
 .term-close:hover { border-color: var(--red); color: var(--red); }
 
-.term-body { flex: 1; overflow-y: auto; padding: 0; display: flex; }
+.term-body { 
+  flex: 1; 
+  overflow-y: auto; /* 确保这里允许滚动 */
+  padding: 0; 
+  display: flex; 
+  flex-direction: column; /* 确保内部布局方向明确 */
+  min-height: 0; /* 关键：防止Flex子元素撑破容器导致无法滚动 */
+}
 
 /* 布局：左右分栏 */
-.detail-layout { display: flex; width: 100%; height: 100%; }
+/* 布局：左右分栏 */
+.detail-layout { 
+  display: flex; 
+  width: 100%; 
+  height: 100%; /* 桌面端保持全高，让右侧独立滚动 */
+}
 
 /* 左侧：立绘与战绩 */
 .detail-col-left { 
@@ -696,9 +708,42 @@ onMounted(() => {
 .glitch-fade-enter-from { opacity: 0; transform: scale(0.98); }
 
 /* 响应式 */
-@media (max-width: 1024px) {
-  .detail-layout { flex-direction: column; overflow-y: auto; }
-  .detail-col-left { width: 100%; height: 350px; border-right: none; border-bottom: 2px solid #333; }
-  .detail-col-right { overflow: visible; }
+/* 响应式 */
+@media (max-width: 1680px) {
+  /* 1. 让布局变成垂直排列，并且高度自动撑开 */
+  .detail-layout { 
+    flex-direction: column; 
+    height: auto; /* 关键：取消固定高度，允许内容撑开 */
+    overflow: visible; /* 取消内部滚动，交给外层 .term-body 滚动 */
+  }
+
+  /* 2. 左侧图片区域自适应 */
+  .detail-col-left { 
+    width: 100%; 
+    height: auto; 
+    aspect-ratio: 16/9; /* 保持一个长宽比，防止图片太高占满屏幕 */
+    border-right: none; 
+    border-bottom: 2px solid #333; 
+    flex-shrink: 0;
+  }
+
+  /* 3. 右侧内容区域让它自然生长 */
+  .detail-col-right { 
+    height: auto; /* 取消高度限制 */
+    overflow: visible; /* 取消独立滚动条 */
+    flex: none; /* 防止被压缩 */
+  }
+  
+  /* 4. 优化小屏幕下的内边距 */
+  .cyber-terminal-window {
+    height: 95vh; /* 稍微增加高度占比 */
+    max-height: 95vh;
+  }
+}
+
+@media (max-height: 1080px) {
+  .bf-container{
+    margin: 2% 0 10%;
+  }
 }
 </style>

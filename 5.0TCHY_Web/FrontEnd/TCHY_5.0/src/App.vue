@@ -66,7 +66,7 @@ const handleUserAction = () => { console.log('用户操作') }
   flex: 1;
   overflow-y: auto; /* 主内容可滚动 */
   width: 100%;
-  padding: 20px 0;
+  padding: 0 0;
   background-color: #ffffff;
   margin-top: 70px; /* Header高度 */
 }
@@ -74,7 +74,7 @@ const handleUserAction = () => { console.log('用户操作') }
 .app-footer {
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
-  padding: 1.5rem 0;
+  padding: 0.5rem 0;
   width: 100%;
   margin-top: auto; /* 关键：将footer推到最下面 */
 }

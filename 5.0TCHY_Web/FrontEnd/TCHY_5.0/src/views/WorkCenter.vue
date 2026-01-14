@@ -131,7 +131,7 @@ onUnmounted(() => clearInterval(clockTimer));
 .art-industrial-system {
   --red: #D92323; --black: #111111; --white: #F4F1EA; --gray: #E0DDD5;
   --mono: 'JetBrains Mono', monospace; --heading: 'Anton', sans-serif;
-  width: 100%; min-height: 100vh; background-color: var(--gray); color: var(--black); font-family: var(--mono); position: relative; overflow: hidden; padding: 20px; box-sizing: border-box;
+  width: 100%; height: 100%; background-color: var(--gray); color: var(--black); font-family: var(--mono); position: relative; overflow: hidden; padding: 20px; box-sizing: border-box;
 }
 
 .grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(17, 17, 17, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(17, 17, 17, 0.1) 1px, transparent 1px); background-size: 40px 40px; z-index: 0; pointer-events: none; }
@@ -149,11 +149,27 @@ onUnmounted(() => clearInterval(clockTimer));
 .time-display { font-weight: bold; font-size: 1.1rem; }
 .sys-id { color: #666; font-size: 0.7rem; }
 
-.art-body { flex: 1; display: flex; overflow: hidden; }
+/* 主体区域 */
+.art-body { 
+  flex: 1; 
+  display: flex; 
+  overflow: hidden; /* 防止子元素撑开父级 */
+  min-height: 0;    /* Flex 溢出修复的关键 */
+}
 
-.art-sidebar { width: 260px; background: #f0f0f0; border-right: 4px solid var(--black); display: flex; flex-direction: column; padding: 20px 15px; flex-shrink: 0; user-select: none; }
+.art-sidebar { width: 260px; background: #f0f0f0; border-right: 4px solid var(--black); display: flex; flex-direction: column; padding: 20px 15px; flex-shrink: 0; user-select: none;overflow: hidden; /* 🔥 侧边栏整体不滚动 */ }
 .sidebar-header { font-size: 0.7rem; color: #888; border-bottom: 2px dashed #ccc; margin-bottom: 15px; padding-bottom: 5px; }
-.channel-nav { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; flex: 1; overflow-y: auto; scrollbar-width: none; }
+/* 频道列表：占据剩余空间，内部滚动 */
+.channel-nav { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+  margin-bottom: 15px; 
+  flex: 1;          /* 🔥 自动占据剩余高度 */
+  overflow-y: auto; /* 🔥 内容多了就内部滚动 */
+  min-height: 0;    /* 🔥 防止 Flex 子项溢出 */
+  padding-right: 5px; /* 给滚动条留点位置 */
+}
 .channel-nav::-webkit-scrollbar { display: none; }
 
 .cyber-channel-btn { background: #fff; border: 2px solid var(--black); padding: 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; position: relative; transition: all 0.2s; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); flex-shrink: 0; }
@@ -165,7 +181,16 @@ onUnmounted(() => clearInterval(clockTimer));
 .status-light { width: 6px; height: 6px; border: 1px solid #999; background: #ccc; }
 .cyber-channel-btn.active .status-light { background: var(--red); border-color: var(--red); box-shadow: 0 0 5px var(--red); }
 
-.monitor-panel { background: var(--black); color: var(--white); padding: 15px; border: 2px solid var(--black); box-shadow: 4px 4px 0 rgba(0,0,0,0.2); margin-top: 20px; flex-shrink: 0; }
+/* 数据面板：固定在底部，不被压缩 */
+.monitor-panel { 
+  background: var(--black); 
+  color: var(--white); 
+  padding: 15px; 
+  border: 2px solid var(--black); 
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.2); 
+  margin-top: 10px; 
+  flex-shrink: 0; /* 🔥 禁止被压缩 */
+}
 .panel-label { font-size: 0.8rem; border-bottom: 1px dashed #555; padding-bottom: 5px; margin-bottom: 15px; color: var(--red); font-weight: bold; }
 .stat-grid { display: flex; flex-direction: column; gap: 15px; }
 .stat-cell { cursor: pointer; transition: 0.2s; }
@@ -182,7 +207,7 @@ onUnmounted(() => clearInterval(clockTimer));
   background: #fff;
   padding: 30px;
   position: relative;
-  overflow: hidden; /* 禁止父级滚动！ */
+  overflow-y: scroll; /* 禁止父级滚动！ */
 }
 
 .view-frame {
@@ -210,7 +235,35 @@ onUnmounted(() => clearInterval(clockTimer));
 .glitch-fade-enter-active, .glitch-fade-leave-active { transition: opacity 0.3s ease, transform 0.3s ease; }
 .glitch-fade-enter-from { opacity: 0; transform: translateY(10px); }
 .glitch-fade-leave-to { opacity: 0; transform: translateY(-10px); }
+@media (max-height: 1080px) {
+  .art-industrial-system { padding: 10px; }
+  
+  /* 增加高度利用率 */
+  .art-container { height: 98vh; border-width: 3px; }
+  .sys-header { height: 50px; }
+  
+  /* 侧边栏紧凑化 */
+  .art-sidebar { width: 230px; padding: 10px; }
+  .channel-nav { gap: 6px; }
+  .cyber-channel-btn { padding: 8px 10px; }
+  .ch-name { font-size: 0.8rem; }
+  
+  /* 统计面板压缩 */
+  .monitor-panel { padding: 10px; }
+  .stat-grid { gap: 6px; } /* 缩小间距 */
+  .stat-val { font-size: 1.2rem; }
+  .stat-label { font-size: 0.6rem; }
+  .sidebar-footer { display: none; } /* 空间不足时隐藏底部文字 */
 
+  /* 内容区留白减少 */
+  .art-viewport { padding: 15px; }
+  
+  /* 四角装饰微调 */
+  .corner-tl { top: -5px; left: -5px; width: 15px; height: 15px; border-width: 3px; }
+  .corner-tr { top: -5px; right: -5px; width: 15px; height: 15px; border-width: 3px; }
+  .corner-bl { bottom: -5px; left: -5px; width: 15px; height: 15px; border-width: 3px; }
+  .corner-br { bottom: -5px; right: -5px; width: 15px; height: 15px; border-width: 3px; }
+}
 @media (max-width: 1024px) {
   .art-container { height: auto; min-height: 95vh; }
   .art-body { flex-direction: column; }
