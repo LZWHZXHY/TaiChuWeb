@@ -456,7 +456,6 @@ onUnmounted(() => {
   display: flex; justify-content: space-between; align-items: center;
   padding: 20px 40px; background: var(--black); color: var(--off-white);
   border-bottom: 4px solid var(--black); z-index: 10;
-  height: ;
 }
 .glitch-title { font-family: 'Anton', sans-serif; font-size: 2.5rem; line-height: 1; }
 .red-fill { color: var(--red); }
@@ -526,7 +525,7 @@ onUnmounted(() => {
   overflow-y: auto; /* 开启滚动 */
   padding: 20px; 
   background: #F9F8F5; 
-  height: 0; /* 配合 flex:1 强制使用 flex 计算高度 */
+  height: 500px; /* 配合 flex:1 强制使用 flex 计算高度 */
 }
 .messages-display.dark-mode-scroll { background: #000; }
 
