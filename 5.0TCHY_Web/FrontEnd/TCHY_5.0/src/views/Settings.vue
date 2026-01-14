@@ -358,15 +358,26 @@
 import { ref, reactive, computed } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 // 导入 UserSettings 组件（根据你的组件实际路径调整）
-import UserSettings from '@/UserComponent/UserSettings.vue' 
+// 1. 必须从 vue-router 导入 useRouter
+import { useRouter } from 'vue-router' 
 
 // --- Data & State ---
+const router = useRouter() // 2. 初始化路由实例
 const currentTab = ref('works')
 const viewportRef = ref(null)
 const isFollowing = ref(false)
 const activeWorkFilter = ref('all')
-const goToSettings = () => { showUserMenu.value = false; router.push('/UserComponent/UserSettings') }
 
+// 3. 统一跳转函数（确保名称与模板中调用的 GoToUserSettings 一致）
+const GoToUserSettings = () => {
+  // 注意：app.js 中定义的路径是 "/profile/Usersettings"
+  router.push('/profile/Usersettings')
+}
+
+// 4. 处理模板中第 46 行可能存在的另一个点击事件
+const goToSettings = () => {
+  GoToUserSettings()
+}
 // ID Card Flip State
 const showIdArchive = ref(false)
 

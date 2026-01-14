@@ -4,177 +4,237 @@
       <div class="header-left">
         <div class="brand-block">
           <span class="logo-box">S</span>
-          <span class="brand-text">配置中心 // CONFIG_SYS</span>
+          <span class="brand-text">配置中心 // CONFIG_SYS_V2</span>
         </div>
       </div>
       <div class="header-right">
         <div class="status-indicator">
-          <span class="dot blink"></span> 写入模式: 开启
+          <span class="dot blink"></span> 联机状态: 在线
         </div>
         <button class="sys-btn warning" @click="goBack">
-          [ ESC ] 取消并返回
+          [ ESC ] ABORT
         </button>
         <button class="sys-btn primary" @click="saveAll">
-          [ ENTER ] 保存变更
+          [ ENTER ] COMMIT
         </button>
       </div>
     </header>
 
     <div class="main-layout">
+      
       <aside class="sidebar-nav">
-        <div class="nav-title">导航 // NAV</div>
-        <ul class="nav-list">
-          <li :class="{ active: activeSection === 'identity' }" @click="scrollTo('identity')">01. 身份识别</li>
-          <li :class="{ active: activeSection === 'basic' }" @click="scrollTo('basic')">02. 基础档案</li>
-          <li :class="{ active: activeSection === 'tags' }" @click="scrollTo('tags')">03. 标签管理</li>
-          <li :class="{ active: activeSection === 'contact' }" @click="scrollTo('contact')">04. 通讯终端</li>
-          <li :class="{ active: activeSection === 'links' }" @click="scrollTo('links')">05. 外部链路</li>
-        </ul>
         
-        <div class="console-box">
-          <div class="console-header">SYSTEM_LOG >></div>
-          <div class="console-content custom-scroll">
-            <div v-for="(log, i) in logs" :key="i" :class="log.type">
-              > {{ log.text }}
-            </div>
-          </div>
+        <div class="nav-section custom-scroll">
+          <div class="nav-header">>> 基础索引 // BASICS</div>
+          <ul class="nav-list">
+            <li :class="{ active: activeSection === 'identity' }" @click="scrollTo('identity', 'left')">
+              <span class="idx">01</span> 身份识别
+            </li>
+            <li :class="{ active: activeSection === 'basic' }" @click="scrollTo('basic', 'left')">
+              <span class="idx">02</span> 基础档案
+            </li>
+            <li :class="{ active: activeSection === 'tags' }" @click="scrollTo('tags', 'left')">
+              <span class="idx">03</span> 标签管理
+            </li>
+            <li :class="{ active: activeSection === 'contact' }" @click="scrollTo('contact', 'left')">
+              <span class="idx">04</span> 通讯终端
+            </li>
+            <li :class="{ active: activeSection === 'links' }" @click="scrollTo('links', 'left')">
+              <span class="idx">05</span> 外部链路
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-divider"></div>
+
+        <div class="nav-section custom-scroll">
+          <div class="nav-header">>> 个性化配置 // CUSTOM</div>
+          <ul class="nav-list">
+             <li :class="{ active: activeSection === 'theme' }" @click="scrollTo('theme', 'right')">
+              <span class="idx">A1</span> 视觉主题
+            </li>
+            <li :class="{ active: activeSection === 'pinned' }" @click="scrollTo('pinned', 'right')">
+              <span class="idx">A2</span> 置顶内容
+            </li>
+            <li :class="{ active: activeSection === 'achieve' }" @click="scrollTo('achieve', 'right')">
+              <span class="idx">A3</span> 成就矩阵
+            </li>
+            <li :class="{ active: activeSection === 'widgets' }" @click="scrollTo('widgets', 'right')">
+              <span class="idx">A4</span> 挂件参数
+            </li>
+          </ul>
+        </div>
+
+        <div class="sidebar-footer">
+          <span>MEM: 42%</span>
+          <span>NET: SECURE</span>
         </div>
       </aside>
 
-      <main class="form-area custom-scroll" @scroll="handleScroll">
+      <main class="content-split">
         
-        <section id="identity" class="form-section">
-          <div class="section-header">
-            <span class="sec-num">01</span>
-            <span class="sec-title">身份识别 // IDENTITY_MATRIX</span>
-          </div>
+        <div id="col-left" class="content-col left-col custom-scroll">
           
-          <div class="form-row avatar-row">
-            <div class="avatar-preview">
-              <img :src="form.avatar" alt="Avatar Preview" />
-              <div class="scan-line"></div>
+          <section id="identity" class="form-section">
+            <div class="section-header">
+              <span class="sec-num">01</span>
+              <span class="sec-title">身份识别 // IDENTITY</span>
             </div>
-            <div class="avatar-controls">
-              <label class="field-label">头像源 // AVATAR_SRC</label>
-              <input type="text" v-model="form.avatar" class="cyber-input" placeholder="输入图片URL..." />
-              <div class="btn-group">
-                <button class="cyber-btn sm" @click="randomAvatar">🎲 随机生成</button>
-                <button class="cyber-btn sm">↥ 上传文件</button>
+            <div class="form-row avatar-row">
+              <div class="avatar-preview">
+                <img :src="form.avatar" alt="Avatar" />
+                <div class="scan-line"></div>
+              </div>
+              <div class="avatar-controls">
+                <input type="text" v-model="form.avatar" class="cyber-input" placeholder="IMG_SOURCE_URL..." />
+                <button class="cyber-btn sm full-width" @click="randomAvatar">🎲 REROLL_HASH</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>昵称 // UID</label>
+              <input type="text" v-model="form.nickname" class="cyber-input bold" />
+            </div>
+          </section>
+
+          <section id="basic" class="form-section">
+            <div class="section-header">
+              <span class="sec-num">02</span>
+              <span class="sec-title">基础档案 // DATA</span>
+            </div>
+            <div class="form-group">
+              <label>BIO // 简介</label>
+              <textarea v-model="form.bio" class="cyber-textarea" rows="3"></textarea>
+            </div>
+            <div class="form-grid">
+               <div class="form-group">
+                <label>LOC // 坐标</label>
+                <input type="text" v-model="form.location" class="cyber-input" />
+              </div>
+              <div class="form-group">
+                <label>ROLE // 职业</label>
+                <input type="text" v-model="form.role" class="cyber-input" />
+              </div>
+            </div>
+          </section>
+
+          <section id="tags" class="form-section">
+            <div class="section-header">
+              <span class="sec-num">03</span>
+              <span class="sec-title">标签 // TAGS</span>
+            </div>
+            <div class="tag-manager">
+              <div class="current-tags">
+                <span v-for="(tag, index) in form.tags" :key="index" class="tag-chip">
+                  {{ tag }} <span class="remove-x" @click="removeTag(index)">×</span>
+                </span>
+              </div>
+              <input type="text" v-model="newTagInput" @keyup.enter="addTag" class="cyber-input" placeholder="Add Tag + Enter" />
+            </div>
+          </section>
+
+          <section id="contact" class="form-section">
+            <div class="section-header">
+              <span class="sec-num">04</span>
+              <span class="sec-title">通讯 // COMMS</span>
+            </div>
+            <div class="form-group">
+              <label>EMAIL</label>
+              <input type="email" v-model="form.email" class="cyber-input" />
+            </div>
+          </section>
+
+           <section id="links" class="form-section">
+            <div class="section-header">
+              <span class="sec-num">05</span>
+              <span class="sec-title">链路 // LINKS</span>
+            </div>
+            <div class="links-editor">
+              <div v-for="(link, index) in form.externalLinks" :key="index" class="link-row">
+                <input type="text" v-model="link.name" class="cyber-input sm" placeholder="Name" />
+                <input type="text" v-model="link.url" class="cyber-input lg" placeholder="URL" />
+                <button class="del-btn" @click="removeLink(index)">×</button>
+              </div>
+              <button class="add-link-btn" @click="addLink">+ ADD NODE</button>
+            </div>
+          </section>
+
+          <div class="end-marker">/// END OF BASIC_CONFIG ///</div>
+        </div>
+
+        <div id="col-right" class="content-col right-col custom-scroll">
+          
+          <div id="theme" class="config-module">
+            <div class="module-header">
+              <span class="mod-id">MOD_A1</span>
+              <span class="mod-name">VISUAL_THEME // 视觉主题</span>
+              <div class="mod-decor"></div>
+            </div>
+            <div class="module-body">
+              <div class="form-group">
+                <label>ACCENT_COLOR // 强调色</label>
+                <div class="color-picker-grid">
+                  <div class="color-opt" style="background: #D92323" @click="setTheme('#D92323')"></div>
+                  <div class="color-opt" style="background: #23D9D9" @click="setTheme('#23D9D9')"></div>
+                  <div class="color-opt" style="background: #D9D923" @click="setTheme('#D9D923')"></div>
+                  <div class="color-opt" style="background: #8823D9" @click="setTheme('#8823D9')"></div>
+                  <input type="color" class="color-input" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>INTERFACE_MODE // 界面模式</label>
+                <select class="cyber-select inverted">
+                  <option>DARK_MATTER (Default)</option>
+                  <option>LIGHT_ECHO</option>
+                  <option>HIGH_CONTRAST</option>
+                </select>
               </div>
             </div>
           </div>
 
-          <div class="form-grid">
-            <div class="form-group">
-              <label>昵称 // NICKNAME</label>
-              <input type="text" v-model="form.nickname" class="cyber-input bold" />
+          <div id="pinned" class="config-module">
+            <div class="module-header">
+              <span class="mod-id">MOD_A2</span>
+              <span class="mod-name">PINNED_CONTENT // 置顶管理</span>
+              <div class="mod-decor"></div>
             </div>
-            <div class="form-group">
-              <label>职业 // ROLE</label>
-              <input type="text" v-model="form.role" class="cyber-input" />
+            <div class="module-body">
+              <div class="sub-group">
+                <label>FEATURED_WORK // 代表作</label>
+                <div class="pinned-item empty">
+                  <span>[ + ] Select Project to Pin</span>
+                </div>
+              </div>
+               <div class="sub-group">
+                <label>TOP_ARTICLE // 置顶文章</label>
+                <div class="pinned-item">
+                  <span class="item-title">Vue3 Reactivity Deep Dive</span>
+                  <span class="item-status">ACTIVE</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </section>
-
-        <section id="basic" class="form-section">
-          <div class="section-header">
-            <span class="sec-num">02</span>
-            <span class="sec-title">基础档案 // BASIC_DATA</span>
-          </div>
-
-          <div class="form-group">
-            <label>个人简介 // BIO_TEXT</label>
-            <textarea v-model="form.bio" class="cyber-textarea" rows="4" placeholder="输入你的个人简介..."></textarea>
-            <div class="char-count">{{ form.bio.length }} / 200 chars</div>
-          </div>
-
-          <div class="form-grid three-col">
-            <div class="form-group">
-              <label>年龄 // AGE</label>
-              <input type="number" v-model="form.age" class="cyber-input" />
-            </div>
-            <div class="form-group">
-              <label>性别 // SEX</label>
-              <select v-model="form.gender" class="cyber-select">
-                <option value="Male / M">Male / M</option>
-                <option value="Female / F">Female / F</option>
-                <option value="Bot / B">Bot / B</option>
-                <option value="Unknown">Unknown</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>坐标 // LOC</label>
-              <input type="text" v-model="form.location" class="cyber-input" />
-            </div>
-          </div>
-        </section>
-
-        <section id="tags" class="form-section">
-          <div class="section-header">
-            <span class="sec-num">03</span>
-            <span class="sec-title">标签管理 // TAG_SYSTEM</span>
-          </div>
-          
-          <div class="tag-manager">
-            <div class="current-tags">
-              <span v-for="(tag, index) in form.tags" :key="index" class="tag-chip">
-                {{ tag }}
-                <span class="remove-x" @click="removeTag(index)">×</span>
-              </span>
-            </div>
-            <div class="add-tag-row">
-              <input 
-                type="text" 
-                v-model="newTagInput" 
-                @keyup.enter="addTag"
-                class="cyber-input" 
-                placeholder="输入标签后回车添加..." 
-              />
-              <button class="cyber-btn" @click="addTag">ADD +</button>
-            </div>
-          </div>
-        </section>
-
-        <section id="contact" class="form-section">
-          <div class="section-header">
-            <span class="sec-num">04</span>
-            <span class="sec-title">通讯终端 // CONNECT_HUB</span>
           </div>
 
-          <div class="form-grid">
-            <div class="form-group">
-              <label>电子邮箱 // EMAIL</label>
-              <input type="email" v-model="form.email" class="cyber-input" />
+          <div id="achieve" class="config-module">
+             <div class="module-header">
+              <span class="mod-id">MOD_A3</span>
+              <span class="mod-name">ACHIEVEMENTS // 成就展示</span>
+              <div class="mod-decor"></div>
             </div>
-            <div class="form-group">
-              <label>腾讯QQ // TENCENT_ID</label>
-              <input type="text" v-model="form.qq" class="cyber-input" />
+            <div class="module-body">
+              <div class="achievement-grid">
+                <div class="ach-badge active">100 Days</div>
+                <div class="ach-badge active">Contributor</div>
+                <div class="ach-badge">Bug Hunter</div>
+                <div class="ach-badge">Sponsor</div>
+              </div>
+              <div class="switch-row">
+                <label>Show Badges Publicly</label>
+                <input type="checkbox" checked />
+              </div>
             </div>
           </div>
-        </section>
 
-        <section id="links" class="form-section">
-          <div class="section-header">
-            <span class="sec-num">05</span>
-            <span class="sec-title">外部链路 // HYPERLINKS</span>
-          </div>
-
-          <div class="links-editor">
-            <div v-for="(link, index) in form.externalLinks" :key="index" class="link-row">
-              <span class="row-idx">{{ (index + 1).toString().padStart(2,'0') }}</span>
-              <input type="text" v-model="link.name" class="cyber-input sm" placeholder="平台名称 (e.g. GitHub)" />
-              <input type="text" v-model="link.url" class="cyber-input lg" placeholder="URL..." />
-              <button class="del-btn" @click="removeLink(index)">[ DEL ]</button>
-            </div>
-            
-            <button class="add-link-btn" @click="addLink">
-              + 添加新链路节点 // ADD_NODE
-            </button>
-          </div>
-        </section>
-        
-        <div class="form-footer">
-          <div class="footer-deco">--- END OF CONFIG ---</div>
+          <div class="end-marker">/// END OF CUSTOM_CONFIG ///</div>
         </div>
 
       </main>
@@ -183,271 +243,333 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+  import { onMounted, onUnmounted } from 'vue'
+
+onMounted(() => {
+  // 进入页面时，禁止全局滚动
+  document.body.style.overflow = 'hidden'
+})
+
+onUnmounted(() => {
+  // 离开页面时，恢复全局滚动
+  document.body.style.overflow = ''
+})
+import { ref, reactive } from 'vue'
 
 // --- State ---
 const activeSection = ref('identity')
 const newTagInput = ref('')
-const logs = ref([
-  { text: 'System Initialized...', type: 'info' },
-  { text: 'Loading User Config...', type: 'info' },
-  { text: 'Ready for Input.', type: 'success' }
-])
 
-// --- Form Data (初始值模拟) ---
+// --- Form Data ---
 const form = reactive({
   avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
   nickname: '峰峰子',
-  role: '视觉前端 // VISUAL_ENG',
-  bio: '原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼。',
-  age: 24,
-  gender: 'Male / M',
+  role: 'Visual Eng.',
+  bio: 'System initialization complete. Waiting for input...',
   location: 'Guangzhou, CN',
-  creationAge: '4年', 
   email: 'fengfengzi@cyber.com',
-  qq: '1145141919',
-  tags: ['界面设计', 'Vue开发', '三维艺术', 'Cyberpunk'],
+  tags: ['UI/UX', 'Vue3', 'Cyberpunk'],
   externalLinks: [
     { name: 'GitHub', url: 'https://github.com' },
-    { name: 'Bilibili', url: 'https://bilibili.com' },
-    { name: 'Dribbble', url: 'https://dribbble.com' }
+    { name: 'Bilibili', url: 'https://bilibili.com' }
   ]
 })
 
 // --- Methods ---
 
 const goBack = () => {
-  // 实际场景用 router.back()
-  if (confirm('检测到未保存的更改。确定要中止并返回吗？')) {
-    addLog('Process Aborted.', 'error')
-    setTimeout(() => {
-      if(window.history.length > 1) window.history.back()
-    }, 500)
-  }
+  if (confirm('ABORT CHANGES?')) window.history.back()
 }
 
 const saveAll = () => {
-  addLog('Validating Data Packets...', 'info')
-  setTimeout(() => {
-    addLog('Writing to Database...', 'warning')
-    setTimeout(() => {
-      addLog('Config Saved Successfully.', 'success')
-      alert('保存成功！\n[System]: Configuration Updated.')
-      // 此处调用API保存
-    }, 800)
-  }, 600)
+  alert('SYSTEM_MSG: Configuration packets transmitted.')
 }
 
-// 头像随机
+// Avatar
 const randomAvatar = () => {
-  const seeds = ['Felix', 'Aneka', 'Zoe', 'Midnight', 'Bear']
-  const randomSeed = seeds[Math.floor(Math.random() * seeds.length)]
-  form.avatar = `https://api.dicebear.com/7.x/notionists/svg?seed=${randomSeed + Math.random()}`
-  addLog('Avatar Hash Regenerated.', 'info')
+  const seed = Math.random().toString(36).substring(7)
+  form.avatar = `https://api.dicebear.com/7.x/notionists/svg?seed=${seed}`
 }
 
-// 标签管理
+// Tags
 const addTag = () => {
   const val = newTagInput.value.trim()
   if (val && !form.tags.includes(val)) {
     form.tags.push(val)
     newTagInput.value = ''
-    addLog(`Tag [${val}] appended.`, 'success')
   }
 }
-const removeTag = (index) => {
-  const removed = form.tags.splice(index, 1)
-  addLog(`Tag [${removed}] detached.`, 'warning')
+const removeTag = (index) => form.tags.splice(index, 1)
+
+// Links
+const addLink = () => form.externalLinks.push({ name: '', url: '' })
+const removeLink = (index) => form.externalLinks.splice(index, 1)
+
+// Theme Mock
+const setTheme = (color) => {
+  console.log(`System Accent Color set to: ${color}`)
 }
 
-// 链接管理
-const addLink = () => {
-  form.externalLinks.push({ name: '', url: '' })
-}
-const removeLink = (index) => {
-  form.externalLinks.splice(index, 1)
-}
-
-// 日志工具
-const addLog = (text, type = 'info') => {
-  logs.value.push({ text, type })
-  // 保持日志在最新
-  setTimeout(() => {
-    const el = document.querySelector('.console-content')
-    if(el) el.scrollTop = el.scrollHeight
-  }, 50)
-}
-
-// 滚动监听 (简单的)
-const scrollTo = (id) => {
-  const el = document.getElementById(id)
-  if (el) el.scrollIntoView({ behavior: 'smooth' })
+// Scroll Logic
+// colType: 'left' | 'right'
+const scrollTo = (id, colType) => {
   activeSection.value = id
+  const containerId = colType === 'left' ? 'col-left' : 'col-right'
+  const container = document.getElementById(containerId)
+  const target = document.getElementById(id)
+  
+  if (container && target) {
+    // 计算相对位置进行滚动
+    const top = target.offsetTop - container.offsetTop
+    container.scrollTo({ top, behavior: 'smooth' })
+  }
 }
 </script>
 
 <style scoped>
 @import url('https://gs.jurieo.com/gemini/fonts-googleapis/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap');
 
+/* --- Global Reset & Variables --- */
 .settings-terminal {
   --red: #D92323;
-  --black: #111111;
-  --white: #F4F1EA;
-  --gray: #ccc;
+  --black: #111111; /* 主要背景 */
+  --dark-grey: #1a1a1a; /* 模块背景 */
+  --light-grey: #f4f4f4; /* 表单背景 */
+  --green: #00ff41; /* 终端绿 */
+  --text-main: #111;
+  --text-inv: #eee;
+  
   --mono: 'JetBrains Mono', monospace;
   --sans: 'Noto Sans SC', sans-serif;
 
   width: 100vw;
   height: 100vh;
-  background: var(--white);
-  color: var(--black);
+  background: var(--light-grey);
+  color: var(--text-main);
   font-family: var(--mono), var(--sans);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden; /* 禁止全局滚动 */
 }
 
-/* --- Header --- */
+/* --- Header (Fixed) --- */
 .terminal-header {
   height: 60px;
   background: var(--black);
-  color: var(--white);
+  color: var(--text-inv);
   display: flex; justify-content: space-between; align-items: center;
   padding: 0 20px;
   border-bottom: 4px solid var(--red);
   flex-shrink: 0;
+  z-index: 10;
 }
-.brand-block { display: flex; align-items: center; gap: 10px; font-weight: bold; }
-.logo-box { background: var(--white); color: var(--black); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-.header-right { display: flex; align-items: center; gap: 15px; }
-.status-indicator { font-size: 0.75rem; color: #00ff00; margin-right: 15px; }
-.dot { display: inline-block; width: 8px; height: 8px; background: #00ff00; border-radius: 50%; margin-right: 5px; }
+.brand-block { display: flex; align-items: center; gap: 10px; font-weight: bold; font-family: var(--mono); }
+.logo-box { background: var(--text-inv); color: var(--black); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.header-right { display: flex; align-items: center; gap: 15px; font-size: 0.8rem; }
+.status-indicator { font-size: 0.75rem; display: flex; align-items: center; gap: 6px; color: #00ff00; }
+.dot { width: 8px; height: 8px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 5px #00ff00; }
 .sys-btn {
-  border: 1px solid #666; background: transparent; color: #ccc;
-  padding: 5px 15px; font-family: var(--mono); cursor: pointer; transition: 0.2s; font-size: 0.75rem;
+  background: transparent; border: 1px solid #444; color: #888;
+  padding: 6px 12px; font-family: var(--mono); cursor: pointer; transition: 0.2s; font-size: 0.75rem;
 }
 .sys-btn:hover { background: #333; color: #fff; }
 .sys-btn.primary { border-color: var(--red); color: var(--red); font-weight: bold; }
-.sys-btn.primary:hover { background: var(--red); color: var(--white); }
-.sys-btn.warning:hover { color: #ffff00; border-color: #ffff00; }
+.sys-btn.primary:hover { background: var(--red); color: white; }
+.blink { animation: blink 1s infinite; }
 
-/* --- Layout --- */
-.main-layout { flex: 1; display: flex; overflow: hidden; }
+/* --- Main Layout (Flex) --- */
+.main-layout {
+  flex: 1;
+  display: flex;
+  overflow: hidden; /* 内部区域独立滚动 */
+}
 
-/* --- Sidebar --- */
+/* --- Sidebar (Left, 260px) --- */
 .sidebar-nav {
   width: 260px;
-  background: #eee;
-  border-right: 2px solid var(--black);
+  background: var(--black); /* 借鉴原 Console 风格 */
+  color: var(--green);
   display: flex; flex-direction: column;
+  border-right: 1px solid #333;
+  flex-shrink: 0;
+  font-family: var(--mono);
+}
+
+.nav-section {
+  flex: 1;
+  overflow-y: auto;
   padding: 20px;
+  display: flex; flex-direction: column;
 }
-.nav-title { font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid var(--black); padding-bottom: 5px; }
-.nav-list { list-style: none; padding: 0; margin-bottom: auto; }
+
+.nav-header {
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 15px;
+  border-bottom: 1px dashed #333;
+  padding-bottom: 5px;
+}
+
+.nav-list { list-style: none; padding: 0; margin: 0; }
 .nav-list li {
-  padding: 10px; cursor: pointer; border: 1px solid transparent; margin-bottom: 5px; font-size: 0.85rem; transition: 0.2s;
+  padding: 10px; cursor: pointer; margin-bottom: 4px; font-size: 0.85rem;
+  transition: 0.2s; border-left: 2px solid transparent; opacity: 0.7;
 }
-.nav-list li:hover { background: #ddd; }
-.nav-list li.active { background: var(--black); color: var(--white); border-left: 5px solid var(--red); }
-
-/* Console */
-.console-box {
-  background: #000; color: #00ff00; border: 2px solid #333; font-size: 0.7rem; display: flex; flex-direction: column; height: 200px;
+.nav-list li:hover { opacity: 1; background: rgba(0,255,65,0.1); }
+.nav-list li.active {
+  color: var(--black); background: var(--green);
+  border-left-color: var(--red); opacity: 1; font-weight: bold;
 }
-.console-header { background: #333; color: #fff; padding: 2px 5px; font-weight: bold; }
-.console-content { padding: 10px; overflow-y: auto; flex: 1; font-family: 'Courier New', monospace; }
-.console-content .error { color: #ff0000; }
-.console-content .warning { color: #ffff00; }
-.console-content .success { color: #00ff00; }
+.idx { opacity: 0.5; margin-right: 8px; font-size: 0.7rem; }
 
-/* --- Form Area --- */
-.form-area { flex: 1; padding: 40px; overflow-y: auto; background-image: linear-gradient(#ccc 1px, transparent 1px), linear-gradient(90deg, #ccc 1px, transparent 1px); background-size: 40px 40px; position: relative; scroll-behavior: smooth; }
+.nav-divider {
+  height: 2px;
+  background: #222;
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #000;
+}
+
+.sidebar-footer {
+  height: 40px;
+  background: #000;
+  border-top: 1px solid var(--red);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 15px; font-size: 0.7rem; color: #555;
+}
+
+/* --- Content Split (Right Area) --- */
+.content-split {
+  flex: 1;
+  display: flex;
+  background: #ddd; /* 缝隙颜色 */
+  gap: 2px; /* 产生分割线效果 */
+}
+
+.content-col {
+  flex: 1;
+  background: var(--light-grey);
+  overflow-y: auto;
+  padding: 40px;
+  position: relative;
+}
+
+/* --- Left Col Styles (Profile Forms) --- */
+.left-col {
+  background: #F4F1EA;
+  background-image: linear-gradient(#e5e5e5 1px, transparent 1px), linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
+  background-size: 20px 20px;
+  
+}
 
 .form-section {
-  background: var(--white);
-  border: 2px solid var(--black);
-  padding: 30px;
-  margin-bottom: 40px;
-  box-shadow: 8px 8px 0 rgba(0,0,0,0.1);
+  margin-bottom: 50px;
 }
-
-.section-header { display: flex; align-items: center; border-bottom: 2px solid var(--black); padding-bottom: 15px; margin-bottom: 25px; }
-.sec-num { font-size: 2rem; font-weight: bold; color: #ddd; margin-right: 15px; line-height: 1; }
-.sec-title { font-size: 1.2rem; font-weight: bold; font-family: var(--mono); }
-
-/* Inputs Common */
-.form-group { margin-bottom: 20px; display: flex; flex-direction: column; }
-.form-group label { font-size: 0.75rem; color: #666; margin-bottom: 5px; font-weight: bold; font-family: var(--mono); }
-.cyber-input, .cyber-textarea, .cyber-select {
-  border: 2px solid var(--black);
-  background: #f9f9f9;
-  padding: 10px;
-  font-family: var(--sans);
-  font-size: 0.9rem;
-  outline: none;
-  transition: 0.2s;
-  width: 100%;
+.section-header {
+  display: flex; align-items: baseline; border-bottom: 2px solid var(--black);
+  padding-bottom: 10px; margin-bottom: 20px;
 }
-.cyber-input:focus, .cyber-textarea:focus, .cyber-select:focus {
-  border-color: var(--red);
-  box-shadow: 4px 4px 0 rgba(217, 35, 35, 0.1);
-  background: #fff;
+.sec-num { font-size: 2.5rem; font-weight: bold; color: #ccc; margin-right: 15px; line-height: 0.8; font-family: var(--sans); }
+.sec-title { font-size: 1.1rem; font-weight: bold; font-family: var(--mono); }
+
+/* Inputs */
+.form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+.form-group label { font-size: 0.7rem; color: #666; margin-bottom: 5px; font-weight: bold; font-family: var(--mono); }
+.cyber-input, .cyber-textarea {
+  border: 1px solid #999; background: #fff; padding: 10px;
+  font-family: var(--sans); font-size: 0.9rem; outline: none; transition: 0.2s;
+  width: 100%; display: block;
 }
-.cyber-input.bold { font-weight: bold; font-size: 1.1rem; }
+.cyber-input:focus, .cyber-textarea:focus { border-color: var(--red); box-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
 
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.form-grid.three-col { grid-template-columns: 1fr 1fr 1fr; }
-
-/* Specific: Avatar */
-.avatar-row { display: flex; gap: 30px; align-items: center; margin-bottom: 20px; }
-.avatar-preview { width: 100px; height: 100px; border: 2px solid var(--black); position: relative; overflow: hidden; background: #eee; flex-shrink: 0; }
+/* Avatar */
+.avatar-row { display: flex; gap: 20px; align-items: center; margin-bottom: 20px; }
+.avatar-preview { width: 80px; height: 80px; border: 1px solid var(--black); position: relative; overflow: hidden; background: #000; flex-shrink: 0; }
 .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
-.scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: rgba(0,255,0,0.5); animation: scan 2s infinite linear; }
-.avatar-controls { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-.btn-group { display: flex; gap: 10px; margin-top: 5px; }
+.avatar-controls { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.cyber-btn.sm { padding: 5px; font-size: 0.75rem; background: var(--black); color: #fff; border: none; cursor: pointer; width: 120px;}
+.cyber-btn.sm:hover { background: var(--red); }
 
-/* Specific: Tags */
-.tag-manager { border: 2px solid #ddd; padding: 15px; background: #fafafa; }
-.current-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
-.tag-chip { background: var(--black); color: var(--white); padding: 5px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; }
-.remove-x { cursor: pointer; color: var(--red); font-weight: bold; }
-.remove-x:hover { color: #fff; }
-.add-tag-row { display: flex; gap: 10px; }
-
-/* Specific: Links */
-.link-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-.row-idx { font-family: var(--mono); color: #aaa; width: 30px; }
-.cyber-input.sm { width: 150px; }
+/* Tags & Links */
+.tag-chip { background: var(--black); color: #fff; display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; font-size: 0.8rem; margin: 0 5px 5px 0; }
+.remove-x { color: var(--red); cursor: pointer; }
+.link-row { display: flex; gap: 5px; margin-bottom: 5px; }
+.cyber-input.sm { width: 30%; }
 .cyber-input.lg { flex: 1; }
-.del-btn { background: transparent; border: none; color: #999; cursor: pointer; font-family: var(--mono); font-size: 0.8rem; }
-.del-btn:hover { color: var(--red); text-decoration: line-through; }
-.add-link-btn { width: 100%; padding: 10px; border: 2px dashed #999; background: transparent; color: #666; cursor: pointer; font-family: var(--mono); transition: 0.2s; }
-.add-link-btn:hover { border-color: var(--black); color: var(--black); background: #eee; }
+.del-btn { background: #ccc; border: none; cursor: pointer; width: 30px; }
+.del-btn:hover { background: var(--red); color: white; }
+.add-link-btn { width: 100%; border: 1px dashed #999; background: transparent; padding: 8px; cursor: pointer; font-size: 0.8rem; }
+.add-link-btn:hover { border-color: var(--black); background: #eee; }
 
-/* Buttons */
-.cyber-btn { background: var(--black); color: var(--white); border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; transition: 0.2s; font-family: var(--mono); }
-.cyber-btn:hover { background: var(--red); }
-.cyber-btn.sm { padding: 5px 10px; font-size: 0.75rem; }
+/* --- Right Col Styles (Personalization Modules) --- */
+.right-col {
+  background: #F4F1EA;
+  padding: 40px 30px;
+  background-image: linear-gradient(#e5e5e5 1px, transparent 1px), linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
+  background-size: 20px 20px;
+}
 
-/* Footer */
-.form-footer { text-align: center; margin-top: 50px; padding-bottom: 50px; color: #999; font-family: var(--mono); }
+.config-module {
+  background: #fff;
+  border: 1px solid var(--black);
+  margin-bottom: 30px;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+}
 
-/* Animation */
-@keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
-.blink { animation: blink 1s infinite; }
+/* Module Header: Industrial Style */
+.module-header {
+  background: var(--dark-grey);
+  color: #fff;
+  padding: 8px 15px;
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--black);
+}
+.mod-id { color: var(--red); font-weight: bold; }
+.mod-decor { flex: 1; height: 2px; background: repeating-linear-gradient(90deg, #444, #444 2px, transparent 2px, transparent 4px); }
+
+.module-body {
+  padding: 20px;
+}
+
+/* Module Contents */
+.color-picker-grid { display: flex; gap: 10px; margin-top: 5px; }
+.color-opt { width: 24px; height: 24px; border: 1px solid #000; cursor: pointer; }
+.color-opt:hover { transform: scale(1.1); }
+.pinned-item {
+  border: 1px dashed #999; padding: 10px; text-align: center; font-size: 0.8rem; color: #666; margin-top: 5px;
+  display: flex; justify-content: space-between;
+}
+.pinned-item.empty { background: #f9f9f9; cursor: pointer; }
+.pinned-item.empty:hover { background: #eee; color: #000; border-color: #000; }
+.item-status { font-size: 0.6rem; background: var(--green); color: #000; padding: 1px 4px; }
+
+.achievement-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
+.ach-badge {
+  aspect-ratio: 1; background: #333; color: #555; display: flex; align-items: center; justify-content: center;
+  font-size: 0.6rem; text-align: center; border: 1px solid #000;
+}
+.ach-badge.active { background: var(--black); color: var(--red); border-color: var(--red); font-weight: bold; }
+
+.end-marker {
+  text-align: center; font-family: var(--mono); color: #bbb; margin-top: 40px; font-size: 0.7rem; letter-spacing: 2px;
+}
+
+/* Scrollbars */
+.custom-scroll::-webkit-scrollbar { width: 5px; }
+.custom-scroll::-webkit-scrollbar-track { background: transparent; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #413e3a; }
+.sidebar-nav .custom-scroll::-webkit-scrollbar-thumb { background: #333; }
+.sidebar-nav .custom-scroll::-webkit-scrollbar-thumb:hover { background: var(--green); }
+
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-/* Scrollbar */
-.custom-scroll::-webkit-scrollbar { width: 8px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: var(--black); }
-.custom-scroll::-webkit-scrollbar-track { background: #eee; }
-
-/* Mobile */
+/* Mobile Response (简易适配) */
 @media (max-width: 900px) {
   .main-layout { flex-direction: column; overflow-y: auto; }
-  .sidebar-nav { width: 100%; height: auto; border-right: none; border-bottom: 2px solid var(--black); flex-shrink: 0; }
-  .console-box { display: none; }
-  .form-grid, .form-grid.three-col { grid-template-columns: 1fr; }
-  .avatar-row { flex-direction: column; align-items: flex-start; }
+  .sidebar-nav { width: 100%; height: auto; border-right: none; max-height: 200px; }
+  .content-split { flex-direction: column; }
+  .content-col { overflow: visible; height: auto; }
+  .settings-terminal { overflow-y: auto; height: auto; }
 }
 </style>

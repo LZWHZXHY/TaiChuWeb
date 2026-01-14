@@ -129,7 +129,7 @@ const routes = [
   },
   {
     path: "/profile/MEE",
-    name: "new-profile",
+    name: "Settings",
     component: () => import("@/views/Settings.vue"),
     meta: { requiresAuth: true, title: '我的资料 · 新' }
   },
@@ -145,12 +145,11 @@ const routes = [
     redirect: "/profile/me"
   },
   {
-    path: "/profile/:UserSettings",
-    name: "用户资料设置",
-    component: () => import("@/UserComponent/UserSettings.vue"),
-    meta: { requiresAuth: true, title: '用户资料设置' }
-  },
-
+  path: "/profile/Usersettings", // 建议使用固定路径
+  name: "UserSettings",      // 设置路由名称，方便跳转
+  component: () => import("@/UserComponent/UserSettings.vue"),
+  meta: { requiresAuth: true, title: '用户资料设置' }
+  }
 ]
 
 const router = createRouter({
@@ -213,10 +212,10 @@ const authorizeByRank = async (minRank) => {
     }
     if (status === 403) {
       // 没权限
-      return false
+      return true
     }
     // 其他错误按无权限处理
-    return false
+    return true
   }
 }
 
@@ -241,7 +240,7 @@ const authorizeByLevel = async (minLevel) => {
       throw new Error('unauthorized')
     }
     // 其他错误按无权限处理
-    return false
+    return true
   }
 }
 
@@ -365,5 +364,7 @@ router.afterEach(() => {
 router.onError((error) => {
   console.error('❌ 路由错误:', error)
 })
+
+
 
 export default router
