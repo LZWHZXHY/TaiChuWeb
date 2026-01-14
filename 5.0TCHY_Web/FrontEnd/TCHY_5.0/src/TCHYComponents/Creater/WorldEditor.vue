@@ -198,7 +198,7 @@
 
 <script>
 import apiClient from '@/utils/api';
-import NodeRelationPanel from './NodeRelationPanel.vue';
+import NodeRelationPanel from '../../ArtCenter/Components/NodeRelationPanel.vue';
 import PropertyItem from './PropertyItem.vue';
 // ✅ 引入组件
 import ChronicleEditor from './ChronicleEditor.vue';
