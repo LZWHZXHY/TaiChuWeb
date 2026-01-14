@@ -1,142 +1,145 @@
 <template>
-  <div class="doc-viewer-wrapper">
-    <div class="doc-paper">
-      
-      <div class="doc-toolbar">
-        <div class="doc-breadcrumbs">
-          ID: {{ node.id }} // {{ node.type }}
+  <div class="cyber-doc-viewer">
+    <div class="grid-bg moving-grid"></div>
+
+    <div class="doc-paper-heavy">
+      <div class="cyber-toolbar-heavy">
+        <div class="tech-info-group">
+          <span class="deco-box">■</span>
+          <span class="node-id-label">NODE_ID: {{ node.id }}</span>
+          <span class="status-badge" :class="{ 'pending': node.status === 2 }">
+            // {{ node.status === 2 ? 'PENDING_REVIEW' : 'VERIFIED_STABLE' }}
+          </span>
         </div>
         <div class="tool-actions">
           <template v-if="!isEditing">
-            <button class="cyber-btn primary" @click="startEdit">EDIT_MODE</button>
-            <button class="cyber-btn ghost del" @click="deleteNode">DEL</button>
+            <button class="cyber-btn-rect primary-red" @click="startEdit">
+              <span class="btn-text">EDIT_MODE</span>
+            </button>
+            <button class="cyber-btn-rect ghost-dark" @click="deleteNode">
+              <span class="btn-text">TERMINATE</span>
+            </button>
           </template>
           <template v-else>
-            <button class="cyber-btn ghost" @click="cancelEdit">CANCEL</button>
-            <button class="cyber-btn primary" @click="saveNode" :disabled="submitting">
-              {{ submitting ? 'SAVING...' : 'SAVE_CHANGES' }}
+            <button class="cyber-btn-rect ghost-dark" @click="cancelEdit">
+              <span class="btn-text">ABORT</span>
+            </button>
+            <button class="cyber-btn-rect primary-black" @click="saveNode" :disabled="submitting">
+              <span class="btn-text">{{ submitting ? 'SYNCING...' : 'COMMIT_CHANGES' }}</span>
             </button>
           </template>
         </div>
       </div>
 
-      <div v-if="!isEditing" class="read-mode">
-        
-        <div class="doc-header-section">
-          <div class="header-content">
-            <h1 class="doc-title">{{ node.name }}</h1>
-            <div class="meta-row">
-              <span class="tag">TYPE: {{ node.type }}</span>
-              <span class="tag">AUTHOR: {{ node.author || 'SYSTEM' }}</span>
-              <span class="tag">UPDATED: {{ formatDate(node.updateTime) }}</span>
+      <div v-if="!isEditing" class="read-mode-scroll custom-scroll">
+        <div class="doc-hero-section">
+          <div class="hero-main">
+            <h1 class="giant-doc-title glitch-hover" :data-text="node.name">{{ node.name }}</h1>
+            <div class="meta-strip">
+              <span class="meta-item"><span class="label">TYPE:</span> {{ node.type }}</span>
+              <span class="meta-item"><span class="label">AUTH:</span> {{ node.author || 'SYSTEM' }}</span>
+              <span class="meta-item"><span class="label">SYNC:</span> {{ formatDate(node.updateTime) }}</span>
             </div>
           </div>
-          <div class="header-visual" v-if="parsedImages.length > 0">
-            <img :src="parsedImages[0]" @error="handleImgError" />
+          <div class="hero-portrait" v-if="parsedImages.length > 0">
+            <div class="portrait-frame">
+               <img :src="parsedImages[0]" @error="handleImgError" />
+               <div class="scanline"></div>
+            </div>
           </div>
         </div>
 
-        <div class="doc-divider"></div>
+        <div class="divider-tech"><span>// INTEL_DATA_STREAM //</span></div>
 
-        <div class="doc-section">
-          <h3 class="sec-title">DESCRIPTION // 描述</h3>
-          <div class="text-content">
-            {{ node.description || node.summary || 'NO_DATA_LOGGED...' }}
-          </div>
-        </div>
+        <section class="info-block-heavy">
+          <div class="block-label">// DESCRIPTION_ARCHIVE</div>
+          <div class="text-content-industrial">{{ node.description || '>> NO_DATA_TRANSMITTED_IN_THIS_NODE.' }}</div>
+        </section>
 
-        <div class="doc-section" v-if="hasMetaData">
-          <h3 class="sec-title">ATTRIBUTES // 属性设定</h3>
-          <div class="attr-panel">
+        <section class="info-block-heavy" v-if="hasMetaData">
+          <div class="block-label">// ATTRIBUTE_MATRIX</div>
+          <div class="attr-matrix-inner">
             <JsonTreeViewer :data="parsedMeta" />
           </div>
-        </div>
+        </section>
 
-        <div class="doc-section" v-if="parsedImages.length > 0">
-          <h3 class="sec-title">GALLERY // 图像档案</h3>
-          <div class="gallery-grid">
-            <div v-for="(img, idx) in parsedImages" :key="idx" class="gallery-item">
+        <section class="info-block-heavy">
+          <div class="block-label">// NEURAL_CONNECTIONS</div>
+          <NodeRelationPanel :currentNode="node" :allNodes="allNodes" @select-node="$emit('select-node', $event)" />
+        </section>
+
+        <section class="info-block-heavy" v-if="parsedImages.length > 0">
+          <div class="block-label">// VISUAL_DATABASE</div>
+          <div class="cyber-gallery-grid">
+            <div v-for="(img, idx) in parsedImages" :key="idx" class="gallery-cell">
               <img :src="img" loading="lazy" />
+              <div class="cell-deco">IMG_{{ idx + 1 }}</div>
             </div>
           </div>
-        </div>
-
+        </section>
       </div>
 
-      <div v-else class="edit-mode custom-scroll">
+      <div v-else class="edit-mode-scroll custom-scroll">
         
-        <div class="edit-section">
-          <div class="sec-label">>> BASIC_INFO // 基础信息</div>
-          <div class="form-row">
-            <div class="form-group grow">
-              <label>NAME</label>
-              <input v-model="editForm.name" class="cyber-input" />
+        
+
+        <div class="edit-card-heavy">
+          <div class="card-tag-black">BASIC_INPUT_BUFFER</div>
+          <div class="form-grid-industrial">
+            <div class="form-group-tech">
+              <label class="input-label-tech">> IDENTIFIER_NAME</label>
+              <input v-model="editForm.name" class="cyber-input-heavy" />
             </div>
-            <div class="form-group">
-              <label>TYPE</label>
-              <input v-model="editForm.type" class="cyber-input" />
+            <div class="form-group-tech">
+              <label class="input-label-tech">> NODE_CLASSIFICATION</label>
+              <input v-model="editForm.type" class="cyber-input-heavy" list="type-options" />
+              <datalist id="type-options">
+                <option v-for="t in existingTypes" :key="t" :value="t" />
+              </datalist>
             </div>
-            <div class="form-group">
-              <label>AUTHOR</label>
-              <input v-model="editForm.author" class="cyber-input" />
+            <div class="form-group-tech">
+              <label class="input-label-tech">> ORIGIN_AUTHOR</label>
+              <input v-model="editForm.author" class="cyber-input-heavy" />
             </div>
           </div>
         </div>
 
-        <div class="edit-section">
-          <div class="sec-label">>> RELATIONS // 关系链接</div>
-          <NodeRelationPanel 
-            :currentNode="node" 
-            :allNodes="allNodes"
-            @select-node="$emit('select-node', $event)" 
-          />
-        </div>
-
-        <div class="edit-section">
-          <div class="sec-header">
-            <div class="sec-label">>> PROPERTIES // 属性参数</div>
-            <button class="cyber-btn-sm" @click="addRootProperty">+ ADD PROP</button>
+        <div class="edit-card-heavy">
+          <div class="card-tag-black">META_DATA_CONFIGURATION</div>
+          <div class="property-header-tech">
+            <button class="cyber-btn-sm-heavy" @click="addRootProperty">+ ADD_ENTRY</button>
           </div>
-          
-          <div class="props-editor-container">
+          <div class="props-editor-industrial">
             <PropertyItem 
               v-for="(item, index) in editForm.propsList" 
-              :key="index"
-              v-model="editForm.propsList[index]"
-              @delete="removeRootProperty(index)"
+              :key="index" 
+              v-model="editForm.propsList[index]" 
+              @delete="removeRootProperty(index)" 
             />
-            <div v-if="editForm.propsList.length === 0" class="empty-tip">
-              暂无属性，点击右上角添加
-            </div>
           </div>
         </div>
 
-        <div class="edit-section">
-          <div class="sec-header">
-            <div class="sec-label">>> IMAGES // 图像资料</div>
-            <div class="upload-box">
-              <button class="cyber-btn-sm" @click="$refs.fileInput.click()" :disabled="uploading">
-                {{ uploading ? 'UPLOADING...' : '+ UPLOAD' }}
-              </button>
-              <input type="file" ref="fileInput" style="display:none" accept="image/*" @change="handleFileUpload" />
-            </div>
+        <div class="edit-card-heavy">
+          <div class="card-tag-black">VISUAL_ASSET_UPLOAD</div>
+          <div class="upload-area-tech">
+            <button class="cyber-btn-rect primary-red small" @click="$refs.fileInput.click()" :disabled="uploading">
+              {{ uploading ? 'TRANSMITTING...' : 'UPLOAD_NEW_IMAGE' }}
+            </button>
+            <input type="file" ref="fileInput" style="display:none" accept="image/*" @change="handleFileUpload" />
           </div>
-          
-          <div class="edit-gallery">
-            <div v-for="(url, idx) in parsedImages" :key="idx" class="edit-img-card">
+          <div class="edit-gallery-previews">
+            <div v-for="(url, idx) in parsedImages" :key="idx" class="preview-box">
               <img :src="url" />
             </div>
-            <div v-if="parsedImages.length === 0" class="empty-tip">暂无图片</div>
           </div>
         </div>
 
-        <div class="edit-section">
-          <div class="sec-label">>> DESCRIPTION // 详细档案</div>
-          <textarea v-model="editForm.description" class="cyber-textarea" rows="12"></textarea>
+        <div class="edit-card-heavy">
+          <div class="card-tag-black">DETAILED_LOG_CONTENT</div>
+          <textarea v-model="editForm.description" class="cyber-textarea-heavy" rows="12"></textarea>
         </div>
 
       </div>
-
     </div>
   </div>
 </template>
@@ -153,255 +156,264 @@ const props = defineProps({
   allNodes: { type: Array, default: () => [] } 
 })
 
-// 🔥 注册事件
 const emit = defineEmits(['update-node', 'delete-node', 'select-node'])
 
-// --- State ---
 const isEditing = ref(false)
 const submitting = ref(false)
 const uploading = ref(false)
 const fileInput = ref(null)
 
-// 编辑态表单数据
 const editForm = reactive({
-  id: null,
-  name: '',
-  type: '',
-  author: '',
-  description: '',
-  propsList: [] 
+  id: null, name: '', type: '', author: '', description: '', parentId: null, propsList: [] 
 })
 
-// --- Helpers ---
-const handleImgError = (e) => e.target.src = '/土豆.jpg'
-const formatDate = (t) => t ? new Date(t).toLocaleDateString() : '-'
-const getImageUrl = (url) => {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  return `https://bianyuzhou.com/${url}`
-}
-
-// --- Data Computeds ---
-
-// 解析 meta_data_json 用于阅读模式
+// --- 计算属性与原有逻辑保持一致 ---
+const availableParents = computed(() => props.allNodes.filter(n => n.id !== props.node.id))
+const existingTypes = computed(() => [...new Set(props.allNodes.map(n => n.type))].filter(t => t && t !== '待定'))
 const parsedMeta = computed(() => {
   if (!props.node.meta_data_json) return {}
-  try { 
-    return (typeof props.node.meta_data_json === 'string') 
-      ? JSON.parse(props.node.meta_data_json) 
-      : props.node.meta_data_json
-  } catch { return {} }
+  try { return (typeof props.node.meta_data_json === 'string') ? JSON.parse(props.node.meta_data_json) : props.node.meta_data_json } catch { return {} }
 })
-
 const hasMetaData = computed(() => Object.keys(parsedMeta.value).length > 0)
-
-// 解析 image_url
 const parsedImages = computed(() => {
   if (!props.node.image_url) return []
   try {
     const res = JSON.parse(props.node.image_url)
     const arr = Array.isArray(res) ? res : [props.node.image_url]
-    return arr.map(getImageUrl)
-  } catch { return [getImageUrl(props.node.image_url)] }
+    return arr.map(url => url.startsWith('http') ? url : `https://bianyuzhou.com/${url}`)
+  } catch { return [] }
 })
 
-// --- JSON <-> Tree Conversion ---
+const handleImgError = (e) => e.target.src = '/土豆.jpg'
+const formatDate = (t) => t ? new Date(t).toLocaleString() : 'N/A'
+const getLevelDots = (level) => "· ".repeat(level || 0)
 
-// JSON 对象转 Tree 数组
 const jsonToTree = (jsonObj) => {
   if (!jsonObj || typeof jsonObj !== 'object') return []
   return Object.keys(jsonObj).map(key => {
     const val = jsonObj[key]
-    if (val && typeof val === 'object' && !Array.isArray(val)) {
-      return { key: key, children: jsonToTree(val) } 
-    } else {
-      return { key: key, value: val } 
-    }
+    return (val && typeof val === 'object' && !Array.isArray(val)) ? { key, children: jsonToTree(val) } : { key, value: val }
   })
 }
-
-// Tree 数组转 JSON 对象
 const treeToJson = (treeArr) => {
   const result = {}
-  treeArr.forEach(item => {
-    if (!item.key) return
-    if (item.children && Array.isArray(item.children)) {
-      result[item.key] = treeToJson(item.children)
-    } else {
-      result[item.key] = item.value
-    }
-  })
+  treeArr.forEach(item => { if (item.key) result[item.key] = item.children ? treeToJson(item.children) : item.value })
   return result
 }
 
-// --- Actions ---
-
 const startEdit = () => {
   const n = props.node
-  editForm.id = n.id
-  editForm.name = n.name
-  editForm.type = n.type
-  editForm.author = n.author
-  editForm.description = n.description || n.summary || ''
-  
-  // 转换 MetaData
-  const meta = parsedMeta.value
-  editForm.propsList = jsonToTree(meta)
-  
+  Object.assign(editForm, { id: n.id, name: n.name, type: n.type, author: n.author, description: n.description || '', parentId: n.parentId, propsList: jsonToTree(parsedMeta.value) })
   isEditing.value = true
 }
-
 const cancelEdit = () => isEditing.value = false
-
-// 添加根属性
-const addRootProperty = () => {
-  editForm.propsList.push({ key: '', value: '' })
-}
-const removeRootProperty = (index) => {
-  editForm.propsList.splice(index, 1)
-}
+const addRootProperty = () => editForm.propsList.push({ key: '', value: '' })
+const removeRootProperty = (index) => editForm.propsList.splice(index, 1)
 
 const handleFileUpload = async (e) => {
   const file = e.target.files[0]
   if (!file) return
   uploading.value = true
   try {
-    const fd = new FormData()
-    fd.append('file', file)
+    const fd = new FormData(); fd.append('file', file)
     await apiClient.post(`/Setting/${props.node.id}/image`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-    alert("上传成功，保存节点后刷新列表可见")
-  } catch (e) { alert("上传失败") } finally { uploading.value = false }
+    alert("TRANSMISSION_COMPLETE: IMAGE_UPLOADED")
+  } catch (e) { alert("UPLOAD_FAILED") } finally { uploading.value = false }
 }
 
 const saveNode = () => {
   submitting.value = true
-  
-  // 1. 将 Tree 数组转回 JSON 字符串
-  const metaJsonObj = treeToJson(editForm.propsList)
-  const metaStr = JSON.stringify(metaJsonObj)
-
-  const payload = {
-    id: editForm.id,
-    name: editForm.name,
-    type: editForm.type, 
-    description: editForm.description,
-    author: editForm.author,
-    metaStr: metaStr,
-    parentId: props.node.parentId 
-  }
-
-  // Emit 给父组件去调 API
-  emit('update-node', payload, () => {
-    submitting.value = false
-    isEditing.value = false
+  emit('update-node', { ...editForm, metaStr: JSON.stringify(treeToJson(editForm.propsList)) }, () => {
+    submitting.value = false; isEditing.value = false
   })
 }
 
-const deleteNode = () => {
-  if(confirm("Confirm Delete?")) emit('delete-node', props.node.id)
-}
-
-// 切换节点时自动退出编辑
+const deleteNode = () => { if(confirm("EXECUTE TERMINATION PROTOCOL?")) emit('delete-node', props.node.id) }
 watch(() => props.node.id, () => { isEditing.value = false })
-
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
 
-.doc-viewer-wrapper {
-  --bg-panel: #F4F1EA;
-  --border-color: #111111;
-  --text-main: #111111;
-  --text-sub: #666666;
-  --accent: #D92323;
+/* --- 核心变量 (同步 ComCenter) --- */
+.cyber-doc-viewer {
+  --red: #D92323;
+  --black: #111111;
+  --off-white: #F4F1EA;
+  --gray: #E0DDD5;
   --mono: 'JetBrains Mono', monospace;
   --heading: 'Anton', sans-serif;
-  --body-font: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --body: 'Inter', sans-serif;
+  
+  width: 100%; height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: var(--off-white);
+  color: var(--black);
+  font-family: var(--body);
+}
 
-  width: 100%; max-width: 900px; margin: 0 auto; height: 100%;
+/* 网格背景动画 */
+.grid-bg { 
+  position: absolute; inset: 0; 
+  background-image: linear-gradient(var(--gray) 1px, transparent 1px), linear-gradient(90deg, var(--gray) 1px, transparent 1px); 
+  background-size: 50px 50px; opacity: 0.4; pointer-events: none; z-index: 0; 
+}
+.moving-grid { animation: gridScroll 30s linear infinite; }
+@keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-50px); } }
+
+/* 主容器 */
+.doc-paper-heavy {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 1000px; height: 95%;
+  margin: 20px auto;
+  background: #fff;
+  border: 3px solid var(--black);
+  box-shadow: 12px 12px 0 rgba(0,0,0,0.15);
   display: flex; flex-direction: column;
 }
 
-.doc-paper { 
-  background: var(--bg-panel); 
-  border: 2px solid var(--border-color); 
-  box-shadow: 8px 8px 0 rgba(0,0,0,0.1); 
-  flex: 1; display: flex; flex-direction: column; overflow: hidden; /* 内部滚动 */
+/* 顶部技术工具条 */
+.cyber-toolbar-heavy {
+  height: 60px;
+  background: var(--black);
+  color: #fff;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 20px;
+  border-bottom: 4px solid var(--red);
+  flex-shrink: 0;
+}
+.tech-info-group { display: flex; align-items: center; gap: 15px; font-family: var(--mono); font-size: 0.85rem; }
+.deco-box { color: var(--red); }
+.status-badge { background: #222; padding: 2px 8px; color: #00ff00; }
+.status-badge.pending { color: #ffae00; }
+
+/* 按钮通用样式 (重型) */
+.cyber-btn-rect {
+  border: none; padding: 8px 16px; cursor: pointer;
+  font-family: var(--heading); font-size: 0.9rem;
+  transition: 0.2s; position: relative;
+}
+.primary-red { background: var(--red); color: #fff; }
+.primary-red:hover { background: #b91d1d; transform: translate(-2px, -2px); box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
+.primary-black { background: #fff; color: var(--black); border: 1px solid var(--black); }
+.primary-black:hover { background: var(--black); color: #fff; }
+.ghost-dark { background: transparent; color: #fff; border: 1px solid #555; }
+.ghost-dark:hover { border-color: var(--red); color: var(--red); }
+
+/* --- 阅读模式内容 --- */
+.read-mode-scroll { flex: 1; overflow-y: auto; padding: 40px; }
+
+.doc-hero-section { display: flex; gap: 30px; margin-bottom: 40px; }
+.hero-main { flex: 1; }
+.giant-doc-title {
+  font-family: var(--heading); font-size: 4rem; line-height: 0.9;
+  text-transform: uppercase; margin: 0 0 20px 0;
+  color: var(--black);
+}
+.meta-strip { 
+  display: flex; gap: 20px; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 0.8rem; color: #666;
+}
+.meta-item .label { font-weight: 800; color: var(--black); }
+
+.hero-portrait { width: 180px; height: 180px; flex-shrink: 0; }
+.portrait-frame {
+  width: 100%; height: 100%; border: 3px solid var(--black);
+  position: relative; overflow: hidden; background: #eee;
+}
+.portrait-frame img { width: 100%; height: 100%; object-fit: cover; }
+.scanline {
+  position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+  background: rgba(255, 255, 255, 0.5); animation: scan 3s linear infinite;
+}
+@keyframes scan { 0% { top: -5%; } 100% { top: 105%; } }
+
+.divider-tech {
+  background: var(--black); color: #fff; text-align: center;
+  font-family: var(--mono); font-size: 0.75rem; padding: 5px; margin: 30px 0;
+  letter-spacing: 2px;
 }
 
-.doc-toolbar { 
-  display: flex; justify-content: space-between; align-items: center; 
-  padding: 10px 30px; border-bottom: 1px dashed #ccc; background: #fff; flex-shrink: 0;
+.info-block-heavy { margin-bottom: 40px; }
+.block-label {
+  background: var(--black); color: #fff; display: inline-block;
+  padding: 4px 12px; font-family: var(--mono); font-size: 0.8rem;
+  margin-bottom: 15px; font-weight: 700;
 }
-.doc-breadcrumbs { color: var(--text-sub); font-size: 0.75rem; font-weight: bold; font-family: var(--mono); }
-.tool-actions { display: flex; gap: 10px; }
-
-/* === Read Mode === */
-.read-mode { padding: 40px; overflow-y: auto; }
-
-.doc-header-section { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 20px; }
-.header-content { flex: 1; }
-.header-visual { width: 120px; height: 120px; border: 2px solid var(--border-color); flex-shrink: 0; background: #eee; }
-.header-visual img { width: 100%; height: 100%; object-fit: cover; }
-
-.doc-title { 
-  font-family: var(--heading); font-size: 3rem; margin: 0 0 10px 0; 
-  line-height: 1; letter-spacing: 1px; color: var(--text-main);
+.text-content-industrial {
+  font-size: 1.15rem; line-height: 1.8; color: #333;
+  white-space: pre-wrap; padding-left: 15px; border-left: 4px solid var(--gray);
 }
-.meta-row { display: flex; gap: 15px; flex-wrap: wrap; }
-.tag { background: #e0e0e0; padding: 2px 8px; font-size: 0.7rem; color: #333; border: 1px solid #ccc; font-family: var(--mono); }
 
-.doc-divider { border-bottom: 2px solid var(--border-color); margin: 20px 0 30px 0; }
-
-.doc-section { margin-bottom: 40px; }
-.sec-title { font-size: 1rem; color: var(--accent); margin-bottom: 15px; font-family: var(--mono); font-weight: bold; border-left: 4px solid var(--accent); padding-left: 10px; }
-
-.text-content { font-family: var(--body-font); font-size: 1.05rem; line-height: 1.8; color: #333; white-space: pre-wrap; }
-.attr-panel { background: #fff; border: 1px solid #ccc; padding: 20px; border-radius: 4px; }
-
-.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-.gallery-item img { width: 100%; height: 150px; object-fit: cover; border: 1px solid #ccc; }
-
-/* === Edit Mode (Industrial Form) === */
-.edit-mode { padding: 30px; background: #f9f9f9; overflow-y: auto; }
-
-.edit-section { 
-  background: #fff; border: 1px solid #ccc; padding: 20px; margin-bottom: 20px; 
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.05);
+.cyber-gallery-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;
 }
-.sec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.sec-label { font-family: var(--heading); font-size: 1.1rem; color: var(--text-main); letter-spacing: 1px; border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 2px; }
-
-.form-row { display: flex; gap: 15px; }
-.form-group { display: flex; flex-direction: column; gap: 5px; }
-.form-group.grow { flex: 1; }
-.form-group label { font-size: 0.7rem; font-weight: bold; color: var(--text-sub); font-family: var(--mono); }
-
-.cyber-input, .cyber-textarea { 
-  background: #fff; border: 2px solid #ccc; padding: 8px; 
-  font-family: var(--mono); outline: none; width: 100%; box-sizing: border-box; color: var(--text-main);
-  transition: 0.2s; font-size: 0.9rem;
+.gallery-cell {
+  border: 1px solid var(--black); position: relative; overflow: hidden;
 }
-.cyber-input:focus, .cyber-textarea:focus { border-color: var(--text-main); background: #fffef0; }
+.gallery-cell img { width: 100%; height: 200px; object-fit: cover; transition: 0.3s; }
+.gallery-cell:hover img { transform: scale(1.05); }
+.cell-deco {
+  position: absolute; bottom: 0; right: 0; background: var(--black);
+  color: #fff; font-family: var(--mono); font-size: 0.6rem; padding: 2px 6px;
+}
 
-.props-editor-container { display: flex; flex-direction: column; gap: 5px; }
-.empty-tip { text-align: center; color: #999; font-size: 0.8rem; padding: 10px; }
+/* --- 编辑模式内容 --- */
+.edit-mode-scroll { flex: 1; overflow-y: auto; padding: 30px; background: var(--off-white); }
 
-.edit-gallery { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-.edit-img-card { width: 100px; height: 100px; border: 1px solid #ddd; background: #eee; }
-.edit-img-card img { width: 100%; height: 100%; object-fit: cover; }
+.edit-card-heavy {
+  background: #fff; border: 2px solid var(--black);
+  margin-bottom: 25px; padding: 25px;
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+  position: relative;
+}
+.alert-border { border-left: 10px solid var(--red); }
+.card-tag-black {
+  position: absolute; top: -12px; left: 15px;
+  background: var(--black); color: #fff;
+  padding: 2px 10px; font-family: var(--mono); font-size: 0.7rem;
+}
+.card-tag-red {
+  position: absolute; top: -12px; left: 15px;
+  background: var(--red); color: #fff;
+  padding: 2px 10px; font-family: var(--mono); font-size: 0.7rem;
+}
 
-/* Buttons */
-.cyber-btn { border: 2px solid var(--border-color); background: transparent; padding: 6px 15px; cursor: pointer; font-family: var(--heading); font-size: 0.9rem; transition: 0.2s; }
-.cyber-btn.primary { background: var(--text-main); color: #fff; }
-.cyber-btn.primary:hover { background: var(--accent); border-color: var(--accent); }
-.cyber-btn.ghost:hover { background: #eee; }
-.cyber-btn.del:hover { border-color: var(--accent); color: var(--accent); }
-.cyber-btn-sm { background: var(--text-main); color: #fff; border: none; padding: 4px 10px; cursor: pointer; font-family: var(--mono); font-size: 0.75rem; }
-.cyber-btn-sm:hover { background: var(--accent); }
+.input-label-tech {
+  display: block; font-family: var(--mono); font-weight: 800;
+  font-size: 0.75rem; margin-bottom: 10px; color: #555;
+}
 
-/* Scrollbar */
+.cyber-input-heavy, .cyber-select-heavy, .cyber-textarea-heavy {
+  width: 100%; border: 2px solid var(--black); padding: 12px;
+  font-family: var(--mono); font-weight: 700; outline: none;
+  background: #fff; box-sizing: border-box;
+}
+.cyber-input-heavy:focus, .cyber-textarea-heavy:focus {
+  background: #fdfdfd; border-color: var(--red); box-shadow: 4px 4px 0 rgba(0,0,0,0.05);
+}
+
+.form-grid-industrial { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+
+.property-header-tech { display: flex; justify-content: flex-end; margin-bottom: 15px; }
+.cyber-btn-sm-heavy {
+  background: var(--black); color: #fff; border: none;
+  font-family: var(--mono); padding: 5px 15px; cursor: pointer;
+}
+.cyber-btn-sm-heavy:hover { background: var(--red); }
+
+.edit-gallery-previews {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;
+}
+.preview-box {
+  width: 100px; height: 100px; border: 1px solid var(--black);
+  background: #eee;
+}
+.preview-box img { width: 100%; height: 100%; object-fit: cover; }
+
+/* 滚动条美化 (同 ComCenter) */
 .custom-scroll::-webkit-scrollbar { width: 6px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #ccc; }
+.custom-scroll::-webkit-scrollbar-track { background: var(--off-white); }
+.custom-scroll::-webkit-scrollbar-thumb { background: var(--black); border-radius: 3px; }
 </style>

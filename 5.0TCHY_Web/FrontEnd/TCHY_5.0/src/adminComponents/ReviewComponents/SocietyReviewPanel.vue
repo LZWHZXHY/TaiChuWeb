@@ -30,23 +30,6 @@
       </div>
     </div>
 
-
-    
-    
-    <!-- 调试信息 -->
-     <!--  
-    <div v-if="debugInfo" class="debug-panel">
-      <h4>调试信息</h4>
-      <div class="debug-content">
-        <div><strong>API端点:</strong> {{ debugInfo.endpoint }}</div>
-        <div><strong>请求参数:</strong> {{ JSON.stringify(debugInfo.params) }}</div>
-        <div><strong>响应状态:</strong> {{ debugInfo.status }}</div>
-        <div><strong>数据条数:</strong> {{ debugInfo.count }}</div>
-        <div><strong>第一条数据:</strong> {{ JSON.stringify(debugInfo.sample) }}</div>
-      </div>
-    </div>
-    -->
-    <!-- 表格内容 -->
     <div class="table-container">
       <table class="review-table">
         <thead>

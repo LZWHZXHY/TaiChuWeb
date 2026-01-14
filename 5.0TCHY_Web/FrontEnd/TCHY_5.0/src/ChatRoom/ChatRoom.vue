@@ -456,6 +456,7 @@ onUnmounted(() => {
   display: flex; justify-content: space-between; align-items: center;
   padding: 20px 40px; background: var(--black); color: var(--off-white);
   border-bottom: 4px solid var(--black); z-index: 10;
+  height: ;
 }
 .glitch-title { font-family: 'Anton', sans-serif; font-size: 2.5rem; line-height: 1; }
 .red-fill { color: var(--red); }

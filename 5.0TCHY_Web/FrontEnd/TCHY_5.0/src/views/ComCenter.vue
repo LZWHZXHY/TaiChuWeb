@@ -627,7 +627,7 @@ onUnmounted(() => {
 }
 
 .chat-module-wrapper {
-  height: 600px; /* 与帖子列表高度对齐 */
+  height: 100%; /* 与帖子列表高度对齐 */
   width: 100%; border: 2px solid var(--black);
   background: #fff; box-shadow: var(--shadow-hard);
   overflow: hidden; position: relative;

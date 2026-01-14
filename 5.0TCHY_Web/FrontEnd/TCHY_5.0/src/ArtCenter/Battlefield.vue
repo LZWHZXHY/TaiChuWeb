@@ -523,7 +523,7 @@ onMounted(() => {
 .form-group label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 0.8rem; }
 .req { color: var(--red); }
 .cyber-input, .cyber-select, .cyber-textarea { width: 100%; border: 2px solid var(--black); background: #fff; padding: 10px; font-family: var(--mono); outline: none; transition: 0.2s; box-sizing: border-box; }
-.cyber-input:focus, .cyber-select:focus, .cyber-textarea:focus { background: #000000; border-color: var(--red); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
+.cyber-input:focus, .cyber-select:focus, .cyber-textarea:focus { background: #ffffff; border-color: var(--red); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
 .upload-zone { border: 2px dashed var(--black); padding: 20px; text-align: center; cursor: pointer; background: #eee; transition: 0.2s; }
 .upload-zone:hover { background: #fff; border-color: var(--red); }
 .file-preview { display: flex; justify-content: space-between; background: var(--black); color: var(--white); padding: 5px 10px; }

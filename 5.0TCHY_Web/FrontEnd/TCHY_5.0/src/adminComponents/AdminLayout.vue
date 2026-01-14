@@ -1,111 +1,105 @@
 <template>
-  <div class="admin" :class="{ 'sidebar-collapsed': collapsed }">
-    <!-- 顶部栏 -->
-    <header class="admin-header" role="banner">
+  <div class="cyber-admin-container" :class="{ 'sidebar-collapsed': collapsed }">
+    <div class="grid-bg moving-grid"></div>
+
+    <header class="admin-bridge-header" role="banner">
       <div class="header-left">
-        <h1 class="title">管理员后台</h1>
-        <p class="sub">用于审核与管理站内内容</p>
+        <div class="tech-tag">ADMIN_PROTOCOL_v5.0</div>
+        <h1 class="giant-title">
+          <span class="red-box"></span>
+          COMMAND_CENTER <small>// 管理员后台</small>
+        </h1>
       </div>
 
       <div class="header-right">
-        <!-- 刷新图标（现在有加载态、全局事件和防抖） -->
         <button
-          class="icon-btn"
-          type="button"
+          class="cyber-tool-btn"
+          :class="{ 'is-loading': loading }"
           @click="handleRefresh"
-          :aria-label="loading ? '正在刷新' : '刷新数据'"
-          :title="loading ? '正在刷新…' : '刷新页面数据'"
-          :aria-busy="loading"
           :disabled="loading"
+          title="SYNC_DATA"
         >
-          <template v-if="!loading">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M23 4v6h-6"></path>
-              <path d="M1 20v-6h6"></path>
-              <path d="M3.51 9a9 9 0 0114.13-3.36L23 4"></path>
-              <path d="M20.49 15a9 9 0 01-14.13 3.36L1 20"></path>
+          <span class="btn-icon">
+            <svg v-if="!loading" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.13-3.36L23 4M20.49 15a9 9 0 01-14.13 3.36L1 20"></path>
             </svg>
-          </template>
-
-          <template v-else>
-            <!-- 简单 spinner -->
-            <svg class="spinner" viewBox="0 0 50 50" width="18" height="18" aria-hidden="true">
-              <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.4 31.4"/>
-            </svg>
-          </template>
+            <div v-else class="tech-spinner"></div>
+          </span>
+          <span class="btn-text" v-if="!collapsed">REFRESH</span>
         </button>
 
-        <!-- 折叠侧边栏按钮 -->
-        <button
-          class="icon-btn"
-          type="button"
-          @click="toggleCollapsed"
-          :aria-pressed="collapsed"
-          :title="collapsed ? '展开侧栏' : '折叠侧栏'"
-        >
-          <svg v-if="!collapsed" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 6h14M6 18h14M6 12h14"></path>
-          </svg>
-          <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 6h16M4 12h16M4 18h16"></path>
+        <button class="cyber-tool-btn toggle-btn" @click="toggleCollapsed" :title="collapsed ? 'EXPAND' : 'COLLAPSE'">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3">
+            <path v-if="!collapsed" d="M4 6h16M4 12h10M4 18h16"></path>
+            <path v-else d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
         </button>
       </div>
     </header>
 
-    <div class="admin-layout">
-      <!-- 侧边导航 -->
-      <aside class="sidebar" aria-label="管理员菜单">
-        <div class="sidebar-top">
-          <nav class="menu" role="navigation" aria-label="主菜单">
-            <button
-              v-for="item in items"
-              :key="item.id"
-              class="menu-item"
-              :class="{ active: active === item.id }"
-              type="button"
-              @click="handleChange(item.id)"
-              :title="!collapsed ? '' : item.label"
-              :aria-current="active === item.id ? 'page' : false"
-            >
-              <span class="icon" aria-hidden="true">{{ item.icon }}</span>
-              <span v-if="!collapsed" class="label">{{ item.label }}</span>
-            </button>
-          </nav>
+    <div class="admin-main-bridge">
+      <aside class="sidebar-deck">
+        <div class="deck-label">// NAVIGATION_SYSTEM</div>
+        <nav class="cyber-menu">
+          <button
+            v-for="item in items"
+            :key="item.id"
+            class="cyber-menu-item"
+            :class="{ active: active === item.id }"
+            @click="handleChange(item.id)"
+            :aria-current="active === item.id ? 'page' : false"
+          >
+            <span class="item-indicator"></span>
+            <span class="item-icon">{{ item.icon }}</span>
+            <span v-if="!collapsed" class="item-label">{{ item.label }}</span>
+            <span class="item-id-tag" v-if="!collapsed">{{ item.id.toUpperCase() }}</span>
+          </button>
+        </nav>
+        
+        <div class="sidebar-footer" v-if="!collapsed">
+          <div class="footer-line">CORE_STATUS: STABLE</div>
+          <div class="footer-line">ENCRYPTION: AES_256</div>
         </div>
       </aside>
 
-      <!-- 主内容插槽 -->
-      <main class="content" role="main">
-        <slot />
+      <main class="content-viewport custom-scroll" role="main">
+        <div class="viewport-header" v-if="activeItem">
+          <span class="path-root">TAICHU_HUB</span>
+          <span class="path-sep">/</span>
+          <span class="path-current">{{ activeItem.label.toUpperCase() }}</span>
+        </div>
+        <div class="slot-container">
+          <slot />
+        </div>
       </main>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps({
   active: { type: String, required: true }
 })
 const emit = defineEmits(['change', 'refresh'])
 
-// 可收起侧栏，改善窄屏或管理操作专注度
 const collapsed = ref(false)
-const loading = ref(false) // 刷新加载态
+const loading = ref(false)
 let refreshTimer = null
 
 const items = [
   { id: 'review', label: '审核中心', icon: '🗂️'},
   { id: 'users', label: '用户管理', icon: '👤'},
-  { id: 'notifications', label: '通知系统', icon: '🔔' }, // 建议换个图标
+  { id: 'notifications', label: '通知系统', icon: '🔔' },
   { id: 'reports', label: '举报处理', icon: '🚩', },
   { id: 'settings', label: '系统设置', icon: '⚙️'},
-  { id: 'updates', label: '更新日志', icon: '📝'}, // 建议换个图标
-  { id: 'rules', label: '社区规则', icon: '📜' },    // 建议换个图标
-  { id: 'feedback', label: '意见箱', icon: '📫' } // 建议换个图标
+  { id: 'updates', label: '更新日志', icon: '📝'},
+  { id: 'rules', label: '社区规则', icon: '📜' },
+  { id: 'feedback', label: '意见箱', icon: '📫' }
 ]
+
+const activeItem = computed(() => items.find(i => i.id === props.active))
 
 function handleChange(id) {
   emit('change', id)
@@ -115,26 +109,14 @@ function toggleCollapsed() {
   collapsed.value = !collapsed.value
 }
 
-/**
- * 刷新处理：
- * - 防抖：避免重复点击短时间内触发多次
- * - 发射组件事件 'refresh' 供父组件处理
- * - 也 dispatch 全局 window 事件 'admin-refresh'，确保没有绑定父监听时也能触发其他监听器
- * - 显示短暂 loading 反馈
- */
 function handleRefresh() {
   if (loading.value) return
-
-  // 防抖：短时间内只允许一次刷新
   loading.value = true
-  emit('refresh') // 父组件处理刷新逻辑（如果有）
+  emit('refresh')
   try {
-    window.dispatchEvent(new CustomEvent('admin-refresh')) // 全局备用触发
-  } catch {
-    // ignore
-  }
+    window.dispatchEvent(new CustomEvent('admin-refresh'))
+  } catch (e) {}
 
-  // 保持 loading 状态至少 700ms，提升反馈感
   clearTimeout(refreshTimer)
   refreshTimer = setTimeout(() => {
     loading.value = false
@@ -143,129 +125,236 @@ function handleRefresh() {
 </script>
 
 <style scoped>
-:root {
-  --bg: #f6f8fb;
-  --ink: #0f172a;
-  --muted: #64748b;
-  --card: #ffffff;
-  --ring: #e6ebf3;
-  --primary: #2563eb;
-  --r-lg: 12px;
-  --shadow-sm: 0 6px 24px rgba(2,6,23,.06);
-}
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;800&display=swap');
 
-/* 整体容器 */
-.admin {
-  background: var(--bg);
+.cyber-admin-container {
+  --red: #D92323;
+  --black: #111111;
+  --off-white: #F4F1EA;
+  --gray: #E0DDD5;
+  --mono: 'JetBrains Mono', monospace;
+  --heading: 'Anton', sans-serif;
+  
+  background: var(--off-white);
   min-height: 100vh;
-  color: var(--ink);
+  color: var(--black);
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-/* 头部 */
-.admin-header {
+/* --- 背景网格 --- */
+.grid-bg { 
+  position: absolute; inset: 0; 
+  background-image: linear-gradient(var(--gray) 1px, transparent 1px), linear-gradient(90deg, var(--gray) 1px, transparent 1px); 
+  background-size: 50px 50px; opacity: 0.4; pointer-events: none; z-index: 0; 
+}
+.moving-grid { animation: gridScroll 30s linear infinite; }
+@keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-50px); } }
+
+/* --- 顶部指令栏 --- */
+.admin-bridge-header {
+  height: 70px;
+  background: var(--black);
+  color: #fff;
+  border-bottom: 4px solid var(--red);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 20px;
-  background: linear-gradient(90deg, #ffffff, #f7fbff);
-  border-bottom: 1px solid var(--ring);
-  box-shadow: var(--shadow-sm);
+  padding: 0 30px;
   position: sticky;
   top: 0;
-  z-index: 40;
-  width: 85%;
+  z-index: 100;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
-.header-left { display:flex; flex-direction:column; gap:4px; }
-.title { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: .2px; }
-.sub { margin: 0; color: var(--muted); font-size: 13px; }
 
-/* 头部右侧小图标按钮 */
-.header-right { display:flex; gap:8px; align-items:center; }
-.icon-btn {
-  appearance: none;
-  display: inline-grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  background: white;
+.tech-tag {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--red);
+  letter-spacing: 2px;
+  margin-bottom: 2px;
+}
+
+.giant-title {
+  margin: 0;
+  font-family: var(--heading);
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  letter-spacing: 1px;
+}
+.giant-title small { font-family: 'Inter'; font-size: 0.8rem; opacity: 0.6; font-weight: 400; }
+.red-box { width: 14px; height: 14px; background: var(--red); }
+
+.header-right { display: flex; gap: 15px; }
+
+/* --- 工业风格按钮 --- */
+.cyber-tool-btn {
+  background: transparent;
+  border: 1px solid #444;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 15px;
   cursor: pointer;
-  color: var(--primary);
-  transition: background .12s ease, transform .08s ease, box-shadow .12s;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+  transition: all 0.2s;
 }
-.icon-btn:hover { background: #f0f6ff; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(37,99,235,.06); }
+.cyber-tool-btn:hover { background: #222; border-color: var(--red); color: var(--red); }
+.cyber-tool-btn.is-loading { color: var(--red); border-color: var(--red); }
 
-/* spinner 动画 */
-.spinner {
-  animation: spin 1s linear infinite;
+.tech-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--red);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
-/* 布局：侧边栏 + 内容 */
-.admin-layout {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 18px;
-  padding: 18px;
+/* --- 侧栏面板 --- */
+.admin-main-bridge {
+  flex: 1;
+  display: flex;
+  padding: 20px;
+  gap: 20px;
+  z-index: 1;
+  height: calc(100vh - 70px);
 }
-.sidebar {
-  background: var(--card);
-  border: 1px solid var(--ring);
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
-  padding: 10px;
-  height: fit-content;
+
+.sidebar-deck {
+  width: 260px;
+  background: #fff;
+  border: 3px solid var(--black);
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
 }
 
-/* 当折叠时把侧边栏变窄，仅显示图标 */
-.sidebar-collapsed .admin-layout {
-  grid-template-columns: 76px 1fr;
-}
-.sidebar-collapsed .sidebar {
-  padding: 8px 6px;
-  width: 76px;
-  overflow: visible;
-}
-.sidebar-collapsed .menu-item { justify-content: center; padding: 10px 6px; }
-.sidebar-collapsed .menu-item .label { display: none; }
+.sidebar-collapsed .sidebar-deck { width: 80px; }
 
-/* 菜单 */
-.menu { display: grid; gap: 8px; }
-.menu-item {
+.deck-label {
+  background: var(--black);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  padding: 5px 12px;
+  font-weight: 800;
+}
+
+.cyber-menu {
+  flex: 1;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cyber-menu-item {
+  height: 50px;
+  border: 1px solid #eee;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 0 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  text-align: left;
+}
+
+.item-indicator {
+  position: absolute; left: -3px; top: 20%; bottom: 20%;
+  width: 6px; background: var(--black); transform: scaleY(0);
+  transition: transform 0.2s;
+}
+
+.item-icon { font-size: 1.2rem; filter: grayscale(1); transition: 0.2s; }
+.item-label { font-weight: 800; font-size: 0.9rem; flex: 1; color: #444; }
+.item-id-tag { font-family: var(--mono); font-size: 0.6rem; opacity: 0.4; }
+
+.cyber-menu-item:hover {
+  background: var(--off-white);
+  transform: translateX(5px);
+  border-color: var(--black);
+}
+
+.cyber-menu-item.active {
+  background: var(--black);
+  border-color: var(--black);
+  color: #fff;
+  box-shadow: 4px 4px 0 var(--red);
+}
+.cyber-menu-item.active .item-label { color: #fff; }
+.cyber-menu-item.active .item-icon { filter: grayscale(0); }
+.cyber-menu-item.active .item-indicator { transform: scaleY(1); background: var(--red); }
+.cyber-menu-item.active .item-id-tag { opacity: 0.8; color: var(--red); }
+
+.sidebar-collapsed .cyber-menu-item { justify-content: center; padding: 0; }
+.sidebar-collapsed .item-id-tag { display: none; }
+
+.sidebar-footer {
+  padding: 15px;
+  border-top: 2px dashed var(--gray);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: #888;
+}
+
+/* --- 内容视口 --- */
+.content-viewport {
+  flex: 1;
+  background: #fff;
+  border: 3px solid var(--black);
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 30px;
+}
+
+.viewport-header {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--black);
+  font-family: var(--mono);
+  font-weight: 700;
   display: flex;
   gap: 10px;
-  align-items: center;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #fff;
-  border: 1px solid transparent;
-  font-weight: 800;
-  color: var(--ink);
-  cursor: pointer;
-  transition: background .12s, border-color .12s, transform .06s;
+  font-size: 0.85rem;
 }
-.menu-item .icon { font-size: 18px; line-height: 1; width: 22px; text-align: center; }
-.menu-item .label { font-size: 14px; }
+.path-root { color: #888; }
+.path-sep { color: var(--red); }
+.path-current { color: var(--black); background: #eee; padding: 0 8px; }
 
-.menu-item:hover { background: #f7faff; border-color: var(--ring); transform: translateY(-1px); }
-.menu-item.active { background: linear-gradient(90deg,#eef4ff,#f7fbff); border-color: #dbe9ff; box-shadow: 0 6px 20px rgba(37,99,235,.04); color: var(--primary); }
-
-/* 主内容 */
-.content {
-  min-height: 60vh;
-  background: transparent;
+.slot-container {
+  flex: 1;
+  animation: fadeIn 0.4s ease;
 }
 
-/* 小屏优化 */
-@media (max-width: 960px) {
-  .admin-layout { grid-template-columns: 1fr; padding: 12px; }
-  .sidebar { position: static; width: 100%; }
-  .sidebar-collapsed .admin-layout { grid-template-columns: 1fr; }
-  .header-right .icon-btn { width: 40px; height: 40px; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 滚动条美化 */
+.custom-scroll::-webkit-scrollbar { width: 8px; }
+.custom-scroll::-webkit-scrollbar-track { background: var(--gray); }
+.custom-scroll::-webkit-scrollbar-thumb { background: var(--black); border: 2px solid var(--gray); }
+
+@media (max-width: 1024px) {
+  .admin-main-bridge { padding: 10px; gap: 10px; }
+  .sidebar-deck { position: fixed; left: -300px; height: 80vh; z-index: 200; }
+  /* 这里可以添加更复杂的移动端逻辑，或保持简单的样式调整 */
 }
 </style>

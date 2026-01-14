@@ -1,60 +1,78 @@
 <template>
-  <section class="review-content">
-    <nav class="review-tabs">
+  <section class="cyber-review-container">
+    <div class="panel-scanline"></div>
+
+    <nav class="cyber-tab-deck">
       <button
         v-for="tab in tabs"
         :key="tab.key"
-        :class="['tab-button', { active: activeTab === tab.key }]"
+        :class="['cyber-tab-btn', { active: activeTab === tab.key }]"
         @click="switchTab(tab.key)"
       >
+        <span class="tab-status-led"></span>
         <span class="tab-icon">{{ tab.icon }}</span>
-        <span class="tab-label">{{ tab.label }}</span>
-        <span v-if="tab.count > 0" class="tab-badge">{{ tab.count }}</span>
+        <span class="tab-label">{{ tab.label.toUpperCase() }}</span>
+        <span v-if="tab.count > 0" class="tab-count-tag">{{ tab.count }}</span>
+        <div class="tab-glitch-effect"></div>
       </button>
     </nav>
 
-    <div class="review-panels">
-      <div v-show="activeTab === 'society'" class="panel-container">
-        <SocietyReviewPanel
-          ref="societyPanel"
-          :search="search"
-          @update-count="updateTabCount('society', $event)"
-        />
-      </div>
-
-      <div v-show="activeTab === 'union'" class="panel-container">
-        <UnionReviewPanel
-          ref="unionPanel"
-          :search="search"
-          @update-count="updateTabCount('union', $event)"
-        />
-      </div>
-
-      <div v-show="activeTab === 'posts'" class="panel-container">
-        <PostsPanel
-          ref="postsPanel"
-          :search="search"
-          @update-count="updateTabCount('posts', $event)"
-        />
-      </div>
-
-      <div v-show="activeTab === 'artist'" class="panel-container">
-        <ArtistReviewPanel
-          ref="artistPanel"
-          :search="search"
-          @update-count="updateTabCount('artist', $event)"
-        />
-      </div>
-    </div>
-
-    <div class="global-search">
+    <div class="cyber-search-terminal">
+      <div class="search-prefix">> FILTER_NODE:</div>
       <input
         v-model="searchTerm"
-        class="search-input"
+        class="terminal-input"
         type="search"
-        placeholder="全局搜索：名称 / 申请人 / ID…"
+        placeholder="INPUT_ID_OR_NAME_TO_QUERY..."
         @input="onSearchInput"
       />
+      <div class="search-deco">SIGNAL_STRENGTH: 100%</div>
+    </div>
+
+    <div class="review-data-viewport cyber-card">
+      <div class="card-label-strip">
+        <span>// DATA_LOG_ACCESS // SECTION: {{ activeTab.toUpperCase() }}</span>
+        <span class="blink-cursor">_</span>
+      </div>
+
+      <div class="panel-content-wrapper custom-scroll">
+        <Transition name="fade-slide" mode="out-in">
+          <div :key="activeTab" class="panel-container">
+            <SocietyReviewPanel
+              v-if="activeTab === 'society'"
+              ref="societyPanel"
+              :search="search"
+              @update-count="updateTabCount('society', $event)"
+            />
+
+            <UnionReviewPanel
+              v-if="activeTab === 'union'"
+              ref="unionPanel"
+              :search="search"
+              @update-count="updateTabCount('union', $event)"
+            />
+
+            <PostsPanel
+              v-if="activeTab === 'posts'"
+              ref="postsPanel"
+              :search="search"
+              @update-count="updateTabCount('posts', $event)"
+            />
+            <ArtGalleryPanel
+              v-if="activeTab === 'art'"
+              ref="artPanel"
+              :search="search"
+              @update-count="updateTabCount('art', $event)"
+            />
+            <ArtistReviewPanel
+              v-if="activeTab === 'artist'"
+              ref="artistPanel"
+              :search="search"
+              @update-count="updateTabCount('artist', $event)"
+            />
+          </div>
+        </Transition>
+      </div>
     </div>
   </section>
 </template>
@@ -64,254 +82,243 @@ import { ref, computed } from 'vue'
 import SocietyReviewPanel from './ReviewComponents/SocietyReviewPanel.vue'
 import UnionReviewPanel from './ReviewComponents/UnionReviewPanel.vue'
 import PostsPanel from './ReviewComponents/PostsPanel.vue'
-// 1. 引入新组件
 import ArtistReviewPanel from './ReviewComponents/ArtistReviewPanel.vue'
+import ArtGalleryPanel from './ReviewComponents/ArtGalleryPanel.vue'
 
-const activeTab = ref('society') // 默认显示社团审核
+const activeTab = ref('society')
 const searchTerm = ref('')
-
+const artPanel = ref(null);
 const societyPanel = ref(null)
 const unionPanel = ref(null)
 const postsPanel = ref(null)
-const artistPanel = ref(null) // 2. 新增 ref
+const artistPanel = ref(null)
 
-// 3. 标签页配置
 const tabs = ref([
-  {
-    key: 'society',
-    label: '社团审核',
-    icon: '🏢',
-    count: 0
-  },
-  {
-    key: 'union',
-    label: '联合内容审核',
-    icon: '🤝',
-    count: 0
-  },
-  {
-    key: 'posts',
-    label: '帖子审核',
-    icon: '📝',
-    count: 0
-  },
-  {
-    key: 'artist',
-    label: '画师认证', // 新增 Tab
-    icon: '🎨',
-    count: 0
-  }
+  { key: 'society', label: '社团审核', icon: '🏢', count: 0 },
+  { key: 'union', label: '联合内容', icon: '🤝', count: 0 },
+  { key: 'posts', label: '帖子审核', icon: '📝', count: 0 },
+  { key: 'art', label: '画廊审核', icon: '🖼️', count: 0 },
+  { key: 'artist', label: '画师认证', icon: '🎨', count: 0 }
 ])
 
-// 防抖搜索
 let searchDebounce = null
 const search = computed(() => searchTerm.value)
 
 function onSearchInput() {
   clearTimeout(searchDebounce)
   searchDebounce = setTimeout(() => {
-    // 4. 通知当前激活的面板进行搜索
-    if (activeTab.value === 'society' && societyPanel.value) {
-      societyPanel.value.onSearch(searchTerm.value)
-    } else if (activeTab.value === 'union' && unionPanel.value) {
-      unionPanel.value.onSearch(searchTerm.value)
-    } else if (activeTab.value === 'posts' && postsPanel.value) {
-      postsPanel.value.onSearch(searchTerm.value)
-    } else if (activeTab.value === 'artist' && artistPanel.value) {
-      artistPanel.value.onSearch(searchTerm.value) // 新增搜索逻辑
+    const panels = {
+  society: societyPanel,
+  union: unionPanel,
+  posts: postsPanel,
+  artist: artistPanel,
+  art: artPanel // 添加此行
+};
+    const current = panels[activeTab.value].value
+    if (current && current.onSearch) {
+      current.onSearch(searchTerm.value)
     }
   }, 300)
 }
 
 function switchTab(tabKey) {
   activeTab.value = tabKey
-  // 切换标签时重置搜索，或者保持搜索状态取决于需求
-  // searchTerm.value = ''
 }
 
 function updateTabCount(tabKey, count) {
   const tab = tabs.value.find(t => t.key === tabKey)
-  if (tab) {
-    tab.count = count
-  }
+  if (tab) tab.count = count
 }
 
-// 暴露方法供父组件调用
 defineExpose({
   refresh: () => {
-    // 5. 刷新逻辑加入新面板
-    if (societyPanel.value) societyPanel.value.refresh()
-    if (unionPanel.value) unionPanel.value.refresh()
-    if (postsPanel.value) postsPanel.value.refresh()
-    if (artistPanel.value) artistPanel.value.refresh()
+    [societyPanel, unionPanel, postsPanel, artistPanel].forEach(p => {
+      if (p.value?.refresh) p.value.refresh()
+    })
   },
   getActivePanel: () => {
-    switch (activeTab.value) {
-      case 'society':
-        return societyPanel.value
-      case 'union':
-        return unionPanel.value
-      case 'posts':
-        return postsPanel.value
-      case 'artist':
-        return artistPanel.value // 新增返回
-      default:
-        return null
-    }
+    const map = { society: societyPanel, union: unionPanel, posts: postsPanel, artist: artistPanel }
+    return map[activeTab.value]?.value || null
   }
 })
 </script>
 
 <style scoped>
-.review-content {
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
+
+.cyber-review-container {
+  --red: #D92323;
+  --black: #111111;
+  --white: #F4F1EA;
+  --gray: #E0DDD5;
+  --mono: 'JetBrains Mono', monospace;
+  --heading: 'Anton', sans-serif;
+
   display: flex;
   flex-direction: column;
   gap: 20px;
   height: 100%;
   position: relative;
+  font-family: 'Inter', sans-serif;
 }
 
-/* 标签导航样式 */
-.review-tabs {
+/* --- 顶部标签栏：工业控制面板风格 --- */
+.cyber-tab-deck {
   display: flex;
-  background: var(--light-bg);
-  border-radius: var(--radius-lg);
-  padding: 4px;
-  border: 1px solid var(--border-color);
-  margin-bottom: 16px;
+  gap: 10px;
+  padding: 5px;
+  background: var(--gray);
+  border: 2px solid var(--black);
 }
 
-.tab-button {
+.cyber-tab-btn {
+  flex: 1;
+  height: 45px;
+  background: #fff;
+  border: 1px solid var(--black);
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: none;
-  background: transparent;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: var(--transition);
-  color: var(--text-secondary);
-  flex: 1;
   justify-content: center;
+  gap: 10px;
+  cursor: pointer;
   position: relative;
+  transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  overflow: hidden;
 }
 
-.tab-button.active {
-  background: var(--card-bg);
-  box-shadow: var(--shadow);
-  color: var(--primary-color);
-  font-weight: 600;
-}
-
-.tab-button:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.8);
-  color: var(--primary-color);
-}
-
-.tab-icon {
-  font-size: 16px;
+.tab-status-led {
+  width: 6px;
+  height: 6px;
+  background: #ccc;
+  border: 1px solid var(--black);
 }
 
 .tab-label {
+  font-family: var(--mono);
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.cyber-tab-btn.active {
+  background: var(--black);
+  color: var(--white);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--red);
+}
+
+.cyber-tab-btn.active .tab-label { color: var(--white); }
+.cyber-tab-btn.active .tab-status-led {
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red);
+}
+
+.tab-count-tag {
+  background: var(--red);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  padding: 0 5px;
+  font-weight: bold;
+}
+
+/* --- 搜索框：终端风格 --- */
+.cyber-search-terminal {
+  background: var(--black);
+  border: 2px solid var(--black);
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  height: 40px;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+}
+
+.search-prefix {
+  color: var(--red);
+  font-family: var(--mono);
+  font-weight: bold;
+  font-size: 0.8rem;
+  margin-right: 15px;
   white-space: nowrap;
 }
 
-.tab-badge {
-  background: var(--primary-color);
-  color: white;
-  border-radius: 10px;
-  padding: 2px 6px;
-  font-size: 11px;
-  font-weight: 600;
-  min-width: 18px;
-  text-align: center;
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  outline: none;
 }
 
-/* 内容区域 */
-.review-panels {
+.terminal-input::placeholder { color: #555; }
+
+.search-deco {
+  font-family: var(--mono);
+  color: #333;
+  font-size: 0.6rem;
+  font-weight: bold;
+}
+
+/* --- 数据视口容器 --- */
+.review-data-viewport {
   flex: 1;
   min-height: 0;
-  position: relative;
-}
-
-.panel-container {
-  height: 100%;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* 全局搜索 */
-.global-search {
-  position: sticky;
-  bottom: 20px;
-  z-index: 10;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
 }
 
-.search-input {
-  width: 300px;
-  padding: 12px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  background: var(--card-bg);
-  box-shadow: var(--shadow-lg);
-  font-size: 14px;
-  transition: var(--transition);
+.cyber-card {
+  background: #fff;
+  border: 3px solid var(--black);
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.15);
 }
 
-.search-input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  transform: translateY(-2px);
+.card-label-strip {
+  background: var(--black);
+  color: var(--white);
+  padding: 5px 15px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
 }
 
-.search-input::placeholder {
-  color: var(--text-light);
+.panel-content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  background: var(--white); /* 略带复古的纸张感 */
 }
 
-/* 响应式设计 */
+.blink-cursor {
+  animation: blink 1s infinite;
+  color: var(--red);
+}
+
+@keyframes blink { 
+  0%, 100% { opacity: 1; } 
+  50% { opacity: 0; } 
+}
+
+/* --- 切换动画 --- */
+.fade-slide-enter-active, .fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-slide-enter-from { opacity: 0; transform: translateX(20px); }
+.fade-slide-leave-to { opacity: 0; transform: translateX(-20px); }
+
+/* --- 滚动条 (同步 ComCenter) --- */
+.custom-scroll::-webkit-scrollbar { width: 6px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: var(--black); }
+.custom-scroll::-webkit-scrollbar-track { background: var(--gray); }
+
+/* 响应式 */
 @media (max-width: 768px) {
-  .review-tabs {
-    flex-direction: column;
-    gap: 4px;
-  }
-  
-  .tab-button {
-    padding: 10px 16px;
-  }
-  
-  .global-search {
-    position: static;
-    margin-top: 16px;
-  }
-  
-  .search-input {
-    width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .tab-button {
-    flex-direction: column;
-    gap: 4px;
-    padding: 8px 12px;
-  }
-  
-  .tab-label {
-    font-size: 13px;
-  }
-  
-  .tab-icon {
-    font-size: 14px;
-  }
+  .cyber-tab-deck { flex-wrap: wrap; }
+  .cyber-tab-btn { flex: 1 1 45%; }
+  .cyber-search-terminal { height: auto; padding: 10px; flex-direction: column; align-items: flex-start; }
 }
 </style>

@@ -497,7 +497,7 @@ onMounted(() => { fetchRoster(); fetchPending() })
 .cyber-input:focus { border-color: var(--black); background: #fff; }
 .textarea { height: 100px; resize: vertical; }
 
-.confirm-btn { width: 100%; padding: 14px; background: var(--red); color: white; border: none; font-weight: 700; font-size: 1rem; cursor: pointer; border-radius: 6px; letter-spacing: 1px; transition: 0.2s; }
+.confirm-btn { width: 100%; padding: 14px; background: var(--red); color: rgb(0, 0, 0); border: none; font-weight: 700; font-size: 1rem; cursor: pointer; border-radius: 6px; letter-spacing: 1px; transition: 0.2s; }
 .confirm-btn:hover { background: #b91d1d; transform: translateY(-1px); }
 .confirm-btn:disabled { background: #ccc; cursor: not-allowed; }
 
