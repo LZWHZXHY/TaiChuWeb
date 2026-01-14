@@ -1,21 +1,13 @@
 <template>
-  <div class="cyber-profile">
+      <meta charset="utf-8">
+    <!-- 核心视口配置：开启移动端适配，禁止用户手动缩放（可选） -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vue3 缩放适应页面</title>
+  <div class="cyber-profile" ref="profileContainer">
     <div class="grid-bg moving-grid"></div>
 
-    <!-- 悬浮语言切换按钮 -->
-    <button
-      class="floating-lang-toggle"
-      @click="langPriority = langPriority === 'zh' ? 'en' : 'zh'"
-      :title="langPriority === 'zh' ? '切换到英文优先' : 'Switch to Chinese Priority'"
-    >
-      <div class="toggle-icon">
-        <span class="lang-primary">{{ langPriority === 'zh' ? '中' : 'EN' }}</span>
-        <span class="lang-secondary">{{ langPriority === 'zh' ? 'EN' : '中' }}</span>
-      </div>
-      <div class="toggle-label">{{ langPriority === 'zh' ? '语言' : 'LANG' }}</div>
-    </button>
 
-    <div class="profile-scroll-container custom-scroll">
+    <div class="profile-scroll-container">
 
       <!-- 顶部导航栏 -->
       <header class="profile-header">
@@ -23,14 +15,14 @@
           <button class="back-btn" @click="router.push('/comCenter')">
             <i class="fas fa-arrow-left"></i>
             <span class="btn-text-main">{{ t.back }}</span>
-            <span class="btn-text-sub" v-if="langPriority === 'zh'">BACK</span>
+            <span class="btn-text-sub">BACK</span>
           </button>
         </div>
         <div class="header-center">
           <h1 class="page-title">
             <span class="title-deco"></span>
             <span class="title-main">{{ isEditMode ? t.profileEditor : t.userProfile }}</span>
-            <span class="title-sub">{{ isEditMode ? (langPriority === 'zh' ? 'EDITOR' : '编辑器') : (langPriority === 'zh' ? 'PROFILE' : '主页') }}</span>
+            <span class="title-sub">{{ isEditMode ? 'EDITOR' : 'PROFILE' }}</span>
           </h1>
         </div>
         <div class="header-right">
@@ -41,7 +33,7 @@
               @click="isEditMode = false"
             >
               <span class="btn-main">{{ t.view }}</span>
-              <span class="btn-sub">{{ langPriority === 'zh' ? 'VIEW' : '查看' }}</span>
+              <span class="btn-sub">VIEW</span>
             </button>
             <button
               class="toggle-btn"
@@ -49,7 +41,7 @@
               @click="isEditMode = true"
             >
               <span class="btn-main">{{ t.edit }}</span>
-              <span class="btn-sub">{{ langPriority === 'zh' ? 'EDIT' : '编辑' }}</span>
+              <span class="btn-sub">EDIT</span>
             </button>
           </div>
         </div>
@@ -57,6 +49,11 @@
 
       <div class="tech-strip">
         <div class="strip-content">
+          // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
+          // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
+          // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
+          // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
+          // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
           // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
           // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
         </div>
@@ -82,7 +79,7 @@
                 <div v-if="isEditMode" class="avatar-overlay" @click="triggerAvatarUpload">
                   <i class="fas fa-camera"></i>
                   <span class="overlay-main">{{ t.changeAvatar }}</span>
-                  <span class="overlay-sub">{{ langPriority === 'zh' ? 'CHANGE' : '更换' }}</span>
+                  <span class="overlay-sub">CHANGE</span>
                 </div>
                 <input
                   ref="avatarInput"
@@ -94,7 +91,7 @@
               </div>
               <div class="level-badge">
                 <span class="badge-level">LV.{{ userProfile.level || 1 }}</span>
-                <span class="badge-level-sub">{{ langPriority === 'zh' ? 'LEVEL' : '等级' }}</span>
+                <span class="badge-level-sub">LEVEL</span>
               </div>
             </div>
 
@@ -109,6 +106,42 @@
               />
 
               <div class="user-id">ID: {{ userProfile.userId || '000000' }}</div>
+
+              <!-- 个人信息：性别、年龄、地点 -->
+              <div class="user-details" v-if="!isEditMode">
+                <div class="detail-item">
+                  <i class="fas fa-venus-mars"></i>
+                  <span>{{ userProfile.gender || '未设置' }}</span>
+                </div>
+                <div class="detail-item">
+                  <i class="fas fa-birthday-cake"></i>
+                  <span>{{ userProfile.age || '未设置' }}岁</span>
+                </div>
+                <div class="detail-item">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span>{{ userProfile.location || '未设置' }}</span>
+                </div>
+              </div>
+
+              <!-- 编辑模式下的个人信息 -->
+              <div class="user-details-edit" v-else>
+                <div class="detail-edit-row">
+                  <label>性别</label>
+                  <select v-model="userProfile.gender" class="detail-select">
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                    <option value="保密">保密</option>
+                  </select>
+                </div>
+                <div class="detail-edit-row">
+                  <label>年龄</label>
+                  <input type="number" v-model="userProfile.age" class="detail-input" placeholder="年龄" />
+                </div>
+                <div class="detail-edit-row">
+                  <label>地点</label>
+                  <input type="text" v-model="userProfile.locationCity" class="detail-input" placeholder="城市" />
+                </div>
+              </div>
 
               <div class="bio-section" v-if="!isEditMode">
                 <p class="bio-text">{{ userProfile.bio || t.noBioData }}</p>
@@ -126,21 +159,21 @@
                   <span class="num">{{ userProfile.followingCount || 0 }}</span>
                   <span class="label">
                     <span class="label-main">{{ t.following }}</span>
-                    <span class="label-sub">{{ langPriority === 'zh' ? 'FOLLOWING' : '关注' }}</span>
+                    <span class="label-sub">FOLLOWING</span>
                   </span>
                 </div>
                 <div class="stat-mini">
                   <span class="num">{{ userProfile.followersCount || 0 }}</span>
                   <span class="label">
                     <span class="label-main">{{ t.followers }}</span>
-                    <span class="label-sub">{{ langPriority === 'zh' ? 'FOLLOWERS' : '粉丝' }}</span>
+                    <span class="label-sub">FOLLOWERS</span>
                   </span>
                 </div>
                 <div class="stat-mini">
                   <span class="num">{{ userProfile.postsCount || 0 }}</span>
                   <span class="label">
                     <span class="label-main">{{ t.posts }}</span>
-                    <span class="label-sub">{{ langPriority === 'zh' ? 'POSTS' : '帖子' }}</span>
+                    <span class="label-sub">POSTS</span>
                   </span>
                 </div>
               </div>
@@ -149,7 +182,7 @@
             <button v-if="isEditMode" class="save-profile-btn" @click="saveProfile">
               <i class="fas fa-save"></i>
               <span class="btn-text-main">{{ t.saveProfile }}</span>
-              <span class="btn-text-sub">{{ langPriority === 'zh' ? 'SAVE' : '保存' }}</span>
+              <span class="btn-text-sub">SAVE</span>
             </button>
           </section>
 
@@ -157,7 +190,7 @@
           <section class="cyber-card achievements-card">
             <div class="card-label-strip">
               <span class="strip-main">{{ t.achievements }}</span>
-              <span class="strip-sub">{{ langPriority === 'zh' ? 'ACHIEVEMENTS' : '成��' }}</span>
+              <span class="strip-sub">ACHIEVEMENTS</span>
             </div>
             <div class="achievements-grid">
               <div
@@ -177,7 +210,7 @@
           <section class="cyber-card repo-card">
             <div class="card-label-strip">
               <span class="strip-main">{{ t.repositories }}</span>
-              <span class="strip-sub">{{ langPriority === 'zh' ? 'REPOSITORIES' : '仓库' }}</span>
+              <span class="strip-sub">REPOSITORIES</span>
             </div>
             <div class="repo-list">
               <div
@@ -208,7 +241,7 @@
               <i class="fas fa-th"></i>
               <span class="tab-main">{{ t.artworks }}</span>
               <span class="tab-count">({{ artworks.length }})</span>
-              <span class="tab-sub">{{ langPriority === 'zh' ? 'WORKS' : '作品' }}</span>
+              <span class="tab-sub">WORKS</span>
             </button>
             <button
               class="tab-btn"
@@ -218,7 +251,7 @@
               <i class="fas fa-book"></i>
               <span class="tab-main">{{ t.blogs }}</span>
               <span class="tab-count">({{ blogs.length }})</span>
-              <span class="tab-sub">{{ langPriority === 'zh' ? 'BLOGS' : '博客' }}</span>
+              <span class="tab-sub">BLOGS</span>
             </button>
             <button
               class="tab-btn"
@@ -227,7 +260,7 @@
             >
               <i class="fas fa-history"></i>
               <span class="tab-main">{{ t.activity }}</span>
-              <span class="tab-sub">{{ langPriority === 'zh' ? 'ACTIVITY' : '活动' }}</span>
+              <span class="tab-sub">ACTIVITY</span>
             </button>
           </div>
 
@@ -242,7 +275,7 @@
                 <button class="upload-btn" @click="uploadArtwork">
                   <i class="fas fa-upload"></i>
                   <span class="btn-text-main">{{ t.uploadFirstArtwork }}</span>
-                  <span class="btn-text-sub">{{ langPriority === 'zh' ? 'UPLOAD' : '上传' }}</span>
+                  <span class="btn-text-sub">UPLOAD</span>
                 </button>
               </div>
               <div v-else class="waterfall-container">
@@ -280,7 +313,7 @@
                 <button class="upload-btn" @click="router.push('/blogCreater')">
                   <i class="fas fa-pen"></i>
                   <span class="btn-text-main">{{ t.writeFirstBlog }}</span>
-                  <span class="btn-text-sub">{{ langPriority === 'zh' ? 'WRITE' : '写作' }}</span>
+                  <span class="btn-text-sub">WRITE</span>
                 </button>
               </div>
               <div v-else class="blog-list-container">
@@ -347,9 +380,9 @@
           <!-- 留言板 -->
           <section class="cyber-card guestbook-card">
             <div class="card-label-strip">
-              <span class="strip-main">{{ langPriority === 'zh' ? '留言板' : 'GUESTBOOK' }}</span>
+              <span class="strip-main">留言板</span>
               <span class="strip-count">({{ guestbookMessages.length }})</span>
-              <span class="strip-sub">{{ langPriority === 'zh' ? 'GUESTBOOK' : '留言板' }}</span>
+              <span class="strip-sub">GUESTBOOK</span>
             </div>
 
             <div class="guestbook-messages custom-scroll">
@@ -377,7 +410,7 @@
             <div class="guestbook-input-area">
               <textarea
                 v-model="newMessage"
-                :placeholder="langPriority === 'zh' ? '留下你的足迹...' : 'LEAVE_MESSAGE...'"
+                :placeholder="'留下你的足迹...'"
                 class="msg-input"
                 rows="2"
                 @keyup.ctrl.enter="submitMessage"
@@ -387,8 +420,8 @@
                 @click="submitMessage"
                 :disabled="!newMessage.trim()"
               >
-                <span class="btn-send-main">{{ langPriority === 'zh' ? '发送' : 'SEND' }}</span>
-                <span class="btn-send-sub">{{ langPriority === 'zh' ? 'SEND' : '发送' }}</span>
+                <span class="btn-send-main">发送</span>
+                <span class="btn-send-sub">SEND</span>
               </button>
             </div>
           </section>
@@ -396,8 +429,8 @@
           <!-- 个人设置 -->
           <section v-if="isEditMode" class="cyber-card settings-card">
             <div class="card-label-strip">
-              <span class="strip-main">{{ langPriority === 'zh' ? '设置' : 'SETTINGS' }}</span>
-              <span class="strip-sub">{{ langPriority === 'zh' ? 'SETTINGS' : '设置' }}</span>
+              <span class="strip-main">设置</span>
+              <span class="strip-sub">SETTINGS</span>
             </div>
 
             <div class="settings-list">
@@ -440,8 +473,8 @@
               <div class="setting-item">
                 <label class="setting-label">
                   <i class="fas fa-palette"></i>
-                  <span class="label-main">{{ langPriority === 'zh' ? '主题颜色' : 'Theme Color' }}</span>
-                  <span class="label-sub">{{ langPriority === 'zh' ? 'THEME' : '主题' }}</span>
+                  <span class="label-main">主题颜色</span>
+                  <span class="label-sub">THEME</span>
                 </label>
                 <div class="color-picker-group">
                   <div
@@ -477,8 +510,8 @@
 
               <button class="danger-btn" @click="showDeleteConfirm = true">
                 <i class="fas fa-exclamation-triangle"></i>
-                <span class="btn-text-main">{{ langPriority === 'zh' ? '删除账户' : 'DELETE ACCOUNT' }}</span>
-                <span class="btn-text-sub">{{ langPriority === 'zh' ? 'DELETE' : '删除' }}</span>
+                <span class="btn-text-main">保存修改</span>
+                <span class="btn-text-sub">SAVE</span>
               </button>
             </div>
           </section>
@@ -486,8 +519,8 @@
           <!-- 社交链接 -->
           <section class="cyber-card social-card">
             <div class="card-label-strip">
-              <span class="strip-main">{{ langPriority === 'zh' ? '社交链接' : 'SOCIAL LINKS' }}</span>
-              <span class="strip-sub">{{ langPriority === 'zh' ? 'SOCIAL' : '社交' }}</span>
+              <span class="strip-main">社交链接</span>
+              <span class="strip-sub">SOCIAL</span>
             </div>
             <div class="social-links">
               <a v-for="link in socialLinks" :key="link.platform" :href="link.url" target="_blank" class="social-link">
@@ -528,7 +561,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import apiClient from '@/utils/api';
 
@@ -539,58 +572,55 @@ const BASE_URL = isDev ? 'https://localhost:44359' : 'https://bianyuzhou.com';
 
 const isEditMode = ref(false);
 const activeTab = ref('works');
-const langPriority = ref('zh'); // 'zh' 中文优先, 'en' 英文优先
+const profileContainer = ref(null);
 
-// 多语言文本
-const t = computed(() => {
-  const lang = langPriority.value;
-  return {
-    back: lang === 'zh' ? '返回' : 'BACK',
-    profileEditor: lang === 'zh' ? '资料编辑' : 'PROFILE_EDITOR',
-    userProfile: lang === 'zh' ? '用户主页' : 'USER_PROFILE',
-    view: lang === 'zh' ? '查看' : 'VIEW',
-    edit: lang === 'zh' ? '编辑' : 'EDIT',
-    changeAvatar: lang === 'zh' ? '更换头像' : 'CHANGE',
-    usernamePlaceholder: lang === 'zh' ? '用户名' : 'Username',
-    bioPlaceholder: lang === 'zh' ? '写点什么介绍自己吧...' : 'Write your bio...',
-    noBioData: lang === 'zh' ? '// 暂无个人简介' : '// NO_BIO_DATA',
-    following: lang === 'zh' ? '关注' : 'Following',
-    followers: lang === 'zh' ? '粉丝' : 'Followers',
-    posts: lang === 'zh' ? '帖子' : 'Posts',
-    saveProfile: lang === 'zh' ? '保存资料' : 'SAVE PROFILE',
-    achievements: lang === 'zh' ? '成就' : 'ACHIEVEMENTS',
-    repositories: lang === 'zh' ? '仓库' : 'REPOSITORIES',
-    artworks: lang === 'zh' ? '作品集' : 'ARTWORKS',
-    blogs: lang === 'zh' ? '博客' : 'BLOGS',
-    activity: lang === 'zh' ? '活动记录' : 'ACTIVITY',
-    loadingArtworks: lang === 'zh' ? '加载作品中...' : 'LOADING_ARTWORKS...',
-    noArtworksYet: lang === 'zh' ? '// 还没有作品 //' : '// NO_ARTWORKS_YET //',
-    uploadFirstArtwork: lang === 'zh' ? '上传第一件作品' : 'UPLOAD FIRST ARTWORK',
-    loadingBlogs: lang === 'zh' ? '加载博客中...' : 'LOADING_BLOGS...',
-    noBlogsYet: lang === 'zh' ? '// 还没有博客 //' : '// NO_BLOGS_YET //',
-    writeFirstBlog: lang === 'zh' ? '写第一篇博客' : 'WRITE FIRST BLOG',
-    loadingActivity: lang === 'zh' ? '加载活动记录中...' : 'LOADING_ACTIVITY...',
-    noActivityRecorded: lang === 'zh' ? '// 暂无活动记录 //' : '// NO_ACTIVITY_RECORDED //',
-    guestbook: lang === 'zh' ? '留言板' : 'GUESTBOOK',
-    noMessagesYet: lang === 'zh' ? '// 还没有留言 //' : '// NO_MESSAGES_YET //',
-    leaveMessagePlaceholder: lang === 'zh' ? '留下你的足迹...' : 'LEAVE_MESSAGE...',
-    send: lang === 'zh' ? '发送' : 'SEND',
-    settings: lang === 'zh' ? '设置' : 'SETTINGS',
-    email: lang === 'zh' ? '邮箱' : 'Email',
-    website: lang === 'zh' ? '个人网站' : 'Website',
-    location: lang === 'zh' ? '所在地' : 'Location',
-    themeColor: lang === 'zh' ? '主题颜色' : 'Theme Color',
-    profilePublic: lang === 'zh' ? '公开主页' : 'Profile Public',
-    notifications: lang === 'zh' ? '通知' : 'Notifications',
-    deleteAccount: lang === 'zh' ? '删除账户' : 'DELETE ACCOUNT',
-    socialLinks: lang === 'zh' ? '社交链接' : 'SOCIAL_LINKS',
-    confirmDeletion: lang === 'zh' ? '确认删除' : 'CONFIRM DELETION',
-    deleteWarning: lang === 'zh' ? '此操作无法撤销，您的所有数据将被永久删除。' : 'This action cannot be undone. All your data will be permanently deleted.',
-    cancel: lang === 'zh' ? '取消' : 'CANCEL',
-    delete: lang === 'zh' ? '删除' : 'DELETE',
-    locationPlaceholder: lang === 'zh' ? '城市，国家' : 'City, Country'
-  };
-});
+// 文本常量（中文优先）
+const t = {
+  back: '返回',
+  profileEditor: '资料编辑',
+  userProfile: '用户主页',
+  view: '查看',
+  edit: '编辑',
+  changeAvatar: '更换头像',
+  usernamePlaceholder: '用户名',
+  bioPlaceholder: '写点什么介绍自己吧...',
+  noBioData: '// 暂无个人简介',
+  following: '关注',
+  followers: '粉丝',
+  posts: '帖子',
+  saveProfile: '保存资料',
+  achievements: '成就',
+  repositories: '仓库',
+  artworks: '作品集',
+  blogs: '博客',
+  activity: '活动记录',
+  loadingArtworks: '加载作品中...',
+  noArtworksYet: '// 还没有作品 //',
+  uploadFirstArtwork: '上传第一件作品',
+  loadingBlogs: '加载博客中...',
+  noBlogsYet: '// 还没有博客 //',
+  writeFirstBlog: '写第一篇博客',
+  loadingActivity: '加载活动记录中...',
+  noActivityRecorded: '// 暂无活动记录 //',
+  guestbook: '留言板',
+  noMessagesYet: '// 还没有留言 //',
+  leaveMessagePlaceholder: '留下你的足迹...',
+  send: '发送',
+  settings: '设置',
+  email: '邮箱',
+  website: '个人网站',
+  location: '所在地',
+  themeColor: '主题颜色',
+  profilePublic: '公开主页',
+  notifications: '通知',
+  deleteAccount: '删除账户',
+  socialLinks: '社交链接',
+  confirmDeletion: '确认删除',
+  deleteWarning: '此操作无法撤销，您的所有数据将被永久删除。',
+  cancel: '取消',
+  delete: '删除',
+  locationPlaceholder: '城市，国家'
+};
 
 const userProfile = reactive({
   userId: '000001',
@@ -598,12 +628,15 @@ const userProfile = reactive({
   avatar: '',
   bio: '探索太初宇宙的旅行者 // Explorer of TAICHU Universe',
   level: 5,
+  gender: '男',
+  age: 25,
+  location: '北京',
+  locationCity: '北京',
   followingCount: 42,
   followersCount: 128,
   postsCount: 36,
   email: '',
   website: '',
-  location: '',
   themeColor: '#D92323',
   isPublic: true,
   notifications: true
@@ -645,6 +678,26 @@ const socialLinks = ref([
   { platform: 'Twitter', url: 'https://twitter.com', icon: 'fab fa-twitter' },
   { platform: 'Bilibili', url: 'https://bilibili.com', icon: 'fas fa-tv' }
 ]);
+
+// 缩放适配函数
+const handleResize = () => {
+  if (!profileContainer.value) return;
+
+  const designWidth = 1920;
+  const designHeight = 1080;
+
+  const windowWidth = window.innerWidth;
+  const windowHeight = window.innerHeight;
+
+  const scaleX = windowWidth / designWidth;
+  const scaleY = windowHeight / designHeight;
+  const scale = Math.min(scaleX, scaleY);
+
+  profileContainer.value.style.transform = `scale(${scale})`;
+  profileContainer.value.style.transformOrigin = 'top left';
+  profileContainer.value.style.width = `${designWidth}px`;
+  profileContainer.value.style.height = `${designHeight}px`;
+};
 
 // Utility functions
 const handleImgError = (e) => {
@@ -856,6 +909,14 @@ onMounted(() => {
   fetchBlogs();
   fetchActivities();
   fetchGuestbook();
+
+  // 初始化缩放
+  handleResize();
+  window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
 });
 </script>
 
@@ -877,8 +938,8 @@ onMounted(() => {
   --body: 'Inter', sans-serif;
   --gap: 20px;
 
-  width: 100%;
-  height: 100vh;
+  width: 1920px;
+  height: 2000px;
   background: var(--off-white);
   display: flex;
   flex-direction: column;
@@ -886,6 +947,7 @@ onMounted(() => {
   font-family: var(--body);
   color: var(--black);
   position: relative;
+  transform-origin: top left;
 }
 
 /* 背景网格 */
@@ -910,63 +972,9 @@ onMounted(() => {
   100% { transform: translateY(-50px); }
 }
 
-/* 悬浮语言切换按钮 */
-.floating-lang-toggle {
-  position: fixed;
-  bottom: 40px;
-  right: 40px;
-  z-index: 9999;
-  width: 70px;
-  height: 70px;
-  background: var(--red);
-  border: 3px solid var(--black);
-  color: var(--off-white);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  font-family: var(--mono);
-  font-weight: 700;
-  box-shadow: -5px 5px 0 rgba(0, 0, 0, 0.2);
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  clip-path: polygon(15% 0%, 100% 0%, 100% 85%, 85% 100%, 0% 100%, 0% 15%);
-}
-
-.floating-lang-toggle:hover {
-  transform: translateY(-5px) rotate(5deg);
-  box-shadow: -8px 8px 0 rgba(0, 0, 0, 0.3);
-  background: var(--black);
-  color: var(--off-white);
-}
-
-.toggle-icon {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.lang-primary {
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-.lang-secondary {
-  font-size: 0.65rem;
-  opacity: 0.7;
-}
-
-.toggle-label {
-  font-size: 0.55rem;
-  letter-spacing: 1px;
-  opacity: 0.8;
-}
-
 .profile-scroll-container {
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
   z-index: 1;
   display: flex;
@@ -980,7 +988,7 @@ onMounted(() => {
   align-items: center;
   padding: 20px 30px;
   border-bottom: 4px solid var(--black);
-  background: #fff;
+  background: #000000;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -988,8 +996,8 @@ onMounted(() => {
 }
 
 .header-left .back-btn {
-  background: var(--black);
-  color: var(--off-white);
+  background: white;
+  color: black;
   border: 2px solid var(--black);
   padding: 12px 24px;
   font-family: var(--mono);
@@ -1042,6 +1050,7 @@ onMounted(() => {
 .title-main {
   font-size: 2rem;
   letter-spacing: -1px;
+  color: #ddd;
 }
 
 .title-sub {
@@ -1049,6 +1058,7 @@ onMounted(() => {
   opacity: 0.6;
   font-family: var(--mono);
   font-weight: 400;
+  color: #ddd;
 }
 
 .mode-toggle {
@@ -1090,8 +1100,9 @@ onMounted(() => {
 }
 
 .toggle-btn.active {
-  background: var(--black);
+  background: #D92323;
   color: var(--off-white);
+  transition: ease-in-out;
 }
 
 .toggle-btn.active .btn-sub {
@@ -1114,6 +1125,9 @@ onMounted(() => {
   font-weight: 700;
   border-top: 2px solid var(--black);
   border-bottom: 2px solid var(--black);
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
 }
 
 .strip-content {
@@ -1134,9 +1148,11 @@ onMounted(() => {
   max-width: 2560px;
   margin: 0 auto;
   width: 100%;
+  height: 100%;
   box-sizing: border-box;
-  align-items: flex-start;
+  align-items: stretch;
   background: var(--off-white);
+  overflow: hidden;
 }
 
 .profile-left-column {
@@ -1144,6 +1160,9 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--gap);
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100%;
 }
 
 .profile-mid-column {
@@ -1152,6 +1171,8 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--gap);
+  overflow: hidden;
+  max-height: 100%;
 }
 
 .profile-right-column {
@@ -1159,6 +1180,9 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--gap);
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100%;
 }
 
 /* 通用卡片 */
@@ -1171,6 +1195,12 @@ onMounted(() => {
   overflow: hidden;
   position: relative;
   transition: all 0.3s ease;
+    /* 核心：清除子元素可能的浮动/布局影响，让父容器自动包裹所有子元素（包括底部内容） */
+  display: flow-root;
+  /* 可选：若父容器原本有固定高度，去掉固定高度，改用高度自适应 */
+  height: fit-content; 
+  /* 辅助：避免内容紧贴边缘（可根据实际调整） */
+  padding-bottom: 12px;
 }
 
 .cyber-card:hover {
@@ -1377,8 +1407,84 @@ onMounted(() => {
   font-family: var(--mono);
   font-size: 0.85rem;
   color: #666;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   opacity: 0.8;
+}
+
+/* 个人详细信息展示 */
+.user-details {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 12px 0 18px 0;
+  padding: 12px;
+  background: var(--gray-light);
+  border: 2px solid var(--black);
+  clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: var(--black);
+  padding: 4px 10px;
+  background: #fff;
+  border-radius: 3px;
+}
+
+.detail-item i {
+  color: var(--red);
+  font-size: 0.9rem;
+}
+
+/* 个人信息编辑模式 */
+.user-details-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0 18px 0;
+  padding: 15px;
+  background: var(--gray-light);
+  border: 2px solid var(--black);
+}
+
+.detail-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 80px;
+}
+
+.detail-edit-row label {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--black);
+  min-width: 50px;
+
+}
+
+.detail-select,
+.detail-input {
+  flex: 1;
+  border: 2px solid var(--black);
+  padding: 8px 12px;
+  font-family: var(--body);
+  font-size: 0.9rem;
+  outline: none;
+  transition: 0.2s;
+  background: #fff;
+  color: var(--black);
+  width: 80px;
+}
+
+.detail-select:focus,
+.detail-input:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 8px rgba(217, 35, 35, 0.2);
 }
 
 .bio-section {
@@ -1706,7 +1812,14 @@ onMounted(() => {
 
 /* 作品瀑布流 */
 .works-waterfall {
-  min-height: 600px;
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-width: 5px;
+  border-color: #000000;
+  border-style: solid;
+  box-shadow: 6px 6px 0px 0px rgb(127, 124, 124);
 }
 
 .loading-state,
@@ -1768,6 +1881,7 @@ onMounted(() => {
   transition: 0.3s;
   animation: fadeInUp 0.5s ease-out;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.15), 8px 8px 0 rgba(217, 35, 35, 0.1);
 }
 
 @keyframes fadeInUp {
@@ -1783,7 +1897,7 @@ onMounted(() => {
 
 .artwork-card:hover {
   transform: translateY(-10px) rotate(2deg);
-  box-shadow: 0 10px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 6px 16px 0 rgba(0, 0, 0, 0.25), 12px 20px 0 rgba(217, 35, 35, 0.2);
   border-color: var(--red);
 }
 
@@ -1854,16 +1968,23 @@ onMounted(() => {
 
 /* 博客列表 */
 .blogs-list {
-  min-height: 600px;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .blog-list-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 20px;
   padding: 20px;
   background: var(--gray);
   border: 3px solid var(--black);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .blog-item-card {
@@ -1956,14 +2077,21 @@ onMounted(() => {
 
 /* 活动时间线 */
 .activity-timeline {
-  min-height: 600px;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .timeline-container {
+  flex: 1;
   padding: 20px 20px 20px 50px;
   background: var(--gray);
   border: 3px solid var(--black);
   position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .timeline-container::before {
@@ -2049,10 +2177,11 @@ onMounted(() => {
 
 /* 留言板 */
 .guestbook-card {
-  height: 600px;
+  flex: 1;
   display: flex;
   flex-direction: column;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%);
+  min-height: 0;
 }
 
 .guestbook-messages {
@@ -2501,38 +2630,42 @@ input:checked + .switch-slider::before {
   transform: scale(0.8) rotate(-5deg);
 }
 
-/* 响应式 */
-@media screen and (max-width: 1400px) {
-  .profile-left-column {
-    flex: 0 0 280px;
-  }
-  .profile-right-column {
-    flex: 0 0 320px;
-  }
-}
-
-@media screen and (max-width: 1920px) {
-  .cyber-profile {
-    zoom: 0.8;
-  }
-}
-
 /* 滚动条样式 */
-.custom-scroll::-webkit-scrollbar {
+.custom-scroll::-webkit-scrollbar,
+.profile-left-column::-webkit-scrollbar,
+.profile-right-column::-webkit-scrollbar,
+.works-waterfall::-webkit-scrollbar,
+.blog-list-container::-webkit-scrollbar,
+.timeline-container::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
-.custom-scroll::-webkit-scrollbar-track {
+.custom-scroll::-webkit-scrollbar-track,
+.profile-left-column::-webkit-scrollbar-track,
+.profile-right-column::-webkit-scrollbar-track,
+.works-waterfall::-webkit-scrollbar-track,
+.blog-list-container::-webkit-scrollbar-track,
+.timeline-container::-webkit-scrollbar-track {
   background: var(--gray);
 }
 
-.custom-scroll::-webkit-scrollbar-thumb {
+.custom-scroll::-webkit-scrollbar-thumb,
+.profile-left-column::-webkit-scrollbar-thumb,
+.profile-right-column::-webkit-scrollbar-thumb,
+.works-waterfall::-webkit-scrollbar-thumb,
+.blog-list-container::-webkit-scrollbar-thumb,
+.timeline-container::-webkit-scrollbar-thumb {
   background: var(--black);
   border: 2px solid var(--gray);
 }
 
-.custom-scroll::-webkit-scrollbar-thumb:hover {
+.custom-scroll::-webkit-scrollbar-thumb:hover,
+.profile-left-column::-webkit-scrollbar-thumb:hover,
+.profile-right-column::-webkit-scrollbar-thumb:hover,
+.works-waterfall::-webkit-scrollbar-thumb:hover,
+.blog-list-container::-webkit-scrollbar-thumb:hover,
+.timeline-container::-webkit-scrollbar-thumb:hover {
   background: var(--red);
 }
 </style>
