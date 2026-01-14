@@ -143,7 +143,14 @@ const routes = [
   {
     path: "/profile",
     redirect: "/profile/me"
-  }
+  },
+  {
+    path: "/profile/:UserSettings",
+    name: "用户资料设置",
+    component: () => import("@/UserComponent/UserSettings.vue"),
+    meta: { requiresAuth: true, title: '用户资料设置' }
+  },
+
 ]
 
 const router = createRouter({
