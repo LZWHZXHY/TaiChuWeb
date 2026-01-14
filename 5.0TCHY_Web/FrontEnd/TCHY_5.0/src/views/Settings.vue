@@ -1,2671 +1,835 @@
 <template>
-      <meta charset="utf-8">
-    <!-- 核心视口配置：开启移动端适配，禁止用户手动缩放（可选） -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vue3 缩放适应页面</title>
-  <div class="cyber-profile" ref="profileContainer">
-    <div class="grid-bg moving-grid"></div>
-
-
-    <div class="profile-scroll-container">
-
-      <!-- 顶部导航栏 -->
-      <header class="profile-header">
-        <div class="header-left">
-          <button class="back-btn" @click="router.push('/comCenter')">
-            <i class="fas fa-arrow-left"></i>
-            <span class="btn-text-main">{{ t.back }}</span>
-            <span class="btn-text-sub">BACK</span>
-          </button>
+  <div class="user-profile-terminal">
+    <header class="terminal-header">
+      <div class="header-left">
+        <div class="brand-block">
+          <span class="logo-box">T</span>
+          <span class="brand-text">用户终端 // USER_CENTER</span>
         </div>
-        <div class="header-center">
-          <h1 class="page-title">
-            <span class="title-deco"></span>
-            <span class="title-main">{{ isEditMode ? t.profileEditor : t.userProfile }}</span>
-            <span class="title-sub">{{ isEditMode ? 'EDITOR' : 'PROFILE' }}</span>
-          </h1>
-        </div>
-        <div class="header-right">
-          <div class="mode-toggle">
-            <button
-              class="toggle-btn"
-              :class="{ active: !isEditMode }"
-              @click="isEditMode = false"
-            >
-              <span class="btn-main">{{ t.view }}</span>
-              <span class="btn-sub">VIEW</span>
-            </button>
-            <button
-              class="toggle-btn"
-              :class="{ active: isEditMode }"
-              @click="isEditMode = true"
-            >
-              <span class="btn-main">{{ t.edit }}</span>
-              <span class="btn-sub">EDIT</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div class="tech-strip">
-        <div class="strip-content">
-          // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
-          // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
-          // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
-          // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
-          // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
-          // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
-          // TAICHU_USER_SYSTEM_v5.0 // 太初用户系统 // DATA_SYNCED // 数据已同步 // PERSONALIZATION_ACTIVE // 个性化已启用 //
+        <div class="path-bread">
+          <span class="root">系统</span>
+          <span class="sep">></span>
+          <span class="root">档案库</span>
+          <span class="sep">></span>
+          <span class="current blink">{{ user.username }}</span>
         </div>
       </div>
+      <div class="header-right">
+        <div class="status-indicator">
+          <span class="dot"></span> 联机状态: 在线
+        </div>
+        <button class="sys-btn" @click="goBack">
+          [ ESC ] 返回上级
+        </button>
+      </div>
+    </header>
 
-      <!-- 主要内容区域 -->
-      <div class="profile-main-grid">
-
-        <!-- 左侧栏：名片 + 统计 + 快捷入口 -->
-        <aside class="profile-left-column">
-
-          <!-- 用户名片 -->
-          <section class="cyber-card user-card">
-            <div class="card-deco-corner"></div>
-            <div class="taichu-logo-badge">
-              <span class="badge-main">太初寰宇</span>
-              <span class="badge-sub">TAICHU</span>
-            </div>
-
-            <div class="avatar-section">
-              <div class="avatar-wrapper" :class="{ 'edit-hover': isEditMode }">
-                <img :src="fixAvatarUrl(userProfile.avatar)" @error="handleImgError" />
-                <div v-if="isEditMode" class="avatar-overlay" @click="triggerAvatarUpload">
-                  <i class="fas fa-camera"></i>
-                  <span class="overlay-main">{{ t.changeAvatar }}</span>
-                  <span class="overlay-sub">CHANGE</span>
-                </div>
-                <input
-                  ref="avatarInput"
-                  type="file"
-                  accept="image/*"
-                  style="display: none;"
-                  @change="handleAvatarChange"
-                />
-              </div>
-              <div class="level-badge">
-                <span class="badge-level">LV.{{ userProfile.level || 1 }}</span>
-                <span class="badge-level-sub">LEVEL</span>
-              </div>
-            </div>
-
-            <div class="user-info-block">
-              <h2 class="username" v-if="!isEditMode">{{ userProfile.username }}</h2>
-              <input
-                v-else
-                type="text"
-                v-model="userProfile.username"
-                class="edit-input username-input"
-                :placeholder="t.usernamePlaceholder"
-              />
-
-              <div class="user-id">ID: {{ userProfile.userId || '000000' }}</div>
-
-              <!-- 个人信息：性别、年龄、地点 -->
-              <div class="user-details" v-if="!isEditMode">
-                <div class="detail-item">
-                  <i class="fas fa-venus-mars"></i>
-                  <span>{{ userProfile.gender || '未设置' }}</span>
-                </div>
-                <div class="detail-item">
-                  <i class="fas fa-birthday-cake"></i>
-                  <span>{{ userProfile.age || '未设置' }}岁</span>
-                </div>
-                <div class="detail-item">
-                  <i class="fas fa-map-marker-alt"></i>
-                  <span>{{ userProfile.location || '未设置' }}</span>
-                </div>
-              </div>
-
-              <!-- 编辑模式下的个人信息 -->
-              <div class="user-details-edit" v-else>
-                <div class="detail-edit-row">
-                  <label>性别</label>
-                  <select v-model="userProfile.gender" class="detail-select">
-                    <option value="男">男</option>
-                    <option value="女">女</option>
-                    <option value="保密">保密</option>
-                  </select>
-                </div>
-                <div class="detail-edit-row">
-                  <label>年龄</label>
-                  <input type="number" v-model="userProfile.age" class="detail-input" placeholder="年龄" />
-                </div>
-                <div class="detail-edit-row">
-                  <label>地点</label>
-                  <input type="text" v-model="userProfile.locationCity" class="detail-input" placeholder="城市" />
-                </div>
-              </div>
-
-              <div class="bio-section" v-if="!isEditMode">
-                <p class="bio-text">{{ userProfile.bio || t.noBioData }}</p>
-              </div>
-              <textarea
-                v-else
-                v-model="userProfile.bio"
-                class="edit-textarea"
-                :placeholder="t.bioPlaceholder"
-                rows="3"
-              ></textarea>
-
-              <div class="stats-mini-grid">
-                <div class="stat-mini">
-                  <span class="num">{{ userProfile.followingCount || 0 }}</span>
-                  <span class="label">
-                    <span class="label-main">{{ t.following }}</span>
-                    <span class="label-sub">FOLLOWING</span>
-                  </span>
-                </div>
-                <div class="stat-mini">
-                  <span class="num">{{ userProfile.followersCount || 0 }}</span>
-                  <span class="label">
-                    <span class="label-main">{{ t.followers }}</span>
-                    <span class="label-sub">FOLLOWERS</span>
-                  </span>
-                </div>
-                <div class="stat-mini">
-                  <span class="num">{{ userProfile.postsCount || 0 }}</span>
-                  <span class="label">
-                    <span class="label-main">{{ t.posts }}</span>
-                    <span class="label-sub">POSTS</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <button v-if="isEditMode" class="save-profile-btn" @click="saveProfile">
-              <i class="fas fa-save"></i>
-              <span class="btn-text-main">{{ t.saveProfile }}</span>
-              <span class="btn-text-sub">SAVE</span>
-            </button>
-          </section>
-
-          <!-- 成就栏 -->
-          <section class="cyber-card achievements-card">
-            <div class="card-label-strip">
-              <span class="strip-main">{{ t.achievements }}</span>
-              <span class="strip-sub">ACHIEVEMENTS</span>
-            </div>
-            <div class="achievements-grid">
-              <div
-                v-for="ach in achievements"
-                :key="ach.id"
-                class="achievement-item"
-                :class="{ unlocked: ach.unlocked }"
-                :title="ach.description"
-              >
-                <i :class="ach.icon"></i>
-                <span class="ach-name">{{ ach.name }}</span>
-              </div>
-            </div>
-          </section>
-
-          <!-- 仓库入口 -->
-          <section class="cyber-card repo-card">
-            <div class="card-label-strip">
-              <span class="strip-main">{{ t.repositories }}</span>
-              <span class="strip-sub">REPOSITORIES</span>
-            </div>
-            <div class="repo-list">
-              <div
-                v-for="repo in repositories"
-                :key="repo.id"
-                class="repo-item"
-                @click="openRepo(repo)"
-              >
-                <i class="fas fa-folder"></i>
-                <span class="repo-name">{{ repo.name }}</span>
-                <span class="repo-count">{{ repo.count }}</span>
-              </div>
-            </div>
-          </section>
-
-        </aside>
-
-        <!-- 中间栏：作品瀑布流 + 博客列表 -->
-        <main class="profile-mid-column">
-
-          <!-- Tab切换 -->
-          <div class="content-tabs">
-            <button
-              class="tab-btn"
-              :class="{ active: activeTab === 'works' }"
-              @click="activeTab = 'works'"
-            >
-              <i class="fas fa-th"></i>
-              <span class="tab-main">{{ t.artworks }}</span>
-              <span class="tab-count">({{ artworks.length }})</span>
-              <span class="tab-sub">WORKS</span>
-            </button>
-            <button
-              class="tab-btn"
-              :class="{ active: activeTab === 'blogs' }"
-              @click="activeTab = 'blogs'"
-            >
-              <i class="fas fa-book"></i>
-              <span class="tab-main">{{ t.blogs }}</span>
-              <span class="tab-count">({{ blogs.length }})</span>
-              <span class="tab-sub">BLOGS</span>
-            </button>
-            <button
-              class="tab-btn"
-              :class="{ active: activeTab === 'activity' }"
-              @click="activeTab = 'activity'"
-            >
-              <i class="fas fa-history"></i>
-              <span class="tab-main">{{ t.activity }}</span>
-              <span class="tab-sub">ACTIVITY</span>
-            </button>
-          </div>
-
-          <!-- 作品瀑布流 -->
-          <Transition name="fade" mode="out-in">
-            <div v-if="activeTab === 'works'" class="works-waterfall" key="works">
-              <div v-if="loadingWorks" class="loading-state">
-                <i class="fas fa-spinner fa-spin"></i> {{ t.loadingArtworks }}
-              </div>
-              <div v-else-if="artworks.length === 0" class="empty-state">
-                <p>{{ t.noArtworksYet }}</p>
-                <button class="upload-btn" @click="uploadArtwork">
-                  <i class="fas fa-upload"></i>
-                  <span class="btn-text-main">{{ t.uploadFirstArtwork }}</span>
-                  <span class="btn-text-sub">UPLOAD</span>
+    <div class="main-layout">
+      
+      <aside class="sidebar-left custom-scroll">
+        
+        <div class="id-flip-wrapper" :class="{ 'is-flipped': showIdArchive }">
+          <div class="id-flipper">
+            
+            <div class="id-face id-front">
+              <div class="cyber-card id-card-content">
+                <button class="flip-trigger-btn" @click="toggleIdArchive" title="查看详细资料">
+                  <span class="icon">➜</span>
+                  <span class="corner-deco"></span>
                 </button>
+
+                <div class="card-deco-top"></div>
+                <div class="avatar-frame">
+                  <img :src="user.avatar" alt="avatar" />
+                  <div class="corner-brackets"></div>
+                  <div class="level-badge">LV.{{ user.level }}</div>
+                </div>
+                <div class="id-info">
+                  <h1 class="user-name">{{ user.nickname }}</h1>
+                  <div class="user-role">
+                    <span class="hash">#</span> {{ user.role }}
+                  </div>
+                  <p class="bio-text">
+                    {{ user.bio || '暂无个人简介数据...' }}
+                  </p>
+                  <div class="meta-tags">
+                    <span class="tag" v-for="tag in user.tags" :key="tag">{{ tag }}</span>
+                  </div>
+                </div>
+                <div class="action-row">
+                  <button 
+                    class="action-btn" 
+                    :class="isFollowing ? 'active-state' : 'primary'" 
+                    @click="toggleFollow"
+                  >
+                    {{ isFollowing ? '✓ 已关注' : '关注 + FOLLOW' }}
+                  </button>
+                  <button class="action-btn" @click="handleMessage">
+                    私信 // MSG
+                  </button>
+                </div>
               </div>
-              <div v-else class="waterfall-container">
-                <div
-                  v-for="(art, index) in artworks"
-                  :key="art.id"
-                  class="artwork-card"
-                  :style="{ animationDelay: (index * 0.05) + 's' }"
-                  @click="openArtworkDetail(art)"
-                >
-                  <div class="artwork-img-wrapper">
-                    <img :src="art.imageUrl" @error="handleImgError" loading="lazy" />
-                    <div class="artwork-overlay">
-                      <div class="overlay-stats">
-                        <span><i class="far fa-heart"></i> {{ art.likes }}</span>
-                        <span><i class="far fa-eye"></i> {{ art.views }}</span>
+            </div>
+
+            <div class="id-face id-back">
+              <div class="cyber-card archive-card-content">
+                <div class="archive-header">
+                  <span class="blink">> PERSONAL_DATA</span>
+                  <button class="close-btn" @click="toggleIdArchive">×</button>
+                </div>
+                
+                <div class="archive-body custom-scroll">
+                  
+                  <div class="data-group">
+                    <div class="group-title">01. 基础识别 // BASIC_ID</div>
+                    <div class="info-grid">
+                      <div class="info-cell">
+                        <span class="label">AGE</span>
+                        <span class="value">{{ user.age }}</span>
+                      </div>
+                      <div class="info-cell">
+                        <span class="label">SEX</span>
+                        <span class="value">{{ user.gender }}</span>
+                      </div>
+                      <div class="info-cell full-width">
+                        <span class="label">LOC</span>
+                        <span class="value">{{ user.location }}</span>
+                      </div>
+                      <div class="info-cell full-width">
+                        <span class="label">EXP</span>
+                        <span class="value">{{ user.creationAge }} (since 2019)</span>
                       </div>
                     </div>
                   </div>
-                  <div class="artwork-info">
-                    <h4 class="artwork-title">{{ art.title }}</h4>
-                    <span class="artwork-date">{{ formatTime(art.createTime) }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <!-- 博客列表 -->
-            <div v-else-if="activeTab === 'blogs'" class="blogs-list" key="blogs">
-              <div v-if="loadingBlogs" class="loading-state">
-                <i class="fas fa-spinner fa-spin"></i> {{ t.loadingBlogs }}
-              </div>
-              <div v-else-if="blogs.length === 0" class="empty-state">
-                <p>{{ t.noBlogsYet }}</p>
-                <button class="upload-btn" @click="router.push('/blogCreater')">
-                  <i class="fas fa-pen"></i>
-                  <span class="btn-text-main">{{ t.writeFirstBlog }}</span>
-                  <span class="btn-text-sub">WRITE</span>
-                </button>
-              </div>
-              <div v-else class="blog-list-container">
-                <div
-                  v-for="blog in blogs"
-                  :key="blog.id"
-                  class="blog-item-card"
-                  @click="openBlogDetail(blog.id)"
-                >
-                  <div v-if="blog.coverImage" class="blog-cover">
-                    <img :src="fixAvatarUrl(blog.coverImage)" @error="handleImgError" />
-                  </div>
-                  <div class="blog-content-section">
-                    <div class="blog-meta">
-                      <span class="blog-tag">#{{ blog.tags?.[0] || 'TECH' }}</span>
-                      <span class="blog-date">{{ formatTime(blog.createTime) }}</span>
-                    </div>
-                    <h3 class="blog-title">{{ blog.title }}</h3>
-                    <p class="blog-excerpt">{{ blog.excerpt || blog.content?.substring(0, 100) + '...' }}</p>
-                    <div class="blog-stats">
-                      <span><i class="far fa-eye"></i> {{ blog.views }}</span>
-                      <span><i class="far fa-comment"></i> {{ blog.comments }}</span>
+                  <div class="data-group">
+                    <div class="group-title">02. 通讯终端 // CONNECT</div>
+                    <div class="contact-list">
+                      <a :href="`mailto:${user.email}`" class="contact-item">
+                        <span class="c-icon">✉</span>
+                        <div class="c-detail">
+                          <span class="c-label">EMAIL_LINK</span>
+                          <span class="c-val">{{ user.email }}</span>
+                        </div>
+                        <span class="c-arrow">>></span>
+                      </a>
+                      <a :href="`tencent://message/?uin=${user.qq}&Site=Sambow&Menu=yes`" class="contact-item">
+                        <span class="c-icon">🐧</span>
+                        <div class="c-detail">
+                          <span class="c-label">TENCENT_QQ</span>
+                          <span class="c-val">{{ user.qq }}</span>
+                        </div>
+                        <span class="c-arrow">>></span>
+                      </a>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
 
-            <!-- 活动记录 -->
-            <div v-else-if="activeTab === 'activity'" class="activity-timeline" key="activity">
-              <div v-if="loadingActivity" class="loading-state">
-                <i class="fas fa-spinner fa-spin"></i> LOADING_ACTIVITY...
-              </div>
-              <div v-else-if="activities.length === 0" class="empty-state">
-                <p>// NO_ACTIVITY_RECORDED //</p>
-              </div>
-              <div v-else class="timeline-container">
-                <div
-                  v-for="activity in activities"
-                  :key="activity.id"
-                  class="activity-item"
-                >
-                  <div class="activity-dot"></div>
-                  <div class="activity-content">
-                    <div class="activity-header">
-                      <span class="activity-type" :class="activity.type">
-                        <i :class="getActivityIcon(activity.type)"></i>
-                        {{ activity.type.toUpperCase() }}
-                      </span>
-                      <span class="activity-time">{{ formatTime(activity.time) }}</span>
+                  <div class="data-group">
+                    <div class="group-title">03. 外部链路 // LINKS</div>
+                    <div class="link-buttons">
+                      <a v-for="link in user.externalLinks" :key="link.name" :href="link.url" target="_blank" class="cyber-link-btn">
+                        [{{ link.name }}]
+                      </a>
                     </div>
-                    <p class="activity-desc">{{ activity.description }}</p>
                   </div>
+
+                  <div class="barcode-area">
+                    <div class="barcode"></div>
+                    <span class="code-num">UID: {{ user.uid }}</span>
+                  </div>
+
                 </div>
               </div>
             </div>
-          </Transition>
-
-        </main>
-
-        <!-- 右侧栏：留言板 + 设置 -->
-        <aside class="profile-right-column">
-
-          <!-- 留言板 -->
-          <section class="cyber-card guestbook-card">
-            <div class="card-label-strip">
-              <span class="strip-main">留言板</span>
-              <span class="strip-count">({{ guestbookMessages.length }})</span>
-              <span class="strip-sub">GUESTBOOK</span>
             </div>
-
-            <div class="guestbook-messages custom-scroll">
-              <div v-if="guestbookMessages.length === 0" class="empty-guestbook">
-                <p>// NO_MESSAGES_YET //</p>
-              </div>
-              <div
-                v-for="msg in guestbookMessages"
-                :key="msg.id"
-                class="guestbook-msg"
-              >
-                <div class="msg-header">
-                  <div class="msg-avatar">
-                    <img :src="fixAvatarUrl(msg.author.avatar)" @error="handleImgError" />
-                  </div>
-                  <div class="msg-info">
-                    <span class="msg-author">{{ msg.author.username }}</span>
-                    <span class="msg-time">{{ formatTime(msg.createTime) }}</span>
-                  </div>
-                </div>
-                <p class="msg-content">{{ msg.content }}</p>
-              </div>
+        </div>
+        <div class="cyber-card stats-card">
+          <div class="panel-header">
+            <span class="deco">📊</span> 数据概览 // METRICS
+          </div>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="label">获赞数</span>
+              <span class="val">{{ formatNumber(user.stats.likes) }}</span>
             </div>
-
-            <div class="guestbook-input-area">
-              <textarea
-                v-model="newMessage"
-                :placeholder="'留下你的足迹...'"
-                class="msg-input"
-                rows="2"
-                @keyup.ctrl.enter="submitMessage"
-              ></textarea>
-              <button
-                class="msg-send-btn"
-                @click="submitMessage"
-                :disabled="!newMessage.trim()"
-              >
-                <span class="btn-send-main">发送</span>
-                <span class="btn-send-sub">SEND</span>
-              </button>
+            <div class="stat-item">
+              <span class="label">浏览量</span>
+              <span class="val">{{ formatNumber(user.stats.views) }}</span>
             </div>
-          </section>
-
-          <!-- 个人设置 -->
-          <section v-if="isEditMode" class="cyber-card settings-card">
-            <div class="card-label-strip">
-              <span class="strip-main">设置</span>
-              <span class="strip-sub">SETTINGS</span>
+            <div class="stat-item">
+              <span class="label">作品数</span>
+              <span class="val">{{ user.stats.works }}</span>
             </div>
-
-            <div class="settings-list">
-              <div class="setting-item">
-                <label class="setting-label">
-                  <i class="fas fa-envelope"></i> Email
-                </label>
-                <input
-                  type="email"
-                  v-model="userProfile.email"
-                  class="setting-input"
-                  placeholder="your@email.com"
-                />
-              </div>
-
-              <div class="setting-item">
-                <label class="setting-label">
-                  <i class="fas fa-link"></i> Website
-                </label>
-                <input
-                  type="url"
-                  v-model="userProfile.website"
-                  class="setting-input"
-                  placeholder="https://..."
-                />
-              </div>
-
-              <div class="setting-item">
-                <label class="setting-label">
-                  <i class="fas fa-map-marker-alt"></i> Location
-                </label>
-                <input
-                  type="text"
-                  v-model="userProfile.location"
-                  class="setting-input"
-                  placeholder="City, Country"
-                />
-              </div>
-
-              <div class="setting-item">
-                <label class="setting-label">
-                  <i class="fas fa-palette"></i>
-                  <span class="label-main">主题颜色</span>
-                  <span class="label-sub">THEME</span>
-                </label>
-                <div class="color-picker-group">
-                  <div
-                    v-for="color in themeColors"
-                    :key="color"
-                    class="color-option"
-                    :style="{ background: color }"
-                    :class="{ selected: userProfile.themeColor === color }"
-                    @click="userProfile.themeColor = color"
-                  ></div>
-                </div>
-              </div>
-
-              <div class="setting-item toggle-row">
-                <label class="setting-label">
-                  <i class="fas fa-eye"></i> Profile Public
-                </label>
-                <label class="cyber-switch">
-                  <input type="checkbox" v-model="userProfile.isPublic" />
-                  <span class="switch-slider"></span>
-                </label>
-              </div>
-
-              <div class="setting-item toggle-row">
-                <label class="setting-label">
-                  <i class="fas fa-bell"></i> Notifications
-                </label>
-                <label class="cyber-switch">
-                  <input type="checkbox" v-model="userProfile.notifications" />
-                  <span class="switch-slider"></span>
-                </label>
-              </div>
-
-              <button class="danger-btn" @click="showDeleteConfirm = true">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span class="btn-text-main">保存修改</span>
-                <span class="btn-text-sub">SAVE</span>
-              </button>
-            </div>
-          </section>
-
-          <!-- 社交链接 -->
-          <section class="cyber-card social-card">
-            <div class="card-label-strip">
-              <span class="strip-main">社交链接</span>
-              <span class="strip-sub">SOCIAL</span>
-            </div>
-            <div class="social-links">
-              <a v-for="link in socialLinks" :key="link.platform" :href="link.url" target="_blank" class="social-link">
-                <i :class="link.icon"></i>
-                <span>{{ link.platform }}</span>
-              </a>
-            </div>
-          </section>
-
-        </aside>
-
-      </div>
-
-    </div>
-
-    <!-- 删除确认弹窗 -->
-    <Teleport to="body">
-      <Transition name="modal-scale">
-        <div v-if="showDeleteConfirm" class="cyber-modal-overlay" @click.self="showDeleteConfirm = false">
-          <div class="confirm-modal">
-            <div class="modal-header">
-              <span class="warning-icon"><i class="fas fa-exclamation-triangle"></i></span>
-              <h3>CONFIRM DELETION</h3>
-            </div>
-            <p class="modal-text">
-              This action cannot be undone. All your data will be permanently deleted.
-            </p>
-            <div class="modal-actions">
-              <button class="cancel-btn" @click="showDeleteConfirm = false">CANCEL</button>
-              <button class="confirm-btn" @click="deleteAccount">DELETE</button>
+            <div class="stat-item">
+              <span class="label">粉丝数</span>
+              <span class="val">{{ formatNumber(user.stats.followers) }}</span>
             </div>
           </div>
         </div>
-      </Transition>
-    </Teleport>
+        
+        <div class="cyber-card achievement-card">
+          <div class="panel-header">
+            <span class="deco">🏆</span> 成就系统 // MEDALS
+          </div>
+          <div class="achieve-list">
+            <div 
+              v-for="ach in achievements" 
+              :key="ach.id" 
+              class="ach-item" 
+              :class="{ locked: !ach.unlocked }"
+            >
+              <div class="ach-icon">{{ ach.icon }}</div>
+              <div class="ach-info">
+                <div class="ach-name">{{ ach.name }}</div>
+                <div class="ach-desc">{{ ach.desc }}</div>
+              </div>
+              <div class="lock-status" v-if="!ach.unlocked">🔒</div>
+            </div>
+          </div>
+        </div>
+      </aside>
 
+      <main class="content-area">
+        <nav class="tab-controller">
+          <button 
+            v-for="tab in tabs" 
+            :key="tab.id"
+            class="tab-btn"
+            :class="{ active: currentTab === tab.id }"
+            @click="switchTab(tab.id)"
+          >
+            <span class="tab-idx">0{{ tab.index }}</span>
+            <span class="tab-label">{{ tab.label }}</span>
+            <span class="tab-sub">{{ tab.sub }}</span>
+          </button>
+          <div class="tab-filler"></div>
+        </nav>
+
+        <div class="viewport custom-scroll" ref="viewportRef">
+          
+          <Transition name="fade-slide" mode="out-in">
+            <div v-if="currentTab === 'works'" class="view-section view-works" key="works">
+              <div class="section-toolbar">
+                <span class="label">筛选类型:</span>
+                <div class="filter-chips">
+                  <span 
+                    v-for="filter in workFilters" 
+                    :key="filter.key"
+                    class="chip" 
+                    :class="{ active: activeWorkFilter === filter.key }"
+                    @click="activeWorkFilter = filter.key"
+                  >
+                    {{ filter.label }}
+                  </span>
+                </div>
+              </div>
+              <div class="works-grid">
+                <div 
+                  v-for="work in filteredWorks" 
+                  :key="work.id" 
+                  class="work-item"
+                  @click="goToWorkDetail(work.id)"
+                >
+                  <div class="img-wrapper">
+                    <img :src="work.cover" loading="lazy" />
+                    <div class="overlay">
+                      <span>查看详情 ></span>
+                    </div>
+                  </div>
+                  <div class="work-meta">
+                    <div class="w-title">{{ work.title }}</div>
+                    <div class="w-stats">
+                      <span>♥ {{ work.likes }}</span>
+                      <span style="font-size: 0.6rem; border:1px solid #ccc; padding:0 2px;">{{ work.category === 'ui' ? 'UI' : 'ART' }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="filteredWorks.length === 0" class="empty-state">
+                  [NULL] 该分类下暂无数据...
+                </div>
+              </div>
+            </div>
+
+            <div v-else-if="currentTab === 'blogs'" class="view-section view-blogs" key="blogs">
+              <div class="blog-timeline">
+                <div v-for="blog in blogs" :key="blog.id" class="blog-entry">
+                  <div class="date-col">
+                    <span class="day">{{ blog.day }}</span>
+                    <span class="month">{{ blog.month }}</span>
+                  </div>
+                  <div class="content-col">
+                    <div class="blog-card" @click="goToBlogDetail(blog.id)">
+                      <h3 class="b-title">{{ blog.title }}</h3>
+                      <p class="b-excerpt">{{ blog.excerpt }}</p>
+                      <div class="b-footer">
+                        <div class="tags">
+                          <span v-for="t in blog.tags" :key="t">#{{ t }}</span>
+                        </div>
+                        <button class="read-btn" @click.stop="goToBlogDetail(blog.id)">阅读档案 >></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-else-if="currentTab === 'activity'" class="view-section view-activity" key="activity">
+              <div class="terminal-log">
+                <div class="log-header">
+                  <span>时间戳 (TIME)</span>
+                  <span>操作 (ACT)</span>
+                  <span>详情 (DETAIL)</span>
+                </div>
+                <div class="log-body">
+                  <div v-for="(log, idx) in activities" :key="idx" class="log-row">
+                    <span class="col-time">{{ log.time }}</span>
+                    <span class="col-action" :class="log.type">[{{ log.action }}]</span>
+                    <span class="col-detail">{{ log.detail }}</span>
+                  </div>
+                  <div class="log-cursor">_</div>
+                </div>
+              </div>
+            </div>
+
+            <div v-else-if="currentTab === 'guestbook'" class="view-section view-guestbook" key="guestbook">
+              
+              <div class="guestbook-input-area">
+                <div class="gb-input-header">
+                  <span class="blink">PULSE_INPUT //</span> 请输入加密留言
+                </div>
+                <div class="gb-form">
+                  <textarea 
+                    v-model="newGuestMsg" 
+                    placeholder="输入内容..." 
+                    rows="3"
+                    class="gb-textarea"
+                  ></textarea>
+                  <div class="gb-actions">
+                    <span class="deco-code">CODE: 0x88</span>
+                    <button class="sign-btn" @click="submitMessage">
+                      [ 签署并归档 / SIGN ]
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="guestbook-list">
+                <div class="list-label">历史归档 // ARCHIVE_HISTORY ({{ guestMessages.length }})</div>
+                
+                <div v-for="msg in guestMessages" :key="msg.id" class="archive-note">
+                  <div class="pin"></div>
+                  <div class="note-header">
+                    <span class="note-id">NO.{{ msg.id.toString().padStart(4, '0') }}</span>
+                    <span class="note-date">{{ msg.date }}</span>
+                  </div>
+                  <div class="note-body">{{ msg.content }}</div>
+                  <div class="note-footer">
+                    <div class="signature-block">
+                      <span class="sig-label">Signed by:</span>
+                      <span class="sig-name">{{ msg.user }}</span>
+                    </div>
+                    <div class="stamp-seal" :class="msg.stampType">{{ msg.stampText }}</div>
+                  </div>
+                </div>
+                <div class="end-of-file">--- END OF FILE ---</div>
+              </div>
+
+            </div>
+
+          </Transition>
+
+        </div>
+      </main>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, computed } from 'vue';
-import { useRouter } from 'vue-router';
-import apiClient from '@/utils/api';
+import { ref, reactive, computed } from 'vue'
 
-const router = useRouter();
+// --- Data & State ---
+const currentTab = ref('works')
+const viewportRef = ref(null)
+const isFollowing = ref(false)
+const activeWorkFilter = ref('all')
 
-const isDev = window.location.hostname === 'localhost';
-const BASE_URL = isDev ? 'https://localhost:44359' : 'https://bianyuzhou.com';
+// ID Card Flip State
+const showIdArchive = ref(false)
 
-const isEditMode = ref(false);
-const activeTab = ref('works');
-const profileContainer = ref(null);
+const tabs = [
+  { id: 'works', index: 1, label: '视觉作品', sub: 'ARTWORKS_DB' },
+  { id: 'blogs', index: 2, label: '思维日志', sub: 'THOUGHT_LOGS' },
+  { id: 'activity', index: 3, label: '活动轨迹', sub: 'SYSTEM_ACT' },
+  { id: 'guestbook', index: 4, label: '访客留言', sub: 'SIGNATURE_ARCHIVE' } 
+]
 
-// 文本常量（中文优先）
-const t = {
-  back: '返回',
-  profileEditor: '资料编辑',
-  userProfile: '用户主页',
-  view: '查看',
-  edit: '编辑',
-  changeAvatar: '更换头像',
-  usernamePlaceholder: '用户名',
-  bioPlaceholder: '写点什么介绍自己吧...',
-  noBioData: '// 暂无个人简介',
-  following: '关注',
-  followers: '粉丝',
-  posts: '帖子',
-  saveProfile: '保存资料',
-  achievements: '成就',
-  repositories: '仓库',
-  artworks: '作品集',
-  blogs: '博客',
-  activity: '活动记录',
-  loadingArtworks: '加载作品中...',
-  noArtworksYet: '// 还没有作品 //',
-  uploadFirstArtwork: '上传第一件作品',
-  loadingBlogs: '加载博客中...',
-  noBlogsYet: '// 还没有博客 //',
-  writeFirstBlog: '写第一篇博客',
-  loadingActivity: '加载活动记录中...',
-  noActivityRecorded: '// 暂无活动记录 //',
-  guestbook: '留言板',
-  noMessagesYet: '// 还没有留言 //',
-  leaveMessagePlaceholder: '留下你的足迹...',
-  send: '发送',
-  settings: '设置',
-  email: '邮箱',
-  website: '个人网站',
-  location: '所在地',
-  themeColor: '主题颜色',
-  profilePublic: '公开主页',
-  notifications: '通知',
-  deleteAccount: '删除账户',
-  socialLinks: '社交链接',
-  confirmDeletion: '确认删除',
-  deleteWarning: '此操作无法撤销，您的所有数据将被永久删除。',
-  cancel: '取消',
-  delete: '删除',
-  locationPlaceholder: '城市，国家'
-};
+const workFilters = [
+  { key: 'all', label: '全部 ALL' },
+  { key: 'ui', label: '作品' },
+  { key: 'art', label: '帖子' }
+]
 
-const userProfile = reactive({
-  userId: '000001',
-  username: 'TaichuUser',
-  avatar: '',
-  bio: '探索太初宇宙的旅行者 // Explorer of TAICHU Universe',
-  level: 5,
-  gender: '男',
-  age: 25,
-  location: '北京',
-  locationCity: '北京',
-  followingCount: 42,
-  followersCount: 128,
-  postsCount: 36,
-  email: '',
-  website: '',
-  themeColor: '#D92323',
-  isPublic: true,
-  notifications: true
-});
-
-const themeColors = ['#D92323', '#2196F3', '#4CAF50', '#FF9800', '#9C27B0', '#111111'];
+const user = reactive({
+  username: 'USER_114514',
+  uid: '89757-X',
+  nickname: '峰峰子', 
+  role: '视觉前端 // VISUAL_ENG',
+  level: 42,
+  avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
+  bio: '原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼。',
+  tags: ['界面设计', 'Vue开发', '三维艺术'],
+  // 实用新增字段
+  age: 24,
+  gender: 'Male / M',
+  location: 'Guangzhou, CN',
+  creationAge: '4年', // 创作年龄
+  email: 'fengfengzi@cyber.com',
+  qq: '1145141919',
+  externalLinks: [
+    { name: 'GitHub', url: 'https://github.com' },
+    { name: 'Bilibili', url: 'https://bilibili.com' },
+    { name: 'Dribbble', url: 'https://dribbble.com' }
+  ],
+  stats: { likes: 12450, views: 89000, works: 142, followers: 3500 }
+})
 
 const achievements = ref([
-  { id: 1, name: 'First Post', icon: 'fas fa-star', unlocked: true, description: 'Posted your first content' },
-  { id: 2, name: 'Socializer', icon: 'fas fa-users', unlocked: true, description: 'Got 100 followers' },
-  { id: 3, name: 'Creator', icon: 'fas fa-palette', unlocked: true, description: 'Uploaded 10 artworks' },
-  { id: 4, name: 'Writer', icon: 'fas fa-pen', unlocked: false, description: 'Published 20 blogs' },
-  { id: 5, name: 'Popular', icon: 'fas fa-fire', unlocked: false, description: 'Got 1000 likes' },
-  { id: 6, name: 'Legend', icon: 'fas fa-crown', unlocked: false, description: 'Reach level 10' }
-]);
+  { id: 1, name: '早期开拓者', desc: '在2023年前注册加入网络', icon: '⚡', unlocked: true },
+  { id: 2, name: '高产机器', desc: '累计发布超过100个作品', icon: '📦', unlocked: true },
+  { id: 3, name: '万人瞩目', desc: '拥有超过10,000名关注者', icon: '👑', unlocked: false },
+])
 
-const repositories = ref([
-  { id: 1, name: 'Artworks', count: 24, type: 'artwork' },
-  { id: 2, name: 'Blogs', count: 12, type: 'blog' },
-  { id: 3, name: 'Favorites', count: 56, type: 'favorite' },
-  { id: 4, name: 'Collections', count: 8, type: 'collection' }
-]);
+const works = ref(Array.from({ length: 8 }).map((_, i) => ({
+  id: i,
+  title: `霓虹计划_第${i+1}期`,
+  likes: 100 + i * 15,
+  date: '2023.10.12',
+  cover: `https://picsum.photos/400/300?random=${i}`,
+  category: i % 2 === 0 ? 'ui' : 'art'
+})))
 
-const artworks = ref([]);
-const blogs = ref([]);
-const activities = ref([]);
-const guestbookMessages = ref([]);
+const blogs = ref([
+  { id: 1, day: '15', month: '10月', title: '低保真界面的美学复兴', excerpt: '为什么在人工智能生成平滑图像的时代，我们开始回归粗野主义设计风格...', tags: ['设计杂谈', '思考'] },
+  { id: 2, day: '02', month: '09月', title: 'Vue 3 渲染性能深度优化', excerpt: '关于如何减少大型工业级仪表盘页面渲染开销的技术报告...', tags: ['代码', '开发'] },
+  { id: 3, day: '28', month: '08月', title: '赛博朋克色彩理论研究', excerpt: '高对比度色彩方案在黑暗模式下的视觉引导作用。', tags: ['艺术', '色彩'] }
+])
 
-const loadingWorks = ref(false);
-const loadingBlogs = ref(false);
-const loadingActivity = ref(false);
+const activities = ref([
+  { time: '2023-10-15 14:30', action: '上传', type: 'info', detail: '发布了新作品 "霓虹创世纪"。' },
+  { time: '2023-10-14 09:15', action: '评论', type: 'success', detail: '在用户 @Ghost 的帖子下留言。' },
+  { time: '2023-10-12 18:45', action: '登录', type: 'warn', detail: '检测到来自 HK_02 节点的系统访问。' },
+  { time: '2023-10-10 11:20', action: '点赞', type: 'success', detail: '点赞了作品 "机械设计_v2"。' },
+  { time: '2023-10-05 22:00', action: '系统', type: 'error', detail: '连接超时，已尝试自动重连。' }
+])
 
-const newMessage = ref('');
-const showDeleteConfirm = ref(false);
-const avatarInput = ref(null);
+const guestMessages = ref([
+  { id: 1024, user: 'NetRunner_01', date: '2023-10-14 22:00', content: '非常喜欢你的配色方案，特别是红色警戒色的运用。期待更多作品！', stampType: 'approved', stampText: 'APPROVED' },
+  { id: 1023, user: 'Unknown_V', date: '2023-10-12 10:15', content: 'Ping... 这里的交互逻辑很流畅。使用的是哪个版本的框架？', stampType: 'reviewed', stampText: 'REVIEWED' },
+  { id: 1022, user: 'Design_Bot', date: '2023-10-10 09:30', content: '[自动留言] 系统检测到高能级设计作品。', stampType: 'system', stampText: 'LOGGED' },
+])
+const newGuestMsg = ref('')
 
-const socialLinks = ref([
-  { platform: 'GitHub', url: 'https://github.com', icon: 'fab fa-github' },
-  { platform: 'Twitter', url: 'https://twitter.com', icon: 'fab fa-twitter' },
-  { platform: 'Bilibili', url: 'https://bilibili.com', icon: 'fas fa-tv' }
-]);
+const filteredWorks = computed(() => {
+  if (activeWorkFilter.value === 'all') return works.value
+  return works.value.filter(w => w.category === activeWorkFilter.value)
+})
 
-// 缩放适配函数
-const handleResize = () => {
-  if (!profileContainer.value) return;
+const formatNumber = (num) => {
+  return num > 1000 ? (num / 1000).toFixed(1) + 'k' : num
+}
 
-  const designWidth = 1920;
-  const designHeight = 1080;
-
-  const windowWidth = window.innerWidth;
-  const windowHeight = window.innerHeight;
-
-  const scaleX = windowWidth / designWidth;
-  const scaleY = windowHeight / designHeight;
-  const scale = Math.min(scaleX, scaleY);
-
-  profileContainer.value.style.transform = `scale(${scale})`;
-  profileContainer.value.style.transformOrigin = 'top left';
-  profileContainer.value.style.width = `${designWidth}px`;
-  profileContainer.value.style.height = `${designHeight}px`;
-};
-
-// Utility functions
-const handleImgError = (e) => {
-  if (e.target.src.includes('土豆.jpg')) return;
-  e.target.src = '/土豆.jpg';
-};
-
-const fixAvatarUrl = (url) => {
-  if (!url || typeof url !== 'string') return '/土豆.jpg';
-  if (url.startsWith('http') || url.startsWith('data:image')) return url;
-  let path = url.replace(/\\/g, '/');
-  if (path.startsWith('/')) path = path.substring(1);
-  if (!path.startsWith('uploads/')) path = `uploads/${path}`;
-  return `${BASE_URL}/${path}`;
-};
-
-const formatTime = (t) => {
-  if (!t) return 'N/A';
-  const date = new Date(t);
-  const now = new Date();
-  const diff = now - date;
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-  if (days === 0) return 'Today';
-  if (days === 1) return 'Yesterday';
-  if (days < 7) return `${days} days ago`;
-  return date.toLocaleDateString();
-};
-
-const getActivityIcon = (type) => {
-  const icons = {
-    post: 'fas fa-paper-plane',
-    blog: 'fas fa-pen',
-    artwork: 'fas fa-image',
-    comment: 'fas fa-comment',
-    like: 'fas fa-heart',
-    follow: 'fas fa-user-plus'
-  };
-  return icons[type] || 'fas fa-circle';
-};
-
-// API functions
-const fetchUserProfile = async () => {
-  try {
-    const res = await apiClient.get('/User/profile');
-    if (res.data.success) {
-      Object.assign(userProfile, res.data.data);
-    }
-  } catch (e) {
-    console.error('Failed to fetch profile:', e);
+const goBack = () => {
+  if (window.history.length > 1) {
+    window.history.back()
+  } else {
+    alert('正在返回根系统...\n[System]: Redirecting to Root...')
   }
-};
+}
 
-const fetchArtworks = async () => {
-  loadingWorks.value = true;
-  try {
-    const res = await apiClient.get('/User/artworks', { params: { pageSize: 50 } });
-    artworks.value = res.data.list || [];
-  } catch (e) {
-    console.error('Failed to fetch artworks:', e);
-    // Mock data for demo
-    artworks.value = Array.from({ length: 12 }, (_, i) => ({
-      id: i + 1,
-      title: `Artwork ${i + 1}`,
-      imageUrl: `https://picsum.photos/300/400?random=${i}`,
-      likes: Math.floor(Math.random() * 100),
-      views: Math.floor(Math.random() * 500),
-      createTime: new Date(Date.now() - Math.random() * 10000000000)
-    }));
-  } finally {
-    loadingWorks.value = false;
-  }
-};
+const switchTab = (tabId) => {
+  currentTab.value = tabId
+  if (viewportRef.value) viewportRef.value.scrollTop = 0
+}
 
-const fetchBlogs = async () => {
-  loadingBlogs.value = true;
-  try {
-    const res = await apiClient.get('/Blog/user-articles');
-    blogs.value = res.data.list || [];
-  } catch (e) {
-    console.error('Failed to fetch blogs:', e);
-    // Mock data
-    blogs.value = Array.from({ length: 5 }, (_, i) => ({
-      id: i + 1,
-      title: `Blog Post ${i + 1}: 探索太初宇宙的奥秘`,
-      coverImage: '',
-      tags: ['Tech', 'Art', 'Life'][Math.floor(Math.random() * 3)],
-      content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit...',
-      views: Math.floor(Math.random() * 200),
-      comments: Math.floor(Math.random() * 20),
-      createTime: new Date(Date.now() - Math.random() * 10000000000)
-    }));
-  } finally {
-    loadingBlogs.value = false;
-  }
-};
+const toggleFollow = () => {
+  isFollowing.value = !isFollowing.value
+}
 
-const fetchActivities = async () => {
-  loadingActivity.value = true;
-  try {
-    const res = await apiClient.get('/User/activities');
-    activities.value = res.data.list || [];
-  } catch (e) {
-    console.error('Failed to fetch activities:', e);
-    // Mock data
-    activities.value = Array.from({ length: 10 }, (_, i) => ({
-      id: i + 1,
-      type: ['post', 'blog', 'artwork', 'comment', 'like', 'follow'][Math.floor(Math.random() * 6)],
-      description: 'Performed an action in the system',
-      time: new Date(Date.now() - Math.random() * 10000000000)
-    }));
-  } finally {
-    loadingActivity.value = false;
-  }
-};
+const handleMessage = () => {
+  alert(`正在建立与 ${user.username} 的加密通道...\n[System]: Encryption handshake initiated.`)
+}
 
-const fetchGuestbook = async () => {
-  try {
-    const res = await apiClient.get('/User/guestbook');
-    guestbookMessages.value = res.data.list || [];
-  } catch (e) {
-    console.error('Failed to fetch guestbook:', e);
-  }
-};
+const goToWorkDetail = (id) => {
+  alert(`打开作品详情档案 [ID:${id}] ...`)
+}
 
-const saveProfile = async () => {
-  try {
-    const res = await apiClient.put('/User/profile', userProfile);
-    if (res.data.success) {
-      alert('Profile saved successfully!');
-      isEditMode.value = false;
-    }
-  } catch (e) {
-    console.error('Failed to save profile:', e);
-    alert('Failed to save profile');
-  }
-};
+const goToBlogDetail = (id) => {
+  alert(`加载思维日志 [ID:${id}] 内容...`)
+}
 
-const submitMessage = async () => {
-  if (!newMessage.value.trim()) return;
-  try {
-    const res = await apiClient.post('/User/guestbook', { content: newMessage.value });
-    if (res.data.success) {
-      guestbookMessages.value.unshift(res.data.data);
-      newMessage.value = '';
-    }
-  } catch (e) {
-    console.error('Failed to submit message:', e);
-    alert('Failed to send message');
-  }
-};
+const submitMessage = () => {
+  if (!newGuestMsg.value.trim()) return
+  const now = new Date()
+  const timeStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')} ${now.getHours()}:${now.getMinutes()}`
+  guestMessages.value.unshift({
+    id: Math.floor(Math.random() * 10000),
+    user: 'Visitor_Guest',
+    date: timeStr,
+    content: newGuestMsg.value,
+    stampType: 'pending', 
+    stampText: 'RECEIVED' 
+  })
+  newGuestMsg.value = ''
+  setTimeout(() => {
+    if (viewportRef.value) viewportRef.value.scrollTop = 150 
+  }, 100)
+}
 
-const triggerAvatarUpload = () => {
-  avatarInput.value?.click();
-};
-
-const handleAvatarChange = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const formData = new FormData();
-  formData.append('avatar', file);
-
-  try {
-    const res = await apiClient.post('/User/avatar', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-    if (res.data.success) {
-      userProfile.avatar = res.data.url;
-    }
-  } catch (e) {
-    console.error('Failed to upload avatar:', e);
-    alert('Failed to upload avatar');
-  }
-};
-
-const openArtworkDetail = (art) => {
-  router.push(`/artwork/${art.id}`);
-};
-
-const openBlogDetail = (id) => {
-  router.push(`/blog/${id}`);
-};
-
-const openRepo = (repo) => {
-  console.log('Opening repo:', repo);
-};
-
-const uploadArtwork = () => {
-  router.push('/artwork/upload');
-};
-
-const deleteAccount = async () => {
-  try {
-    const res = await apiClient.delete('/User/account');
-    if (res.data.success) {
-      alert('Account deleted');
-      router.push('/');
-    }
-  } catch (e) {
-    console.error('Failed to delete account:', e);
-    alert('Failed to delete account');
-  }
-};
-
-onMounted(() => {
-  fetchUserProfile();
-  fetchArtworks();
-  fetchBlogs();
-  fetchActivities();
-  fetchGuestbook();
-
-  // 初始化缩放
-  handleResize();
-  window.addEventListener('resize', handleResize);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize);
-});
+// --- ID Flip Methods ---
+const toggleIdArchive = () => {
+  showIdArchive.value = !showIdArchive.value
+}
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+@import url('https://gs.jurieo.com/gemini/fonts-googleapis/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap');
+@import url('https://gs.jurieo.com/gemini/fonts-googleapis/css2?family=Caveat:wght@700&display=swap');
 
-/* 核心变量 */
-.cyber-profile {
+/* --- 全局变量 --- */
+.user-profile-terminal {
   --red: #D92323;
-  --red-dark: #a01818;
   --black: #111111;
-  --black-light: #1a1a1a;
-  --off-white: #F4F1EA;
+  --white: #F4F1EA;
   --gray: #E0DDD5;
-  --gray-light: #f9f8f5;
-  --gray-dark: #333333;
+  --gray-dark: #333;
   --mono: 'JetBrains Mono', monospace;
   --heading: 'Anton', sans-serif;
-  --body: 'Inter', sans-serif;
-  --gap: 20px;
+  --sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --hand: 'Caveat', cursive;
 
-  width: 1920px;
-  height: 2000px;
-  background: var(--off-white);
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--white);
+  color: var(--black);
+  font-family: var(--mono), var(--sans);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  font-family: var(--body);
-  color: var(--black);
-  position: relative;
-  transform-origin: top left;
 }
 
-/* 背景网格 */
-.grid-bg {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(var(--gray) 1px, transparent 1px),
-    linear-gradient(90deg, var(--gray) 1px, transparent 1px);
-  background-size: 50px 50px;
-  opacity: 0.4;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.moving-grid {
-  animation: gridScroll 30s linear infinite;
-}
-
-@keyframes gridScroll {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-50px); }
-}
-
-.profile-scroll-container {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 顶部导航 */
-.profile-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 30px;
-  border-bottom: 4px solid var(--black);
-  background: #000000;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
-}
-
-.header-left .back-btn {
-  background: white;
-  color: black;
-  border: 2px solid var(--black);
-  padding: 12px 24px;
-  font-family: var(--mono);
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  clip-path: polygon(8% 0%, 100% 0%, 92% 100%, 0% 100%);
-}
-
-.header-left .back-btn:hover {
-  background: var(--red);
-  color: var(--off-white);
-  transform: translateX(-5px);
-  box-shadow: 5px 0 0 rgba(217, 35, 35, 0.3);
-}
-
-.btn-text-main {
-  font-size: 1rem;
-}
-
-.btn-text-sub {
-  font-size: 0.7rem;
-  opacity: 0.7;
-  margin-left: 5px;
-}
-
-.page-title {
-  font-family: var(--heading);
-  font-size: 2rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  text-transform: uppercase;
-  position: relative;
-  color: var(--black);
-}
-
-.title-deco {
-  width: 8px;
-  height: 40px;
-  background: var(--red);
-  clip-path: polygon(0 10%, 100% 0%, 100% 90%, 0% 100%);
-}
-
-.title-main {
-  font-size: 2rem;
-  letter-spacing: -1px;
-  color: #ddd;
-}
-
-.title-sub {
-  font-size: 0.9rem;
-  opacity: 0.6;
-  font-family: var(--mono);
-  font-weight: 400;
-  color: #ddd;
-}
-
-.mode-toggle {
-  display: flex;
-  gap: 0;
-  border: 2px solid var(--black);
-  overflow: hidden;
-  clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
-}
-
-.toggle-btn {
-  background: #fff;
-  border: none;
-  padding: 10px 20px;
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: 0.2s;
-  border-right: 1px solid var(--black);
-  color: var(--black);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-
-.toggle-btn:last-child {
-  border-right: none;
-}
-
-.toggle-btn .btn-main {
-  font-size: 0.95rem;
-}
-
-.toggle-btn .btn-sub {
-  font-size: 0.65rem;
-  opacity: 0.6;
-}
-
-.toggle-btn.active {
-  background: #D92323;
-  color: var(--off-white);
-  transition: ease-in-out;
-}
-
-.toggle-btn.active .btn-sub {
-  opacity: 0.8;
-}
-
-.toggle-btn:hover:not(.active) {
-  background: var(--gray);
-}
-
-/* 跑马灯 */
-.tech-strip {
+/* 1. Header */
+.terminal-header {
+  height: 60px;
   background: var(--black);
-  color: var(--off-white);
-  padding: 8px 0;
-  overflow: hidden;
-  white-space: nowrap;
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-top: 2px solid var(--black);
-  border-bottom: 2px solid var(--black);
+  color: var(--white);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 20px;
+  border-bottom: 4px solid var(--red);
+  flex-shrink: 0;
+}
+.header-left { display: flex; align-items: center; gap: 20px; }
+.brand-block { display: flex; align-items: center; gap: 10px; font-weight: bold; font-family: var(--sans); }
+.logo-box { background: var(--white); color: var(--black); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-family: var(--heading); font-size: 1.2rem; }
+.path-bread { font-size: 0.8rem; color: #aaa; display: flex; gap: 5px; font-family: var(--sans); }
+.path-bread .current { color: var(--red); font-weight: bold; }
+.header-right { display: flex; align-items: center; gap: 20px; font-family: var(--sans); }
+.status-indicator { font-size: 0.75rem; display: flex; align-items: center; gap: 6px; color: #00ff00; }
+.dot { width: 8px; height: 8px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 5px #00ff00; }
+.sys-btn { background: transparent; border: 1px solid #666; color: #ccc; padding: 5px 15px; font-family: var(--sans); cursor: pointer; transition: 0.2s; font-size: 0.75rem; font-weight: bold; }
+.sys-btn:hover { border-color: var(--red); color: var(--red); background: rgba(217, 35, 35, 0.1); }
+.sys-btn:active { transform: scale(0.95); }
+
+/* 2. Main Layout */
+.main-layout {
+  flex: 1;
   display: flex;
-  align-items: center;
-  margin-top: 5px;
+  overflow: hidden; 
+  padding: 20px;
+  gap: 20px;
+  background-image: 
+    linear-gradient(#ccc 1px, transparent 1px),
+    linear-gradient(90deg, #ccc 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
-.strip-content {
-  display: inline-block;
-  animation: marquee 30s linear infinite;
+/* 3. Sidebar */
+.sidebar-left {
+  width: 320px;
+  display: flex; flex-direction: column; gap: 20px;
+  overflow-y: auto;
+  padding-right: 5px; 
+  flex-shrink: 0;
 }
 
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-/* 主网格布局 */
-.profile-main-grid {
-  display: flex;
-  padding: var(--gap);
-  gap: var(--gap);
-  max-width: 2560px;
-  margin: 0 auto;
+/* --- ID Card Flip Logic --- */
+.id-flip-wrapper {
+  perspective: 1200px;
   width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  align-items: stretch;
-  background: var(--off-white);
-  overflow: hidden;
-}
-
-.profile-left-column {
-  flex: 0 0 320px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
-  overflow-y: auto;
-  overflow-x: hidden;
-  max-height: 100%;
-}
-
-.profile-mid-column {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
-  overflow: hidden;
-  max-height: 100%;
-}
-
-.profile-right-column {
-  flex: 0 0 360px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
-  overflow-y: auto;
-  overflow-x: hidden;
-  max-height: 100%;
-}
-
-/* 通用卡片 */
-.cyber-card {
-  background: #fff;
-  border: 3px solid var(--black);
-  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
   position: relative;
-  transition: all 0.3s ease;
-    /* 核心：清除子元素可能的浮动/布局影响，让父容器自动包裹所有子元素（包括底部内容） */
-  display: flow-root;
-  /* 可选：若父容器原本有固定高度，去掉固定高度，改用高度自适应 */
-  height: fit-content; 
-  /* 辅助：避免内容紧贴边缘（可根据实际调整） */
-  padding-bottom: 12px;
+  z-index: 10;
 }
-
-.cyber-card:hover {
-  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.2);
-  transform: translateY(-2px);
-}
-
-.card-label-strip {
-  background: var(--black);
-  color: var(--off-white);
-  padding: 10px 15px;
-  font-family: var(--mono);
-  font-size: 0.8rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 100%, 0 100%);
-}
-
-.strip-main {
-  font-size: 0.95rem;
-}
-
-.strip-sub {
-  font-size: 0.65rem;
-  opacity: 0.7;
-}
-
-.strip-count {
-  font-size: 0.75rem;
-  opacity: 0.8;
-}
-
-.card-deco-corner {
-  position: absolute;
-  top: -3px;
-  right: -3px;
-  width: 70px;
-  height: 70px;
-  background: var(--red);
-  clip-path: polygon(100% 0, 100% 100%, 0 0);
-  z-index: 1;
-  opacity: 0.9;
-}
-
-/* 用户名片 */
-.user-card {
-  padding: 35px;
+.id-flipper {
+  width: 100%;
   position: relative;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.id-flip-wrapper.is-flipped .id-flipper {
+  transform: rotateY(180deg);
 }
 
-.taichu-logo-badge {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  background: var(--black);
-  color: var(--off-white);
-  font-family: var(--heading);
-  font-size: 0.75rem;
-  padding: 6px 14px;
-  letter-spacing: 2px;
+.id-face {
+  backface-visibility: hidden;
+  width: 100%;
+}
+.id-front {
+  position: relative;
   z-index: 2;
-  transform: rotate(-2deg);
-  box-shadow: 3px 3px 0 var(--red);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
 }
-
-.badge-main {
-  font-size: 0.85rem;
-}
-
-.badge-sub {
-  font-size: 0.55rem;
-  opacity: 0.7;
-}
-
-.avatar-section {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 25px;
-  position: relative;
-}
-
-.avatar-wrapper {
-  width: 150px;
-  height: 150px;
-  border: 4px solid var(--black);
-  position: relative;
-  overflow: hidden;
-  transition: 0.3s;
-  clip-path: polygon(15% 0%, 100% 0%, 100% 85%, 85% 100%, 0% 100%, 0% 15%);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-}
-
-.avatar-wrapper img {
-  width: 100%;
+.id-back {
+  position: absolute;
+  top: 0; left: 0;
   height: 100%;
-  object-fit: cover;
-  filter: grayscale(30%);
-  transition: 0.3s;
+  transform: rotateY(180deg);
+  z-index: 1;
+  display: flex; /* 让内部卡片充满高度 */
 }
 
-.avatar-wrapper:hover img {
-  filter: grayscale(0);
-  transform: scale(1.1);
+/* ID Card Content (Front) */
+.cyber-card {
+  background: var(--white);
+  border: 2px solid var(--black);
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+  padding: 0;
+  position: relative;
+  transition: transform 0.2s;
 }
+.id-card-content { padding: 25px; text-align: center; height: 100%; }
+.card-deco-top { height: 10px; background: repeating-linear-gradient(45deg, var(--black), var(--black) 5px, transparent 5px, transparent 10px); position: absolute; top:0; left:0; width:100%; opacity: 0.1; }
 
-.avatar-wrapper.edit-hover:hover {
-  transform: scale(1.05) rotate(2deg);
-  border-color: var(--red);
-  box-shadow: 0 0 30px rgba(217, 35, 35, 0.4);
-}
-
-.avatar-overlay {
+/* Flip Trigger Button */
+.flip-trigger-btn {
   position: absolute;
-  inset: 0;
-  background: rgba(217, 35, 35, 0.9);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: 0.3s;
-  cursor: pointer;
-  color: var(--off-white);
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  gap: 8px;
-}
-
-.overlay-main {
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-.overlay-sub {
-  font-size: 0.7rem;
-  opacity: 0.8;
-}
-
-.avatar-wrapper.edit-hover:hover .avatar-overlay {
-  opacity: 1;
-}
-
-.level-badge {
-  position: absolute;
-  bottom: -12px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 10px; right: 10px;
+  width: 32px; height: 32px;
   background: var(--black);
-  color: var(--off-white);
-  font-family: var(--mono);
-  font-weight: 700;
-  padding: 6px 16px;
-  font-size: 0.85rem;
-  border: 3px solid var(--red);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  clip-path: polygon(10% 0%, 90% 0%, 100% 50%, 90% 100%, 10% 100%, 0% 50%);
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
-}
-
-.badge-level {
-  font-size: 0.95rem;
-}
-
-.badge-level-sub {
-  font-size: 0.6rem;
-  opacity: 0.7;
-}
-
-.user-info-block {
-  text-align: center;
-}
-
-.username {
-  font-family: var(--heading);
-  font-size: 2.2rem;
-  margin: 0 0 8px 0;
-  text-transform: uppercase;
-  letter-spacing: -1px;
-  color: var(--black);
-}
-
-.username-input {
-  font-family: var(--heading);
-  font-size: 2rem;
-  text-align: center;
-  text-transform: uppercase;
-  background: #fff;
-  color: var(--black);
-  border: 2px solid var(--black);
-}
-
-.user-id {
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 12px;
-  opacity: 0.8;
-}
-
-/* 个人详细信息展示 */
-.user-details {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin: 12px 0 18px 0;
-  padding: 12px;
-  background: var(--gray-light);
-  border: 2px solid var(--black);
-  clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  color: var(--black);
-  padding: 4px 10px;
-  background: #fff;
-  border-radius: 3px;
-}
-
-.detail-item i {
-  color: var(--red);
-  font-size: 0.9rem;
-}
-
-/* 个人信息编辑模式 */
-.user-details-edit {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 12px 0 18px 0;
-  padding: 15px;
-  background: var(--gray-light);
-  border: 2px solid var(--black);
-}
-
-.detail-edit-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 80px;
-}
-
-.detail-edit-row label {
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--black);
-  min-width: 50px;
-
-}
-
-.detail-select,
-.detail-input {
-  flex: 1;
-  border: 2px solid var(--black);
-  padding: 8px 12px;
-  font-family: var(--body);
-  font-size: 0.9rem;
-  outline: none;
-  transition: 0.2s;
-  background: #fff;
-  color: var(--black);
-  width: 80px;
-}
-
-.detail-select:focus,
-.detail-input:focus {
-  border-color: var(--red);
-  box-shadow: 0 0 8px rgba(217, 35, 35, 0.2);
-}
-
-.bio-section {
-  margin: 18px 0;
-  padding: 18px;
-  background: var(--gray);
-  border-left: 4px solid var(--black);
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
-}
-
-.bio-text {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  margin: 0;
-  font-family: var(--mono);
-  color: var(--black);
-}
-
-.edit-input,
-.edit-textarea {
-  width: 100%;
-  border: 2px solid var(--black);
-  padding: 12px;
-  font-family: var(--body);
-  font-size: 0.95rem;
-  outline: none;
-  transition: 0.2s;
-  box-sizing: border-box;
-  margin: 12px 0;
-  background: #fff;
-  color: var(--black);
-}
-
-.edit-textarea {
-  resize: vertical;
-  font-family: var(--mono);
-  line-height: 1.6;
-}
-
-.edit-input:focus,
-.edit-textarea:focus {
-  border-color: var(--red);
-  background: #fafafa;
-  box-shadow: 0 0 10px rgba(217, 35, 35, 0.2);
-}
-
-.stats-mini-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin-top: 25px;
-  padding-top: 25px;
-  border-top: 3px solid var(--black);
-}
-
-.stat-mini {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 12px;
-  background: var(--gray);
-  clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
-  transition: 0.3s;
-}
-
-.stat-mini:hover {
-  background: var(--black);
-  transform: translateY(-3px);
-}
-
-.stat-mini .num {
-  font-family: var(--heading);
-  font-size: 2rem;
-  color: var(--red);
-}
-
-.stat-mini:hover .num {
-  color: var(--off-white);
-}
-
-.stat-mini .label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-
-.label-main {
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: var(--black);
-  font-weight: 700;
-}
-
-.stat-mini:hover .label-main {
-  color: var(--off-white);
-}
-
-.label-sub {
-  font-size: 0.6rem;
-  opacity: 0.7;
-  color: #666;
-}
-
-.stat-mini:hover .label-sub {
-  color: var(--gray);
-}
-
-.save-profile-btn {
-  width: 100%;
-  background: var(--red);
-  color: var(--off-white);
-  border: 3px solid var(--black);
-  padding: 18px;
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 1.05rem;
-  cursor: pointer;
-  margin-top: 25px;
-  transition: 0.3s;
-  box-shadow: 0 5px 0 var(--red-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
-}
-
-.save-profile-btn:hover {
-  transform: translateY(3px);
-  box-shadow: 0 2px 0 var(--red-dark);
-  background: var(--black);
-  color: var(--off-white);
-}
-
-.save-profile-btn:active {
-  transform: translateY(5px);
-  box-shadow: none;
-}
-
-/* 成就栏 */
-.achievements-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  padding: 18px;
-  background: var(--gray-light);
-}
-
-.achievement-item {
-  aspect-ratio: 1;
-  border: 2px solid #ccc;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: 0.3s;
-  background: #f5f5f5;
-  filter: grayscale(100%);
-  opacity: 0.4;
-  clip-path: polygon(15% 0%, 100% 0%, 100% 85%, 85% 100%, 0% 100%, 0% 15%);
-}
-
-.achievement-item.unlocked {
-  filter: grayscale(0);
-  opacity: 1;
-  border-color: var(--black);
-  background: #fff;
-}
-
-.achievement-item.unlocked:hover {
-  transform: translateY(-5px) rotate(5deg);
-  box-shadow: 0 8px 0 var(--red);
-  background: var(--red);
-}
-
-.achievement-item i {
-  font-size: 1.8rem;
-  color: var(--red);
-}
-
-.achievement-item.unlocked:hover i {
-  color: var(--off-white);
-}
-
-.ach-name {
-  font-family: var(--mono);
-  font-size: 0.7rem;
-  text-align: center;
-  font-weight: 700;
-  color: var(--black);
-}
-
-.achievement-item.unlocked:hover .ach-name {
-  color: var(--off-white);
-}
-
-/* 仓库入口 */
-.repo-list {
-  padding: 12px;
-  background: var(--gray-light);
-}
-
-.repo-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  margin-bottom: 10px;
-  border: 2px solid #ddd;
-  cursor: pointer;
-  transition: 0.3s;
-  background: #fff;
-  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
-}
-
-.repo-item:hover {
-  border-color: var(--black);
-  transform: translateX(8px);
-  background: var(--gray);
-  box-shadow: -5px 0 0 var(--red);
-}
-
-.repo-item i {
-  font-size: 1.3rem;
-  color: var(--red);
-}
-
-.repo-name {
-  flex: 1;
-  font-weight: 700;
-  font-family: var(--mono);
-  font-size: 0.95rem;
-  color: var(--black);
-}
-
-.repo-count {
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  color: var(--off-white);
-  background: var(--black);
-  padding: 4px 12px;
-  border-radius: 0;
-  clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
-}
-
-/* Tab切换 */
-.content-tabs {
-  display: flex;
-  gap: 0;
-  border: 3px solid var(--black);
-  background: #fff;
-  overflow: hidden;
-}
-
-.tab-btn {
-  flex: 1;
-  background: #fff;
+  color: var(--white);
   border: none;
-  border-right: 2px solid var(--black);
-  padding: 16px 12px;
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 0.85rem;
   cursor: pointer;
-  transition: 0.3s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  color: var(--black);
-  position: relative;
+  z-index: 5;
+  display: flex; align-items: center; justify-content: center;
+  transition: 0.2s;
 }
+.flip-trigger-btn:hover { background: var(--red); transform: rotate(180deg); }
+.flip-trigger-btn .icon { font-size: 1.2rem; line-height: 1; }
+.corner-deco { position: absolute; bottom: -4px; left: -4px; width: 8px; height: 8px; border-bottom: 2px solid var(--black); border-left: 2px solid var(--black); }
 
-.tab-btn:last-child {
-  border-right: none;
-}
+.avatar-frame { width: 120px; height: 120px; margin: 0 auto 20px; position: relative; border: 2px solid var(--black); padding: 4px; }
+.avatar-frame img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(20%); }
+.level-badge { position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); background: var(--red); color: white; padding: 2px 8px; font-size: 0.9rem; font-weight: bold; border: 2px solid var(--black); font-family: var(--heading); letter-spacing: 1px; }
 
-.tab-main {
-  font-size: 0.95rem;
-}
+.user-name { font-family: var(--sans); font-weight: 800; font-size: 1.8rem; margin: 0; line-height: 1.2; color: var(--black); }
+.user-role { color: var(--red); font-weight: bold; font-size: 0.85rem; margin-bottom: 15px; font-family: var(--sans); }
+.bio-text { font-size: 0.85rem; color: #555; margin-bottom: 20px; line-height: 1.6; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc; padding: 10px 0; font-family: var(--sans); text-align: left;}
+.meta-tags { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; margin-bottom: 20px; }
+.tag { background: #eee; font-size: 0.7rem; padding: 2px 8px; border: 1px solid #ccc; font-family: var(--sans); }
 
-.tab-count {
-  font-size: 0.75rem;
-  opacity: 0.8;
-}
+.action-row { display: flex; gap: 10px; }
+.action-btn { flex: 1; border: 2px solid var(--black); background: transparent; padding: 8px; font-family: var(--sans); font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
+.action-btn.primary { background: var(--black); color: var(--white); }
+.action-btn.active-state { background: var(--white); color: var(--red); border-color: var(--red); }
+.action-btn:hover { background: var(--red); color: var(--white); border-color: var(--black); }
+.action-btn:active{ transform: translateY(2px); }
 
-.tab-sub {
-  font-size: 0.65rem;
-  opacity: 0.6;
-}
-
-.tab-btn.active {
-  background: var(--black);
-  color: var(--off-white);
-}
-
-.tab-btn.active .tab-sub {
-  opacity: 0.9;
-}
-
-.tab-btn:hover:not(.active) {
-  background: var(--gray);
-}
-
-.tab-btn::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 0;
-  background: var(--red);
-  transition: 0.3s;
-}
-
-.tab-btn.active::after {
-  height: 4px;
-}
-
-/* 作品瀑布流 */
-.works-waterfall {
-  flex: 1;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  border-width: 5px;
-  border-color: #000000;
-  border-style: solid;
-  box-shadow: 6px 6px 0px 0px rgb(127, 124, 124);
-}
-
-.loading-state,
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  font-family: var(--mono);
-  color: #888;
-  gap: 25px;
-  background: #fff;
-  border: 3px solid var(--black);
-}
-
-.loading-state i {
-  font-size: 2.5rem;
-  color: var(--red);
-}
-
-.upload-btn {
-  background: var(--red);
-  color: var(--off-white);
-  border: 3px solid var(--black);
-  padding: 14px 28px;
-  font-family: var(--mono);
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.3s;
-  box-shadow: 0 5px 0 var(--red-dark);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
-}
-
-.upload-btn:hover {
-  transform: translateY(3px);
-  box-shadow: 0 2px 0 var(--red-dark);
-  background: var(--black);
-  color: var(--off-white);
-}
-
-.waterfall-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
-  padding: 20px;
-  background: var(--gray);
-  border: 3px solid var(--black);
-}
-
-.artwork-card {
-  background: #fff;
+/* --- ID Card Back (Archive - Practical Version) --- */
+.archive-card-content {
+  width: 100%; height: 100%;
+  background: #222; color: #ddd;
+  display: flex; flex-direction: column;
+  text-align: left;
   border: 2px solid var(--black);
-  overflow: hidden;
-  cursor: pointer;
-  transition: 0.3s;
-  animation: fadeInUp 0.5s ease-out;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.15), 8px 8px 0 rgba(217, 35, 35, 0.1);
 }
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.archive-header {
+  background: #000; padding: 10px 15px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px dashed #444; font-family: var(--mono); font-size: 0.8rem; font-weight: bold; color: #0f0;
 }
+.close-btn { background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer; line-height: 1; }
+.close-btn:hover { color: var(--red); }
 
-.artwork-card:hover {
-  transform: translateY(-10px) rotate(2deg);
-  box-shadow: 6px 16px 0 rgba(0, 0, 0, 0.25), 12px 20px 0 rgba(217, 35, 35, 0.2);
-  border-color: var(--red);
+.archive-body { padding: 15px; display: flex; flex-direction: column; gap: 20px; flex: 1; overflow-y: auto; }
+
+/* Archive Group Styles */
+.data-group { display: flex; flex-direction: column; gap: 8px; }
+.group-title { font-size: 0.7rem; color: #666; font-weight: bold; border-left: 3px solid var(--red); padding-left: 8px; font-family: var(--mono); text-transform: uppercase; }
+
+/* 1. Basic ID Grid */
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.info-cell { background: #111; border: 1px solid #333; padding: 8px; display: flex; flex-direction: column; }
+.info-cell.full-width { grid-column: span 2; }
+.info-cell .label { font-size: 0.6rem; color: #888; font-family: var(--mono); margin-bottom: 2px; }
+.info-cell .value { font-size: 0.85rem; font-weight: bold; color: #fff; font-family: var(--sans); }
+
+/* 2. Contact List */
+.contact-list { display: flex; flex-direction: column; gap: 8px; }
+.contact-item { 
+  display: flex; align-items: center; gap: 10px; 
+  background: #111; border: 1px solid #333; padding: 10px; 
+  text-decoration: none; color: #ccc; transition: all 0.2s; 
 }
+.contact-item:hover { border-color: #0f0; background: #000; color: #fff; box-shadow: 0 0 8px rgba(0, 255, 0, 0.2); }
+.c-icon { font-size: 1.2rem; width: 30px; text-align: center; }
+.c-detail { flex: 1; display: flex; flex-direction: column; }
+.c-label { font-size: 0.6rem; color: #666; font-family: var(--mono); }
+.c-val { font-size: 0.8rem; font-weight: bold; }
+.c-arrow { font-family: var(--mono); font-size: 0.8rem; color: #0f0; opacity: 0; transform: translateX(-5px); transition: 0.2s; }
+.contact-item:hover .c-arrow { opacity: 1; transform: translateX(0); }
 
-.artwork-img-wrapper {
-  position: relative;
-  aspect-ratio: 3/4;
+/* 3. Link Buttons */
+.link-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.cyber-link-btn {
+  background: transparent; border: 1px solid #555; color: #aaa;
+  padding: 6px 12px; font-family: var(--mono); font-size: 0.75rem;
+  text-decoration: none; transition: 0.2s;
+}
+.cyber-link-btn:hover { border-color: var(--red); color: var(--red); background: rgba(217, 35, 35, 0.1); }
+
+/* Bottom Barcode */
+.barcode-area { margin-top: auto; padding-top: 15px; text-align: center; opacity: 0.5; }
+.barcode { height: 25px; background: repeating-linear-gradient(90deg, #fff, #fff 2px, transparent 2px, transparent 4px); margin-bottom: 5px; }
+.code-num { font-size: 0.6rem; letter-spacing: 2px; font-family: var(--mono); }
+
+/* Other Sidebar Cards */
+.panel-header { background: var(--black); color: var(--white); padding: 8px 12px; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; font-family: var(--sans); }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--black); border: 2px solid var(--black); margin: 15px; }
+.stat-item { background: var(--white); padding: 15px 10px; display: flex; flex-direction: column; align-items: center; }
+.stat-item .label { font-size: 0.75rem; color: #888; font-weight: bold; margin-bottom: 5px; font-family: var(--sans); }
+.stat-item .val { font-family: var(--heading); font-size: 1.4rem; line-height: 1; color: var(--black); }
+
+.achieve-list { display: flex; flex-direction: column; }
+.ach-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px dashed #ccc; gap: 10px; }
+.ach-item:last-child { border-bottom: none; }
+.ach-icon { font-size: 1.5rem; }
+.ach-info { flex: 1; }
+.ach-name { font-weight: bold; font-size: 0.9rem; font-family: var(--sans); }
+.ach-desc { font-size: 0.75rem; color: #888; font-family: var(--sans); margin-top: 2px; }
+.ach-item.locked { opacity: 0.5; filter: grayscale(1); }
+
+/* 4. Content Area */
+.content-area {
+  flex: 1;
+  display: flex; flex-direction: column;
+  background: var(--white);
+  border: 2px solid var(--black);
+  box-shadow: 10px 10px 0 rgba(0,0,0,0.1);
   overflow: hidden;
 }
 
-.artwork-img-wrapper img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: 0.3s;
-  filter: grayscale(20%);
-}
-
-.artwork-card:hover img {
-  transform: scale(1.15);
-  filter: grayscale(0);
-}
-
-.artwork-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: 0.3s;
-}
-
-.artwork-card:hover .artwork-overlay {
-  opacity: 1;
-}
-
-.overlay-stats {
-  display: flex;
-  gap: 25px;
-  color: var(--off-white);
-  font-family: var(--mono);
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-.artwork-info {
-  padding: 14px;
-  border-top: 2px solid var(--black);
-  background: #fff;
-}
-
-.artwork-title {
-  font-weight: 700;
-  font-size: 0.95rem;
-  margin: 0 0 6px 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--black);
-}
-
-.artwork-date {
-  font-family: var(--mono);
-  font-size: 0.7rem;
-  color: #666;
-}
-
-/* 博客列表 */
-.blogs-list {
-  flex: 1;
-  height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.blog-list-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 20px;
-  background: var(--gray);
-  border: 3px solid var(--black);
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.blog-item-card {
-  background: #fff;
-  border: 2px solid var(--black);
-  display: flex;
-  gap: 20px;
-  cursor: pointer;
-  transition: 0.3s;
-  overflow: hidden;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
-}
-
-.blog-item-card:hover {
-  transform: translateX(10px);
-  box-shadow: -10px 10px 0 rgba(0, 0, 0, 0.15);
-  border-color: var(--red);
-}
-
-.blog-cover {
-  flex: 0 0 200px;
-  overflow: hidden;
-}
-
-.blog-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: grayscale(50%);
-  transition: 0.3s;
-}
-
-.blog-item-card:hover .blog-cover img {
-  filter: grayscale(0);
-  transform: scale(1.15);
-}
-
-.blog-content-section {
-  flex: 1;
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.blog-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  font-family: var(--mono);
-  font-size: 0.75rem;
-}
-
-.blog-tag {
-  background: var(--red);
-  color: var(--off-white);
-  padding: 4px 12px;
-  font-weight: 700;
-  clip-path: polygon(8% 0%, 100% 0%, 92% 100%, 0% 100%);
-}
-
-.blog-date {
-  color: #666;
-}
-
-.blog-title {
-  font-family: var(--heading);
-  font-size: 1.6rem;
-  margin: 0 0 12px 0;
-  text-transform: uppercase;
-  color: var(--black);
-  letter-spacing: -0.5px;
-}
-
-.blog-excerpt {
-  color: #555;
-  line-height: 1.7;
-  margin: 0 0 18px 0;
-  flex: 1;
-}
-
-.blog-stats {
-  display: flex;
-  gap: 25px;
-  font-family: var(--mono);
-  font-size: 0.85rem;
-  color: #666;
-}
-
-/* 活动时间线 */
-.activity-timeline {
-  flex: 1;
-  height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.timeline-container {
-  flex: 1;
-  padding: 20px 20px 20px 50px;
-  background: var(--gray);
-  border: 3px solid var(--black);
-  position: relative;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.timeline-container::before {
-  content: '';
-  position: absolute;
-  left: 32px;
-  top: 20px;
-  bottom: 20px;
-  width: 3px;
-  background: var(--black);
-}
-
-.activity-item {
-  position: relative;
-  margin-bottom: 30px;
-  padding-left: 35px;
-}
-
-.activity-dot {
-  position: absolute;
-  left: -10px;
-  top: 8px;
-  width: 14px;
-  height: 14px;
-  background: var(--red);
-  border: 3px solid var(--black);
-  border-radius: 50%;
-  box-shadow: 0 0 10px rgba(217, 35, 35, 0.4);
-}
-
-.activity-content {
-  background: #fff;
-  border: 2px solid var(--black);
-  padding: 18px;
-  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
-  transition: 0.3s;
-}
-
-.activity-content:hover {
-  background: var(--gray-light);
-  transform: translateX(5px);
-}
-
-.activity-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.activity-type {
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 0.85rem;
-  padding: 4px 12px;
-  background: var(--black);
-  color: var(--off-white);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  clip-path: polygon(8% 0%, 100% 0%, 92% 100%, 0% 100%);
-}
-
-.activity-type.post { background: #2196F3; }
-.activity-type.blog { background: #4CAF50; }
-.activity-type.artwork { background: #FF9800; }
-.activity-type.comment { background: #9C27B0; }
-.activity-type.like { background: var(--red); }
-.activity-type.follow { background: #009688; }
-
-.activity-time {
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  color: #666;
-}
-
-.activity-desc {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--black);
-  line-height: 1.5;
-}
-
-/* 留言板 */
-.guestbook-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%);
-  min-height: 0;
-}
-
-.guestbook-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 18px;
-  background: var(--gray-light);
-}
-
-.empty-guestbook {
-  text-align: center;
-  padding: 60px 20px;
-  font-family: var(--mono);
-  color: #888;
-}
-
-.guestbook-msg {
-  background: #fff;
-  border: 2px solid var(--black);
-  padding: 14px;
-  margin-bottom: 14px;
-  animation: slideInRight 0.4s ease-out;
-  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
-  transition: 0.3s;
-}
-
-.guestbook-msg:hover {
-  background: var(--gray);
-  transform: translateX(5px);
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.msg-header {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.msg-avatar {
-  width: 36px;
-  height: 36px;
-  border: 2px solid var(--black);
-  clip-path: polygon(15% 0%, 100% 0%, 100% 85%, 85% 100%, 0% 100%, 0% 15%);
-}
-
-.msg-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.msg-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.msg-author {
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--black);
-}
-
-.msg-time {
-  font-family: var(--mono);
-  font-size: 0.7rem;
-  color: #666;
-}
-
-.msg-content {
-  margin: 0;
-  line-height: 1.6;
-  font-size: 0.95rem;
-  padding-left: 48px;
-  color: var(--black);
-}
-
-.guestbook-input-area {
-  padding: 18px;
-  border-top: 3px solid var(--black);
-  background: #fff;
-  display: flex;
-  gap: 12px;
-}
-
-.msg-input {
-  flex: 1;
-  border: 2px solid var(--black);
-  padding: 12px;
-  font-family: var(--body);
-  font-size: 0.95rem;
-  resize: none;
-  outline: none;
-  background: #fff;
-  color: var(--black);
-  transition: 0.3s;
-}
-
-.msg-input:focus {
-  border-color: var(--red);
-  box-shadow: 0 0 10px rgba(217, 35, 35, 0.2);
-}
-
-.msg-send-btn {
-  background: var(--black);
-  color: var(--off-white);
-  border: 2px solid var(--black);
-  padding: 0 24px;
-  font-family: var(--mono);
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.3s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
-}
-
-.btn-send-main {
-  font-size: 0.95rem;
-}
-
-.btn-send-sub {
-  font-size: 0.65rem;
-  opacity: 0.7;
-}
-
-.msg-send-btn:hover:not(:disabled) {
-  background: var(--red);
-  border-color: var(--red);
-  transform: scale(1.05);
-}
-
-.msg-send-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* 设置卡片 */
-.settings-list {
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  background: var(--gray-light);
-}
-
-.setting-item {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.setting-item.toggle-row {
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.setting-label {
-  font-family: var(--mono);
-  font-weight: 700;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--black);
-}
-
-.setting-label i {
-  color: var(--red);
-  font-size: 1.1rem;
-}
-
-.label-main {
-  font-size: 0.95rem;
-}
-
-.label-sub {
-  font-size: 0.7rem;
-  opacity: 0.7;
-  margin-left: 8px;
-}
-
-.setting-input {
-  border: 2px solid var(--black);
-  padding: 12px;
-  font-family: var(--body);
-  font-size: 0.95rem;
-  outline: none;
-  transition: 0.3s;
-  background: #fff;
-  color: var(--black);
-}
-
-.setting-input:focus {
-  border-color: var(--red);
-  box-shadow: 0 0 10px rgba(217, 35, 35, 0.2);
-}
-
-.color-picker-group {
-  display: flex;
-  gap: 12px;
-}
-
-.color-option {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #ddd;
-  cursor: pointer;
-  transition: 0.3s;
-  clip-path: polygon(15% 0%, 100% 0%, 100% 85%, 85% 100%, 0% 100%, 0% 15%);
-}
-
-.color-option:hover {
-  transform: scale(1.15) rotate(5deg);
-}
-
-.color-option.selected {
-  border-color: var(--black);
-  transform: scale(1.2);
-  box-shadow: 0 0 15px rgba(217, 35, 35, 0.4);
-}
-
-.cyber-switch {
-  position: relative;
-  display: inline-block;
-  width: 55px;
-  height: 28px;
-}
-
-.cyber-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.switch-slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background: #ccc;
-  border: 2px solid var(--black);
-  transition: 0.3s;
-}
-
-.switch-slider::before {
-  position: absolute;
-  content: '';
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background: var(--black);
-  transition: 0.3s;
-}
-
-.input:checked + .switch-slider {
-  background: var(--red);
-}
-
-input:checked + .switch-slider::before {
-  transform: translateX(27px);
-  background: #fff;
-}
-
-.danger-btn {
-  background: transparent;
-  color: var(--red);
-  border: 3px solid var(--red);
-  padding: 14px;
-  font-family: var(--mono);
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.3s;
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
-}
-
-.danger-btn:hover {
-  background: var(--red);
-  color: var(--off-white);
-  transform: scale(1.02);
-}
-
-/* 社交链接 */
-.social-links {
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: var(--gray-light);
-}
-
-.social-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border: 2px solid var(--black);
-  text-decoration: none;
-  color: var(--black);
-  font-family: var(--mono);
-  font-weight: 700;
-  transition: 0.3s;
-  background: #fff;
-  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
-}
-
-.social-link:hover {
-  background: var(--black);
-  color: var(--off-white);
-  transform: translateX(8px);
-  box-shadow: -5px 0 0 var(--red);
-}
-
-.social-link i {
-  font-size: 1.3rem;
-}
-
-/* 删除确认弹窗 */
-.cyber-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  backdrop-filter: blur(5px);
-}
-
-.confirm-modal {
-  background: #fff;
-  border: 4px solid var(--black);
-  padding: 35px;
-  max-width: 450px;
-  box-shadow: 15px 15px 0 rgba(0, 0, 0, 0.3);
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  margin-bottom: 25px;
-}
-
-.warning-icon {
-  font-size: 2.5rem;
-  color: var(--red);
-}
-
-.modal-header h3 {
-  font-family: var(--heading);
-  font-size: 1.8rem;
-  margin: 0;
-  color: var(--black);
-}
-
-.modal-text {
-  font-size: 1.05rem;
-  line-height: 1.7;
-  margin-bottom: 30px;
-  color: #555;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 18px;
-}
-
-.cancel-btn,
-.confirm-btn {
-  flex: 1;
-  padding: 14px;
-  border: 3px solid var(--black);
-  font-family: var(--mono);
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.3s;
-  font-size: 0.95rem;
-}
-
-.cancel-btn {
-  background: #fff;
-  color: var(--black);
-  clip-path: polygon(8% 0%, 100% 0%, 92% 100%, 0% 100%);
-}
-
-.cancel-btn:hover {
-  background: var(--gray);
-  transform: translateY(-3px);
-}
-
-.confirm-btn {
-  background: var(--red);
-  color: var(--off-white);
-  border-color: var(--red);
-  clip-path: polygon(0 0, 92% 0%, 100% 100%, 8% 100%);
-}
-
-.confirm-btn:hover {
-  background: var(--black);
-  border-color: var(--black);
-  transform: translateY(-3px);
-}
-
-/* 过渡动画 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.4s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-.modal-scale-enter-active,
-.modal-scale-leave-active {
-  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-.modal-scale-enter-from,
-.modal-scale-leave-to {
-  opacity: 0;
-  transform: scale(0.8) rotate(-5deg);
-}
-
-/* 滚动条样式 */
-.custom-scroll::-webkit-scrollbar,
-.profile-left-column::-webkit-scrollbar,
-.profile-right-column::-webkit-scrollbar,
-.works-waterfall::-webkit-scrollbar,
-.blog-list-container::-webkit-scrollbar,
-.timeline-container::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-.custom-scroll::-webkit-scrollbar-track,
-.profile-left-column::-webkit-scrollbar-track,
-.profile-right-column::-webkit-scrollbar-track,
-.works-waterfall::-webkit-scrollbar-track,
-.blog-list-container::-webkit-scrollbar-track,
-.timeline-container::-webkit-scrollbar-track {
-  background: var(--gray);
-}
-
-.custom-scroll::-webkit-scrollbar-thumb,
-.profile-left-column::-webkit-scrollbar-thumb,
-.profile-right-column::-webkit-scrollbar-thumb,
-.works-waterfall::-webkit-scrollbar-thumb,
-.blog-list-container::-webkit-scrollbar-thumb,
-.timeline-container::-webkit-scrollbar-thumb {
-  background: var(--black);
-  border: 2px solid var(--gray);
-}
-
-.custom-scroll::-webkit-scrollbar-thumb:hover,
-.profile-left-column::-webkit-scrollbar-thumb:hover,
-.profile-right-column::-webkit-scrollbar-thumb:hover,
-.works-waterfall::-webkit-scrollbar-thumb:hover,
-.blog-list-container::-webkit-scrollbar-thumb:hover,
-.timeline-container::-webkit-scrollbar-thumb:hover {
-  background: var(--red);
+/* Tab Controller */
+.tab-controller { display: flex; background: #eee; border-bottom: 2px solid var(--black); }
+.tab-btn {
+  flex: 1; max-width: 200px;
+  background: #ddd; border: none; border-right: 1px solid var(--black);
+  padding: 12px 15px; text-align: left; cursor: pointer; position: relative;
+  transition: 0.2s; display: flex; flex-direction: column;
+}
+.tab-btn.active { background: var(--white); color: var(--black); padding-bottom: 14px; margin-bottom: -2px; z-index: 5; border-bottom: none; }
+.tab-btn:hover:not(.active) { background: #ccc; }
+.tab-btn::before { content:''; position: absolute; top:0; left:0; width: 100%; height: 4px; background: transparent; }
+.tab-btn.active::before { background: var(--red); }
+.tab-idx { font-size: 0.7rem; color: #888; font-weight: bold; font-family: var(--mono); }
+.tab-label { font-family: var(--sans); font-weight: 800; font-size: 1.1rem; margin-top: 2px; }
+.tab-sub { font-size: 0.6rem; color: #666; margin-top: 2px; opacity: 0.8; font-family: var(--mono); text-transform: uppercase; }
+.tab-filler { flex: 1; background: #ddd; border-bottom: 2px solid var(--black); }
+
+/* Viewport */
+.viewport { flex: 1; overflow-y: auto; padding: 30px; position: relative; scroll-behavior: smooth; }
+.section-toolbar { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; font-size: 0.85rem; border-bottom: 2px solid #eee; padding-bottom: 10px; font-family: var(--sans); font-weight: bold; }
+.filter-chips { display: flex; gap: 10px; }
+.chip { border: 1px solid var(--black); padding: 4px 12px; cursor: pointer; transition: 0.2s; font-size: 0.8rem; user-select: none; }
+.chip.active, .chip:hover { background: var(--black); color: var(--white); }
+.chip:active { transform: scale(0.95); }
+
+.works-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+.work-item { border: 2px solid var(--black); transition: transform 0.2s; cursor: pointer; }
+.work-item:hover { transform: translateY(-5px); box-shadow: 6px 6px 0 var(--red); }
+.img-wrapper { height: 160px; overflow: hidden; position: relative; border-bottom: 2px solid var(--black); }
+.img-wrapper img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(30%); transition: 0.3s; }
+.work-item:hover img { filter: grayscale(0) contrast(1.1); transform: scale(1.05); }
+.overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; color: var(--white); opacity: 0; transition: 0.2s; font-weight: bold; font-family: var(--sans); }
+.work-item:hover .overlay { opacity: 1; }
+.work-meta { padding: 10px; background: #fff; }
+.w-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--sans); }
+.w-stats { display: flex; justify-content: space-between; font-size: 0.75rem; color: #666; font-family: var(--mono); }
+.empty-state { width: 100%; grid-column: 1 / -1; padding: 40px; text-align: center; color: #999; border: 2px dashed #ddd; font-family: var(--mono); }
+
+/* Blogs */
+.blog-timeline { display: flex; flex-direction: column; gap: 20px; max-width: 800px; }
+.blog-entry { display: flex; gap: 20px; }
+.date-col { width: 60px; text-align: center; border: 2px solid var(--black); height: fit-content; background: #fff; }
+.date-col .day { display: block; font-size: 1.5rem; font-family: var(--heading); background: var(--black); color: var(--white); }
+.date-col .month { display: block; font-size: 0.85rem; font-weight: bold; padding: 5px 0; font-family: var(--sans); }
+.content-col { flex: 1; }
+.blog-card { border: 2px solid var(--black); background: #fff; padding: 20px; position: relative; transition: 0.2s; cursor: pointer; }
+.blog-card:hover { box-shadow: 6px 6px 0 var(--gray-dark); transform: translateX(5px); }
+.b-title { margin: 0 0 10px 0; font-family: var(--sans); font-size: 1.2rem; font-weight: bold; }
+.b-excerpt { color: #555; font-size: 0.9rem; margin-bottom: 15px; font-family: var(--sans); line-height: 1.6; }
+.b-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #ccc; padding-top: 10px; }
+.read-btn { border: none; background: transparent; color: var(--red); font-weight: bold; cursor: pointer; font-family: var(--sans); font-size: 0.85rem; transition: 0.2s; }
+.read-btn:hover { text-decoration: underline; background: #eee; }
+
+/* Activity */
+.terminal-log { background: #000; color: #0f0; padding: 20px; font-family: 'Courier New', Courier, monospace; height: 100%; overflow-y: auto; border: 2px solid #333; }
+.log-header { display: grid; grid-template-columns: 160px 100px 1fr; border-bottom: 1px dashed #0f0; padding-bottom: 10px; margin-bottom: 10px; opacity: 0.7; font-size: 0.8rem; }
+.log-row { display: grid; grid-template-columns: 160px 100px 1fr; margin-bottom: 8px; font-size: 0.85rem; }
+.col-time { opacity: 0.6; font-family: var(--mono); }
+.col-action { font-weight: bold; }
+.col-action.info { color: #00bfff; }
+.col-action.warn { color: #ffff00; }
+.col-action.error { color: #ff0000; }
+.col-action.success { color: #00ff00; }
+.log-cursor { animation: blink 1s infinite; font-weight: bold; margin-top: 10px; }
+
+/* Guestbook */
+.view-guestbook { display: flex; flex-direction: column; gap: 30px; max-width: 800px; }
+.guestbook-input-area { border: 2px solid var(--black); background: #eee; padding: 15px; }
+.gb-input-header { font-family: var(--mono); font-weight: bold; margin-bottom: 10px; font-size: 0.8rem; color: #555; }
+.gb-form { display: flex; flex-direction: column; gap: 10px; }
+.gb-textarea { width: 100%; border: 1px solid var(--black); padding: 10px; font-family: var(--sans); background: var(--white); resize: vertical; min-height: 80px; }
+.gb-textarea:focus { outline: 2px solid var(--red); }
+.gb-actions { display: flex; justify-content: space-between; align-items: center; }
+.deco-code { font-family: var(--mono); font-size: 0.7rem; color: #888; }
+.sign-btn { background: var(--black); color: var(--white); border: none; padding: 8px 20px; font-family: var(--mono); font-weight: bold; cursor: pointer; transition: 0.2s; }
+.sign-btn:hover { background: var(--red); }
+.guestbook-list { display: flex; flex-direction: column; gap: 20px; margin-top: 30px; }
+.list-label { font-family: var(--heading); font-size: 1.2rem; border-bottom: 2px solid var(--black); padding-bottom: 5px; margin-bottom: 10px; }
+.end-of-file { text-align: center; font-family: var(--mono); color: #ccc; margin-top: 20px; font-size: 0.8rem; }
+.archive-note { background: var(--white); border: 1px solid #999; padding: 20px; position: relative; box-shadow: 3px 3px 0 rgba(0,0,0,0.1); }
+.pin { width: 12px; height: 12px; background: #aaa; border-radius: 50%; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3); }
+.note-header { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.75rem; color: #666; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 10px; }
+.note-body { font-family: var(--sans); line-height: 1.6; font-size: 0.95rem; margin-bottom: 20px; min-height: 40px; }
+.note-footer { display: flex; justify-content: space-between; align-items: flex-end; position: relative; }
+.signature-block { display: flex; flex-direction: column; }
+.sig-label { font-size: 0.6rem; color: #888; font-family: var(--sans); }
+.sig-name { font-family: var(--hand), cursive; font-size: 1.5rem; color: var(--black); transform: rotate(-2deg); margin-top: -5px; }
+.stamp-seal { position: absolute; right: 0; bottom: -5px; border: 3px double; padding: 5px 10px; font-family: var(--heading); font-size: 1rem; letter-spacing: 2px; transform: rotate(-15deg); opacity: 0.7; mix-blend-mode: multiply; text-transform: uppercase; }
+.stamp-seal.approved { color: var(--red); border-color: var(--red); }
+.stamp-seal.reviewed { color: #0099ff; border-color: #0099ff; }
+.stamp-seal.system { color: #333; border-color: #333; transform: rotate(0deg); border-style: solid; background: #eee; }
+.stamp-seal.pending { color: #ffaa00; border-color: #ffaa00; border-style: dashed; }
+
+/* Utilities */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.blink { animation: blink 1s infinite; }
+.custom-scroll::-webkit-scrollbar { width: 8px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: var(--black); }
+.custom-scroll::-webkit-scrollbar-track { background: #eee; }
+.fade-slide-enter-active, .fade-slide-leave-active { transition: opacity 0.3s, transform 0.3s; }
+.fade-slide-enter-from { opacity: 0; transform: translateY(10px); }
+.fade-slide-leave-to { opacity: 0; transform: translateY(-10px); }
+@media (max-width: 1000px) {
+  .main-layout { flex-direction: column; overflow-y: auto; }
+  .sidebar-left { width: 100%; flex: none; overflow: visible; }
+  .content-area { height: 600px; flex: none; }
 }
 </style>
