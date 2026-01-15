@@ -77,8 +77,8 @@
                 <span class="row-label">PROFILE</span>
                 <span class="row-icon">-></span>
               </div>
-              <div class="menu-row" @click="goToSettings">
-                <span class="row-label">SETTINGS</span>
+              <div class="menu-row" @click="goToNewProfile">
+                <span class="row-label">NEW PROFILE</span>
                 <span class="row-icon">-></span>
               </div>
               <div class="menu-divider">----------------</div>
@@ -193,7 +193,7 @@ const handleLogin = () => router.push('/login')
 const handleRegister = () => router.push('/register')
 const toggleUserMenu = () => showUserMenu.value = !showUserMenu.value
 const goToProfile = () => { showUserMenu.value = false; router.push('/profile/me') }
-const goToSettings = () => { showUserMenu.value = false; router.push('/profile/MEE') }
+const goToNewProfile = () => { showUserMenu.value = false; router.push('/profile/MEE') }
 const goToNotifications = () => { showUserMenu.value = false; router.push('/profile/me?tab=notification') }
 
 const handleLogout = async () => {

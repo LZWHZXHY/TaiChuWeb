@@ -39,8 +39,9 @@
                   <span class="icon">⚙</span>
                  </button>
                               <div class="menu-row" @click="goToSettings">
-                <span class="row-label">SETTINGS</span>
-                <span class="row-icon">-></span>
+                <span class="row-icon"></span>
+                <span class="row-label">User Avatar</span>
+                
               </div>
 
                 <button class="flip-trigger-btn" @click="toggleIdArchive" title="查看详细资料">
@@ -400,7 +401,7 @@ const user = reactive({
   nickname: '峰峰子', 
   role: '视觉前端 // VISUAL_ENG',
   level: 42,
-  avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
+  avatar: 'https://image2url.com/r2/default/images/1768440579620-518d987a-37b7-4f81-8406-5fa77e6d79c1.jpg',
   bio: '原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼。',
   tags: ['界面设计', 'Vue开发', '三维艺术'],
   // 实用新增字段
@@ -889,4 +890,5 @@ const toggleIdArchive = () => {
   .sidebar-left { width: 100%; flex: none; overflow: visible; }
   .content-area { height: 600px; flex: none; }
 }
+/* 峰峰子何意味的注释 */
 </style>

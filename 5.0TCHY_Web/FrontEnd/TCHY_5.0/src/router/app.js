@@ -129,8 +129,8 @@ const routes = [
   },
   {
     path: "/profile/MEE",
-    name: "Settings",
-    component: () => import("@/views/Settings.vue"),
+    name: "my-new-profile",
+    component: () => import("@/views/NewProfile.vue"),
     meta: { requiresAuth: true, title: '我的资料 · 新' }
   },
   {
@@ -212,10 +212,10 @@ const authorizeByRank = async (minRank) => {
     }
     if (status === 403) {
       // 没权限
-      return true
+      return false
     }
     // 其他错误按无权限处理
-    return true
+    return false
   }
 }
 
@@ -240,7 +240,7 @@ const authorizeByLevel = async (minLevel) => {
       throw new Error('unauthorized')
     }
     // 其他错误按无权限处理
-    return true
+    return false
   }
 }
 

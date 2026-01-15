@@ -342,7 +342,7 @@ const scrollTo = (id, colType) => {
   --mono: 'JetBrains Mono', monospace;
   --sans: 'Noto Sans SC', sans-serif;
 
-  width: 100vw;
+  width: 98vw;
   height: 100vh;
   background: var(--light-grey);
   color: var(--text-main);
@@ -366,7 +366,7 @@ const scrollTo = (id, colType) => {
 .brand-block { display: flex; align-items: center; gap: 10px; font-weight: bold; font-family: var(--mono); }
 .logo-box { background: var(--text-inv); color: var(--black); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 .header-right { display: flex; align-items: center; gap: 15px; font-size: 0.8rem; }
-.status-indicator { font-size: 0.75rem; display: flex; align-items: center; gap: 6px; color: #00ff00; }
+.status-indicator { font-size: 0.75rem; display: flex; align-items: center; gap: 6px; color: #00ff00; text-shadow: 0 0 2px #00ff00, 0 0 2px #00ff00, 0 0 2px #00ff00;}
 .dot { width: 8px; height: 8px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 5px #00ff00; }
 .sys-btn {
   background: transparent; border: 1px solid #444; color: #888;
@@ -387,12 +387,14 @@ const scrollTo = (id, colType) => {
 /* --- Sidebar (Left, 260px) --- */
 .sidebar-nav {
   width: 260px;
+  max-width: 98vw;
   background: var(--black); /* 借鉴原 Console 风格 */
   color: var(--green);
   display: flex; flex-direction: column;
   border-right: 1px solid #333;
   flex-shrink: 0;
   font-family: var(--mono);
+  min-height: 500px;
 }
 
 .nav-section {
@@ -472,7 +474,7 @@ const scrollTo = (id, colType) => {
 .sec-title { font-size: 1.1rem; font-weight: bold; font-family: var(--mono); }
 
 /* Inputs */
-.form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+.form-group { margin-bottom: 15px; display: flex; flex-direction: column;padding-top: 10px; }
 .form-group label { font-size: 0.7rem; color: #666; margin-bottom: 5px; font-weight: bold; font-family: var(--mono); }
 .cyber-input, .cyber-textarea {
   border: 1px solid #999; background: #fff; padding: 10px;
@@ -547,13 +549,14 @@ const scrollTo = (id, colType) => {
 .achievement-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
 .ach-badge {
   aspect-ratio: 1; background: #333; color: #555; display: flex; align-items: center; justify-content: center;
-  font-size: 0.6rem; text-align: center; border: 1px solid #000;
+  font-size: 0.6rem; text-align: center; border: 1px solid #000;width: 50%;
 }
 .ach-badge.active { background: var(--black); color: var(--red); border-color: var(--red); font-weight: bold; }
 
 .end-marker {
   text-align: center; font-family: var(--mono); color: #bbb; margin-top: 40px; font-size: 0.7rem; letter-spacing: 2px;
 }
+.sub-group {padding-top: 10px; padding-bottom: 10px;}
 
 /* Scrollbars */
 .custom-scroll::-webkit-scrollbar { width: 5px; }
@@ -572,4 +575,5 @@ const scrollTo = (id, colType) => {
   .content-col { overflow: visible; height: auto; }
   .settings-terminal { overflow-y: auto; height: auto; }
 }
+/* 峰峰子何意味的注释 */
 </style>
