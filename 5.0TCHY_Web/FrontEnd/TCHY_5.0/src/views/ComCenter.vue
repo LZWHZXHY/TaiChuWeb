@@ -7,22 +7,23 @@
       <header class="main-header">
         <div class="header-split left">
           <h1 class="giant-text glitch-hover">
-            <div class="text-row">TAICHU</div>
+            <div class="text-row">TAICHU!!</div>
             <div class="text-row outline">NETWORK</div>
             <div class="text-row red-fill">社区</div>
+            <div class="header-split right background"></div>
           </h1>
+          
         </div>
-        <div class="header-split right">
-          <div class="info-block">
+                  <div class="info-block">
             <h2 class="cn-title">太初中枢 // NEURAL_HUB</h2>
             <div class="live-indicator"><span class="dot"></span> SYSTEM ONLINE</div>
-            <div class="sys-time-display">{{ currentTime }}</div>
-            <div class="tech-lines">
-               <span>// NODE_SYNC: {{ stats.posts }} POSTS</span>
-               <span>// DB_ARCHIVE: {{ stats.blogs }} BLOGS</span>
-            </div>
           </div>
-        </div>
+        <div class="tech-lines">
+            <span>// NODE_SYNC: {{ stats.posts }} POSTS</span>
+            <span>// DB_ARCHIVE: {{ stats.blogs }} BLOGS</span>
+            <div class="sys-time-display">{{ currentTime }}</div>
+          </div>
+        
       </header>
 
       <div class="tech-strip">
@@ -553,37 +554,71 @@ onUnmounted(() => {
 
 /* --- 头部重构 --- */
 .main-header { 
-  display: flex; flex-wrap: wrap; 
+  display: flex;
+  flex-wrap: wrap; 
   border-bottom: 4px solid var(--black); 
   background: var(--off-white); position: relative; z-index: 10;
+  height: 5vw;
+  gap:10px;
+  
 }
-.header-split { padding: 30px; }
+.header-split { 
+box-sizing: border-box;
+overflow: hidden; max-width: 40vw;display: flex;}
 .header-split.left { 
-  background: var(--black); color: var(--off-white); 
-  display: flex; justify-content: center; align-items: center; 
-  flex: 0 0 350px;
+  background: var(--black); color: var(--off-white); justify-content: center;
+  padding:4px;margin: 0vw;overflow: hidden;
+  height: 100%;padding-top: 0.9vw;
+  transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.header-split.left:hover { 
+ background: #000000; color: var(--off-white); justify-content: center;
+  padding:4px;margin: 0vw;overflow: hidden;
+  height: 15vw;padding-top: 0.9vw;
+  transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  
+}
+.header-split.right {padding-left: 1%;margin:0vw;
+padding-right: 1%;padding: 1%;
+width: 10vw;
 }
 .giant-text { 
   font-family: var(--heading); font-size: 3.5rem; line-height: 0.9; 
   text-transform: uppercase; transform: rotate(-2deg); 
 }
+.text-row {margin-left: 20px;   /* 左侧外边距 */
+margin-right: 0px;
+}
 .text-row.outline { color: var(--black); -webkit-text-stroke: 1px var(--off-white); }
-.text-row.red-fill { color: var(--red); margin-left: 20px; }
-
-.header-split.right { flex: 1; display: flex; align-items: center; justify-content: space-between; }
-.cn-title { font-weight: 900; margin: 0 0 5px 0; font-size: 1.5rem; letter-spacing: -1px; }
+.text-row.red-fill { color: var(--off-white); margin-left: 20px; }
+.header-split.right { align-items: center; justify-content: space-between; height: 5vw;
+max-height: 10vw;display: flex;
+box-sizing: border-box;
+overflow: hidden;
+width: 20vw;
+}
+.info-block{
+  width: auto;
+  max-width: 15vw;
+  height: 4.5vw;
+  align-items: center;
+  margin-top: 1vh;
+}
+.cn-title { font-weight: 900; margin: 0 0 5px 0; font-size: 1rem; letter-spacing: -1px; }
 .live-indicator { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.8rem; color: var(--red); border: 1px solid var(--red); padding: 4px 8px; margin-bottom: 5px; background: rgba(217, 35, 35, 0.05); }
 .dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: pulse 1s infinite; }
-.sys-time-display { font-family: var(--mono); font-weight: 700; font-size: 1.2rem; }
-.tech-lines { font-family: var(--mono); font-size: 0.75rem; color: #666; margin-top: 5px; }
-.tech-lines span { margin-right: 15px; }
+.sys-time-display { font-family: var(--mono); font-weight: 700; font-size: 1.2rem; display: flex;color: #000;}
+.tech-lines { height: 100%;font-family: var(--mono); font-size: 0.75rem; color: #666; margin-top: 1vh; width: 18vw;}
+.tech-lines span { margin-right: 0px; }
 
 /* --- 跑马灯 --- */
 .tech-strip { 
   background: var(--black); color: var(--off-white); 
   padding: 6px 0; border-bottom: 4px solid var(--black); 
   overflow: hidden; white-space: nowrap; font-family: var(--mono); font-size: 0.8rem; 
+  justify-self: center;
 }
+
 .strip-content { display: inline-block; animation: marquee 20s linear infinite; }
 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
@@ -627,10 +662,11 @@ onUnmounted(() => {
 }
 
 .chat-module-wrapper {
-  height: 100%; /* 与帖子列表高度对齐 */
+  height: 30%; /* 与帖子列表高度对齐 */
   width: 100%; border: 2px solid var(--black);
   background: #fff; box-shadow: var(--shadow-hard);
-  overflow: hidden; position: relative;
+  overflow: scroll; position: relative;
+  max-height: 30%;
 }
 
 /* 强制覆盖 ChatRoom 内部样式以适应嵌入 */
@@ -710,7 +746,7 @@ onUnmounted(() => {
 }
 .tab.active { background: var(--black); color: var(--off-white); border: 1px solid var(--black); }
 
-.posts-scroll-area { height: 600px; overflow-y: auto; background: #f0f0f0; padding: 15px; }
+.posts-scroll-area { height: 28vh; overflow-y: auto; background: #f0f0f0; padding: 15px; }
 .post-entry { 
   background: #fff; border: 1px solid var(--black); margin-bottom: 12px; 
   padding: 20px; position: relative; display: flex; gap: 15px; cursor: pointer; 
