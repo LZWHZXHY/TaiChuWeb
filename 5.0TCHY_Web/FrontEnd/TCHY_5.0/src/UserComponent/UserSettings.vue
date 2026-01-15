@@ -341,6 +341,7 @@ const scrollTo = (id, colType) => {
   
   --mono: 'JetBrains Mono', monospace;
   --sans: 'Noto Sans SC', sans-serif;
+  --title: 'Anton', sans-serif;
 
   width: 98vw;
   height: 100vh;
@@ -364,7 +365,7 @@ const scrollTo = (id, colType) => {
   z-index: 10;
 }
 .brand-block { display: flex; align-items: center; gap: 10px; font-weight: bold; font-family: var(--mono); }
-.logo-box { background: var(--text-inv); color: var(--black); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+.logo-box { background: var(--text-inv); color: var(--black); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: var(--title);font-size: 1.2rem;}
 .header-right { display: flex; align-items: center; gap: 15px; font-size: 0.8rem; }
 .status-indicator { font-size: 0.75rem; display: flex; align-items: center; gap: 6px; color: #00ff00; text-shadow: 0 0 2px #00ff00, 0 0 2px #00ff00, 0 0 2px #00ff00;}
 .dot { width: 8px; height: 8px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 5px #00ff00; }
