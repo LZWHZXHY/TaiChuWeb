@@ -33,6 +33,17 @@
             
             <div class="id-face id-front">
               <div class="cyber-card id-card-content">
+                
+                
+                 <button class="settings-trigger-btn" title="用户资料设置" @click="GoToUserSettings">
+                  <span class="icon">⚙</span>
+                 </button>
+                              <div class="menu-row" @click="goToSettings">
+                <span class="row-icon"></span>
+                <span class="row-label">User Avatar</span>
+                
+              </div>
+
                 <button class="flip-trigger-btn" @click="toggleIdArchive" title="查看详细资料">
                   <span class="icon">➜</span>
                   <span class="corner-deco"></span>
@@ -79,7 +90,6 @@
                 </div>
                 
                 <div class="archive-body custom-scroll">
-                  
                   <div class="data-group">
                     <div class="group-title">01. 基础识别 // BASIC_ID</div>
                     <div class="info-grid">
@@ -141,8 +151,9 @@
                 </div>
               </div>
             </div>
-            </div>
+          </div>
         </div>
+
         <div class="cyber-card stats-card">
           <div class="panel-header">
             <span class="deco">📊</span> 数据概览 // METRICS
@@ -346,13 +357,28 @@
 
 <script setup>
 import { ref, reactive, computed } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
+// 导入 UserSettings 组件（根据你的组件实际路径调整）
+// 1. 必须从 vue-router 导入 useRouter
+import { useRouter } from 'vue-router' 
 
 // --- Data & State ---
+const router = useRouter() // 2. 初始化路由实例
 const currentTab = ref('works')
 const viewportRef = ref(null)
 const isFollowing = ref(false)
 const activeWorkFilter = ref('all')
 
+// 3. 统一跳转函数（确保名称与模板中调用的 GoToUserSettings 一致）
+const GoToUserSettings = () => {
+  // 注意：app.js 中定义的路径是 "/profile/Usersettings"
+  router.push('/profile/Usersettings')
+}
+
+// 4. 处理模板中第 46 行可能存在的另一个点击事件
+const goToSettings = () => {
+  GoToUserSettings()
+}
 // ID Card Flip State
 const showIdArchive = ref(false)
 
@@ -375,7 +401,7 @@ const user = reactive({
   nickname: '峰峰子', 
   role: '视觉前端 // VISUAL_ENG',
   level: 42,
-  avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
+  avatar: 'https://image2url.com/r2/default/images/1768440579620-518d987a-37b7-4f81-8406-5fa77e6d79c1.jpg',
   bio: '原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼。',
   tags: ['界面设计', 'Vue开发', '三维艺术'],
   // 实用新增字段
@@ -495,6 +521,11 @@ const toggleIdArchive = () => {
 @import url('https://gs.jurieo.com/gemini/fonts-googleapis/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap');
 @import url('https://gs.jurieo.com/gemini/fonts-googleapis/css2?family=Caveat:wght@700&display=swap');
 
+/* --- 核心修改：全局 Box Sizing 重置，防止 Padding 撑开宽度 --- */
+* {
+  box-sizing: border-box;
+}
+
 /* --- 全局变量 --- */
 .user-profile-terminal {
   --red: #D92323;
@@ -507,14 +538,18 @@ const toggleIdArchive = () => {
   --sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   --hand: 'Caveat', cursive;
 
-  width: 100vw;
+  /* --- 核心修改：使用 100% 替代 100vw，并隐藏横向溢出 --- */
+  width: 100%; 
+  max-width: 100vw;
   height: 100vh;
+  overflow-x: hidden; /* 强制隐藏横向滚动条 */
+  overflow-y: hidden; /* 纵向也不滚动，内容在内部滚动 */
+  
   background-color: var(--white);
   color: var(--black);
   font-family: var(--mono), var(--sans);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 /* 1. Header */
@@ -550,6 +585,7 @@ const toggleIdArchive = () => {
     linear-gradient(#ccc 1px, transparent 1px),
     linear-gradient(90deg, #ccc 1px, transparent 1px);
   background-size: 40px 40px;
+  width: 100%; /* 确保布局不超出容器 */
 }
 
 /* 3. Sidebar */
@@ -607,7 +643,7 @@ const toggleIdArchive = () => {
 .id-card-content { padding: 25px; text-align: center; height: 100%; }
 .card-deco-top { height: 10px; background: repeating-linear-gradient(45deg, var(--black), var(--black) 5px, transparent 5px, transparent 10px); position: absolute; top:0; left:0; width:100%; opacity: 0.1; }
 
-/* Flip Trigger Button */
+/* Flip Trigger Button (Top Right) */
 .flip-trigger-btn {
   position: absolute;
   top: 10px; right: 10px;
@@ -623,6 +659,28 @@ const toggleIdArchive = () => {
 .flip-trigger-btn:hover { background: var(--red); transform: rotate(180deg); }
 .flip-trigger-btn .icon { font-size: 1.2rem; line-height: 1; }
 .corner-deco { position: absolute; bottom: -4px; left: -4px; width: 8px; height: 8px; border-bottom: 2px solid var(--black); border-left: 2px solid var(--black); }
+
+/* Settings Trigger Button (Top Left) */
+.settings-trigger-btn {
+  position: absolute;
+  top: 10px; left: 10px;
+  width: 32px; height: 32px;
+  background: var(--black);
+  color: var(--white);
+  border: none;
+  cursor: pointer;
+  z-index: 5;
+  display: flex; align-items: center; justify-content: center;
+  transition: 0.2s;
+}
+.settings-trigger-btn:hover {
+  background: var(--red);
+  transform: rotate(90deg);
+}
+.settings-trigger-btn .icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
 
 .avatar-frame { width: 120px; height: 120px; margin: 0 auto 20px; position: relative; border: 2px solid var(--black); padding: 4px; }
 .avatar-frame img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(20%); }
@@ -832,4 +890,5 @@ const toggleIdArchive = () => {
   .sidebar-left { width: 100%; flex: none; overflow: visible; }
   .content-area { height: 600px; flex: none; }
 }
+/* 峰峰子何意味的注释 */
 </style>

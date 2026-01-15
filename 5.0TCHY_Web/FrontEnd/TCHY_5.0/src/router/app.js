@@ -129,8 +129,8 @@ const routes = [
   },
   {
     path: "/profile/MEE",
-    name: "new-profile",
-    component: () => import("@/views/Settings.vue"),
+    name: "my-new-profile",
+    component: () => import("@/views/NewProfile.vue"),
     meta: { requiresAuth: true, title: '我的资料 · 新' }
   },
   {
@@ -143,6 +143,12 @@ const routes = [
   {
     path: "/profile",
     redirect: "/profile/me"
+  },
+  {
+  path: "/profile/Usersettings", // 建议使用固定路径
+  name: "UserSettings",      // 设置路由名称，方便跳转
+  component: () => import("@/UserComponent/UserSettings.vue"),
+  meta: { requiresAuth: true, title: '用户资料设置' }
   }
 ]
 
@@ -358,5 +364,7 @@ router.afterEach(() => {
 router.onError((error) => {
   console.error('❌ 路由错误:', error)
 })
+
+
 
 export default router
