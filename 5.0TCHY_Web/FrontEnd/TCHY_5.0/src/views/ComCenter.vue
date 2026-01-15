@@ -7,28 +7,36 @@
       <header class="main-header">
         <div class="header-split left">
           <h1 class="giant-text glitch-hover">
-            <div class="text-row">TAICHU</div>
+            <div class="text-row">TAICHU!!</div>
             <div class="text-row outline">NETWORK</div>
             <div class="text-row red-fill">社区</div>
+            <div class="header-split right background"></div>
           </h1>
+          
         </div>
-        <div class="header-split right">
-          <div class="info-block">
+                  <div class="info-block">
             <h2 class="cn-title">太初中枢 // NEURAL_HUB</h2>
             <div class="live-indicator"><span class="dot"></span> SYSTEM ONLINE</div>
-            <div class="sys-time-display">{{ currentTime }}</div>
-            <div class="tech-lines">
-               <span>// NODE_SYNC: {{ stats.posts }} POSTS</span>
-               <span>// DB_ARCHIVE: {{ stats.blogs }} BLOGS</span>
-            </div>
           </div>
-        </div>
+        <div class="tech-lines">
+            <span>// NODE_SYNC: {{ stats.posts }} POSTS</span>
+            <span>// DB_ARCHIVE: {{ stats.blogs }} BLOGS</span>
+            <div class="sys-time-display">{{ currentTime }}</div>
+          </div>
+        
       </header>
 
       <div class="tech-strip">
         <div class="strip-content">
           // COMMUNITY_Protocol_v5.0 // DATA_STREAM_ACTIVE // WELCOME_USER // SHARE_YOUR_THOUGHTS // 
           // COMMUNITY_Protocol_v5.0 // DATA_STREAM_ACTIVE // WELCOME_USER // SHARE_YOUR_THOUGHTS //
+          // COMMUNITY_Protocol_v5.0 // DATA_STREAM_ACTIVE // WELCOME_USER // SHARE_YOUR_THOUGHTS //
+          // COMMUNITY_Protocol_v5.0 // DATA_STREAM_ACTIVE // WELCOME_USER // SHARE_YOUR_THOUGHTS //
+          // COMMUNITY_Protocol_v5.0 // DATA_STREAM_ACTIVE // WELCOME_USER // SHARE_YOUR_THOUGHTS //
+          // COMMUNITY_Protocol_v5.0 // DATA_STREAM_ACTIVE // WELCOME_USER // SHARE_YOUR_THOUGHTS //
+          // COMMUNITY_Protocol_v5.0 // DATA_STREAM_ACTIVE // WELCOME_USER // SHARE_YOUR_THOUGHTS //
+          // COMMUNITY_Protocol_v5.0 // DATA_STREAM_ACTIVE // WELCOME_USER // SHARE_YOUR_THOUGHTS //
+          
         </div>
       </div>
 
@@ -531,7 +539,7 @@ onUnmounted(() => {
   --border-thin: 1px solid var(--black);
   --shadow-hard: 4px 4px 0 rgba(0,0,0,0.15);
   
-  width: 100%; height: 100vh; 
+  width: 100%; height: 100%; 
   background-color: var(--off-white); 
   display: flex; flex-direction: column; overflow: hidden; 
   font-family: var(--body);
@@ -553,44 +561,102 @@ onUnmounted(() => {
 
 /* --- 头部重构 --- */
 .main-header { 
-  display: flex; flex-wrap: wrap; 
+  display: flex;
+  flex-wrap: wrap; 
   border-bottom: 4px solid var(--black); 
   background: var(--off-white); position: relative; z-index: 10;
+  height: 4vw;
+  gap:10px;
+  
 }
-.header-split { padding: 30px; }
+.header-split { 
+box-sizing: border-box;
+overflow: hidden; max-width: 40vw;display: flex;}
 .header-split.left { 
-  background: var(--black); color: var(--off-white); 
-  display: flex; justify-content: center; align-items: center; 
-  flex: 0 0 350px;
+  background: var(--black); color: var(--off-white); justify-content: center;
+  
+  padding:0px;margin: 0vw;overflow: hidden;
+  height: 100%;padding-top: 0.9vw;
+  transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 30vh;
+}
+.header-split.left:hover { 
+ background: #000000; color: var(--off-white); justify-content: center;
+  padding:4px;margin: 0vw;overflow: hidden;
+  height: 20vh;padding-top: 0.9vw;
+  transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  
+}
+.header-split.right {padding-left: 1%;margin:0vw;
+padding-right: 1%;padding: 1%;
+width: 10vw;
 }
 .giant-text { 
   font-family: var(--heading); font-size: 3.5rem; line-height: 0.9; 
   text-transform: uppercase; transform: rotate(-2deg); 
 }
+.text-row {margin-left: 10vh;   /* 左侧外边距 */
+margin-right: 0px;
+}
 .text-row.outline { color: var(--black); -webkit-text-stroke: 1px var(--off-white); }
-.text-row.red-fill { color: var(--red); margin-left: 20px; }
+.text-row.red-fill { color: var(--off-white); margin-left: 10vh; }
+.header-split.right { align-items: center; justify-content: space-between; height: 5vw;
+max-height: 10vw;display: flex;
+box-sizing: border-box;
+overflow: hidden;
+width: 20vw;
+}
+.info-block{
+  width: auto;
+  max-width: 15vw;
+  height: 4.5vw;
+  align-items: center;
+  margin-top: 1vh;
+  
 
-.header-split.right { flex: 1; display: flex; align-items: center; justify-content: space-between; }
-.cn-title { font-weight: 900; margin: 0 0 5px 0; font-size: 1.5rem; letter-spacing: -1px; }
+}
+.cn-title { font-weight: 900; margin: 0 0 5px 0; font-size: 1rem; letter-spacing: -1px; }
 .live-indicator { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.8rem; color: var(--red); border: 1px solid var(--red); padding: 4px 8px; margin-bottom: 5px; background: rgba(217, 35, 35, 0.05); }
 .dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: pulse 1s infinite; }
-.sys-time-display { font-family: var(--mono); font-weight: 700; font-size: 1.2rem; }
-.tech-lines { font-family: var(--mono); font-size: 0.75rem; color: #666; margin-top: 5px; }
-.tech-lines span { margin-right: 15px; }
+.sys-time-display { font-family: var(--mono); font-weight: 700; font-size: 1.2rem; display: flex;color: #000;}
+.tech-lines { 
+  height: 100%;
+
+  font-family: var(--mono); 
+  font-size: 0.75rem; 
+
+  color: #666; 
+
+  margin-top: 1vh; 
+  
+  width: 18vh;
+  justify-content: flex-end;
+}
+.tech-lines span { margin-right: 0px; }
 
 /* --- 跑马灯 --- */
 .tech-strip { 
   background: var(--black); color: var(--off-white); 
   padding: 6px 0; border-bottom: 4px solid var(--black); 
   overflow: hidden; white-space: nowrap; font-family: var(--mono); font-size: 0.8rem; 
+  justify-self: center;
+  height: 3vh;
+  padding-top: 3px;
+  margin-bottom: 3px;
+  padding: 0 auto;
+  border-radius: 1px;
+  border-color: #8f8989;
 }
-.strip-content { display: inline-block; animation: marquee 20s linear infinite; }
+
+.strip-content { display: inline-block; animation: marquee 30s linear infinite; }
 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
 /* --- 主布局网格 --- */
 .main-bridge { 
-  display: flex; padding: var(--gap); gap: var(--gap); 
-  max-width: 2560px; margin: 0 auto; width: 100%; box-sizing: border-box; 
+  display: flex; gap: var(--gap); 
+  max-width: 2560px; margin: 0 auto; width: 100%; 
+  height: 100vw;
+  box-sizing: border-box; 
   align-items: flex-start;
 }
 .rank-column { flex: 0 0 240px; }
@@ -598,7 +664,8 @@ onUnmounted(() => {
 .mid-column { flex: 1; display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
 .right-column { flex: 0 0 300px; display: flex; flex-direction: column; gap: var(--gap); }
 .mid-content-split { display: flex; gap: var(--gap); flex: 1; }
-.action-sidebar { width: 220px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
+.action-sidebar { padding: 2vh; padding-top:0px; border-width: 2px; border-left: #000 solid;border-width: 3px;
+  width: 220px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
 .posts-container { flex: 1; min-width: 0; }
 
 /* --- [NEW] 模块切换与聊天室样式 --- */
@@ -627,10 +694,11 @@ onUnmounted(() => {
 }
 
 .chat-module-wrapper {
-  height: 100%; /* 与帖子列表高度对齐 */
-  width: 100%; border: 2px solid var(--black);
+  height: 72vh; /* 与帖子列表高度对齐 */
+  width: 99%; border: 2px solid var(--black);
   background: #fff; box-shadow: var(--shadow-hard);
-  overflow: hidden; position: relative;
+  overflow: scroll; position: relative;
+  max-height: 30%;
 }
 
 /* 强制覆盖 ChatRoom 内部样式以适应嵌入 */
@@ -685,7 +753,7 @@ onUnmounted(() => {
 .activity-banner { 
   height: 160px; background: var(--black); color: var(--off-white); 
   border: 2px solid var(--black); position: relative; display: flex; align-items: center; 
-  padding: 0 40px; overflow: hidden; box-shadow: var(--shadow-hard); margin-bottom: 20px;
+  padding: 0 40px; overflow: hidden; box-shadow: var(--shadow-hard); margin-bottom: 10px;
 }
 .banner-content { position: relative; z-index: 2; }
 .banner-badge { background: var(--red); color: #fff; font-family: var(--mono); font-size: 0.75rem; padding: 2px 6px; display: inline-block; margin-bottom: 10px; }
@@ -710,7 +778,7 @@ onUnmounted(() => {
 }
 .tab.active { background: var(--black); color: var(--off-white); border: 1px solid var(--black); }
 
-.posts-scroll-area { height: 600px; overflow-y: auto; background: #f0f0f0; padding: 15px; }
+.posts-scroll-area { height: 64vh; overflow-y: auto; background: #f0f0f0; padding: 15px; margin-bottom: 1vh;}
 .post-entry { 
   background: #fff; border: 1px solid var(--black); margin-bottom: 12px; 
   padding: 20px; position: relative; display: flex; gap: 15px; cursor: pointer; 
@@ -739,7 +807,7 @@ onUnmounted(() => {
 .cyber-btn { 
   background: #fff; border: 1px solid var(--black); padding: 0; 
   display: flex; height: 50px; cursor: pointer; transition: 0.2s; 
-  box-shadow: 2px 2px 0 var(--black);
+  box-shadow: 2px 2px 0 var(--black);width: 100%;
 }
 .cyber-btn:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--black); }
 .btn-icon { width: 40px; background: var(--black); color: #fff; display: flex; align-items: center; justify-content: center; }
