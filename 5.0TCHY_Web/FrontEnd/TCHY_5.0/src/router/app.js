@@ -130,7 +130,7 @@ const routes = [
   {
     path: "/profile/MEE",
     name: "my-new-profile",
-    component: () => import("@/views/NewProfile.vue"),
+    component: () => import("@/UserComponent/Profile/NewProfile.vue"),
     meta: { requiresAuth: true, title: '我的资料 · 新' }
   },
   {
@@ -147,7 +147,7 @@ const routes = [
   {
   path: "/profile/Usersettings", // 建议使用固定路径
   name: "UserSettings",      // 设置路由名称，方便跳转
-  component: () => import("@/UserComponent/UserSettings.vue"),
+  component: () => import("@/UserComponent/UserSettings/UserSettings.vue"),
   meta: { requiresAuth: true, title: '用户资料设置' }
   }
 ]
