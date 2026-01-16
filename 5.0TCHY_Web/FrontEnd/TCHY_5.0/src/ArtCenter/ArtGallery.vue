@@ -276,44 +276,48 @@ const upgradeUrlToHttps = (url) => {
 }
 
 // 核心：加载列表
+// 修改 fetchArtworks 里的分发逻辑
 const fetchArtworks = async (isRefresh = false) => {
-  if (loading.value) return
-  if (!isRefresh && !hasMore.value) return
-  
-  loading.value = true
+  if (loading.value) return;
+  if (!isRefresh && !hasMore.value) return;
+
+  loading.value = true;
   try {
     const params = { 
-      pageSize: 30, 
+      pageSize: 20, 
       sort: 'new', 
       cursor: isRefresh ? null : nextCursor.value, 
       type: selectedSegment.value 
-    }
+    };
     
-    const res = await apiClient.get('/Drawing/list', { params })
+    const res = await apiClient.get('/Drawing/list', { params });
     
     if (res.data.success) {
-      const { items, nextCursor: newCursor, hasMore: more } = res.data.data
-      
-      if (isRefresh) waterfallColumns.value = [[], [], [], []]
-      
-      // 瀑布流分发
-      let currentTotal = 0
-      waterfallColumns.value.forEach(col => currentTotal += col.length)
-      
-      items.forEach((item, index) => {
-        const targetColIndex = (currentTotal + index) % 4
-        waterfallColumns.value[targetColIndex].push(item)
-      })
-      
-      nextCursor.value = newCursor
-      hasMore.value = more
+      const { items, nextCursor: newCursor, hasMore: more } = res.data.data;
+      if (isRefresh) waterfallColumns.value = [[], [], [], []];
+
+      // 修复 BUG 的关键：不要简单的 (i % 4)
+      // 在“综合”模式下，按照每列现有的高度平衡插入
+      items.forEach((item) => {
+        // 找到当前四列中，内容最少（最短）的那一列
+        let shortestIdx = 0;
+        let minLen = waterfallColumns.value[0].length;
+        for (let i = 1; i < 4; i++) {
+          if (waterfallColumns.value[i].length < minLen) {
+            minLen = waterfallColumns.value[i].length;
+            shortestIdx = i;
+          }
+        }
+        waterfallColumns.value[shortestIdx].push(item);
+      });
+
+      nextCursor.value = newCursor;
+      hasMore.value = more;
     }
-  } catch (error) { 
-    console.error("Fetch Error:", error) 
-  } finally { 
-    loading.value = false 
+  } finally {
+    loading.value = false;
   }
-}
+};
 
 // 核心：滚动监听 (无限加载)
 const handleScroll = (e) => {
