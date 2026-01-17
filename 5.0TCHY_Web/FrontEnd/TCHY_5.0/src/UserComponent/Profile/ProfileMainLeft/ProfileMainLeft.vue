@@ -1,5 +1,5 @@
 <template>
-  <main class="content-area">
+  <main class="content-area-inside">
     <nav class="tab-controller">
       <button 
         v-for="tab in tabs" 
@@ -61,6 +61,11 @@
               [NULL] 该分类下暂无数据...
             </div>
           </div>
+
+          <!-- 新增的留言板组件容器 -->
+          <div class="guestbook-container">
+            <GuestbookInput />
+          </div>
         </div>
 
         <div v-else-if="currentTab === 'blogs'" class="view-section view-blogs" key="blogs">
@@ -104,51 +109,6 @@
           </div>
         </div>
 
-        <div v-else-if="currentTab === 'guestbook'" class="view-section view-guestbook" key="guestbook">
-          
-          <div class="guestbook-input-area">
-            <div class="gb-input-header">
-              <span class="blink">PULSE_INPUT //</span> 请输入加密留言
-            </div>
-            <div class="gb-form">
-              <textarea 
-                v-model="newGuestMsg" 
-                placeholder="输入内容..." 
-                rows="3"
-                class="gb-textarea"
-              ></textarea>
-              <div class="gb-actions">
-                <span class="deco-code">CODE: 0x88</span>
-                <button class="sign-btn" @click="submitMessage">
-                  [ 签署并归档 / SIGN ]
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="guestbook-list">
-            <div class="list-label">历史归档 // ARCHIVE_HISTORY ({{ guestMessages.length }})</div>
-            
-            <div v-for="msg in guestMessages" :key="msg.id" class="archive-note">
-              <div class="pin"></div>
-              <div class="note-header">
-                <span class="note-id">NO.{{ msg.id.toString().padStart(4, '0') }}</span>
-                <span class="note-date">{{ msg.date }}</span>
-              </div>
-              <div class="note-body">{{ msg.content }}</div>
-              <div class="note-footer">
-                <div class="signature-block">
-                  <span class="sig-label">Signed by:</span>
-                  <span class="sig-name">{{ msg.user }}</span>
-                </div>
-                <div class="stamp-seal" :class="msg.stampType">{{ msg.stampText }}</div>
-              </div>
-            </div>
-            <div class="end-of-file">--- END OF FILE ---</div>
-          </div>
-
-        </div>
-
       </Transition>
 
     </div>
@@ -157,25 +117,25 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+// 引入GuestbookInput组件（请根据实际文件路径调整）
+import GuestbookInput from './GuestbookInput.vue'
 
 // --- State Management ---
 const currentTab = ref('works')
 const viewportRef = ref(null)
 const activeWorkFilter = ref('all')
-const newGuestMsg = ref('')
 
 // --- Data Constants ---
 const tabs = [
-  { id: 'works', index: 1, label: '视觉作品', sub: 'ARTWORKS_DB' },
-  { id: 'blogs', index: 2, label: '思维日志', sub: 'THOUGHT_LOGS' },
-  { id: 'activity', index: 3, label: '活动轨迹', sub: 'SYSTEM_ACT' },
-  { id: 'guestbook', index: 4, label: '访客留言', sub: 'SIGNATURE_ARCHIVE' } 
+  { id: 'works', index: 1, label: '主页', sub: 'ARTWORKS_DB' },
+  { id: 'blogs', index: 2, label: '博客', sub: 'THOUGHT_LOGS' },
+  { id: 'activity', index: 3, label: '日志', sub: 'SYSTEM_ACT' }
 ]
 
 const workFilters = [
   { key: 'all', label: '全部 ALL' },
-  { key: 'ui', label: '作品' },
-  { key: 'art', label: '帖子' }
+  { key: 'GIF', label: '动态' },
+  { key: '图片', label: '静态' }
 ]
 
 // Mock Data: Works
@@ -201,14 +161,7 @@ const activities = ref([
   { time: '2023-10-14 09:15', action: '评论', type: 'success', detail: '在用户 @Ghost 的帖子下留言。' },
   { time: '2023-10-12 18:45', action: '登录', type: 'warn', detail: '检测到来自 HK_02 节点的系统访问。' },
   { time: '2023-10-10 11:20', action: '点赞', type: 'success', detail: '点赞了作品 "机械设计_v2"。' },
-  { time: '2023-10-05 22:00', action: '系统', type: 'error', detail: '连接超时，已尝试自动重连。' }
-])
-
-// Mock Data: Guest Messages
-const guestMessages = ref([
-  { id: 1024, user: 'NetRunner_01', date: '2023-10-14 22:00', content: '非常喜欢你的配色方案，特别是红色警戒色的运用。期待更多作品！', stampType: 'approved', stampText: 'APPROVED' },
-  { id: 1023, user: 'Unknown_V', date: '2023-10-12 10:15', content: 'Ping... 这里的交互逻辑很流畅。使用的是哪个版本的框架？', stampType: 'reviewed', stampText: 'REVIEWED' },
-  { id: 1022, user: 'Design_Bot', date: '2023-10-10 09:30', content: '[自动留言] 系统检测到高能级设计作品。', stampType: 'system', stampText: 'LOGGED' },
+  { time: '2023-10-05 22:00', action: '登录', type: 'error', detail: '连接超时，已尝试自动重连。' }
 ])
 
 // --- Computed Properties ---
@@ -230,27 +183,6 @@ const goToWorkDetail = (id) => {
 const goToBlogDetail = (id) => {
   alert(`加载思维日志 [ID:${id}] 内容...`)
 }
-
-const submitMessage = () => {
-  if (!newGuestMsg.value.trim()) return
-  const now = new Date()
-  const timeStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')} ${now.getHours()}:${now.getMinutes()}`
-  
-  guestMessages.value.unshift({
-    id: Math.floor(Math.random() * 10000),
-    user: 'Visitor_Guest',
-    date: timeStr,
-    content: newGuestMsg.value,
-    stampType: 'pending', 
-    stampText: 'RECEIVED' 
-  })
-  
-  newGuestMsg.value = ''
-  // 简单滚动动画模拟
-  setTimeout(() => {
-    if (viewportRef.value) viewportRef.value.scrollTop = 150 
-  }, 100)
-}
 </script>
 
 <style scoped>
@@ -259,7 +191,7 @@ const submitMessage = () => {
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
 
 /* --- 局部变量定义 (模拟父级环境) --- */
-.content-area {
+.content-area-inside {
   --red: #D92323;
   --black: #111111;
   --white: #F4F1EA;
@@ -272,7 +204,7 @@ const submitMessage = () => {
 }
 
 /* --- Core Layout --- */
-.content-area {
+.content-area-inside {
   flex: 1;
   display: flex; flex-direction: column;
   background: var(--white);
@@ -306,25 +238,36 @@ const submitMessage = () => {
 .viewport { flex: 1; overflow-y: auto; padding: 30px; position: relative; scroll-behavior: smooth; }
 
 /* 筛选条 */
-.section-toolbar { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; font-size: 0.85rem; border-bottom: 2px solid #eee; padding-bottom: 10px; font-family: var(--sans); font-weight: bold; }
+.section-toolbar { display: flex; align-items: center; gap: 15px; margin-bottom: 0px; font-size: 0.85rem; border-bottom: 2px solid #eee; padding-bottom: 10px; font-family: var(--sans); font-weight: bold; }
 .filter-chips { display: flex; gap: 10px; }
 .chip { border: 1px solid var(--black); padding: 4px 12px; cursor: pointer; transition: 0.2s; font-size: 0.8rem; user-select: none; }
 .chip.active, .chip:hover { background: var(--black); color: var(--white); }
 .chip:active { transform: scale(0.95); }
 
 /* --- Tab: Works --- */
-.works-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
-.work-item { border: 2px solid var(--black); transition: transform 0.2s; cursor: pointer; }
+.works-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 20px; margin-bottom: 1%; padding-top: 1%; max-height: 350px;overflow-y: auto;}
+.work-item { border: 2px solid var(--black); transition: transform 0.2s; cursor: pointer; background: #4b4a4a;height:100% ;}
 .work-item:hover { transform: translateY(-5px); box-shadow: 6px 6px 0 var(--red); }
-.img-wrapper { height: 160px; overflow: hidden; position: relative; border-bottom: 2px solid var(--black); }
+.img-wrapper { height: 68%; overflow: hidden; position: relative; border-bottom: 2px solid var(--black); }
 .img-wrapper img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(30%); transition: 0.3s; }
 .work-item:hover img { filter: grayscale(0) contrast(1.1); transform: scale(1.05); }
 .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; color: var(--white); opacity: 0; transition: 0.2s; font-weight: bold; font-family: var(--sans); }
 .work-item:hover .overlay { opacity: 1; }
-.work-meta { padding: 10px; background: #fff; }
+.work-meta { padding: 5px; background: #fff; }
 .w-title { font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--sans); }
 .w-stats { display: flex; justify-content: space-between; font-size: 0.75rem; color: #666; font-family: var(--mono); }
 .empty-state { width: 100%; grid-column: 1 / -1; padding: 40px; text-align: center; color: #999; border: 2px dashed #ddd; font-family: var(--mono); }
+
+
+.view-works{
+  max-height: 60%;
+}
+/* 新增留言板容器样式 */
+.guestbook-container {
+  width: 100%;
+  margin-top: 20px;
+  padding: 0px;
+}
 
 /* --- Tab: Blogs --- */
 .blog-timeline { display: flex; flex-direction: column; gap: 20px; max-width: 800px; }
@@ -353,36 +296,6 @@ const submitMessage = () => {
 .col-action.success { color: #00ff00; }
 .log-cursor { animation: blink 1s infinite; font-weight: bold; margin-top: 10px; }
 
-/* --- Tab: Guestbook --- */
-.view-guestbook { display: flex; flex-direction: column; gap: 30px; max-width: 800px; }
-.guestbook-input-area { border: 2px solid var(--black); background: #eee; padding: 15px; }
-.gb-input-header { font-family: var(--mono); font-weight: bold; margin-bottom: 10px; font-size: 0.8rem; color: #555; }
-.gb-form { display: flex; flex-direction: column; gap: 10px; }
-.gb-textarea { width: 100%; border: 1px solid var(--black); padding: 10px; font-family: var(--sans); background: var(--white); resize: vertical; min-height: 80px; box-sizing: border-box; }
-.gb-textarea:focus { outline: 2px solid var(--red); }
-.gb-actions { display: flex; justify-content: space-between; align-items: center; }
-.deco-code { font-family: var(--mono); font-size: 0.7rem; color: #888; }
-.sign-btn { background: var(--black); color: var(--white); border: none; padding: 8px 20px; font-family: var(--mono); font-weight: bold; cursor: pointer; transition: 0.2s; }
-.sign-btn:hover { background: var(--red); }
-.guestbook-list { display: flex; flex-direction: column; gap: 20px; margin-top: 30px; }
-.list-label { font-family: var(--heading); font-size: 1.2rem; border-bottom: 2px solid var(--black); padding-bottom: 5px; margin-bottom: 10px; }
-.end-of-file { text-align: center; font-family: var(--mono); color: #ccc; margin-top: 20px; font-size: 0.8rem; }
-
-/* Guestbook Notes */
-.archive-note { background: var(--white); border: 1px solid #999; padding: 20px; position: relative; box-shadow: 3px 3px 0 rgba(0,0,0,0.1); }
-.pin { width: 12px; height: 12px; background: #aaa; border-radius: 50%; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3); }
-.note-header { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.75rem; color: #666; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 10px; }
-.note-body { font-family: var(--sans); line-height: 1.6; font-size: 0.95rem; margin-bottom: 20px; min-height: 40px; }
-.note-footer { display: flex; justify-content: space-between; align-items: flex-end; position: relative; }
-.signature-block { display: flex; flex-direction: column; }
-.sig-label { font-size: 0.6rem; color: #888; font-family: var(--sans); }
-.sig-name { font-family: var(--hand), cursive; font-size: 1.5rem; color: var(--black); transform: rotate(-2deg); margin-top: -5px; }
-.stamp-seal { position: absolute; right: 0; bottom: -5px; border: 3px double; padding: 5px 10px; font-family: var(--heading); font-size: 1rem; letter-spacing: 2px; transform: rotate(-15deg); opacity: 0.7; mix-blend-mode: multiply; text-transform: uppercase; }
-.stamp-seal.approved { color: var(--red); border-color: var(--red); }
-.stamp-seal.reviewed { color: #0099ff; border-color: #0099ff; }
-.stamp-seal.system { color: #333; border-color: #333; transform: rotate(0deg); border-style: solid; background: #eee; }
-.stamp-seal.pending { color: #ffaa00; border-color: #ffaa00; border-style: dashed; }
-
 /* --- Utilities & Animations --- */
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 .blink { animation: blink 1s infinite; }
@@ -390,13 +303,4 @@ const submitMessage = () => {
 .custom-scroll::-webkit-scrollbar { width: 8px; }
 .custom-scroll::-webkit-scrollbar-thumb { background: var(--black); }
 .custom-scroll::-webkit-scrollbar-track { background: #eee; }
-
-.fade-slide-enter-active, .fade-slide-leave-active { transition: opacity 0.3s, transform 0.3s; }
-.fade-slide-enter-from { opacity: 0; transform: translateY(10px); }
-.fade-slide-leave-to { opacity: 0; transform: translateY(-10px); }
-
-/* --- Responsive --- */
-@media (max-width: 1000px) {
-  .content-area { height: 600px; flex: none; width: 100%; }
-}
 </style>

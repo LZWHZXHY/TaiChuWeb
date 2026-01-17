@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue'
+
 
 // Props
 const props = defineProps({
