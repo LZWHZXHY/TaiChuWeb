@@ -14,45 +14,56 @@
         
         <div class="header-right">
           <div class="status-row">
-            <span>SERVER_STATUS:</span>
-            <span class="status-ok">ONLINE</span>
+            <span>CORE_STATUS:</span>
+            <span class="status-ok">OPERATIONAL</span>
           </div>
           <div class="status-row">
-            <span>LAST_SYNC:</span>
-            <span class="blink">{{ new Date().toLocaleTimeString() }}</span>
+            <span>NODE_SYNC:</span>
+            <span class="blink">{{ currentTime }}</span>
           </div>
         </div>
       </header>
 
-      <div class="stream-container">
-        <div class="timeline-bar"></div>
+      <div class="main-bridge">
+        
+        <main class="primary-stream">
+          <div class="section-label">// FORMAL_ARCHIVE // 正式日志</div>
+          <div class="stream-container">
+            <div class="timeline-bar"></div>
 
-        <div class="update-tree">
-          <LogNode 
-            v-for="(node, index) in updateTree" 
-            :key="node.version || index" 
-            :node="node" 
-            class="cyber-node-item"
-          />
-        </div>
+            <div class="update-tree">
+              <LogNode 
+                v-for="(node, index) in updateTree" 
+                :key="node.version || index" 
+                :node="node" 
+                class="cyber-node-item"
+              />
+            </div>
 
-        <div class="status-footer">
-          <div v-if="loading" class="loading-state">
-            <span class="spinner"></span>
-            [ DOWNLOADING_PACKETS... ]
+            <div class="status-footer">
+              <div v-if="loading" class="loading-state">
+                <span class="spinner"></span> [ DOWNLOADING_PACKETS... ]
+              </div>
+              <div v-if="!hasMore && updateTree.length > 0" class="end-state">
+                <div class="divider-line"></div>
+                <span>// END_OF_STREAM // ALL_SYSTEMS_UPDATED</span>
+              </div>
+            </div>
           </div>
+        </main>
+
+        <aside class="technical-stream">
+          <div class="section-label">// GIT_PUSH_STREAM // 技术流</div>
+          <GitLogModule repo="LZWHZXHY/TaiChuWeb" :limit="12" />
           
-          <div v-if="error" class="error-state">
-            [ ! ] ERROR: {{ error }} // CONNECTION_RESET
+          <div class="sidebar-decoration">
+            <div class="terminal-text">> SYNC_STATUS: ACTIVE</div>
+            <div class="terminal-text">> BRANCH: MAIN</div>
+            <div class="terminal-text">> REGION: SHANGHAI_CN</div>
           </div>
-          
-          <div v-if="!hasMore && updateTree.length > 0" class="end-state">
-            <div class="divider-line"></div>
-            <span>// END_OF_STREAM // ALL_SYSTEMS_UPDATED</span>
-          </div>
-        </div>
+        </aside>
+
       </div>
-
     </div>
   </div>
 </template>
@@ -61,18 +72,18 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import apiClient from '@/utils/api'
 import LogNode from './LogNode.vue'
+import GitLogModule from './GitLogModule.vue'
 
 const updateTree = ref([])
 const loading = ref(false)
-const error = ref('')
-const page = ref(1)
 const hasMore = ref(true)
+const page = ref(1)
 const pageSize = 20
+const currentTime = ref(new Date().toLocaleTimeString())
 
 async function loadUpdates() {
   if (!hasMore.value || loading.value) return
   loading.value = true
-  error.value = ''
   try {
     const res = await apiClient.get('/Update/all', { params: { page: page.value, pageSize } })
     const arr = res.data?.data || []
@@ -80,7 +91,7 @@ async function loadUpdates() {
     updateTree.value = [...updateTree.value, ...arr]
     page.value += 1
   } catch (e) {
-    error.value = '加载失败，请稍后重试'
+    console.error("Fetch Error");
   } finally {
     loading.value = false
   }
@@ -93,212 +104,72 @@ function handleScroll() {
   }
 }
 
+let timer;
 onMounted(() => {
   loadUpdates()
   window.addEventListener('scroll', handleScroll)
+  timer = setInterval(() => { currentTime.value = new Date().toLocaleTimeString() }, 1000)
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  clearInterval(timer)
 })
 </script>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
 
-/* --- 核心变量 --- */
 .update-industrial {
-  --red: #D92323; 
-  --black: #111111; 
-  --white: #F4F1EA;
-  --gray: #E0DDD5; 
-  --mono: 'JetBrains Mono', monospace; 
-  --heading: 'Anton', sans-serif;
-  
-  width: 100%;
-  min-height: 100vh;
-  position: relative;
-  background-color: var(--white);
-  color: var(--black);
-  font-family: var(--mono);
-  overflow: hidden;
-  padding: 40px 0;
+  --red: #D92323; --black: #111111; --white: #F4F1EA; --mono: 'JetBrains Mono', monospace; --heading: 'Anton', sans-serif;
+  width: 100%; min-height: 100vh; background-color: var(--white); color: var(--black); font-family: var(--mono);
+  position: relative; padding: 40px 0; overflow-x: hidden;
 }
 
-/* --- 背景网格 --- */
-.grid-bg { 
-  position: absolute; inset: 0; 
-  background-image: linear-gradient(rgba(17, 17, 17, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(17, 17, 17, 0.05) 1px, transparent 1px); 
-  background-size: 40px 40px; 
-  z-index: 0; pointer-events: none;
-}
-.moving-grid { animation: gridScroll 60s linear infinite; }
-@keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-40px); } }
+/* 布局控制 */
+.log-wrapper { max-width: 1240px; margin: 0 auto; padding: 0 20px; z-index: 1; position: relative; }
+.main-bridge { display: flex; gap: 40px; align-items: flex-start; }
 
-/* --- 主容器 --- */
-.log-wrapper {
-  position: relative;
-  z-index: 1;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 20px;
+.primary-stream { flex: 1; min-width: 0; }
+.technical-stream { width: 340px; flex-shrink: 0; position: sticky; top: 40px; }
+
+/* 装饰性标签 */
+.section-label {
+  font-size: 0.7rem; font-weight: bold; color: #999; margin-bottom: 20px;
+  letter-spacing: 2px; border-bottom: 1px solid #ddd; padding-bottom: 5px;
 }
 
-/* --- 头部 --- */
-.log-header {
-  border: 2px solid var(--black);
-  background: #fff;
-  padding: 20px 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-  box-shadow: 8px 8px 0 rgba(0,0,0,0.1);
-}
-.header-left { display: flex; flex-direction: column; }
-.giant-text {
-  font-family: var(--heading);
-  font-size: 3rem;
-  margin: 0;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-.deco-box { color: var(--red); font-size: 0.8em; }
-.sub-text { font-weight: bold; color: #666; margin-top: 5px; font-size: 0.9rem; }
+/* 侧边栏装饰 */
+.sidebar-decoration { margin-top: 20px; padding: 15px; background: var(--black); color: #444; font-size: 0.65rem; font-family: var(--mono); }
+.terminal-text { margin-bottom: 4px; }
 
-.header-right { 
-  text-align: right; font-size: 0.8rem; border-left: 2px solid #eee; padding-left: 20px; 
-}
-.status-row { margin-bottom: 5px; }
-.status-ok { background: var(--black); color: var(--white); padding: 0 6px; font-weight: bold; margin-left: 5px; }
-.blink { animation: blink 1s infinite; color: var(--red); font-weight: bold; }
+/* 正式日志流样式修复 */
+.stream-container { position: relative; padding-left: 35px; }
+.timeline-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: repeating-linear-gradient(to bottom, var(--black), var(--black) 10px, transparent 10px, transparent 20px); }
 
-/* --- 数据流区域 --- */
-.stream-container {
-  position: relative;
-  padding-left: 30px; /* 给左侧线条留空 */
-}
-
-/* 左侧时间轴线条 */
-.timeline-bar {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: repeating-linear-gradient(to bottom, var(--black), var(--black) 10px, transparent 10px, transparent 20px);
-}
-
-/* --- 列表与节点 --- */
-.update-tree {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* 关键点：这里使用 :deep() 来强制覆盖 LogNode 组件内部的样式 
-   哪怕我不知道 LogNode 的具体代码，我假设它是一块 div
-*/
 :deep(.cyber-node-item) {
-  position: relative;
-  border: 2px solid var(--black) !important;
-  background: #fff !important;
-  padding: 20px !important;
-  border-radius: 0 !important; /* 强制去圆角 */
-  box-shadow: 4px 4px 0 rgba(0,0,0,0.1) !important;
-  transition: transform 0.2s !important;
-  margin-bottom: 10px;
+  position: relative; border: 2px solid var(--black) !important; background: #fff !important;
+  padding: 25px !important; margin-bottom: 30px; box-shadow: 6px 6px 0 rgba(0,0,0,0.1) !important;
 }
+:deep(.cyber-node-item::before) { content: ''; position: absolute; left: -37px; top: 35px; width: 35px; height: 2px; background: var(--black); }
+:deep(.cyber-node-item::after) { content: ''; position: absolute; left: -42px; top: 30px; width: 12px; height: 12px; background: var(--red); border: 2px solid var(--black); z-index: 2; }
 
-:deep(.cyber-node-item:hover) {
-  transform: translateX(5px) !important;
-  box-shadow: 6px 6px 0 var(--red) !important;
-  border-color: var(--black) !important;
-}
+/* 头部样式保持原样... */
+.log-header { border: 2px solid var(--black); background: #fff; padding: 25px 35px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; box-shadow: 10px 10px 0 rgba(0,0,0,0.15); }
+.giant-text { font-family: var(--heading); font-size: 3.2rem; margin: 0; display: flex; align-items: center; gap: 15px; }
+.deco-box { color: var(--red); }
+.status-ok { background: var(--black); color: var(--white); padding: 0 8px; margin-left: 10px; font-weight: 800; }
+.blink { animation: blink 1s infinite; color: var(--red); }
 
-/* 装饰性连接线：连接左侧时间轴和卡片 */
-:deep(.cyber-node-item::before) {
-  content: '';
-  position: absolute;
-  left: -32px; /* 伸到父容器 padding 区域 */
-  top: 30px;
-  width: 30px;
-  height: 2px;
-  background: var(--black);
-}
-:deep(.cyber-node-item::after) {
-  content: '';
-  position: absolute;
-  left: -36px;
-  top: 26px;
-  width: 10px;
-  height: 10px;
-  background: var(--red);
-  border: 2px solid var(--black);
-}
+/* 背景网格 */
+.grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(17, 17, 17, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(17, 17, 17, 0.05) 1px, transparent 1px); background-size: 40px 40px; z-index: 0; }
+.moving-grid { animation: gridScroll 60s linear infinite; }
 
-/* 假设 LogNode 内部有标题或日期，尝试用通用选择器调整字体 */
-:deep(.cyber-node-item h3), 
-:deep(.cyber-node-item .title) {
-  font-family: var(--heading) !important;
-  font-size: 1.5rem !important;
-  margin-bottom: 10px !important;
-  text-transform: uppercase !important;
-}
+@keyframes gridScroll { from { transform: translateY(0); } to { transform: translateY(-40px); } }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-/* --- 底部状态 --- */
-.status-footer {
-  margin-top: 40px;
-  text-align: center;
-  font-family: var(--mono);
-  font-weight: bold;
+@media (max-width: 1100px) {
+  .main-bridge { flex-direction: column; }
+  .technical-stream { width: 100%; position: static; }
 }
-
-.loading-state {
-  color: var(--black);
-  background: #fff;
-  display: inline-block;
-  padding: 10px 20px;
-  border: 1px dashed var(--black);
-}
-.spinner {
-  display: inline-block;
-  width: 12px; height: 12px;
-  border: 2px solid var(--black);
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-right: 10px;
-}
-
-.error-state { color: var(--red); border: 2px solid var(--red); padding: 10px; background: rgba(217, 35, 35, 0.1); }
-
-.end-state {
-  color: #888;
-  position: relative;
-  padding-top: 20px;
-}
-.divider-line {
-  height: 2px;
-  background: var(--black);
-  margin-bottom: 10px;
-  opacity: 0.2;
-}
-
-/* --- 响应式 --- */
-@media (max-width: 768px) {
-  .log-header { flex-direction: column; align-items: flex-start; gap: 20px; }
-  .header-right { border-left: none; padding-left: 0; border-top: 2px solid #eee; padding-top: 10px; width: 100%; }
-  .stream-container { padding-left: 15px; }
-  .timeline-bar { width: 2px; left: 0; }
-  
-  /* 移动端调整连接线 */
-  :deep(.cyber-node-item::before) { width: 15px; left: -17px; }
-  :deep(.cyber-node-item::after) { left: -21px; width: 8px; height: 8px; }
-}
-
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-@keyframes spin { to { transform: rotate(360deg); } }
 </style>
