@@ -36,7 +36,7 @@
                 </button>
                 <div class="menu-row" @click="goToSettings">
                   <span class="row-icon"></span>
-                  <span class="row-label">User Avatar</span>
+                  <span class="row-label">[ID:{{ userID }}]</span>
                 </div>
 
                 <button class="flip-trigger-btn" @click="toggleIdArchive" title="查看详细资料">
@@ -141,12 +141,18 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed} from 'vue'
 import { useRouter } from 'vue-router' 
 import ProfileMain from '@/UserComponent/Profile//ProfileMainLeft/ProfileMainLeft.vue';
-// 引入拆分后的组件（路径需根据实际项目调整）
+import apiClient from '@/utils/api';
 import IdArchiveCard from '@/UserComponent/Profile/IdArchiveCard.vue';
+import { useAuthStore } from '@/utils/auth' // 确保路径正确
+import { storeToRefs } from 'pinia'
+const authStore = useAuthStore()
 
+const { userID } = storeToRefs(authStore)
+
+console.log(userID.value)
 // --- Data & State ---
 const router = useRouter() 
 const isFollowing = ref(false)
@@ -162,14 +168,14 @@ const goToSettings = () => GoToUserSettings()
 const user = reactive({
   username: 'USER_114514',
   uid: '89757-X',
-  nickname: '峰峰子', 
+  nickname: 'No Name', 
   role: '视觉前端 // VISUAL_ENG',
   level: 42,
-  avatar: 'https://image2url.com/r2/default/images/1768440579620-518d987a-37b7-4f81-8406-5fa77e6d79c1.jpg',
+  avatar: authStore.user?.logo || 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
   bio: '原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼原神牛逼。',
   tags: ['界面设计', 'Vue开发', '三维艺术'],
   age: 24,
-  gender: 'Male / M',
+  gender: 'M/F',
   location: 'Guangzhou, CN',
   creationAge: '4年',
   email: 'fengfengzi@cyber.com',

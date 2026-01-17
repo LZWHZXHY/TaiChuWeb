@@ -1,74 +1,132 @@
 <template>
   <div class="about-industrial">
-    
+    <div class="scanline-overlay"></div>
+
     <div class="manifesto-terminal">
       <div class="term-header">
-        <span class="dot red"></span>
-        <span class="dot yellow"></span>
-        <span class="dot green"></span>
-        <span class="title">mission_statement.sh</span>
+        <div class="dots">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+        <span class="title">SYSTEM_CORE / mission_statement.sh</span>
+        <span class="status-tag">ENCRYPTED</span>
       </div>
       <div class="term-body">
         <p class="comment"># INITIALIZING TAICHU_UNIVERSE PROTOCOL...</p>
-        <p class="comment"># LOADING CORE VALUES...</p>
         <div class="code-block">
           <span class="var">const</span> <span class="func">createSingularity</span> = () => {<br>
           &nbsp;&nbsp;<span class="key">return</span> {<br>
           &nbsp;&nbsp;&nbsp;&nbsp;vision: <span class="str">"构建去中心化的创意奇点"</span>,<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;values: [<span class="str">"包容"</span>, <span class="str">"极客"</span>, <span class="str">"共创"</span>],<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;status: <span class="str">"ETERNAL_BETA"</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;values: [<span class="str">"包容"</span>, <span class="str">"极客"</span>, <span class="str">"共创"</span>]<br>
           &nbsp;&nbsp;}<br>
           }
         </div>
-        <div class="typing-cursor">
-          > 我们不仅仅是一个社区，我们是连接每一个孤独节点的神经元网络。<span class="blink">_</span>
+        <div class="typing-container">
+          <span class="prompt">></span>
+          <span class="typing-text">我们连接每一个孤独节点的神经元网络。</span>
+          <span class="cursor">_</span>
         </div>
       </div>
     </div>
 
     <div class="metrics-grid">
+      <div class="metric-card highlight">
+        <div class="label">UPTIME // 运行天数</div>
+        <div class="value">{{ uptimeDays }} <span class="unit">DAYS</span></div>
+        <div class="bar"><div class="fill" :style="{ width: uptimePercent + '%' }"></div></div>
+      </div>
       <div class="metric-card">
-        <div class="label">OPERATIVES // 成员</div>
+        <div class="label">SYNC_RATE // 神经同步率</div>
+        <div class="value">98.4 <span class="unit">%</span></div>
+        <div class="bar"><div class="fill" style="width: 98%"></div></div>
+      </div>
+      <div class="metric-card">
+        <div class="label">OPERATIVES // 活跃成员</div>
         <div class="value">12,508</div>
         <div class="bar"><div class="fill" style="width: 75%"></div></div>
       </div>
-      <div class="metric-card">
-        <div class="label">UPTIME // 运行天数</div>
-        <div class="value">365 <span class="unit">DAYS</span></div>
-        <div class="bar"><div class="fill" style="width: 40%"></div></div>
+    </div>
+
+    <div class="section-group">
+      <div class="section-label">
+        <span class="icon red-blink">■</span> COMMAND_CENTER // 创始人
       </div>
-      <div class="metric-card">
-        <div class="label">DATA_BLOCKS // 帖子</div>
-        <div class="value">84,201</div>
-        <div class="bar"><div class="fill" style="width: 90%"></div></div>
+      <div class="founder-wrap">
+        <div class="operator-card founder-card">
+          <div class="card-bg-text">FOUNDER</div>
+          <div class="op-header">
+            <div class="op-avatar-wrapper large">
+              <div class="op-avatar">
+                <img :src="founder.avatar" alt="AVATAR" @error="handleImgError">
+                <div class="scan-overlay"></div>
+              </div>
+              <div class="avatar-frame" :style="{ borderColor: '#D92323' }"></div>
+            </div>
+            <div class="op-status">
+              <span class="status-light online"></span> CONNECTED
+            </div>
+          </div>
+          <div class="op-info">
+            <div class="op-name">{{ founder.name }}</div>
+            <div class="op-role" :style="{ color: '#D92323' }">[{{ founder.role }}]</div>
+            <div class="op-desc">{{ founder.desc }}</div>
+          </div>
+          <div class="op-footer">
+            <span>ID: {{ founder.id }}</span>
+            <span>AUTH_LVL: {{ founder.level }}</span>
+            <span class="op-auth" :style="{ color: '#D92323' }">MASTER_KEY</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="team-section">
+    <div class="section-group">
       <div class="section-label">
-        <span class="icon">■</span> ACTIVE_OPERATORS // 开发团队
+        <span class="icon">■</span> CORE_OPERATIVES // 核心协助者
       </div>
-      
       <div class="operator-grid">
-        <div v-for="member in teamMembers" :key="member.id" class="operator-card">
+        <div v-for="member in coreOperatives" :key="member.id" class="operator-card">
           <div class="card-bg-text">{{ member.role }}</div>
           <div class="op-header">
-            <div class="op-avatar">
-              <img :src="member.avatar" alt="AVATAR" @error="handleImgError">
-              <div class="scan-overlay"></div>
+            <div class="op-avatar-wrapper">
+              <div class="op-avatar">
+                <img :src="member.avatar" alt="AVATAR" @error="handleImgError">
+                <div class="scan-overlay"></div>
+              </div>
+              <div class="avatar-frame" :style="{ borderColor: member.color }"></div>
             </div>
             <div class="op-status">
-              <span class="status-light online"></span> ONLINE
+              <span class="status-light" :class="{ online: member.online }"></span> 
+              {{ member.online ? 'CONNECTED' : 'STANDBY' }}
             </div>
           </div>
           <div class="op-info">
             <div class="op-name">{{ member.name }}</div>
-            <div class="op-role">[{{ member.role }}]</div>
+            <div class="op-role" :style="{ color: member.color }">[{{ member.role }}]</div>
             <div class="op-desc">{{ member.desc }}</div>
           </div>
           <div class="op-footer">
             <span>ID: {{ member.id }}</span>
-            <span>ACC_LVL: {{ member.level }}</span>
+            <span>AUTH_LVL: {{ member.level }}</span>
+            <span class="op-auth" :style="{ color: member.color }">DECODED</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-group">
+      <div class="section-label">
+        <span class="icon">■</span> AUXILIARY_NODES // 协力节点
+      </div>
+      <div class="aux-grid">
+        <div v-for="node in auxiliaryNodes" :key="node.name" class="aux-node">
+          <div class="aux-avatar">
+            <img :src="node.avatar" @error="handleImgError">
+          </div>
+          <div class="aux-body">
+            <div class="aux-name">{{ node.name }}</div>
+            <div class="aux-content">{{ node.content }}</div>
           </div>
         </div>
       </div>
@@ -76,18 +134,20 @@
 
     <div class="roadmap-section">
       <div class="section-label">
-        <span class="icon">■</span> EXECUTION_LOG // 发展历程
+        <span class="icon">■</span> EXECUTION_LOG // 历史进程
       </div>
       <div class="console-log">
-        <div v-for="(log, index) in historyLogs" :key="index" class="log-entry">
-          <span class="log-time">[{{ log.time }}]</span>
-          <span class="log-type" :class="log.type">{{ log.type }}</span>
-          <span class="log-msg">{{ log.msg }}</span>
-        </div>
-        <div class="log-entry blink">
-          <span class="log-time">[ NOW ]</span>
-          <span class="log-type INFO">WAITING</span>
-          <span class="log-msg">等待新的指令输入...</span>
+        <div class="log-scroll-area">
+          <div v-for="(log, index) in historyLogs" :key="index" class="log-entry">
+            <span class="log-time">{{ log.time }}</span>
+            <span class="log-type" :class="log.type">[{{ log.type }}]</span>
+            <span class="log-msg">{{ log.msg }}</span>
+          </div>
+          <div class="log-entry current">
+            <span class="log-time">NOW</span>
+            <span class="log-type INFO">[WAITING]</span>
+            <span class="log-msg">正在监听新的数据块输入...</span>
+          </div>
         </div>
       </div>
     </div>
@@ -96,56 +156,66 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+
+const uptimeDays = computed(() => {
+  const startDate = new Date('2025-05-20');
+  const today = new Date();
+  const diffTime = Math.abs(today - startDate);
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+});
+const uptimePercent = computed(() => Math.min((uptimeDays.value / 1095) * 100, 100));
 
 const handleImgError = (e) => {
-  // 简单的纯色占位符或默认图
-  e.target.src = 'https://via.placeholder.com/150/000000/FFFFFF/?text=USER'; 
+  e.target.src = 'https://api.dicebear.com/7.x/identicon/svg?seed=fallback'; 
 }
 
-// 模拟团队数据
-const teamMembers = ref([
+// 层级 1: 创始人
+const founder = ref({
+  id: 'DIR_001', 
+  name: '腾蛇', 
+  role: 'CHIEF_DIRECTOR', 
+  level: 'S', 
+  desc: '太初寰宇创始人。全栈开发、策划及底层协议制定，统筹社区发展方向。',
+  avatar: 'https://image2url.com/r2/default/images/1768615897703-a73ba8ec-6f15-4960-abe8-4f9252614b9a.png' 
+})
+
+// 层级 2: 核心协助者 (详细版)
+const coreOperatives = ref([
   { 
-    id: 'OP_001', 
-    name: 'Neo_Admin', 
-    role: 'ROOT_ADMIN', 
-    level: 5, 
-    desc: '系统架构师，负责维护太初核心代码库。',
-    avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Neo' 
+    id: 'GAME_001', name: '幽火', role: '游戏开发', color: '#00D1FF', level: 'A', online: true,
+    desc: '负责虚幻引擎/Unity 逻辑构建、关卡设计及核心战斗机制实现。',
+    avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=ghost' 
   },
   { 
-    id: 'OP_002', 
-    name: 'Trinity_Des', 
-    role: 'UI_ARCHITECT', 
-    level: 4, 
-    desc: '视觉接口设计师，构建人机交互界面。',
-    avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Trinity' 
+    id: 'DEV_002', name: '峰峰子', role: '视觉设计', color: '#6b27c4', level: 'A', online: true,
+    desc: '网站前端视觉师，交互设计与美术概念，摄影与后期制作。',
+    avatar: 'https://image2url.com/r2/default/images/1768440579620-518d987a-37b7-4f81-8406-5fa77e6d79c1.jpg' 
   },
   { 
-    id: 'OP_003', 
-    name: 'Morpheus_Dev', 
-    role: 'BACKEND_OPS', 
-    level: 4, 
-    desc: '数据流管理员，确保服务器连接稳定。',
-    avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Morpheus' 
+    id: 'PR_001', name: '星瞳', role: '自媒体运营', color: '#FF6B00', level: 'A', online: true,
+    desc: '品牌宣发与社群增长，负责自媒体矩阵运营、视频剪辑与商业对接。',
+    avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=star' 
   },
-   { 
-    id: 'OP_004', 
-    name: 'Cipher_Mod', 
-    role: 'COMM_OFFICER', 
-    level: 3, 
-    desc: '社区协议执行官，维护社区秩序与规则。',
-    avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Cipher' 
+  { 
+    id: 'OPS_001', name: '援受', role: '社区管理', color: '#f1c40f', level: 'B', online: true,
+    desc: '社区执行官。负责内容分发、用户反馈采集及社群秩序维护。',
+    avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=ops1' 
   }
 ])
 
-// 模拟历史日志
+// 层级 3: 外部协助者 (精简版)
+const auxiliaryNodes = ref([
+  { name: 'Alpha_Bot', content: '自动化运维与脚本支持', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=1' },
+  { name: 'Beta_Tester', content: '核心系统压力测试', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=2' },
+  { name: 'Cyber_Pen', content: '世界观文案与润色', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=3' },
+  { name: 'Pixel_Artist', content: '早期像素美术资源绘制', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=4' }
+])
+
 const historyLogs = ref([
   { time: '2025.05.20', type: 'INIT', msg: '太初寰宇系统内核启动 (Kernel Panic fixed)' },
-  { time: '2025.06.01', type: 'INFO', msg: '首批 100 名种子用户接入神经网络' },
-  { time: '2025.08.15', type: 'WARN', msg: '流量过载，服务器扩容至 2.0 架构' },
   { time: '2025.12.10', type: 'UPDATE', msg: '发布 "太虚坛" 模块，开启无限制交流协议' },
-  { time: '2026.01.01', type: 'SUCCESS', msg: '注册用户突破 10,000 节点' }
+  { time: '2026.01.01', type: 'SUCCESS', msg: '核心注册节点突破 10,000 关卡' }
 ])
 </script>
 
@@ -153,173 +223,107 @@ const historyLogs = ref([
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
 
 .about-industrial {
-  --red: #D92323; 
-  --black: #111111; 
-  --white: #F4F1EA;
-  --green: #239b56;
-  --yellow: #f1c40f;
-  --mono: 'JetBrains Mono', monospace; 
-  --heading: 'Anton', sans-serif;
+  --red: #D92323; --black: #0F0F0F; --white: #F4F1EA;
+  --green: #00FF41; --gray: #2A2A2A;
+  --mono: 'JetBrains Mono', monospace; --heading: 'Anton', sans-serif;
   
-  width: 100%;
-  font-family: var(--mono);
-  color: var(--black);
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
+  width: 100%; padding: 40px; box-sizing: border-box;
+  background: var(--white); font-family: var(--mono); color: var(--black);
+  display: flex; flex-direction: column; gap: 60px;
 }
 
-/* 1. 宣言终端 */
+.scanline-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.02) 50%);
+  background-size: 100% 4px; pointer-events: none; z-index: 100;
+}
+
+/* 1. 终端 */
 .manifesto-terminal {
-  background: #1e1e1e;
-  border: 2px solid var(--black);
-  box-shadow: 8px 8px 0 rgba(0,0,0,0.2);
-  color: #ddd;
-  overflow: hidden;
+  background: #121212; border: 3px solid var(--black); box-shadow: 10px 10px 0 var(--black); color: #eee;
 }
 .term-header {
-  background: #333;
-  padding: 8px 15px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid #000;
+  background: var(--gray); padding: 10px 15px; border-bottom: 2px solid #000;
+  display: flex; align-items: center; justify-content: space-between;
 }
-.dot { width: 10px; height: 10px; border-radius: 50%; }
-.red { background: #ff5f56; }
-.yellow { background: #ffbd2e; }
-.green { background: #27c93f; }
-.title { margin-left: 10px; font-size: 0.8rem; opacity: 0.7; }
+.dots { display: flex; gap: 8px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; }
+.red { background: #ff5f56; } .yellow { background: #ffbd2e; } .green { background: #27c93f; }
+.status-tag { font-size: 0.6rem; background: var(--red); color: white; padding: 2px 5px; }
+.term-body { padding: 30px; }
+.code-block { margin: 15px 0; padding-left: 20px; border-left: 2px solid var(--gray); font-size: 0.9rem; }
+.comment { color: #6a9955; } .var { color: #569cd6; } .func { color: #dcdcaa; } .key { color: #c586c0; } .str { color: #ce9178; }
+.typing-container { color: var(--green); margin-top: 20px; font-weight: bold; }
+.cursor { animation: blink 0.8s infinite; }
 
-.term-body { padding: 20px; font-size: 0.9rem; line-height: 1.6; }
-.comment { color: #6a9955; }
-.code-block { margin: 15px 0; padding-left: 15px; border-left: 2px solid #555; }
-.var { color: #569cd6; }
-.func { color: #dcdcaa; }
-.key { color: #c586c0; }
-.str { color: #ce9178; }
+/* 2. 指标 */
+.metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.metric-card { border: 3px solid var(--black); background: white; padding: 20px; }
+.metric-card.highlight { background: var(--black); color: var(--white); }
+.metric-card .label { font-size: 0.7rem; font-weight: bold; margin-bottom: 5px; }
+.metric-card .value { font-family: var(--heading); font-size: 2.5rem; line-height: 1; }
+.metric-card .unit { font-size: 0.8rem; opacity: 0.6; }
+.metric-card .bar { height: 6px; background: #eee; margin-top: 15px; overflow: hidden; }
+.metric-card.highlight .bar { background: #333; }
+.metric-card .fill { height: 100%; background: var(--red); transition: width 1.5s ease; }
 
-.typing-cursor { color: var(--white); margin-top: 15px; font-weight: bold; }
-.blink { animation: blink 1s infinite; }
-
-/* 2. 核心指标 */
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-.metric-card {
-  border: 2px solid var(--black);
-  background: var(--white);
-  padding: 15px;
-  box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
-  position: relative;
-}
-.metric-card .label { font-size: 0.75rem; font-weight: bold; color: #666; margin-bottom: 5px; }
-.metric-card .value { font-family: var(--heading); font-size: 2.5rem; line-height: 1; color: var(--black); }
-.metric-card .unit { font-size: 1rem; color: #888; font-family: var(--mono); }
-.metric-card .bar { height: 4px; background: #ddd; margin-top: 10px; width: 100%; }
-.metric-card .fill { height: 100%; background: var(--red); }
-
-/* 3. 团队成员 (操作员) */
+/* 3. 成员通用卡片 */
 .section-label {
-  font-family: var(--heading); font-size: 1.5rem; margin-bottom: 20px;
-  display: flex; align-items: center; gap: 10px;
-  border-bottom: 2px solid var(--black); padding-bottom: 5px;
+  font-family: var(--heading); font-size: 1.8rem; margin-bottom: 25px;
+  border-bottom: 3px solid var(--black); padding-bottom: 10px; display: flex; align-items: center; gap: 10px;
 }
-.icon { color: var(--red); font-size: 0.8em; }
+.operator-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
+.operator-card { border: 3px solid var(--black); background: white; position: relative; overflow: hidden; transition: 0.2s; }
+.operator-card:hover { transform: translate(-4px, -4px); box-shadow: 8px 8px 0 var(--black); }
 
-.operator-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-}
-.operator-card {
-  border: 2px solid var(--black);
-  background: #fff;
-  padding: 0;
-  display: flex; flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.2s;
-}
-.operator-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 6px 6px 0 var(--red);
-}
+/* 创始人特化 */
+.founder-card { max-width: 500px; margin: 0 auto; border-width: 4px; box-shadow: 12px 12px 0 var(--black); }
+.op-avatar-wrapper.large .op-avatar { width: 120px; height: 120px; }
+.op-avatar-wrapper.large .avatar-frame { width: 120px; height: 120px; }
 
-.card-bg-text {
-  position: absolute; top: -10px; right: -10px;
-  font-family: var(--heading); font-size: 4rem;
-  color: rgba(0,0,0,0.03); pointer-events: none; z-index: 0;
-  white-space: nowrap;
-}
-
-.op-header {
-  padding: 20px;
-  border-bottom: 2px solid var(--black);
-  background: #f9f9f9;
-  display: flex; justify-content: space-between; align-items: flex-start;
-  position: relative; z-index: 1;
-}
-.op-avatar {
-  width: 80px; height: 80px;
-  border: 2px solid var(--black);
-  background: #000;
-  position: relative;
-  overflow: hidden;
-}
+.card-bg-text { position: absolute; top: -10px; right: -10px; font-family: var(--heading); font-size: 4rem; color: rgba(0,0,0,0.03); pointer-events: none; }
+.op-header { padding: 20px; border-bottom: 2px solid var(--black); display: flex; justify-content: space-between; background: #fdfdfd; }
+.op-avatar-wrapper { position: relative; }
+.op-avatar { width: 80px; height: 80px; border: 2px solid var(--black); background: #000; z-index: 2; position: relative; overflow: hidden; }
 .op-avatar img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); }
-.scan-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(to bottom, transparent 50%, rgba(0,255,0,0.1) 50%);
-  background-size: 100% 4px;
-  pointer-events: none;
-}
-.op-status {
-  font-size: 0.7rem; font-weight: bold;
-  border: 1px solid var(--black); padding: 2px 6px; background: #fff;
-  display: flex; align-items: center; gap: 5px;
-}
-.status-light { width: 6px; height: 6px; border-radius: 50%; background: #ccc; }
-.status-light.online { background: var(--green); box-shadow: 0 0 4px var(--green); }
+.avatar-frame { position: absolute; top: 4px; left: 4px; width: 80px; height: 80px; border: 2px solid; z-index: 1; }
 
-.op-info { padding: 20px; flex: 1; position: relative; z-index: 1; }
-.op-name { font-family: var(--heading); font-size: 1.5rem; line-height: 1; margin-bottom: 5px; }
-.op-role { font-size: 0.8rem; font-weight: bold; color: var(--red); margin-bottom: 10px; }
+.op-status { font-size: 0.65rem; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+.status-light { width: 8px; height: 8px; border-radius: 50%; background: #555; }
+.status-light.online { background: var(--green); box-shadow: 0 0 5px var(--green); }
+
+.op-info { padding: 20px; min-height: 120px; }
+.op-name { font-family: var(--heading); font-size: 1.8rem; margin-bottom: 4px; }
+.op-role { font-size: 0.75rem; font-weight: bold; margin-bottom: 10px; }
 .op-desc { font-size: 0.85rem; color: #555; line-height: 1.4; }
+.op-footer { background: var(--black); color: #888; padding: 8px 15px; font-size: 0.6rem; display: flex; justify-content: space-between; }
 
-.op-footer {
-  background: var(--black); color: var(--white);
-  padding: 8px 15px;
-  font-size: 0.7rem;
-  display: flex; justify-content: space-between;
+/* 4. 协力节点 (精简网格) */
+.aux-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+.aux-node {
+  display: flex; gap: 15px; padding: 12px; border: 2px solid var(--black); background: white;
+  transition: 0.2s; align-items: center;
 }
+.aux-node:hover { background: var(--black); color: white; transform: skewX(-2deg); }
+.aux-avatar { width: 50px; height: 50px; border: 1px solid var(--black); overflow: hidden; flex-shrink: 0; }
+.aux-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.aux-body { display: flex; flex-direction: column; overflow: hidden; }
+.aux-name { font-family: var(--heading); font-size: 1.2rem; line-height: 1; margin-bottom: 4px; }
+.aux-content { font-size: 0.75rem; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* 4. 发展路线 (Console Log) */
-.console-log {
-  background: #f4f4f4;
-  border: 2px solid var(--black);
-  padding: 20px;
-  font-size: 0.85rem;
-  font-family: 'Consolas', monospace;
-}
-.log-entry { margin-bottom: 8px; display: flex; gap: 10px; }
-.log-time { color: #888; }
-.log-type { font-weight: bold; width: 60px; }
-.log-type.INIT { color: #9C27B0; }
-.log-type.INFO { color: #2196F3; }
-.log-type.WARN { color: #FF9800; }
-.log-type.UPDATE { color: #00BCD4; }
-.log-type.SUCCESS { color: #4CAF50; }
-.log-msg { color: #333; flex: 1; }
+/* 5. 日志 */
+.console-log { background: #1a1a1a; border: 3px solid var(--black); padding: 5px; }
+.log-scroll-area { max-height: 250px; overflow-y: auto; padding: 15px; }
+.log-entry { margin-bottom: 8px; font-size: 0.8rem; color: #ccc; display: flex; gap: 10px; border-bottom: 1px solid #222; }
+.log-time { color: #555; }
+.log-type.SUCCESS { color: var(--green); }
+.current { animation: blink 2s infinite; }
 
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.red-blink { animation: blink 1.5s infinite; color: var(--red) !important; }
 
-/* 响应式 */
 @media (max-width: 768px) {
   .metrics-grid { grid-template-columns: 1fr; }
-  .operator-grid { grid-template-columns: 1fr; }
-  .manifesto-terminal { font-size: 0.8rem; }
+  .aux-grid { grid-template-columns: 1fr; }
 }
 </style>

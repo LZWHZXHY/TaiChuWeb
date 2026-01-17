@@ -207,7 +207,8 @@ import BaseProfileSection from './BaseProfileSection.vue'
 import TagsSection from './TagsSection.vue'
 import CommsSection from './CommsSection.vue'
 import LinksSection from './LinksSection.vue'
-
+import { useAuthStore } from '@/utils/auth' // 确保路径正确
+const authStore = useAuthStore()
 onMounted(() => {
   document.body.style.overflow = 'hidden'
 })
@@ -221,7 +222,7 @@ const newTagInput = ref('')
 
 // --- Form Data ---
 const form = reactive({
-  avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
+  avatar: authStore.user?.logo || 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix',
   nickname: '峰峰子',
   role: 'Visual Eng.',
   bio: 'System initialization complete. Waiting for input...',

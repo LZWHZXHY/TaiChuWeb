@@ -6,6 +6,22 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const token = ref(null)
   const isAuthenticated = ref(false)
+  const userID = ref(null)
+
+  const fetchUserID = async (id) => {
+      try {
+        console.log(`🔍 正在同步 UserData 状态，查询 ID: ${id}`)
+        const response = await apiClient.get(`/Profile/get-id/${id}`)
+        
+        if (response.data.success) {
+          userID.value = response.data.id
+          console.log('✅ UserData ID 同步成功:', userID.value)
+        }
+      } catch (error) {
+        console.error('❌ 获取 UserData ID 失败:', error)
+      }
+    }
+
 
   // 清理认证状态的方法
   const clearAuthState = () => {
@@ -39,7 +55,7 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = userData
       token.value = storedToken
       isAuthenticated.value = true
-      
+      fetchUserID(userData.id)
       console.log('✅ 认证状态检查成功')
       console.log('👤 用户:', userData.username)
       
@@ -80,7 +96,9 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.setItem('user', JSON.stringify(userData))
         localStorage.setItem('auth_token', authToken)
         
-        console.log('✅ 登录成功，状态已更新')
+        await fetchUserID(userData.id) 
+
+        console.log('✅ 登录成功，userID 已同步:', userID.value)
         console.log('👤 用户:', userData.username)
         
         return { success: true, user: userData }
@@ -156,10 +174,12 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     token,
     isAuthenticated,
+    userID,
     login,
     logout,
     checkAuth,
     sendVerificationCode,
-    register
+    register,
+    fetchUserID
   }
 })

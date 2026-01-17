@@ -39,13 +39,11 @@
       <input type="text" v-model="localNickname" class="cyber-input bold" />
     </div>
 
-    <!-- 新增性别输入容器 -->
     <div class="form-group">
       <label>性别 // GENDER</label>
       <input type="text" v-model="localGender" class="cyber-input bold" />
     </div>
 
-    <!-- 上传弹窗 -->
     <transition name="fade">
       <div v-if="uploadModal.visible" class="upload-modal-overlay">
         <div class="upload-terminal-window">
@@ -59,6 +57,7 @@
               <p>> ANALYZING BIOMETRIC DATA...</p>
               <p v-if="uploadModal.progress > 30" class="success">> FORMAT CHECK: PASSED</p>
               <p v-if="uploadModal.progress > 60">> COMPRESSING STREAM...</p>
+              <p v-if="uploadModal.isUploading" class="success">> SYNCING WITH CLOUD STORAGE...</p>
             </div>
 
             <div class="preview-stage">
@@ -69,10 +68,18 @@
             <div class="progress-bar-container">
               <div class="progress-fill" :style="{ width: uploadModal.progress + '%' }"></div>
             </div>
-            <div class="progress-text">{{ uploadModal.progress }}% // TRANSFERRING</div>
+            <div class="progress-text">{{ uploadModal.progress }}% // {{ uploadModal.isUploading ? 'UPLOADING' : 'READY' }}</div>
 
-            <button v-if="uploadModal.progress === 100" class="sys-btn primary full" @click="confirmUpload">
+            <button 
+              v-if="uploadModal.progress === 100 && !uploadModal.isUploading" 
+              class="sys-btn primary full" 
+              @click="confirmUpload"
+            >
               [ EXECUTE ] APPLY CHANGES
+            </button>
+            
+            <button v-if="uploadModal.isUploading" class="sys-btn primary full" disabled style="opacity: 0.5;">
+              TRANSMITTING...
             </button>
           </div>
         </div>
@@ -83,8 +90,10 @@
 
 <script setup>
 import { ref, reactive, watch } from 'vue'
+import { useAuthStore } from '@/utils/auth' // 导入您的认证 Store
+import apiClient from '@/utils/api'           // 导入 API 客户端
 
-// Props - 新增 gender 字段
+// Props
 const props = defineProps({
   avatar: {
     type: String,
@@ -100,88 +109,141 @@ const props = defineProps({
   }
 })
 
-// Emits - 新增 update:gender 事件
+// Emits
 const emit = defineEmits(['update:avatar', 'update:nickname', 'update:gender'])
 
-// 本地昵称（双向绑定）
+// 初始化 Store
+const authStore = useAuthStore()
+
+// 本地数据双向绑定 (Nickname)
 const localNickname = ref(props.nickname)
 watch(localNickname, (val) => {
   emit('update:nickname', val)
 })
 
-// 本地性别（双向绑定 - 新增）
+// 本地数据双向绑定 (Gender)
 const localGender = ref(props.gender)
 watch(localGender, (val) => {
   emit('update:gender', val)
 })
 
-// File Upload State
+// 上传状态管理
 const fileInput = ref(null)
 const uploadModal = reactive({
   visible: false,
   progress: 0,
   tempImg: null,
-  file: null
+  file: null,
+  isUploading: false 
 })
 
-// 触发上传
+// 触发文件选择框
 const triggerUpload = () => {
+  if (uploadModal.isUploading) return
   fileInput.value.click()
 }
 
-// 处理文件选择
+// 处理文件选择逻辑
 const handleFileChange = (event) => {
   const file = event.target.files[0]
   if (!file) return
 
-  // 大小限制 5MB
   if (file.size > 5 * 1024 * 1024) {
     alert('SYSTEM_ERROR: FILE_SIZE_EXCEEDED (MAX 5MB)')
     return
   }
 
-  // 创建预览并打开弹窗
   const reader = new FileReader()
   reader.onload = (e) => {
-    uploadModal.tempImg = e.target.result
-    uploadModal.file = file
+    uploadModal.tempImg = e.target.result 
+    uploadModal.file = file              
     uploadModal.visible = true
     uploadModal.progress = 0
-    simulateUpload()
+    uploadModal.isUploading = false
+    simulateInitialProgress()
   }
   reader.readAsDataURL(file)
-
-  // 重置input，允许重新选择同一文件
   event.target.value = ''
 }
 
-// 模拟上传进度
-const simulateUpload = () => {
+const simulateInitialProgress = () => {
   const interval = setInterval(() => {
     if (uploadModal.progress < 100) {
-      uploadModal.progress += Math.floor(Math.random() * 15)
+      uploadModal.progress += Math.floor(Math.random() * 20)
       if (uploadModal.progress > 100) uploadModal.progress = 100
     } else {
       clearInterval(interval)
     }
-  }, 200)
+  }, 100)
 }
 
-// 确认上传
-const confirmUpload = () => {
-  emit('update:avatar', uploadModal.tempImg)
-  uploadModal.visible = false
+/**
+ * 核心：确认上传并实现持久化
+ */
+// IdentitySection.vue 中的 confirmUpload 函数
+const confirmUpload = async () => {
+  if (!uploadModal.file || uploadModal.isUploading) return
+
+  const currentUserId = authStore.user?.id
+  if (!currentUserId) {
+    alert('CRITICAL_ERROR: 无法获取 UID，请重新登录')
+    return
+  }
+
+  uploadModal.isUploading = true
+  uploadModal.progress = 0 
+
+  try {
+    const formData = new FormData()
+    formData.append('file', uploadModal.file)
+    formData.append('userId', currentUserId)
+
+    const response = await apiClient.post('/Profile/upload-avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (progressEvent) => {
+        uploadModal.progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+      }
+    })
+
+    if (response.data && response.data.success) {
+      const newAvatarUrl = response.data.url;
+
+      // --- 👇 核心修改：确保切换页面不还原 👇 ---
+      
+      // 1. 修改父组件当前显示的变量
+      emit('update:avatar', newAvatarUrl)
+      
+      // 2. 修改全局 Store 里的数据
+      if (authStore.user) {
+        authStore.user.logo = newAvatarUrl;
+        
+        // 3. 修改本地持久化缓存（这是刷新页面也不还原的关键）
+        localStorage.setItem('user', JSON.stringify(authStore.user));
+      }
+      
+      // --- 👆 修改结束 👆 ---
+
+      setTimeout(() => {
+        uploadModal.visible = false
+        uploadModal.isUploading = false
+      }, 600)
+    }
+  } catch (error) {
+    console.error('上传失败:', error)
+    uploadModal.isUploading = false
+  }
 }
 
-// 取消上传
 const cancelUpload = () => {
+  if (uploadModal.isUploading) return 
   uploadModal.visible = false
   uploadModal.tempImg = null
+  uploadModal.file = null
 }
 </script>
 
 <style scoped>
-/* 身份识别模块样式 */
+/* 保持所有 CSS 样式不动 */
 .monitor-wrapper {
   display: flex;
   gap: 25px;
@@ -286,7 +348,6 @@ const cancelUpload = () => {
   color: #ffffff;
 }
 
-/* 上传弹窗样式 */
 .upload-modal-overlay {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -362,7 +423,6 @@ const cancelUpload = () => {
 
 .sys-btn.full { width: 100%; padding: 12px; margin-top: 10px; }
 
-/* 通用样式 */
 .form-section { margin-bottom: 50px; }
 .section-header { display: flex; align-items: baseline; border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 20px; }
 .sec-num { font-size: 2.5rem; font-weight: bold; color: #ccc; margin-right: 15px; line-height: 0.8; font-family: 'Noto Sans SC', sans-serif; }
@@ -372,7 +432,6 @@ const cancelUpload = () => {
 .cyber-input, .cyber-textarea { border: 1px solid #999; background: #fff; padding: 10px; font-family: 'Noto Sans SC', sans-serif; font-size: 0.9rem; outline: none; transition: 0.2s; width: 100%; display: block; }
 .cyber-input:focus, .cyber-textarea:focus { border-color: #D92323; box-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
 
-/* 过渡动画 */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
