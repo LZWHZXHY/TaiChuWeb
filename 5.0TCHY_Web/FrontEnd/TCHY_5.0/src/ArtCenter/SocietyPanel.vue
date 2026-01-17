@@ -429,9 +429,9 @@ function applyJoin(s) { if (s?.url) window.open(s.url, '_blank') }
 .card-desc { margin-left: 10px; flex: 1; display: flex; flex-direction: column; }
 .desc-content {
   font-size: 0.8rem; color: #555; line-height: 1.5;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.desc-content.expanded { -webkit-line-clamp: unset; display: block; }
+.desc-content.expanded { -webkit-line-clamp: unset; line-clamp: unset; display: block; }
 .expand-btn {
   background: none; border: none; color: var(--black);
   font-size: 0.65rem; font-weight: bold; cursor: pointer;
