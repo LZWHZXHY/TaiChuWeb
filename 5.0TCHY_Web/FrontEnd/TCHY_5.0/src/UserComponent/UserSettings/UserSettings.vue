@@ -23,7 +23,6 @@
     <div class="main-layout">
       <main class="content-split">
         <div class="content-col left-col custom-scroll">
-          <caption></caption>
 
           <!-- 引入拆分后的子组件 -->
           <IdentitySection 

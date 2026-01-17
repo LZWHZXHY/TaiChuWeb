@@ -130,8 +130,11 @@
         </div>
       </aside>
 
-      <div class="content-area">
+      <div class="content-area-left">
         <ProfileMain />
+      </div>
+      <div class="content-area-right">
+        <>
       </div>
     </div>
   </div>
@@ -410,7 +413,17 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 .ach-item.locked { opacity: 0.5; filter: grayscale(1); }
 
 /* 内容区域样式（保留原有） */
-.content-area {
+.content-area-left {
+  display: flex; flex-direction: column;
+  background: var(--white);
+  border: 0.1px solid var(--black);
+  box-shadow: 10px 10px 0 rgba(0,0,0,0.1);
+  overflow: hidden;
+  height: 97%;
+  margin-top: 1%;
+  width: 40%;
+}
+.content-area-right {
   display: flex; flex-direction: column;
   background: var(--white);
   border: 0.1px solid var(--black);

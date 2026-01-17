@@ -238,17 +238,17 @@ const goToBlogDetail = (id) => {
 .viewport { flex: 1; overflow-y: auto; padding: 30px; position: relative; scroll-behavior: smooth; }
 
 /* 筛选条 */
-.section-toolbar { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; font-size: 0.85rem; border-bottom: 2px solid #eee; padding-bottom: 10px; font-family: var(--sans); font-weight: bold; }
+.section-toolbar { display: flex; align-items: center; gap: 15px; margin-bottom: 0px; font-size: 0.85rem; border-bottom: 2px solid #eee; padding-bottom: 10px; font-family: var(--sans); font-weight: bold; }
 .filter-chips { display: flex; gap: 10px; }
 .chip { border: 1px solid var(--black); padding: 4px 12px; cursor: pointer; transition: 0.2s; font-size: 0.8rem; user-select: none; }
 .chip.active, .chip:hover { background: var(--black); color: var(--white); }
 .chip:active { transform: scale(0.95); }
 
 /* --- Tab: Works --- */
-.works-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 3fr)); gap: 20px; margin-bottom: 30px; }
+.works-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 20px; margin-bottom: 1%; padding-top: 1%; max-height: 350px;overflow-y: auto;}
 .work-item { border: 2px solid var(--black); transition: transform 0.2s; cursor: pointer; background: #4b4a4a;height:100% ;}
 .work-item:hover { transform: translateY(-5px); box-shadow: 6px 6px 0 var(--red); }
-.img-wrapper { height: 70%; overflow: hidden; position: relative; border-bottom: 2px solid var(--black); }
+.img-wrapper { height: 68%; overflow: hidden; position: relative; border-bottom: 2px solid var(--black); }
 .img-wrapper img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(30%); transition: 0.3s; }
 .work-item:hover img { filter: grayscale(0) contrast(1.1); transform: scale(1.05); }
 .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; color: var(--white); opacity: 0; transition: 0.2s; font-weight: bold; font-family: var(--sans); }
@@ -258,11 +258,15 @@ const goToBlogDetail = (id) => {
 .w-stats { display: flex; justify-content: space-between; font-size: 0.75rem; color: #666; font-family: var(--mono); }
 .empty-state { width: 100%; grid-column: 1 / -1; padding: 40px; text-align: center; color: #999; border: 2px dashed #ddd; font-family: var(--mono); }
 
+
+.view-works{
+  max-height: 60%;
+}
 /* 新增留言板容器样式 */
 .guestbook-container {
   width: 100%;
   margin-top: 20px;
-  padding: 20px;
+  padding: 0px;
 }
 
 /* --- Tab: Blogs --- */

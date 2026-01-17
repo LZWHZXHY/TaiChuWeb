@@ -68,7 +68,6 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue'
 
 // 定义Props接收用户数据
 const props = defineProps({
