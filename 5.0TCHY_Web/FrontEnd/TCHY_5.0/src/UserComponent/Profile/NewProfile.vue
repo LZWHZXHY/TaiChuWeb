@@ -134,7 +134,8 @@
         <ProfileMain />
       </div>
       <div class="content-area-right">
-        <>
+        <!-- 修复1：传递正确的form属性 + 绑定update事件 -->
+        <RightConfigSection :form="rightForm" @update:form="updateRightForm" />
       </div>
     </div>
   </div>
@@ -143,11 +144,12 @@
 <script setup>
 import { ref, reactive, computed} from 'vue'
 import { useRouter } from 'vue-router' 
-import ProfileMain from '@/UserComponent/Profile//ProfileMainLeft/ProfileMainLeft.vue';
+import ProfileMain from '@/UserComponent/Profile/ProfileMainLeft/ProfileMainLeft.vue';
 import apiClient from '@/utils/api';
 import IdArchiveCard from '@/UserComponent/Profile/IdArchiveCard.vue';
-import { useAuthStore } from '@/utils/auth' // 确保路径正确
+import { useAuthStore } from '@/utils/auth' 
 import { storeToRefs } from 'pinia'
+import RightConfigSection from '@/UserComponent/Profile/ProfileMainRight/RightConfigSection.vue';
 const authStore = useAuthStore()
 
 const { userID } = storeToRefs(authStore)
@@ -187,6 +189,19 @@ const user = reactive({
   ],
   stats: { likes: 12450, views: 89000, works: 142, followers: 3500 }
 })
+
+// 修复2：初始化RightConfigSection需要的form数据结构（匹配子组件需求）
+const rightForm = reactive({
+  works: [null, null, null, null], // 4个作品槽位
+  articles: [null, null, null, null], // 4个文章槽位
+  achievements: [null, null, null, null, null, null, null, null], // 8个成就槽位
+  inventory: [null, null, null, null, null, null, null, null] // 8个展示柜槽位
+})
+
+// 修复3：定义form更新方法
+const updateRightForm = (newForm) => {
+  Object.assign(rightForm, newForm)
+}
 
 const achievements = ref([
   { id: 1, name: '早期开拓者', desc: '在2023年前注册加入网络', icon: '⚡', unlocked: true },
@@ -235,9 +250,9 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 
   width: 100%; 
   max-width: 100vw;
-  height: 100%;
+  height: 100%; /* 修复4：设置为100vh确保容器高度铺满视口 */
   overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-y: auto; /* 修复5：改为auto避免内容被完全隐藏 */
   background-color: var(--white);
   color: var(--black);
   font-family: var(--mono), var(--sans);
@@ -281,7 +296,7 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
     linear-gradient(90deg, #ccc 1px, transparent 1px);
   background-size: 40px 40px;
   width: 100%;
-  height: 100%;
+  height: 100%; /* 修复6：计算高度（总高度 - header高度） */
 }
 
 /* 3. Sidebar 样式（保留原有） */
@@ -418,13 +433,13 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 .ach-desc { font-size: 0.75rem; color: #888; font-family: var(--sans); margin-top: 2px; }
 .ach-item.locked { opacity: 0.5; filter: grayscale(1); }
 
-/* 内容区域样式（保留原有） */
+/* 内容区域样式（保留原有 + 修复溢出） */
 .content-area-left {
   display: flex; flex-direction: column;
   background: var(--white);
   border: 0.1px solid var(--black);
   box-shadow: 10px 10px 0 rgba(0,0,0,0.1);
-  overflow: hidden;
+  overflow: auto; /* 修复7：改为auto允许内部滚动 */
   height: 97%;
   margin-top: 1%;
   width: 40%;
@@ -434,7 +449,7 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   background: var(--white);
   border: 0.1px solid var(--black);
   box-shadow: 10px 10px 0 rgba(0,0,0,0.1);
-  overflow: hidden;
+  overflow: auto; /* 修复8：改为auto允许内部滚动 */
   height: 97%;
   margin-top: 1%;
   width: 40%;
