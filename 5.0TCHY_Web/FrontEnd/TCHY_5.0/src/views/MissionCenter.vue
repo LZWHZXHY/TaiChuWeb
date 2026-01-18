@@ -10,13 +10,29 @@
             <span class="text-row outline">委托中心</span>
           </h1>
         </div>
+        
         <div class="user-badge">
           <div class="avatar-frame">
             <img :src="myUser.avatar" />
           </div>
           <div class="info-col">
-            <span class="name">{{ myUser.name }}</span>
-            <span class="rank">HUNTER_RANK: <span class="highlight">S</span></span>
+            <div class="name-row">
+              <span class="name">{{ myUser.name }}</span>
+              <span class="title-tag">[{{ userStatus.title }}]</span>
+            </div>
+            
+            <div class="status-row">
+              <span class="rank">LV.{{ userStatus.level }}</span>
+              <span class="gold">💰 {{ userStatus.points }} G</span>
+            </div>
+
+            <div class="exp-bar-box">
+              <div 
+                class="exp-fill" 
+                :style="{ width: userStatus.expPercent + '%' }"
+              ></div>
+            </div>
+            <span class="exp-num">{{ userStatus.currentExp }} / {{ userStatus.nextLevelExp }} XP</span>
           </div>
         </div>
       </div>
@@ -97,6 +113,14 @@
           <div v-else-if="task.status === 3" class="status-bar completed">
             /// MISSION ACCOMPLISHED ///
           </div>
+
+          <button 
+            v-if="isMyPublishedTask(task) && task.status === 2"
+            class="action-btn admin-btn"
+            @click="handleApprove(task)"
+          >
+            [ADMIN] APPROVE // 批准
+          </button>
         </div>
       </div>
 
@@ -129,104 +153,112 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import apiClient from '@/utils/api';
+import { useAuthStore } from '@/utils/auth';
 
-// --- 模拟当前用户 ---
-const myUser = {
-  id: 101,
-  name: 'ShadowWalker',
-  avatar: '/土豆.jpg'
-};
-
-// --- 模拟任务数据 (7个等级) ---
-const missions = ref([
-  {
-    id: 9001,
-    title: '讨伐：核心数据库溢出',
-    desc: '系统核心出现严重内存泄漏，导致服务器频繁重启。找出原因并修复。',
-    rank: 'SSS', // 1. 神话
-    type: 'FATAL_ERROR',
-    reward: 50000,
-    publisher: 'SYSTEM_CORE',
-    status: 0,
-    assignee: null
-  },
-  {
-    id: 9002,
-    title: '护送：新版架构图',
-    desc: '将 V5.0 架构图安全传输至前端资源库，确保无损压缩。',
-    rank: 'SS', // 2. 传说
-    type: 'ARCHITECT',
-    reward: 20000,
-    publisher: 'CTO_OFFICE',
-    status: 0,
-    assignee: null
-  },
-  {
-    id: 9003,
-    title: '猎杀：高并发死锁进程',
-    desc: '一个死锁进程正在阻塞交易系统，强制结束它并优化锁逻辑。',
-    rank: 'S', // 3. 史诗
-    type: 'BACKEND',
-    reward: 8000,
-    publisher: 'DBA_MASTER',
-    status: 1, // 别人接了
-    assignee: { id: 999, name: 'CodeSlayer', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix' }
-  },
-  {
-    id: 9004,
-    title: '重构：评论区组件',
-    desc: '将旧版评论组件重构为递归树组件，支持无限层级。',
-    rank: 'A', // 4. 精英
-    type: 'FRONTEND',
-    reward: 5000,
-    publisher: 'UI_LEADER',
-    status: 1, // 我接了
-    assignee: { id: 101, name: 'ShadowWalker', avatar: '/土豆.jpg' }
-  },
-  {
-    id: 9005,
-    title: '绘制：活动宣传 Banner',
-    desc: '设计本周“黑客松”活动的宣传海报，风格要求赛博朋克。',
-    rank: 'B', // 5. 资深
-    type: 'DESIGN',
-    reward: 2000,
-    publisher: 'OPERATION',
-    status: 0,
-    assignee: null
-  },
-  {
-    id: 9006,
-    title: '编写：API 接口文档',
-    desc: '为 MissionController 的接口补充 Swagger 注释。',
-    rank: 'C', // 6. 普通
-    type: 'DOCS',
-    reward: 800,
-    publisher: 'QA_TEAM',
-    status: 0,
-    assignee: null
-  },
-  {
-    id: 9007,
-    title: '清理：过期日志文件',
-    desc: '服务器磁盘报警，清理 30 天前的 Log 文件。',
-    rank: 'D', // 7. 新手
-    type: 'MAINTENANCE',
-    reward: 200,
-    publisher: 'JANITOR_BOT',
-    status: 2, // 审核中
-    assignee: { id: 101, name: 'ShadowWalker', avatar: '/土豆.jpg' }
-  }
-]);
-
-// --- 状态控制 ---
+const authStore = useAuthStore();
+const missions = ref([]);
 const showModal = ref(false);
 const currentTask = ref(null);
 const submitContent = ref('');
+const loading = ref(false);
+
+// 🔥 用户资产状态
+const userStatus = ref({
+  level: 1,
+  currentExp: 0,
+  nextLevelExp: 100,
+  gold: 0,
+  reputation: 100,
+  title: 'Loading...',
+  expPercent: 0
+});
+
+// 当前登录用户信息
+const myUser = computed(() => {
+  return {
+    id: authStore.user?.id,
+    name: authStore.user?.username || 'GUEST',
+    avatar: fixAvatar(authStore.user?.avatar)
+  };
+});
+
+// --- API 1: 获取用户资产 ---
+// --- API 1: 获取用户资产 ---
+const fetchUserStatus = async () => {
+  try {
+    // 确保你的后端 Controller 路由是 api/Profile/me 还是 api/UserStatus/me
+    // 根据你上一步发的后端代码，应该是 '/Profile/me'
+    const res = await apiClient.get('/Profile/me'); 
+    
+    if(res.data.success) {
+      const serverData = res.data.data;
+      
+      // 🔥 核心修复：手动映射大小写 🔥
+      userStatus.value = {
+        level: serverData.Level,            // 后端 Level -> 前端 level
+        currentExp: serverData.CurrentExp,  // 后端 CurrentExp -> 前端 currentExp
+        nextLevelExp: serverData.NextLevelExp,
+        points: serverData.Points,
+        reputation: serverData.Reputation,
+        title: serverData.Title,
+        expPercent: serverData.ExpPercent
+      };
+    }
+  } catch(e) {
+    console.error("获取资产失败", e);
+  }
+};
+
+// --- API 2: 获取任务列表 ---
+const fetchMissions = async () => {
+  loading.value = true;
+  try {
+    const res = await apiClient.get('/Mission');
+    if(res.data.success) {
+      // 后端 PascalCase -> 前端 camelCase 映射
+      missions.value = res.data.data.map(task => ({
+        id: task.Id,
+        title: task.Title,
+        desc: task.Description,
+        rank: task.Rank || 'D',
+        type: task.Type || 'NORMAL',
+        reward: task.Reward || 0,
+        status: task.Status,
+        publisher: task.Publisher, // 这是一个字符串(名字)
+        
+        assignee: task.Assignee ? {
+          id: task.Assignee.Id,
+          name: task.Assignee.Name,
+          avatar: fixAvatar(task.Assignee.Avatar)
+        } : null
+      }));
+    }
+  } catch(e) {
+    console.error("获取任务失败", e);
+  } finally {
+    loading.value = false;
+  }
+};
 
 // --- 辅助逻辑 ---
+const fixAvatar = (url) => {
+  if (!url) return '/土豆.jpg';
+  if (url.startsWith('http')) return url;
+  const BASE_URL = 'https://bianyuzhou.com'; 
+  return `${BASE_URL}/uploads/${url.startsWith('/') ? url.substring(1) : url}`;
+};
+
 const isMyTask = (task) => {
-  return task.assignee && task.assignee.id === myUser.id;
+  return task.assignee && task.assignee.id === myUser.value.id;
+};
+
+// 判断是否是我发布的任务 (用于测试审核)
+const isMyPublishedTask = (task) => {
+  // 注意：真实场景应该用 ID 对比 (task.publisherId === myUser.value.id)
+  // 这里暂时用名字对比作为测试
+  return task.publisher === myUser.value.name;
 };
 
 const getStatusClass = (task) => {
@@ -235,26 +267,72 @@ const getStatusClass = (task) => {
 };
 
 // --- 交互动作 ---
-const handleAccept = (task) => {
+
+// 接取任务
+const handleAccept = async (task) => {
   if(!confirm(`[工会系统] 确认承接 ${task.rank} 级任务？\n高难度任务失败可能会降低信誉分。`)) return;
   
-  // 模拟接单
-  task.status = 1;
-  task.assignee = myUser;
+  try {
+    const res = await apiClient.post(`/Mission/accept/${task.id}`);
+    if(res.data.success) {
+      alert("接取成功！请尽快完成委托。");
+      fetchMissions(); // 刷新列表
+    }
+  } catch(e) {
+    alert(e.response?.data || "抢单失败，可能已被他人接取。");
+    fetchMissions(); 
+  }
 };
 
+// 打开提交弹窗
 const openSubmitModal = (task) => {
   currentTask.value = task;
   submitContent.value = '';
   showModal.value = true;
 };
 
-const confirmSubmit = () => {
-  if (!submitContent.value) return alert("报告内容不能为空");
-  const target = missions.value.find(m => m.id === currentTask.value.id);
-  if (target) target.status = 2; // 变成审核中
-  showModal.value = false;
+// 提交任务证明
+const confirmSubmit = async () => {
+  if (!submitContent.value.trim()) return alert("报告内容不能为空");
+  
+  try {
+    const res = await apiClient.post(`/Mission/submit/${currentTask.value.id}`, {
+      content: submitContent.value
+    });
+    
+    if(res.data.success) {
+      alert("报告已上传，等待公会审核。");
+      showModal.value = false;
+      fetchMissions(); 
+    }
+  } catch(e) {
+    alert("提交失败: " + (e.response?.data || "未知错误"));
+  }
 };
+
+// 🔥 [测试用] 审核通过
+const handleApprove = async (task) => {
+  if(!confirm("确认审核通过？这将直接给对方发钱！")) return;
+  
+  try {
+    const res = await apiClient.post(`/Mission/approve/${task.id}`);
+    if(res.data.success) {
+      alert(res.data.message);
+      // 两个都要刷新，才能看到钱涨了，状态也变了
+      fetchMissions();
+      fetchUserStatus();
+    }
+  } catch(e) {
+    alert(e.response?.data || "审核失败");
+  }
+};
+
+onMounted(() => {
+  fetchMissions();
+  if(authStore.isAuthenticated) {
+    fetchUserStatus(); // 获取钱和等级
+  }
+});
 </script>
 
 <style scoped>
@@ -262,20 +340,14 @@ const confirmSubmit = () => {
 
 /* --- 核心容器 --- */
 .guild-hall-container {
-  /* 基础色盘 (参考 ComCenter) */
   --bg: #F4F1EA;
   --black: #111111;
   --text-main: #111;
   --card-bg: #fff;
   
-  /* --- 🔥 七大等级色谱 (高对比度) 🔥 --- */
-  --r-sss: #FF00FF; /* 神话：幻彩紫/洋红 */
-  --r-ss:  #FFD700; /* 传说：黄金 */
-  --r-s:   #D92323; /* 史诗：猩红 (ComCenter红) */
-  --r-a:   #FF6600; /* 精英：橙色 */
-  --r-b:   #9D00FF; /* 资深：深紫 */
-  --r-c:   #0099FF; /* 普通：科技蓝 */
-  --r-d:   #00CC66; /* 新手：基础绿 */
+  /* 等级色谱 */
+  --r-sss: #FF00FF; --r-ss: #FFD700; --r-s: #D92323; --r-a: #FF6600; 
+  --r-b: #9D00FF; --r-c: #0099FF; --r-d: #00CC66;
 
   width: 100%; height: 100%;
   background-color: var(--bg);
@@ -285,7 +357,7 @@ const confirmSubmit = () => {
   position: relative; overflow: hidden;
 }
 
-/* 背景网格 (ComCenter 同款) */
+/* 背景网格 */
 .grid-bg { 
   position: absolute; inset: 0; 
   background-image: linear-gradient(#ccc 1px, transparent 1px), linear-gradient(90deg, #ccc 1px, transparent 1px); 
@@ -293,7 +365,7 @@ const confirmSubmit = () => {
 }
 .moving-grid { animation: gridScroll 60s linear infinite; }
 
-/* --- 1. 头部 (ComCenter 风格) --- */
+/* --- 1. 头部 --- */
 .guild-header {
   flex-shrink: 0; background: var(--black); border-bottom: 4px solid var(--black);
 }
@@ -304,18 +376,27 @@ const confirmSubmit = () => {
 .glitch-title { font-family: 'Anton'; font-size: 3rem; margin: 0; line-height: 0.9; text-transform: uppercase; }
 .text-row.outline { -webkit-text-stroke: 1px #fff; color: transparent; display: block; font-size: 2rem; }
 
-.user-badge { display: flex; align-items: center; gap: 15px; border: 2px solid #fff; padding: 5px 15px; background: #000; box-shadow: 4px 4px 0 rgba(255,255,255,0.2); }
-.avatar-frame { width: 40px; height: 40px; border: 2px solid #fff; overflow: hidden; }
+/* 用户信息栏样式更新 */
+.user-badge { display: flex; align-items: center; gap: 15px; border: 2px solid #fff; padding: 10px 20px; background: #000; box-shadow: 4px 4px 0 rgba(255,255,255,0.2); min-width: 260px; }
+.avatar-frame { width: 50px; height: 50px; border: 2px solid #fff; overflow: hidden; flex-shrink: 0; }
 .avatar-frame img { width: 100%; height: 100%; object-fit: cover; }
-.info-col { display: flex; flex-direction: column; }
-.info-col .name { font-weight: bold; color: #fff; }
-.info-col .rank { font-size: 0.7rem; color: #ccc; }
-.highlight { color: var(--r-ss); font-weight: bold; }
+.info-col { display: flex; flex-direction: column; width: 100%; }
+
+.name-row { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.9rem; }
+.title-tag { font-size: 0.7rem; color: #FFD700; border: 1px solid #FFD700; padding: 0 4px; border-radius: 4px; }
+
+.status-row { display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 4px; color: #ccc; }
+.gold { color: #FFD700; text-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
+
+/* 经验条 */
+.exp-bar-box { width: 100%; height: 6px; background: #333; margin-top: 4px; border-radius: 3px; overflow: hidden; border: 1px solid #444; }
+.exp-fill { height: 100%; background: #00CC66; box-shadow: 0 0 8px #00CC66; transition: width 0.5s ease; }
+.exp-num { font-size: 0.6rem; color: #666; display: block; text-align: right; margin-top: 2px; }
 
 .alert-strip { background: var(--black); border-top: 1px solid #333; color: var(--r-s); font-weight: bold; font-size: 0.8rem; padding: 4px 0; overflow: hidden; white-space: nowrap; }
 .strip-content { display: inline-block; animation: marquee 30s linear infinite; }
 
-/* --- 2. 任务卡片网格 --- */
+/* --- 2. 任务网格 --- */
 .mission-grid {
   flex: 1; padding: 40px; overflow-y: auto;
   display: grid; 
@@ -323,102 +404,57 @@ const confirmSubmit = () => {
   gap: 30px; align-content: start;
 }
 
-/* --- 卡片通用样式 (MD 风格升级) --- */
+/* 卡片样式 */
 .mission-card {
   background: var(--card-bg); 
   border: 2px solid var(--black);
   position: relative; display: flex; flex-direction: column;
   height: 420px; transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
   overflow: hidden;
-  /* MD Elevation 1 */
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
 }
+.mission-card:hover { transform: translateY(-8px); box-shadow: 0 14px 28px rgba(0,0,0,0.25); z-index: 5; }
 
-/* MD Hover Lift */
-.mission-card:hover { 
-  transform: translateY(-8px); 
-  /* MD Elevation 4 */
-  box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
-  z-index: 5; 
-}
+.bg-watermark { position: absolute; top: 20px; right: 10px; font-family: 'Anton'; font-size: 9rem; opacity: 0.08; pointer-events: none; z-index: 0; line-height: 1; color: var(--black); }
 
-/* 水印 */
-.bg-watermark {
-  position: absolute; top: 20px; right: 10px;
-  font-family: 'Anton'; font-size: 9rem;
-  opacity: 0.08; pointer-events: none; z-index: 0;
-  line-height: 1; color: var(--black);
-}
-
-/* --- 🔥 等级样式变体 (边框 & 徽章) 🔥 --- */
-/* SSS */
-.mission-card.rank-sss { border-color: var(--r-sss); box-shadow: 0 0 15px rgba(255, 0, 255, 0.4); animation: border-pulse 2s infinite; }
+/* 等级颜色 */
+.mission-card.rank-sss { border-color: var(--r-sss); box-shadow: 0 0 15px rgba(255, 0, 255, 0.4); }
 .mission-card.rank-sss .rank-badge { background: linear-gradient(135deg, var(--r-sss), #FFF); color: #000; }
-.mission-card.rank-sss .bg-watermark { color: var(--r-sss); opacity: 0.15; }
 
-/* SS */
-.mission-card.rank-ss { border-color: var(--r-ss); box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3); }
+.mission-card.rank-ss { border-color: var(--r-ss); }
 .mission-card.rank-ss .rank-badge { background: var(--r-ss); color: #000; }
 
-/* S */
 .mission-card.rank-s { border-color: var(--r-s); }
 .mission-card.rank-s .rank-badge { background: var(--r-s); color: #fff; }
 
-/* A */
 .mission-card.rank-a { border-color: var(--r-a); }
 .mission-card.rank-a .rank-badge { background: var(--r-a); color: #000; }
 
-/* B */
 .mission-card.rank-b { border-color: var(--r-b); }
 .mission-card.rank-b .rank-badge { background: var(--r-b); color: #fff; }
 
-/* C */
 .mission-card.rank-c { border-color: var(--r-c); }
 .mission-card.rank-c .rank-badge { background: var(--r-c); color: #000; }
 
-/* D */
 .mission-card.rank-d { border-color: var(--r-d); }
 .mission-card.rank-d .rank-badge { background: var(--r-d); color: #000; }
 
-/* 卡片内容布局 */
-.card-top { 
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 15px; border-bottom: 2px solid var(--black); 
-  background: rgba(0,0,0,0.02); z-index: 1; 
-}
-.rank-badge { 
-  padding: 4px 12px; font-weight: 900; font-family: 'Anton'; letter-spacing: 1px; font-size: 1.4rem; 
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.2); 
-}
+.card-top { display: flex; justify-content: space-between; padding: 15px; border-bottom: 2px solid var(--black); background: rgba(0,0,0,0.02); z-index: 1; }
+.rank-badge { padding: 4px 12px; font-weight: 900; font-family: 'Anton'; letter-spacing: 1px; font-size: 1.4rem; box-shadow: 2px 2px 0 rgba(0,0,0,0.2); }
 .reward-box { display: flex; align-items: center; gap: 5px; background: var(--black); color: #fff; padding: 4px 8px; font-weight: bold; }
 .reward-box .label { color: #ccc; font-size: 0.7rem; }
 
 .card-body { flex: 1; padding: 20px; z-index: 1; display: flex; flex-direction: column; }
 .id-row { font-size: 0.8rem; color: #666; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 .type-tag { border: 1px solid #666; padding: 2px 6px; font-size: 0.65rem; border-radius: 4px; }
-
 .title { font-family: 'Anton'; font-size: 1.6rem; margin: 0 0 15px 0; line-height: 1.1; text-transform: uppercase; color: var(--black); }
 .desc { font-size: 0.9rem; color: #444; line-height: 1.5; flex: 1; }
-
 .client-row { margin-top: 15px; font-size: 0.75rem; color: #555; border-top: 1px dashed #ccc; padding-top: 10px; font-weight: bold; }
 
-/* 🔒 封条层 (公会风格) */
-.sealed-overlay {
-  position: absolute; inset: 0; z-index: 10;
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(2px) grayscale(100%);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
-}
-.seal-stamp {
-  border: 5px solid var(--r-s); padding: 10px;
-  transform: rotate(-15deg);
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--r-s);
-}
-.seal-inner { 
-  font-family: 'Anton'; font-size: 2.2rem; color: var(--r-s); text-align: center; line-height: 1; 
-  border: 2px solid var(--r-s); padding: 5px 20px; letter-spacing: 2px;
-}
-
+/* 封条 */
+.sealed-overlay { position: absolute; inset: 0; z-index: 10; background: rgba(255,255,255,0.85); backdrop-filter: blur(2px) grayscale(100%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+.seal-stamp { border: 5px solid var(--r-s); padding: 10px; transform: rotate(-15deg); box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--r-s); }
+.seal-inner { font-family: 'Anton'; font-size: 2.2rem; color: var(--r-s); text-align: center; line-height: 1; border: 2px solid var(--r-s); padding: 5px 20px; }
 .hunter-info { display: flex; flex-direction: column; align-items: center; color: var(--black); font-size: 0.8rem; font-weight: bold; }
 .hunter-row { display: flex; align-items: center; gap: 10px; margin-top: 5px; background: var(--black); color: #fff; padding: 5px 15px; }
 .hunter-row img { width: 25px; height: 25px; object-fit: cover; border: 1px solid #fff; }
@@ -426,39 +462,33 @@ const confirmSubmit = () => {
 /* 底部操作 */
 .card-footer { padding: 15px; border-top: 2px solid var(--black); z-index: 1; background: #fff; }
 
-.action-btn { 
-  width: 100%; padding: 12px; font-weight: bold; cursor: pointer; border: 2px solid var(--black); 
-  font-family: 'JetBrains Mono'; transition: 0.2s; text-transform: uppercase; box-shadow: 4px 4px 0 var(--black);
-  background: #fff; color: var(--black);
-}
+.action-btn { width: 100%; padding: 12px; font-weight: bold; cursor: pointer; border: 2px solid var(--black); font-family: 'JetBrains Mono'; text-transform: uppercase; box-shadow: 4px 4px 0 var(--black); background: #fff; color: var(--black); }
 .action-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--black); }
 .action-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--black); }
 
-/* 接受按钮：根据等级变色 (可选，这里用统一风格保持整洁，或者用绿色) */
-.accept-btn:hover { background: var(--black); color: #fff; }
+.admin-btn { background: #000; color: #fff; border-color: #fff; margin-top: 10px; }
+.admin-btn:hover { background: #fff; color: #000; }
 
+.accept-btn:hover { background: var(--black); color: #fff; }
 .submit-btn { background: var(--r-ss); border-color: var(--black); }
 
 .status-bar { width: 100%; padding: 12px; text-align: center; font-weight: bold; font-size: 0.9rem; border: 2px dashed #999; color: #666; }
 .status-bar.auditing { color: var(--r-c); border-color: var(--r-c); background: rgba(0, 153, 255, 0.05); }
 .status-bar.completed { color: var(--r-d); border-color: var(--r-d); background: rgba(0, 204, 102, 0.05); }
 
-/* --- 弹窗 --- */
+/* 弹窗 */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
 .guild-modal { width: 600px; background: #fff; border: 4px solid var(--black); box-shadow: 15px 15px 0 rgba(0,0,0,0.5); display: flex; flex-direction: column; }
-.modal-header { background: var(--black); color: #fff; padding: 15px 20px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-family: 'JetBrains Mono'; }
-.close-btn { background: none; border: 1px solid #fff; color: #fff; font-weight: bold; font-size: 1.2rem; cursor: pointer; padding: 0 8px; transition: 0.2s; }
+.modal-header { background: var(--black); color: #fff; padding: 15px 20px; font-weight: bold; display: flex; justify-content: space-between; }
+.close-btn { background: none; border: 1px solid #fff; color: #fff; font-size: 1.2rem; cursor: pointer; padding: 0 8px; }
 .close-btn:hover { background: var(--r-s); border-color: var(--r-s); }
-
 .modal-body { padding: 30px; }
 .instruction { color: #333; margin-bottom: 15px; font-weight: bold; }
 .cyber-textarea { width: 100%; height: 180px; background: #fafafa; border: 2px solid var(--black); color: #000; padding: 15px; font-family: 'JetBrains Mono'; margin-bottom: 25px; outline: none; resize: none; font-size: 1rem; }
-.cyber-textarea:focus { box-shadow: inset 4px 4px 0 rgba(0,0,0,0.1); }
-
 .modal-actions { display: flex; justify-content: flex-end; gap: 15px; }
-.cancel-btn { padding: 12px 25px; background: #ccc; color: #000; border: 2px solid var(--black); cursor: pointer; font-weight: bold; box-shadow: 4px 4px 0 var(--black); }
-.confirm-btn { padding: 12px 25px; background: var(--r-ss); color: #000; border: 2px solid var(--black); cursor: pointer; font-weight: bold; box-shadow: 4px 4px 0 var(--black); }
-.confirm-btn:hover, .cancel-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--black); }
+.cancel-btn, .confirm-btn { padding: 12px 25px; border: 2px solid var(--black); cursor: pointer; font-weight: bold; box-shadow: 4px 4px 0 var(--black); }
+.cancel-btn { background: #ccc; }
+.confirm-btn { background: var(--r-ss); }
 
 @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 @keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-40px); } }

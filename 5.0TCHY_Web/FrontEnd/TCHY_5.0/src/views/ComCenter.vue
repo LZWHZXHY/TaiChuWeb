@@ -312,7 +312,6 @@ const processCommentTree = (list) => {
 };
 
 const handlePostSuccess = async () => {
-  showPostForm.value = false; 
   hasMore.value = true;
   await fetchPosts(true);
 };

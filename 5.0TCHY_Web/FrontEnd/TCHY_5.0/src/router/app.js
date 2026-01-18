@@ -104,6 +104,15 @@ const routes = [
     }
   },
   {
+    path:'/RankCenter',
+    name:'排行榜大厅',
+    component:()=>import('@/views/RankCenter.vue'),
+    meta:{
+      requiresAuth:true,
+      title:'排行榜大厅'
+    }
+  },
+  {
     path:'/blogCreater',
     name:'博客创作',
     component:()=>import('@/BlogComponents/BlogCreater.vue'),

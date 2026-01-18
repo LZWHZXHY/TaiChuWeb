@@ -18,60 +18,109 @@
           </header>
 
           <div class="cp-body custom-scroll">
-            <div class="form-group">
-              <label class="input-label">// TITLE_FIELD</label>
-              <input 
-                v-model="formData.title" 
-                type="text" 
-                class="cp-input title-input" 
-                :placeholder="t('CreatePost.placeholder_title')" 
-                maxlength="50"
-              />
-            </div>
+            
+            <div v-if="!submitResult" class="form-view">
+              <div class="form-group">
+                <label class="input-label">// TITLE_FIELD</label>
+                <input 
+                  v-model="formData.title" 
+                  type="text" 
+                  class="cp-input title-input" 
+                  :placeholder="t('CreatePost.placeholder_title')" 
+                  maxlength="50"
+                />
+              </div>
 
-            <div class="form-group">
-              <label class="input-label">// CONTENT_STREAM (OPTIONAL)</label>
-              <textarea 
-                v-model="formData.content" 
-                class="cp-input content-area custom-scroll" 
-                :placeholder="t('CreatePost.placeholder_content')"
-              ></textarea>
-            </div>
+              <div class="form-group">
+                <label class="input-label">// CONTENT_STREAM (OPTIONAL)</label>
+                <textarea 
+                  v-model="formData.content" 
+                  class="cp-input content-area custom-scroll" 
+                  :placeholder="t('CreatePost.placeholder_content')"
+                ></textarea>
+              </div>
 
-            <div class="media-section">
-              <label class="input-label">// ATTACHED_MEDIA</label>
-              <div class="media-grid">
-                <div v-for="(img, index) in previewImages" :key="index" class="img-preview-card">
-                  <img :src="img.url" />
-                  <button class="remove-img-btn" @click="removeImage(index)">
-                    <i class="fas fa-trash-alt"></i>
-                  </button>
+              <div class="media-section">
+                <label class="input-label">// ATTACHED_MEDIA</label>
+                <div class="media-grid">
+                  <div v-for="(img, index) in previewImages" :key="index" class="img-preview-card">
+                    <img :src="img.url" />
+                    <button class="remove-img-btn" @click="removeImage(index)">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
+                  
+                  <label v-if="previewImages.length < 9" class="upload-btn">
+                    <input type="file" accept="image/*" multiple @change="handleFileSelect" hidden />
+                    <i class="fas fa-plus"></i>
+                    <span>UPLOAD</span>
+                  </label>
                 </div>
-                
-                <label v-if="previewImages.length < 9" class="upload-btn">
-                  <input type="file" accept="image/*" multiple @change="handleFileSelect" hidden />
-                  <i class="fas fa-plus"></i>
-                  <span>UPLOAD</span>
-                </label>
               </div>
             </div>
+
+            <div v-else class="result-view">
+              <div class="result-icon">✔ TRANSMISSION COMPLETE</div>
+              <p class="result-sub">Data synchronized with Core System.</p>
+              
+              <div class="reward-ticket">
+                <div class="ticket-header">:: TRANSACTION RECEIPT ::</div>
+                
+                <div class="ticket-row">
+                  <span class="label">STATUS:</span>
+                  <span class="value success">UPLOADED [200]</span>
+                </div>
+
+                <div v-if="submitResult.reward && (submitResult.reward.success || submitResult.reward.Success)" class="reward-content">
+                  <div class="dashed-line">--------------------------------</div>
+                  
+                  <div class="ticket-row highlight">
+                    <span class="label">REWARD:</span>
+                    <span class="value">{{ submitResult.reward.message || submitResult.reward.Message }}</span>
+                  </div>
+
+                  <div v-if="submitResult.reward.leveledUp || submitResult.reward.LeveledUp" class="level-up-box">
+                    <span class="blink">⚠️ LEVEL UP DETECTED</span>
+                    <div class="new-level">CURRENT GRADE: LV.{{ submitResult.reward.currentLevel || submitResult.reward.CurrentLevel }}</div>
+                  </div>
+                </div>
+
+                <div v-else class="ticket-row">
+                  <span class="label">INFO:</span>
+                  <span class="value">NO EXTRA REWARD</span>
+                </div>
+                
+                <div class="dashed-line">--------------------------------</div>
+                <div class="ticket-footer">END OF LINE_</div>
+              </div>
+            </div>
+
           </div>
 
           <footer class="cp-footer">
             <div class="status-indicator">
-              <span :class="['dot', { 'processing': isSubmitting }]"></span>
+              <span :class="['dot', { 'processing': isSubmitting, 'done': submitResult }]"></span>
               <span class="status-text">
-                {{ isSubmitting ? 'UPLOADING_DATA...' : 'SYSTEM_READY' }}
+                {{ submitResult ? 'STANDBY' : (isSubmitting ? 'UPLOADING...' : 'SYSTEM_READY') }}
               </span>
             </div>
             
             <button 
+              v-if="!submitResult"
               class="submit-btn" 
               @click="submitPost" 
               :disabled="isSubmitting || !formData.title.trim()"
             >
               <span v-if="isSubmitting">SENDING...</span>
               <span v-else>TRANSMIT_DATA</span>
+            </button>
+
+            <button 
+              v-else 
+              class="submit-btn confirm-btn" 
+              @click="closeModal"
+            >
+              CONFIRM [OK]
             </button>
           </footer>
 
@@ -97,15 +146,26 @@ const emit = defineEmits(['update:modelValue', 'success']);
 const isSubmitting = ref(false);
 const fileList = ref([]);
 const previewImages = ref([]);
+const submitResult = ref(null); // 新增：用于存储成功后的返回结果
 
 const formData = reactive({
   title: '',
   content: ''
 });
 
+// 关闭弹窗并重置状态
 const closeModal = () => {
   if (isSubmitting.value) return;
   emit('update:modelValue', false);
+
+  // 延迟重置，避免动画闪烁，保证下次打开是干净的表单
+  setTimeout(() => {
+    submitResult.value = null;
+    formData.title = '';
+    formData.content = '';
+    fileList.value = [];
+    previewImages.value = [];
+  }, 300);
 };
 
 const handleFileSelect = (event) => {
@@ -113,7 +173,7 @@ const handleFileSelect = (event) => {
   if (!files.length) return;
 
   files.forEach(file => {
-    if (file.size > 10 * 1024 * 1024) { // 配合后端 10MB 限制
+    if (file.size > 10 * 1024 * 1024) { 
       alert(`文件过大: ${file.name}`);
       return;
     }
@@ -132,9 +192,8 @@ const removeImage = (index) => {
   previewImages.value.splice(index, 1);
 };
 
-// 提交逻辑修复
+// 提交逻辑
 const submitPost = async () => {
-  // 修改：内容可以为空，只校验标题
   if (!formData.title.trim()) return;
 
   isSubmitting.value = true;
@@ -142,29 +201,27 @@ const submitPost = async () => {
   try {
     const submission = new FormData();
     submission.append('Title', formData.title.trim());
-    submission.append('Content', formData.content.trim()); // 传空字符串后端也支持
-    submission.append('PostType', 0); // 分类固定为 0
+    submission.append('Content', formData.content.trim()); 
+    submission.append('PostType', 0); 
     
     fileList.value.forEach(file => {
-      submission.append('Images', file); // 匹配后端 CreatePostDto 字段名
+      submission.append('Images', file); 
     });
 
-    // 路径根据你的控制器调整
     const res = await apiClient.post('/ThePost/create', submission, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
     if (res.data.success) {
-      formData.title = '';
-      formData.content = '';
-      fileList.value = [];
-      previewImages.value = [];
+      // ✅ 成功后，不再弹窗，而是设置 result，切换视图
+      submitResult.value = res.data;
+      
+      // 可以在这里立即通知列表刷新，用户点击 Confirm 关闭弹窗时体验更流畅
       emit('success');
-      closeModal();
     }
   } catch (e) {
     console.error(e);
-    alert('TRANSMISSION_ERROR // 信号中断');
+    alert('TRANSMISSION_ERROR // 信号中断'); // 出错保留 alert 作为降级处理
   } finally {
     isSubmitting.value = false;
   }
@@ -179,6 +236,7 @@ const submitPost = async () => {
   --black: #111111;
   --off-white: #F4F1EA;
   --gray: #E0DDD5;
+  --green: #009966;
   --mono: 'JetBrains Mono', monospace;
   --heading: 'Anton', sans-serif;
 
@@ -260,8 +318,10 @@ const submitPost = async () => {
   padding: 25px;
   overflow-y: auto;
   max-height: 60vh;
+  min-height: 300px; /* 保持高度稳定，防止切换视图时跳动 */
 }
 
+/* Form Styles */
 .input-label {
   font-family: var(--mono);
   font-size: 12px;
@@ -300,7 +360,7 @@ const submitPost = async () => {
   resize: vertical;
 }
 
-/* Media Grid: 工业缩略图 */
+/* Media Grid */
 .media-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -348,6 +408,103 @@ const submitPost = async () => {
 .upload-btn i { font-size: 20px; }
 .upload-btn span { font-family: var(--mono); font-size: 9px; margin-top: 4px; font-weight: 700; }
 
+/* 🔥🔥🔥 Result View Styles (新增加的结算界面样式) 🔥🔥🔥 */
+.result-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+  animation: slideUp 0.4s ease-out;
+}
+
+.result-icon {
+  font-family: var(--heading);
+  font-size: 2rem;
+  color: var(--green);
+  margin-bottom: 5px;
+  letter-spacing: 1px;
+}
+
+.result-sub {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+/* 结算小票样式 */
+.reward-ticket {
+  width: 100%;
+  max-width: 400px;
+  background: #E8E5DE;
+  border: 2px dashed var(--black);
+  padding: 20px;
+  font-family: var(--mono);
+  position: relative;
+}
+
+.ticket-header {
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 15px;
+  font-size: 14px;
+  color: #333;
+}
+
+.ticket-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.ticket-row.highlight {
+  margin-top: 5px;
+  font-size: 15px;
+}
+
+.label { color: #555; font-weight: 700; }
+.value { font-weight: 400; color: #000; }
+.value.success { color: var(--green); font-weight: 700; }
+
+.dashed-line {
+  color: #aaa;
+  overflow: hidden;
+  white-space: nowrap;
+  margin: 10px 0;
+  font-size: 12px;
+}
+
+/* 升级特效 */
+.level-up-box {
+  background: var(--red);
+  color: white;
+  padding: 10px;
+  text-align: center;
+  margin-top: 15px;
+  border: 2px solid var(--black);
+}
+
+.blink {
+  font-weight: 800;
+  font-size: 14px;
+  animation: blink 1s infinite;
+  display: block;
+}
+
+.new-level {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.ticket-footer {
+  text-align: right;
+  font-size: 10px;
+  color: #999;
+}
+
+
 /* Footer: 状态与按钮 */
 .cp-footer {
   padding: 15px 25px;
@@ -367,13 +524,17 @@ const submitPost = async () => {
 
 .dot {
   width: 8px; height: 8px;
-  background: #009966;
+  background: #999;
   border-radius: 50%;
 }
 
 .dot.processing {
   background: var(--red);
-  animation: blink 0.8s infinite;
+  animation: blink 0.5s infinite;
+}
+
+.dot.done {
+  background: var(--green);
 }
 
 .status-text {
@@ -400,6 +561,15 @@ const submitPost = async () => {
   box-shadow: 6px 6px 0 rgba(0,0,0,0.3);
 }
 
+/* 确认按钮颜色 */
+.submit-btn.confirm-btn {
+  background: var(--green); 
+  color: white;
+}
+.submit-btn.confirm-btn:hover {
+  background: #007744;
+}
+
 .submit-btn:disabled {
   background: #999;
   cursor: not-allowed;
@@ -407,6 +577,11 @@ const submitPost = async () => {
 
 @keyframes modalIn {
   from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(15px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
