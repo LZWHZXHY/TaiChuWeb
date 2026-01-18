@@ -403,7 +403,8 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   display: flex; align-items: center; justify-content: center;
   /* 优化transition：仅针对背景色过渡，避免干扰transform（动画/hover） */
   transition: background 0.2s ease;
-  /* 优化后的动画配置：减少动画时长，使用delay创建循环间隔 */
+  /* 优化后的动画配置：2s动画时长 + 8s延迟 = 10s总循环时间 */
+  /* 相比之前10s动画（其中80%空闲），现在效率更高 */
   animation: move-rotate-loop 2s ease-in-out 8s infinite;
   transform: translateZ(0);
 }
