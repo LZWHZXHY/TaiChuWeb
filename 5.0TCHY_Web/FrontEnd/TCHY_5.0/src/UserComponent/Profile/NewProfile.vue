@@ -374,7 +374,23 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 .flip-trigger-btn .icon { font-size: 1rem; line-height: 1; }
 .corner-deco { position: absolute; bottom: -4px; left: -4px; width: 8px; height: 8px; border-bottom: 2px solid var(--black); border-left: 2px solid var(--black); }
 
-/* 设置按钮样式（保留原有） */
+/* 1. 优化后的关键帧动画（移除空闲时间，仅保留实际动画部分） */
+@keyframes move-rotate-loop {
+  0% {
+    transform: translateY(0) rotate(0deg); /* 初始状态：原地、无旋转 */
+  }
+  50% {
+    transform: translateY(100px) rotate(180deg); /* 中途：下移100px、旋转180° */
+  }
+  75% {
+    transform: translateY(100px) rotate(180deg); /* 停顿：保持下移旋转状态 */
+  }
+  100% {
+    transform: translateY(0) rotate(360deg); /* 复位：回到原地、旋转360° */
+  }
+}
+
+/* 2. 设置按钮样式（核心修改：hover时暂停动画，优化过渡） */
 .settings-trigger-btn {
   position: absolute;
   top: 10px; left: 10px;
@@ -385,17 +401,29 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   cursor: pointer;
   z-index: 5;
   display: flex; align-items: center; justify-content: center;
-  transition: 0.2s;
+  /* 优化transition：仅针对背景色过渡，避免干扰transform（动画/hover） */
+  transition: background 0.2s ease;
+  /* 优化后的动画配置：2s动画时长 + 8s延迟 = 10s总循环时间 */
+  /* 相比之前10s动画（其中80%空闲），现在效率更高 */
+  animation: move-rotate-loop 2s ease-in-out 8s infinite;
+  transform: translateZ(0);
 }
+
+/* 3. hover状态：暂停动画 + 保留原有悬浮效果，无冲突 */
 .settings-trigger-btn:hover {
   background: var(--red);
+  /* 核心：暂停动画，让动画不再修改transform，hover样式正常生效 */
+  animation-play-state: paused;
+  /* 悬浮旋转效果：覆盖动画当前的transform，优先级正常 */
   transform: rotate(90deg);
+  /* 可选：添加悬浮旋转的过渡，让切换更流畅 */
+  transition: background 0.2s ease, transform 0.2s ease;
 }
+
 .settings-trigger-btn .icon {
   font-size: 1.2rem;
   line-height: 1;
 }
-
 /* 头像区域样式（保留原有） */
 .avatar-frame { width: 120px; height: 120px; margin: 0 auto 20px; position: relative; border: 2px solid var(--black); padding: 4px; }
 .avatar-frame img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(20%); }

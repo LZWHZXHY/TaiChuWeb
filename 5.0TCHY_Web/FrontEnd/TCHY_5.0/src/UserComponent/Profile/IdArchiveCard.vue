@@ -110,10 +110,10 @@ const handleClose = () => emit('close')
   display: flex; justify-content: space-between; align-items: center;
   border-bottom: 1px dashed #444; font-family: var(--mono); font-size: 0.8rem; font-weight: bold; color: #0f0;
 }
-.close-btn { background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer; line-height: 1; }
+.close-btn { background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer; line-height: 1; }
 .close-btn:hover { color: var(--red); }
 
-.archive-body { padding: 15px; display: flex; flex-direction: column; gap: 20px; flex: 1; overflow-y: auto; }
+.archive-body { padding: 15px; display: flex; flex-direction: column; gap: 20px; flex: 1; overflow-y: auto; background: #000000;}
 
 /* 数据组样式 */
 .data-group { display: flex; flex-direction: column; gap: 8px; }
