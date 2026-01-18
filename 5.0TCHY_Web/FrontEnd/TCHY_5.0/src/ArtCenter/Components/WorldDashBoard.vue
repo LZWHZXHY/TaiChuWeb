@@ -288,7 +288,13 @@ onMounted(initData)
 .dashboard-body { flex: 1; overflow: hidden; display: flex; }
 .doc-layout { display: flex; width: 100%; height: 100%; }
 
-.doc-sidebar { width: 280px; background: #EEECE6; border-right: 2px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; }
+
+.doc-sidebar { width: 280px; background: #EEECE6; border-right: 2px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; padding-bottom: 5%;}
+
+
+
+
+
 .sidebar-tools { padding: 10px; border-bottom: 1px solid #ccc; display: flex; gap: 5px; background: #e8e8e8; }
 .cyber-input-sm { width: 120px; flex: 1; background: #fff; border: 1px solid #999; padding: 5px; outline: none; }
 .cyber-btn-sm { background: var(--text-main); color: #fff; border: none; padding: 0 10px; font-weight: bold; cursor: pointer; }

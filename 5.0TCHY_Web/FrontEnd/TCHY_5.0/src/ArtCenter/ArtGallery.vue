@@ -418,14 +418,11 @@ onMounted(() => {
   --mono: 'JetBrains Mono', monospace; 
   --heading: 'Anton', sans-serif;
   
-  width: 100%; 
-  height: 100%; /* 确保填满父容器 */
-  display: flex; 
-  flex-direction: column; /* 垂直排列 Header 和 Body */
-  font-family: var(--mono); 
-  color: var(--black);
-  overflow: hidden; /* 防止最外层出现滚动条 */
-  position: relative;
+  height: 100%; 
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* 1. 控制条 (固定不滚动) */
@@ -439,15 +436,19 @@ onMounted(() => {
   z-index: 10;
 }
 
-/* 2. Body：主体区域 */
 .gallery-body {
-  flex: 1; /* 占据剩余高度 */
+  flex: 1; 
   display: flex; 
-  overflow: hidden; /* 关键：切断外部滚动 */
-  padding: 20px; 
   gap: 20px;
+  padding: 20px;
+  
+  /* 关键：锁定高度，禁止父容器被内容撑开 */
+  overflow: hidden; 
+  min-height: 0; 
   position: relative;
-  min-height: 0; /* 关键：允许 Flex 子项缩小 */
+  
+  /* 确保它在整个视口内是有上限的 */
+  height: 100%; 
 }
 
 /* 2.1 Main：左侧列表容器 */
@@ -460,13 +461,12 @@ onMounted(() => {
   min-height: 0; /* 关键 */
 }
 
-/* 🔥 真正的滚动容器 🔥 */
+/* 滚动容器 */
 .gallery-scroll-container {
   flex: 1;
-  overflow-y: auto; /* 只有这里允许纵向滚动 */
+  overflow-y: auto; /* 这里产生滚动条 */
   overflow-x: hidden;
-  padding-right: 5px; /* 给滚动条留位置 */
-  min-height: 0; /* 关键：防止被内容撑开 */
+  min-height: 0; /* 再次确保不会被内容撑开 */
 }
 
 /* 内容包装器 */
@@ -481,15 +481,32 @@ onMounted(() => {
   flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 0;
 }
 
-/* 2.2 Sidebar：右侧侧边栏 */
 .gallery-sidebar {
-  width: 260px; 
-  flex-shrink: 0; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 20px; 
-  overflow-y: auto; /* 侧边栏独立滚动 */
-  max-height: 100%;
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  
+  /* 关键：不再使用 max-height，改用以下组合 */
+  height: 100%; 
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* 解决“滚不到底”视觉问题的核心：底部内边距 */
+  /* 因为底部可能有阴影或边框遮挡，预留 40px 以上的间距 */
+  padding-bottom: 60px; 
+  
+  /* 确保 padding 不会增加总高度 */
+  box-sizing: border-box; 
+}
+
+/* 别忘了美化滚动条，确保它在视觉上是完整的 */
+.gallery-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+.gallery-sidebar::-webkit-scrollbar-thumb {
+  background: var(--black);
 }
 
 /* --- 以下样式保持原样 --- */

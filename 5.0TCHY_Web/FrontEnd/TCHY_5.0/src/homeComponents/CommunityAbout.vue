@@ -91,7 +91,12 @@
           <div class="op-header">
             <div class="op-avatar-wrapper">
               <div class="op-avatar">
-                <img :src="member.avatar" alt="AVATAR" @error="handleImgError">
+                <img 
+                  :src="member.avatar" 
+                  alt="AVATAR" 
+                  :class="{ 'is-offline': !member.online }"
+                  @error="handleImgError"
+                >
                 <div class="scan-overlay"></div>
               </div>
               <div class="avatar-frame" :style="{ borderColor: member.color }"></div>
@@ -121,11 +126,23 @@
       </div>
       <div class="aux-grid">
         <div v-for="node in auxiliaryNodes" :key="node.name" class="aux-node">
-          <div class="aux-avatar">
-            <img :src="node.avatar" @error="handleImgError">
+          <div class="aux-avatar-container">
+            <div class="aux-avatar">
+              <img 
+                :src="node.avatar" 
+                :class="{ 'is-offline': !node.online }"
+                @error="handleImgError"
+              >
+            </div>
+            <div class="aux-status-dot" :class="{ 'is-online': node.online }"></div>
           </div>
           <div class="aux-body">
-            <div class="aux-name">{{ node.name }}</div>
+            <div class="aux-name">
+              {{ node.name }}
+              <span class="aux-status-tag" :class="{ 'is-online': node.online }">
+                {{ node.online ? 'ON' : 'OFF' }}
+              </span>
+            </div>
             <div class="aux-content">{{ node.content }}</div>
           </div>
         </div>
@@ -170,46 +187,66 @@ const handleImgError = (e) => {
   e.target.src = 'https://api.dicebear.com/7.x/identicon/svg?seed=fallback'; 
 }
 
-// 层级 1: 创始人
 const founder = ref({
   id: 'DIR_001', 
   name: '腾蛇', 
   role: 'CHIEF_DIRECTOR', 
   level: 'S', 
-  desc: '太初寰宇创始人。全栈开发、策划及底层协议制定，统筹社区发展方向。',
+  desc: '太初寰宇创始人。网站全栈开发、策划及底层协议制定，统筹社区发展方向。游戏全流程开发，3D建模，材质制作',
   avatar: 'https://image2url.com/r2/default/images/1768615897703-a73ba8ec-6f15-4960-abe8-4f9252614b9a.png' 
 })
 
-// 层级 2: 核心协助者 (详细版)
 const coreOperatives = ref([
   { 
-    id: 'GAME_001', name: '幽火', role: '游戏开发', color: '#00D1FF', level: 'A', online: true,
-    desc: '负责虚幻引擎/Unity 逻辑构建、关卡设计及核心战斗机制实现。',
-    avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=ghost' 
-  },
-  { 
-    id: 'DEV_002', name: '峰峰子', role: '视觉设计', color: '#6b27c4', level: 'A', online: true,
-    desc: '网站前端视觉师，交互设计与美术概念，摄影与后期制作。',
+    id: 'DEV_001', name: '峰峰子', role: '全链视觉设计', color: '#6b27c4', level: 'A', online: true,
+    desc: '网站前端视觉师，交互设计与美术概念，品牌宣发、造型设计，摄影与后期制作',
     avatar: 'https://image2url.com/r2/default/images/1768440579620-518d987a-37b7-4f81-8406-5fa77e6d79c1.jpg' 
   },
   { 
-    id: 'PR_001', name: '星瞳', role: '自媒体运营', color: '#FF6B00', level: 'A', online: true,
-    desc: '品牌宣发与社群增长，负责自媒体矩阵运营、视频剪辑与商业对接。',
-    avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=star' 
+    id: 'PR_001', name: 'SIMON', role: '项目研发,产品宣发', color: '#FF6B00', level: 'A', online: true,
+    desc: '游戏概念美术设计，3D动画师，项目主策划，游戏制作人',
+    avatar: 'https://image2url.com/r2/default/images/1768690065252-298402c8-483f-4993-bd9a-331c3cc87b73.jpg' 
   },
   { 
-    id: 'OPS_001', name: '援受', role: '社区管理', color: '#f1c40f', level: 'B', online: true,
-    desc: '社区执行官。负责内容分发、用户反馈采集及社群秩序维护。',
-    avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=ops1' 
-  }
+    id: 'OPS_001', name: '援受', role: '社区管理,自媒体运营,动画管理', color: '#f1c40f', level: 'B', online: true,
+    desc: '社区执行官。负责内容分发、用户反馈采集及社群秩序维护。负责自媒体矩阵运营、视频剪辑与商业对接',
+    avatar: 'https://image2url.com/r2/default/images/1768690111264-18a501cb-2a7d-486b-98ae-206c91b49de6.jpg' 
+  },
+  { 
+    id: 'Draw_001', name: '伊渡', role: '动画管理,静态立绘', color: '#00D1FF', level: 'A', online: true,
+    desc: '动画项目管理，制作进度跟踪，背景制作',
+    avatar: 'https://image2url.com/r2/default/images/1768690345558-4df4c727-6b55-47a4-801a-9a1ee065b83b.jpg' 
+  },
+  { 
+    id: 'WorldIP_001', name: '口嘿嗨', role: '世界观设计', color: '#00D1FF', level: 'A', online: false,
+    desc: '世界观设定，剧情编写',
+    avatar: 'https://image2url.com/r2/default/images/1768691134725-b7a4f65f-7d4e-41d1-a308-bd1a1e17a70c.jpg' 
+  },
+  { 
+    id: 'Animation_002', name: '云绍', role: '动画制作', color: '#00D1FF', level: 'A', online: true,
+    desc: '动画制作',
+    avatar: 'https://image2url.com/r2/default/images/1768690862512-a59e76a0-2c4e-4f37-a573-e02f2301f1bc.jpg' 
+  },
+  { 
+    id: 'Animation_003', name: '橘橘兔', role: '动画制作，世界观设计', color: '#00D1FF', level: 'A', online: false,
+    desc: '动画制作，世界观内容设计',
+    avatar: 'https://image2url.com/r2/default/images/1768691184574-ce55168f-826f-4489-a2a9-e71dac6a343b.jpg' 
+  },
+  { 
+    id: 'Draw_002', name: '寒鸦', role: '静态立绘', color: '#00D1FF', level: 'A', online: false,
+    desc: '人物静态立绘，世界观设计',
+    avatar: 'https://image2url.com/r2/default/images/1768691578204-4bf29127-9848-4b06-b686-5ec279bf9f74.jpg' 
+  },
+  { 
+    id: 'Animation_004', name: 'BHZ32', role: '动画制作', color: '#00D1FF', level: 'A', online: true,
+    desc: '动画制作，世界观设计',
+    avatar: 'https://image2url.com/r2/default/images/1768691449272-c15f30b4-4d95-4d29-b7ea-27d0855b2f1c.jpg' 
+  },
 ])
 
-// 层级 3: 外部协助者 (精简版)
 const auxiliaryNodes = ref([
-  { name: 'Alpha_Bot', content: '自动化运维与脚本支持', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=1' },
-  { name: 'Beta_Tester', content: '核心系统压力测试', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=2' },
-  { name: 'Cyber_Pen', content: '世界观文案与润色', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=3' },
-  { name: 'Pixel_Artist', content: '早期像素美术资源绘制', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=4' }
+  { name: '土豆', content: '绘院联合管理', avatar: 'https://image2url.com/r2/default/images/1768691881825-21a82807-61a7-48b8-adc9-bb9a9d5e2a21.jpg', online: true },
+  { name: '索少', content: '绘院联合管理', avatar: 'https://image2url.com/r2/default/images/1768691862407-37acfd2f-83e7-472b-8dbe-c5c3511a34b5.jpg', online: true }
 ])
 
 const historyLogs = ref([
@@ -276,6 +313,17 @@ const historyLogs = ref([
 .operator-card { border: 3px solid var(--black); background: white; position: relative; overflow: hidden; transition: 0.2s; }
 .operator-card:hover { transform: translate(-4px, -4px); box-shadow: 8px 8px 0 var(--black); }
 
+/* 头像通用样式 */
+.op-avatar { width: 80px; height: 80px; border: 2px solid var(--black); background: #000; z-index: 2; position: relative; overflow: hidden; }
+/* 修改：默认移除 grayscale，让图片彩色显示 */
+.op-avatar img { width: 100%; height: 100%; object-fit: cover; transition: filter 0.3s ease; }
+
+/* 添加：离线状态的灰度滤镜 */
+.is-offline { 
+  filter: grayscale(100%); 
+  opacity: 0.6; /* 离线时稍微降低透明度，增加“关机”感 */
+}
+
 /* 创始人特化 */
 .founder-card { max-width: 500px; margin: 0 auto; border-width: 4px; box-shadow: 12px 12px 0 var(--black); }
 .op-avatar-wrapper.large .op-avatar { width: 120px; height: 120px; }
@@ -284,13 +332,11 @@ const historyLogs = ref([
 .card-bg-text { position: absolute; top: -10px; right: -10px; font-family: var(--heading); font-size: 4rem; color: rgba(0,0,0,0.03); pointer-events: none; }
 .op-header { padding: 20px; border-bottom: 2px solid var(--black); display: flex; justify-content: space-between; background: #fdfdfd; }
 .op-avatar-wrapper { position: relative; }
-.op-avatar { width: 80px; height: 80px; border: 2px solid var(--black); background: #000; z-index: 2; position: relative; overflow: hidden; }
-.op-avatar img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); }
 .avatar-frame { position: absolute; top: 4px; left: 4px; width: 80px; height: 80px; border: 2px solid; z-index: 1; }
 
 .op-status { font-size: 0.65rem; font-weight: bold; display: flex; align-items: center; gap: 5px; }
 .status-light { width: 8px; height: 8px; border-radius: 50%; background: #555; }
-.status-light.online { background: var(--green); box-shadow: 0 0 5px var(--green); }
+.status-light.online { background: var(--green); box-shadow: 0 0 5px var(--green); animation: blink 2s infinite; }
 
 .op-info { padding: 20px; min-height: 120px; }
 .op-name { font-family: var(--heading); font-size: 1.8rem; margin-bottom: 4px; }
@@ -298,17 +344,41 @@ const historyLogs = ref([
 .op-desc { font-size: 0.85rem; color: #555; line-height: 1.4; }
 .op-footer { background: var(--black); color: #888; padding: 8px 15px; font-size: 0.6rem; display: flex; justify-content: space-between; }
 
-/* 4. 协力节点 (精简网格) */
+/* 4. 协力节点 */
 .aux-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
 .aux-node {
   display: flex; gap: 15px; padding: 12px; border: 2px solid var(--black); background: white;
-  transition: 0.2s; align-items: center;
+  transition: 0.2s; align-items: center; position: relative;
 }
 .aux-node:hover { background: var(--black); color: white; transform: skewX(-2deg); }
-.aux-avatar { width: 50px; height: 50px; border: 1px solid var(--black); overflow: hidden; flex-shrink: 0; }
-.aux-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.aux-avatar-container { position: relative; flex-shrink: 0; }
+.aux-avatar { width: 50px; height: 50px; border: 1px solid var(--black); overflow: hidden; background: #000; }
+/* 修改：默认移除 grayscale */
+.aux-avatar img { width: 100%; height: 100%; object-fit: cover; transition: filter 0.3s ease; }
+
+.aux-status-dot {
+  position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; 
+  background: #555; border: 2px solid var(--white); z-index: 10;
+}
+.aux-status-dot.is-online {
+  background: var(--green); box-shadow: 0 0 5px var(--green);
+  animation: blink 1.5s infinite;
+}
+.aux-node:hover .aux-status-dot { border-color: var(--black); }
+
 .aux-body { display: flex; flex-direction: column; overflow: hidden; }
-.aux-name { font-family: var(--heading); font-size: 1.2rem; line-height: 1; margin-bottom: 4px; }
+.aux-name { 
+  font-family: var(--heading); font-size: 1.2rem; line-height: 1; margin-bottom: 4px; 
+  display: flex; align-items: center; gap: 8px;
+}
+.aux-status-tag { 
+  font-family: var(--mono); font-size: 0.5rem; padding: 1px 4px; 
+  border: 1px solid #999; color: #999; font-weight: normal;
+}
+.aux-status-tag.is-online { border-color: var(--green); color: var(--green); }
+.aux-node:hover .aux-status-tag:not(.is-online) { color: #555; border-color: #555; }
+
 .aux-content { font-size: 0.75rem; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* 5. 日志 */
@@ -319,7 +389,7 @@ const historyLogs = ref([
 .log-type.SUCCESS { color: var(--green); }
 .current { animation: blink 2s infinite; }
 
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 .red-blink { animation: blink 1.5s infinite; color: var(--red) !important; }
 
 @media (max-width: 768px) {

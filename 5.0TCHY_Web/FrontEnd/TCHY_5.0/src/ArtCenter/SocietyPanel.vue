@@ -317,7 +317,8 @@ function applyJoin(s) { if (s?.url) window.open(s.url, '_blank') }
 .society-container {
   position: relative; z-index: 1;
   flex: 1; display: flex; flex-direction: column;
-  padding: 20px; gap: 20px;
+  padding: 20px; gap: 20px;min-height: 0;      /* 关键：允许子元素溢出处理 */
+  overflow: hidden;
 }
 
 /* --- 1. 头部控制台 --- */
@@ -328,6 +329,7 @@ function applyJoin(s) { if (s?.url) window.open(s.url, '_blank') }
   display: flex; justify-content: space-between; align-items: center;
   box-shadow: 8px 8px 0 rgba(0,0,0,0.1);
   flex-wrap: wrap; gap: 15px;
+  flex-shrink: 0;
 }
 
 .title-block { display: flex; align-items: center; gap: 15px; }
@@ -360,18 +362,29 @@ function applyJoin(s) { if (s?.url) window.open(s.url, '_blank') }
 
 /* --- 主布局 (双列) --- */
 .main-terminal-layout {
-  flex: 1; display: flex; gap: 20px; overflow: hidden;
+  flex: 1;            /* 占据剩余全部高度 */
+  display: flex;
+  gap: 20px;
+  min-height: 0;      /* 极其关键：这是让子面板 overflow 生效的前提 */
+  overflow: hidden;   /* 容器本身不滚动 */
 }
 
 /* --- 2. 左侧：档案列表 --- */
 .archive-panel {
-  flex: 2; /* 占据更多空间 */
+  flex: 2;
   background: var(--white);
   border: 2px solid var(--black);
   padding: 20px;
-  display: flex; flex-direction: column;
-  overflow-y: auto;
+  
+  /* 确保这里滚动生效 */
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;   /* 开启独立滚动 */
+  min-height: 0;
   box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+  
+  /* 增加底部垫片，防止最后一个卡片滚不到底 */
+  padding-bottom: 60px; 
 }
 
 .panel-label {
@@ -450,14 +463,21 @@ function applyJoin(s) { if (s?.url) window.open(s.url, '_blank') }
 .action-btn:disabled { background: #ccc; cursor: not-allowed; }
 .btn-deco { font-size: 0.8rem; letter-spacing: -2px; }
 
-/* --- 3. 右侧：注册表单 --- */
 .registry-panel {
-  flex: 1; min-width: 350px; max-width: 450px;
+  flex: 1;
+  min-width: 350px;
+  max-width: 450px;
   background: #f4f4f4;
   border: 2px solid var(--black);
   padding: 20px;
-  overflow-y: auto;
+  
+  /* 确保这里滚动生效 */
+  overflow-y: auto;   /* 开启独立滚动 */
+  min-height: 0;
   box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+  
+  /* 底部垫片 */
+  padding-bottom: 60px;
 }
 
 .cyber-form { display: flex; flex-direction: column; gap: 15px; }

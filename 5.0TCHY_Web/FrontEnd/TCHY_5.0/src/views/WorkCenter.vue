@@ -16,7 +16,7 @@
 
       <div class="art-body">
         <aside class="art-sidebar custom-scroll">
-          <div class="sidebar-header">// CHANNEL_SELECT</div>
+          <div class="sidebar-header">//频道选择</div>
           <nav class="channel-nav">
             <div class="cyber-channel-btn" :class="{ active: currentChannel === 'gallery' }" @click="currentChannel = 'gallery'">
               <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_01</span><span class="ch-name">寰宇画廊 // GALLERY</span></div><div class="status-light"></div>
@@ -155,21 +155,38 @@ onUnmounted(() => clearInterval(clockTimer));
   display: flex; 
   overflow: hidden; /* 防止子元素撑开父级 */
   min-height: 0;    /* Flex 溢出修复的关键 */
+
 }
 
-.art-sidebar { width: 260px; background: #f0f0f0; border-right: 4px solid var(--black); display: flex; flex-direction: column; padding: 20px 15px; flex-shrink: 0; user-select: none;overflow: hidden; /* 🔥 侧边栏整体不滚动 */ }
+.art-sidebar { 
+  width: 260px; 
+  background: #f0f0f0; 
+  border-right: 4px solid var(--black); 
+  display: flex; 
+  flex-direction: column; 
+  padding: 20px 15px; 
+  flex-shrink: 0; 
+  user-select: none;
+  overflow: hidden; 
+}
+
+
+  
 .sidebar-header { font-size: 0.7rem; color: #888; border-bottom: 2px dashed #ccc; margin-bottom: 15px; padding-bottom: 5px; }
-/* 频道列表：占据剩余空间，内部滚动 */
+
+
+
 .channel-nav { 
   display: flex; 
   flex-direction: column; 
   gap: 10px; 
-  margin-bottom: 15px; 
-  flex: 1;          /* 🔥 自动占据剩余高度 */
-  overflow-y: auto; /* 🔥 内容多了就内部滚动 */
-  min-height: 0;    /* 🔥 防止 Flex 子项溢出 */
-  padding-right: 5px; /* 给滚动条留点位置 */
+  flex: 0 1 auto;
+  margin-bottom: 15px;       
+  overflow-y: auto; 
+  min-height: 0;    
+  padding-right: 5px; 
 }
+
 .channel-nav::-webkit-scrollbar { display: none; }
 
 .cyber-channel-btn { background: #fff; border: 2px solid var(--black); padding: 12px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; position: relative; transition: all 0.2s; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); flex-shrink: 0; }
@@ -181,16 +198,17 @@ onUnmounted(() => clearInterval(clockTimer));
 .status-light { width: 6px; height: 6px; border: 1px solid #999; background: #ccc; }
 .cyber-channel-btn.active .status-light { background: var(--red); border-color: var(--red); box-shadow: 0 0 5px var(--red); }
 
-/* 数据面板：固定在底部，不被压缩 */
+
 .monitor-panel { 
   background: var(--black); 
   color: var(--white); 
   padding: 15px; 
   border: 2px solid var(--black); 
   box-shadow: 4px 4px 0 rgba(0,0,0,0.2); 
-  margin-top: 10px; 
+  margin-top: 15px; 
   flex-shrink: 0; /* 🔥 禁止被压缩 */
 }
+
 .panel-label { font-size: 0.8rem; border-bottom: 1px dashed #555; padding-bottom: 5px; margin-bottom: 15px; color: var(--red); font-weight: bold; }
 .stat-grid { display: flex; flex-direction: column; gap: 15px; }
 .stat-cell { cursor: pointer; transition: 0.2s; }
@@ -201,27 +219,35 @@ onUnmounted(() => clearInterval(clockTimer));
 .fill { height: 100%; background: var(--white); }
 .sidebar-footer { margin-top: 15px; font-size: 0.7rem; color: #999; text-align: center; line-height: 1.5; opacity: 0.5; flex-shrink: 0; }
 
-/* 🔥 关键修复 CSS 🔥 */
 .art-viewport {
   flex: 1;
   background: #fff;
-  padding: 30px;
+  padding: 30px; /* 如果需要内容顶格，可以调小这里 */
   position: relative;
-  overflow-y: scroll; /* 禁止父级滚动！ */
+  
+  /* 关键修改：禁止父级滚动 */
+  overflow: hidden; 
+  display: flex;
+  flex-direction: column;
 }
 
+/* 确保中间的包装层也撑满高度，不让子组件“塌陷” */
 .view-frame {
+  flex: 1; /* 占据父级所有剩余空间 */
   width: 100%;
-  height: 100%; /* 强制占满高度 */
   position: relative;
-  overflow: hidden; /* 防止溢出 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 内部继续锁定 */
+  padding-bottom: 0; /* 之前你写了 20px，建议改为 0，间距交给子组件 */
 }
 
 .component-renderer {
+  flex: 1;
   width: 100%;
-  height: 100%; /* 确保子组件能继承高度 */
-  position: relative;
-  z-index: 1;
+  height: 100%; /* 确保高度继承 */
+  display: flex;
+  flex-direction: column;
 }
 
 /* 视口四角装饰 */
