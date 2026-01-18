@@ -265,7 +265,7 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   position: fixed; inset: 0; pointer-events: none; z-index: 9999;
   background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%);
   background-size: 100% 4px;
-  height: 80%;
+  height: 100%;
 }
 
 /* Header - 替换后的 header-left 样式 + 原有 header 基础样式保留 */
