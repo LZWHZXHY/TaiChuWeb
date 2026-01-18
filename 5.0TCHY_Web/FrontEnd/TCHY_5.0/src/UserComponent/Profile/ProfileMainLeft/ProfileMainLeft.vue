@@ -215,6 +215,7 @@ const goToBlogDetail = (id) => {
   box-sizing: border-box;
   font-family: var(--mono), var(--sans);
   color: var(--black);
+  
 }
 
 /* --- Tab Controller --- */
