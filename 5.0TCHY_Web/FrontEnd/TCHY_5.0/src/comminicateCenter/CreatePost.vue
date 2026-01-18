@@ -1,22 +1,25 @@
 <template>
   <Teleport to="body">
-    <Transition name="modal-fade">
+    <Transition name="modal-scale">
       <div v-if="modelValue" class="cp-overlay" @click.self="closeModal">
-        <div class="cp-container md-elevation-5">
+        <div class="cp-container">
           
           <header class="cp-header">
             <div class="header-title">
-              <h3>{{ t('CreatePost.create_title') }}</h3>
-              <span class="header-sub">NEW_TRANSMISSION //</span>
+              <span class="deco-box">■</span>
+              <div class="title-wrap">
+                <h3>{{ t('CreatePost.create_title') }}</h3>
+                <span class="header-sub">NEW_TRANSMISSION // DATA_ENTRY</span>
+              </div>
             </div>
             <button class="close-btn" @click="closeModal">
-              <i class="fas fa-times"></i>
+              CLOSE [X]
             </button>
           </header>
 
           <div class="cp-body custom-scroll">
             <div class="form-group">
-              <label class="input-label">TITLE_</label>
+              <label class="input-label">// TITLE_FIELD</label>
               <input 
                 v-model="formData.title" 
                 type="text" 
@@ -27,7 +30,7 @@
             </div>
 
             <div class="form-group">
-              <label class="input-label">CONTENT_</label>
+              <label class="input-label">// CONTENT_STREAM (OPTIONAL)</label>
               <textarea 
                 v-model="formData.content" 
                 class="cp-input content-area custom-scroll" 
@@ -36,6 +39,7 @@
             </div>
 
             <div class="media-section">
+              <label class="input-label">// ATTACHED_MEDIA</label>
               <div class="media-grid">
                 <div v-for="(img, index) in previewImages" :key="index" class="img-preview-card">
                   <img :src="img.url" />
@@ -47,7 +51,7 @@
                 <label v-if="previewImages.length < 9" class="upload-btn">
                   <input type="file" accept="image/*" multiple @change="handleFileSelect" hidden />
                   <i class="fas fa-plus"></i>
-                  <span>{{ t('CreatePost.add_img') || 'ADD_IMG' }}</span>
+                  <span>UPLOAD</span>
                 </label>
               </div>
             </div>
@@ -56,15 +60,18 @@
           <footer class="cp-footer">
             <div class="status-indicator">
               <span :class="['dot', { 'processing': isSubmitting }]"></span>
-              {{ isSubmitting ? t('CreatePost.uploading') : t('CreatePost.ready') }}
+              <span class="status-text">
+                {{ isSubmitting ? 'UPLOADING_DATA...' : 'SYSTEM_READY' }}
+              </span>
             </div>
+            
             <button 
-              class="submit-btn md-ripple" 
+              class="submit-btn" 
               @click="submitPost" 
-              :disabled="isSubmitting || !formData.title || !formData.content"
+              :disabled="isSubmitting || !formData.title.trim()"
             >
-              <span v-if="isSubmitting"><i class="fas fa-circle-notch fa-spin"></i> {{ t('Register.sending') }}</span>
-              <span v-else>{{ t('CreatePost.submit') }}</span>
+              <span v-if="isSubmitting">SENDING...</span>
+              <span v-else>TRANSMIT_DATA</span>
             </button>
           </footer>
 
@@ -79,42 +86,35 @@ import { ref, reactive } from 'vue';
 import apiClient from '@/utils/api';
 import { useI18n } from 'vue-i18n';
 
-// 如果你的项目中还没配置 i18n，这里给一个 fallback，防止报错
 const { t } = useI18n({ useScope: 'global', missingWarn: false, fallbackWarn: false }) || { t: (key) => key };
 
 const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    default: false
-  }
+  modelValue: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(['update:modelValue', 'success']);
 
 const isSubmitting = ref(false);
-const fileList = ref([]); // 实际的 File 对象
-const previewImages = ref([]); // 用于预览的 URL
+const fileList = ref([]);
+const previewImages = ref([]);
 
 const formData = reactive({
   title: '',
   content: ''
 });
 
-// 关闭弹窗
 const closeModal = () => {
   if (isSubmitting.value) return;
   emit('update:modelValue', false);
 };
 
-// 处理图片选择
 const handleFileSelect = (event) => {
   const files = Array.from(event.target.files);
   if (!files.length) return;
 
   files.forEach(file => {
-    // 限制一下大小，比如 5MB
-    if (file.size > 5 * 1024 * 1024) {
-      alert(`文件 ${file.name} 太大，请上传小于 5MB 的图片`);
+    if (file.size > 10 * 1024 * 1024) { // 配合后端 10MB 限制
+      alert(`文件过大: ${file.name}`);
       return;
     }
     fileList.value.push(file);
@@ -123,54 +123,48 @@ const handleFileSelect = (event) => {
       name: file.name
     });
   });
-  
-  // 清空 input 使得同名文件可以再次触发 change
   event.target.value = '';
 };
 
-// 移除图片
 const removeImage = (index) => {
   fileList.value.splice(index, 1);
-  URL.revokeObjectURL(previewImages.value[index].url); // 释放内存
+  URL.revokeObjectURL(previewImages.value[index].url);
   previewImages.value.splice(index, 1);
 };
 
-// 提交逻辑
+// 提交逻辑修复
 const submitPost = async () => {
-  if (!formData.title.trim() || !formData.content.trim()) return;
+  // 修改：内容可以为空，只校验标题
+  if (!formData.title.trim()) return;
 
   isSubmitting.value = true;
   
   try {
-    // 构建 FormData，因为涉及到文件上传
     const submission = new FormData();
-    submission.append('Title', formData.title);
-    submission.append('Content', formData.content); // 注意：后端字段名需确认 (Content vs Body)
+    submission.append('Title', formData.title.trim());
+    submission.append('Content', formData.content.trim()); // 传空字符串后端也支持
+    submission.append('PostType', 0); // 分类固定为 0
     
     fileList.value.forEach(file => {
-      submission.append('images', file); // 注意：后端接收文件的字段名 (images, files, etc.)
+      submission.append('Images', file); // 匹配后端 CreatePostDto 字段名
     });
 
-    // 假设 API 路径
-    const res = await apiClient.post('/Posts/create', submission, {
+    // 路径根据你的控制器调整
+    const res = await apiClient.post('/ThePost/create', submission, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
-    if (res.data.success || res.status === 200) {
-      // 重置表单
+    if (res.data.success) {
       formData.title = '';
       formData.content = '';
       fileList.value = [];
       previewImages.value = [];
-      
-      emit('success'); // 通知父组件刷新列表
+      emit('success');
       closeModal();
-    } else {
-      alert('发布失败: ' + (res.data.message || '未知错误'));
     }
   } catch (e) {
     console.error(e);
-    alert('网络连接中断 // CONNECTION_LOST');
+    alert('TRANSMISSION_ERROR // 信号中断');
   } finally {
     isSubmitting.value = false;
   }
@@ -178,277 +172,246 @@ const submitPost = async () => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;800&display=swap');
 
-/* 变量定义，保持与主仪表盘一致 */
 .cp-overlay {
-  --accent-blue: #3b82f6;
-  --bg-overlay: rgba(15, 23, 42, 0.6);
-  --bg-card: #ffffff;
-  --text-main: #1e293b;
-  --text-sub: #64748b;
-  --border: #e2e8f0;
-  
+  --red: #D92323;
+  --black: #111111;
+  --off-white: #F4F1EA;
+  --gray: #E0DDD5;
+  --mono: 'JetBrains Mono', monospace;
+  --heading: 'Anton', sans-serif;
+
   position: fixed;
   inset: 0;
-  background: var(--bg-overlay);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
   z-index: 9999;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-family: 'Inter', sans-serif;
 }
 
 .cp-container {
-  width: 90%;
-  max-width: 600px;
-  max-height: 85vh;
-  background: var(--bg-card);
-  border-radius: 20px;
+  width: 95%;
+  max-width: 650px;
+  background: var(--off-white);
+  border: 4px solid var(--black);
+  box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  animation: modalIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
-/* Header */
+/* Header: 黑色粗犷风 */
 .cp-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
+  padding: 15px 20px;
+  background: var(--black);
+  color: var(--off-white);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f8fafc;
 }
 
-.header-title h3 {
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.deco-box {
+  color: var(--red);
+  font-size: 20px;
+}
+
+.title-wrap h3 {
+  font-family: var(--heading);
+  font-size: 1.5rem;
   margin: 0;
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text-main);
+  letter-spacing: 1px;
 }
 
 .header-sub {
+  font-family: var(--mono);
   font-size: 10px;
-  color: var(--accent-blue);
-  font-weight: 700;
-  letter-spacing: 1px;
+  color: #666;
+  display: block;
 }
 
 .close-btn {
   background: transparent;
-  border: none;
-  font-size: 20px;
-  color: var(--text-sub);
+  border: 1px solid #444;
+  color: #888;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 5px 10px;
   cursor: pointer;
-  transition: transform 0.2s, color 0.2s;
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 50%;
 }
 
 .close-btn:hover {
-  color: #ef4444;
-  background: #fee2e2;
-  transform: rotate(90deg);
+  background: var(--red);
+  color: white;
+  border-color: var(--red);
 }
 
-/* Body */
+/* Body: 工业灰白背景 */
 .cp-body {
-  padding: 24px;
+  padding: 25px;
   overflow-y: auto;
-  flex: 1;
-}
-
-.form-group {
-  margin-bottom: 20px;
+  max-height: 60vh;
 }
 
 .input-label {
-  display: block;
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--text-sub);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--black);
   margin-bottom: 8px;
-  letter-spacing: 0.5px;
+  display: block;
 }
 
 .cp-input {
   width: 100%;
-  padding: 12px 16px;
-  border: 2px solid var(--border);
-  border-radius: 12px;
+  background: #fff;
+  border: 2px solid var(--black);
+  padding: 12px;
+  font-family: var(--mono);
   font-size: 14px;
-  color: var(--text-main);
-  background: #f8fafc;
-  transition: all 0.3s ease;
+  outline: none;
+  transition: all 0.2s;
   box-sizing: border-box;
-  font-family: inherit;
 }
 
 .cp-input:focus {
-  outline: none;
   background: #fff;
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  border-color: var(--red);
+  box-shadow: 4px 4px 0 rgba(217, 35, 35, 0.1);
 }
 
 .title-input {
-  font-weight: 700;
-  font-size: 16px;
+  font-weight: 800;
+  font-size: 18px;
+  text-transform: uppercase;
 }
 
 .content-area {
-  min-height: 150px;
+  min-height: 120px;
   resize: vertical;
-  line-height: 1.6;
 }
 
-/* Media Grid */
-.media-section {
-  margin-top: 10px;
-}
+/* Media Grid: 工业缩略图 */
 .media-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
 }
 
 .img-preview-card {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
-  overflow: hidden;
+  aspect-ratio: 1;
+  border: 1px solid var(--black);
   position: relative;
-  border: 1px solid var(--border);
+  background: #000;
 }
 
 .img-preview-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 100%; height: 100%; object-fit: cover;
 }
 
 .remove-img-btn {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  background: rgba(0,0,0,0.6);
-  color: #fff;
+  top: 0; right: 0;
+  background: var(--red);
+  color: white;
   border: none;
-  border-radius: 4px;
-  width: 20px;
-  height: 20px;
+  padding: 4px;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 10px;
 }
-.remove-img-btn:hover { background: #ef4444; }
 
 .upload-btn {
-  width: 80px;
-  height: 80px;
-  border: 2px dashed var(--border);
-  border-radius: 12px;
+  aspect-ratio: 1;
+  border: 2px dashed #999;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--text-sub);
   cursor: pointer;
-  transition: all 0.2s;
-  background: #f8fafc;
+  background: #eee;
+  color: #666;
 }
 
 .upload-btn:hover {
-  border-color: var(--accent-blue);
-  color: var(--accent-blue);
-  background: #eff6ff;
+  border-color: var(--red);
+  color: var(--red);
 }
 
-.upload-btn i { font-size: 18px; margin-bottom: 4px; }
-.upload-btn span { font-size: 9px; font-weight: 700; }
+.upload-btn i { font-size: 20px; }
+.upload-btn span { font-family: var(--mono); font-size: 9px; margin-top: 4px; font-weight: 700; }
 
-/* Footer */
+/* Footer: 状态与按钮 */
 .cp-footer {
-  padding: 16px 24px;
-  border-top: 1px solid var(--border);
+  padding: 15px 25px;
+  border-top: 2px solid var(--black);
+  background: var(--gray);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f8fafc;
 }
 
 .status-indicator {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-sub);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  font-family: var(--mono);
 }
 
 .dot {
-  width: 6px; height: 6px;
-  background: #10b981;
+  width: 8px; height: 8px;
+  background: #009966;
   border-radius: 50%;
 }
-.dot.processing { background: #f59e0b; animation: blink 1s infinite; }
+
+.dot.processing {
+  background: var(--red);
+  animation: blink 0.8s infinite;
+}
+
+.status-text {
+  font-size: 11px;
+  color: #555;
+  font-weight: 700;
+}
 
 .submit-btn {
-  padding: 10px 24px;
-  background: var(--text-main);
-  color: #fff;
+  background: var(--black);
+  color: var(--off-white);
   border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 13px;
+  padding: 10px 25px;
+  font-family: var(--heading);
+  font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: var(--accent-blue);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  background: var(--red);
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.3);
 }
 
 .submit-btn:disabled {
-  opacity: 0.6;
+  background: #999;
   cursor: not-allowed;
 }
 
-/* Animations */
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: opacity 0.3s ease;
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
-}
+@keyframes blink { 50% { opacity: 0.3; } }
 
-.modal-fade-enter-active .cp-container,
-.modal-fade-leave-active .cp-container {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.modal-fade-enter-from .cp-container {
-  transform: scale(0.95) translateY(20px);
-}
-.modal-fade-leave-to .cp-container {
-  transform: scale(0.95) translateY(20px);
-}
-
-@keyframes blink { 50% { opacity: 0.4; } }
-
-/* 滚动条美化 */
-.custom-scroll::-webkit-scrollbar { width: 4px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.custom-scroll::-webkit-scrollbar { width: 6px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: var(--black); }
 </style>

@@ -19,7 +19,8 @@ export default{
     work_center: '作品大厅',
     entertainment: '娱乐区',
     product: '太初产品',
-    manage: '管理'
+    manage: '管理',
+    missionCenter:'任务中心'
   },
   login:{
     LoginAccount:"登录太初寰宇",

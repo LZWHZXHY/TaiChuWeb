@@ -12,7 +12,8 @@ export const NAV_ITEMS = [
     children: [
       { name: 'nav.data_center', path: '/DataCenter', mode: 'TERMINAL' }, // 原来是 '交流中枢'
       { name: 'nav.work_center', path: '/WorkCenter', mode: 'GALLERY' },    // 原来是 '艺术大厅'
-      { name: 'nav.entertainment', path: '/EntertainmentArea'}            // 原来是 '娱乐区'
+      { name: 'nav.entertainment', path: '/EntertainmentArea'},        // 原来是 '娱乐区'
+      { name: 'nav.missionCenter', path:'/MissionCenter'}
     ]
   },
   {

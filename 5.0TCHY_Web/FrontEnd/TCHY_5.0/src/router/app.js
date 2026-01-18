@@ -95,6 +95,15 @@ const routes = [
     }
   },
   {
+    path:'/MissionCenter',
+    name:'任务中心',
+    component:()=>import('@/views/MissionCenter.vue'),
+    meta:{
+      requiresAuth:true,
+      title:'任务中心'
+    }
+  },
+  {
     path:'/blogCreater',
     name:'博客创作',
     component:()=>import('@/BlogComponents/BlogCreater.vue'),
