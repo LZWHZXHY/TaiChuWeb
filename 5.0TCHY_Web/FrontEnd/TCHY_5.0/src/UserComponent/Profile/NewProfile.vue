@@ -374,22 +374,19 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 .flip-trigger-btn .icon { font-size: 1rem; line-height: 1; }
 .corner-deco { position: absolute; bottom: -4px; left: -4px; width: 8px; height: 8px; border-bottom: 2px solid var(--black); border-left: 2px solid var(--black); }
 
-/* 1. 保留顶级关键帧（无修改，你的原有动画逻辑） */
+/* 1. 优化后的关键帧动画（移除空闲时间，仅保留实际动画部分） */
 @keyframes move-rotate-loop {
   0% {
     transform: translateY(0) rotate(0deg); /* 初始状态：原地、无旋转 */
   }
-  10% {
+  50% {
     transform: translateY(100px) rotate(180deg); /* 中途：下移100px、旋转180° */
   }
-  15% {
+  75% {
     transform: translateY(100px) rotate(180deg); /* 停顿：保持下移旋转状态 */
   }
-  20% {
-    transform: translateY(0) rotate(360deg); /* 复位：回到原地、旋转360° */
-  }
   100% {
-    transform: translateY(0) rotate(360deg); /* 全程停顿：保持复位状态 */
+    transform: translateY(0) rotate(360deg); /* 复位：回到原地、旋转360° */
   }
 }
 
@@ -406,8 +403,8 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   display: flex; align-items: center; justify-content: center;
   /* 优化transition：仅针对背景色过渡，避免干扰transform（动画/hover） */
   transition: background 0.2s ease;
-  /* 原有动画配置 */
-  animation: move-rotate-loop 10s ease-in-out infinite;
+  /* 优化后的动画配置：减少动画时长，使用delay创建循环间隔 */
+  animation: move-rotate-loop 2s ease-in-out 8s infinite;
   transform: translateZ(0);
 }
 
