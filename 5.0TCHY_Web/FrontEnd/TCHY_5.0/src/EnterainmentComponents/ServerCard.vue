@@ -1,7 +1,7 @@
 <template>
   <div class="md-server-card">
     <div class="card-media">
-      <img :src="coverImage" @error="handleImgError" alt="Server Cover" />
+      <img :src="coverImage" @error="handleImgError" alt="Server Cover" loading="lazy" />
       <div class="media-overlay"></div>
       
       <div class="status-chip" :class="isOnline ? 'online' : 'offline'">
@@ -18,229 +18,163 @@
         <span class="server-id">#{{ index.toString().padStart(2, '0') }}</span>
       </div>
 
-      <div class="ip-action-bar" @click="copyIP" title="点击复制">
-        <div class="ip-icon">ADDR</div>
-        <span class="ip-text">{{ ip }}</span>
-        <div class="copy-hint"><i class="fas fa-copy"></i></div>
+      <div class="ip-group">
+        <div class="ip-action-bar" @click="copyIP(ip1)" title="点击复制主线路">
+          <div class="ip-icon primary">主线</div>
+          <span class="ip-text">{{ ip1 }}</span>
+          <div class="copy-hint"><i class="icon">⧉</i></div>
+        </div>
+
+        <div class="ip-action-bar alt" v-if="ip2" @click="copyIP(ip2)" title="点击复制备用线路">
+          <div class="ip-icon secondary">备用</div>
+          <span class="ip-text">{{ ip2 }}</span>
+          <div class="copy-hint"><i class="icon">⧉</i></div>
+        </div>
       </div>
 
-      <p class="server-desc">点击上方地址快速复制，或下载下方资源文件。</p>
+      <p class="server-desc">点击地址即可复制到剪贴板。</p>
     </div>
 
     <div class="card-actions">
-      <button 
-        class="md-btn outlined" 
-        @click="$emit('download', 'launcher')"
-      >
+      <button class="md-btn outlined" @click="$emit('download', 'launcher')">
         启动器
       </button>
-      <button 
-        class="md-btn contained" 
-        @click="$emit('download', 'modpack')"
-      >
-        同步整合包
+      <button class="md-btn contained" @click="$emit('download', 'modpack')">
+        下载整合包
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
-// 定义接收的属性
 const props = defineProps({
   index: { type: Number, default: 1 },
-  title: { type: String, default: '未知服务器' },
-  ip: { type: String, default: '127.0.0.1' },
-  version: { type: String, default: 'Latest' },
-  coverImage: { type: String, default: '' },
-  isOnline: { type: Boolean, default: true }
+  title: String,
+  ip1: String, // 对应数据源的 ip1
+  ip2: String, // 对应数据源的 ip2
+  version: String,
+  coverImage: String,
+  isOnline: Boolean
 });
 
-// 定义事件
 const emit = defineEmits(['download']);
 
-// 复制连接地址逻辑
-const copyIP = () => {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(props.ip).then(() => {
-      alert('连接地址已复制: ' + props.ip);
-    }).catch(() => {
-      // 兼容性回退方案
-      const input = document.createElement('input');
-      input.value = props.ip;
-      document.body.appendChild(input);
-      input.select();
-      document.execCommand('copy');
-      document.body.removeChild(input);
-      alert('连接地址已复制');
-    });
+// 复制逻辑
+const copyIP = async (text) => {
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    alert(`复制成功: ${text}`);
+  } catch (err) {
+    // 简单回退
+    const input = document.createElement('input');
+    input.value = text;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    alert('复制成功');
   }
 };
 
-// 图片加载失败处理 (Base64 纯色占位，防止死循环)
+// 图片容错
 const handleImgError = (e) => {
-  const fallback = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
-  if (e.target.src !== fallback) {
-    e.target.src = fallback;
-  }
+  e.target.src = 'https://via.placeholder.com/400x200?text=NO+IMAGE';
 };
 </script>
 
 <style scoped>
-/* 核心卡片容器 */
+/* 引入漂亮字体 */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap');
+
 .md-server-card {
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  border: 1px solid #eee;
-  height: 100%;
+  height: 100%; /* 确保卡片等高 */
+  border: 1px solid #f0f0f0;
 }
 
 .md-server-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
 }
 
-/* 媒体展示区样式 */
-.card-media { 
-  position: relative; 
-  height: 140px; 
-  background: #333; 
-  overflow: hidden; 
-}
-.card-media img { 
-  width: 100%; 
-  height: 100%; 
-  object-fit: cover; 
-  transition: transform 0.5s ease; 
-}
-.md-server-card:hover .card-media img { 
-  transform: scale(1.05); 
-}
+/* 媒体图片 */
+.card-media { position: relative; height: 150px; background: #eee; }
+.card-media img { width: 100%; height: 100%; object-fit: cover; }
+.media-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.4), transparent); }
 
-/* 状态标识小标签 (Status Chip) */
+/* 状态 Chip */
 .status-chip {
-  position: absolute; 
-  top: 10px; 
-  left: 10px;
-  padding: 4px 10px; 
-  border-radius: 20px;
+  position: absolute; top: 12px; left: 12px;
+  padding: 4px 12px; border-radius: 20px;
   background: rgba(255,255,255,0.95);
-  font-size: 12px; 
-  font-weight: bold;
-  display: flex; 
-  align-items: center; 
-  gap: 6px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  z-index: 2;
+  font-size: 12px; font-weight: bold;
+  display: flex; align-items: center; gap: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; }
 .status-chip.online { color: #059669; }
-.status-chip.online .status-dot { background: #10B981; box-shadow: 0 0 5px #10B981; }
+.status-chip.online .status-dot { background: #10B981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
 .status-chip.offline { color: #DC2626; }
 .status-chip.offline .status-dot { background: #EF4444; }
 
 .version-badge {
-  position: absolute; 
-  bottom: 0; 
-  right: 0;
-  background: rgba(0,0,0,0.7); 
-  color: #fff;
-  padding: 2px 10px; 
-  font-size: 11px;
-  border-top-left-radius: 8px;
-  z-index: 2;
+  position: absolute; bottom: 8px; right: 8px;
+  background: rgba(0,0,0,0.6); color: #fff;
+  padding: 2px 8px; font-size: 11px; border-radius: 4px;
+  backdrop-filter: blur(4px);
 }
 
-/* 内容区域排版 */
+/* 内容 */
 .card-content { padding: 16px; flex: 1; display: flex; flex-direction: column; }
-.header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.server-title { margin: 0; font-size: 18px; font-weight: 800; color: #111; line-height: 1.2; }
-.server-id { color: #999; font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+.header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+.server-title { margin: 0; font-size: 18px; font-weight: 700; color: #1f2937; line-height: 1.3; }
+.server-id { color: #9ca3af; font-family: 'JetBrains Mono'; font-size: 14px; }
 
-/* ADDR 复制条样式 */
+/* IP 列表组 */
+.ip-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+
 .ip-action-bar {
-  background: #f3f4f6; 
-  padding: 8px; 
-  border-radius: 6px;
-  display: flex; 
-  align-items: center; 
-  cursor: pointer;
-  margin-bottom: 16px; 
-  transition: background 0.2s ease;
-  border: 1px solid transparent;
+  background: #f3f4f6; padding: 8px 10px; border-radius: 6px;
+  display: flex; align-items: center; cursor: pointer;
+  transition: all 0.2s; border: 1px solid transparent;
 }
-.ip-action-bar:hover { 
-  background: #e5e7eb; 
-  border-color: #d1d5db;
-}
-.ip-icon { 
-  font-size: 10px; 
-  font-weight: bold; 
-  background: #333; 
-  padding: 2px 4px; 
-  border-radius: 3px; 
-  margin-right: 8px; 
-  color: #fff; 
-}
-.ip-text { 
-  flex: 1; 
-  font-family: 'JetBrains Mono', monospace; 
-  color: #333; 
-  font-weight: 600; 
-  font-size: 13px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.copy-hint { color: #999; font-size: 12px; }
+.ip-action-bar:hover { background: #e5e7eb; border-color: #d1d5db; }
+.ip-action-bar:active { background: #d1d5db; }
 
-.server-desc { font-size: 12px; color: #666; margin: 0; line-height: 1.5; }
+.ip-icon {
+  font-size: 10px; padding: 2px 6px; border-radius: 4px;
+  color: #fff; margin-right: 8px; font-weight: bold;
+}
+.ip-icon.primary { background: #2563EB; }
+.ip-icon.secondary { background: #6B7280; }
 
-/* 底部操作按钮样式 (Material Design 风格) */
-.card-actions { 
-  padding: 12px 16px; 
-  display: flex; 
-  gap: 10px; 
-  background: #fafafa; 
-  border-top: 1px solid #eee; 
+.ip-text {
+  flex: 1; font-family: 'JetBrains Mono'; color: #374151;
+  font-size: 13px; font-weight: 600;
 }
-.md-btn { 
-  flex: 1; 
-  padding: 10px 0; 
-  border-radius: 8px; 
-  border: none; 
-  font-size: 13px; 
-  cursor: pointer; 
-  font-weight: 600; 
-  transition: all 0.2s ease; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.copy-hint .icon { font-style: normal; font-size: 14px; color: #9ca3af; }
 
-/* 填充按钮 (Primary) */
-.md-btn.contained { 
-  background: #2563EB; 
-  color: #fff; 
-  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
-}
-.md-btn.contained:hover { 
-  background: #1D4ED8; 
-  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
-}
+.server-desc { font-size: 12px; color: #6b7280; margin-top: auto; padding-top: 10px; }
 
-/* 描边按钮 (Secondary) */
-.md-btn.outlined { 
-  background: #fff; 
-  border: 1px solid #d1d5db; 
-  color: #374151; 
+/* 按钮 */
+.card-actions {
+  padding: 12px 16px; background: #f9fafb;
+  border-top: 1px solid #f3f4f6; display: flex; gap: 10px;
 }
-.md-btn.outlined:hover { 
-  border-color: #9ca3af; 
-  background: #f9fafb; 
+.md-btn {
+  flex: 1; padding: 8px; border-radius: 6px; border: none;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
 }
+.md-btn.contained { background: #2563EB; color: #fff; box-shadow: 0 1px 2px rgba(37, 99, 235, 0.3); }
+.md-btn.contained:hover { background: #1d4ed8; }
+.md-btn.outlined { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.md-btn.outlined:hover { border-color: #9ca3af; background: #f3f4f6; }
 </style>
