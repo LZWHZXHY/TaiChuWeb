@@ -113,7 +113,6 @@ const submitMessage = () => {
   gap: 30px; 
   max-width: 800px;
   font-family: var(--mono), var(--sans);
-  max-height: calc(100vh - 200px); /* 适配容器高度，可根据父容器调整 */
 }
 
 .guestbook-input-area { 

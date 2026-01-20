@@ -226,13 +226,13 @@ const goToBlogDetail = (id) => {
   padding: 12px 15px; text-align: left; cursor: pointer; position: relative;
   transition: 0.2s; display: flex; flex-direction: column;
 }
-.tab-btn.active { background: var(--white); color: var(--black); padding-bottom: 14px; margin-bottom: -2px; z-index: 5; border-bottom: none; }
+.tab-btn.active { background: black; color: rgb(255, 255, 255); padding-bottom: 14px; margin-bottom: -2px; z-index: 5; border-bottom: none; }
 .tab-btn:hover:not(.active) { background: #ccc; }
 .tab-btn::before { content:''; position: absolute; top:0; left:0; width: 100%; height: 4px; background: transparent; }
 .tab-btn.active::before { background: var(--red); }
 .tab-idx { font-size: 0.7rem; color: #888; font-weight: bold; font-family: var(--mono); }
 .tab-label { font-family: var(--sans); font-weight: 800; font-size: 1.1rem; margin-top: 2px; }
-.tab-sub { font-size: 0.6rem; color: #666; margin-top: 2px; opacity: 0.8; font-family: var(--mono); text-transform: uppercase; }
+.tab-sub { font-size: 0.6rem; color: #868686; margin-top: 2px; opacity: 0.8; font-family: var(--mono); text-transform: uppercase; }
 .tab-filler { flex: 1; background: #ddd; border-bottom: 2px solid var(--black); }
 
 /* --- Viewport & Common --- */
