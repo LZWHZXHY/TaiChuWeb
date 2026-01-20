@@ -207,7 +207,7 @@ const goToBlogDetail = (id) => {
 .content-area-inside {
   flex: 1;
   display: flex; flex-direction: column;
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.8);
   border: 2px solid var(--black);
   box-shadow: 10px 10px 0 rgba(0,0,0,0.1);
   overflow: hidden;
@@ -215,7 +215,7 @@ const goToBlogDetail = (id) => {
   box-sizing: border-box;
   font-family: var(--mono), var(--sans);
   color: var(--black);
-  
+  opacity: 0.95; /* 50% 不透明度 = 50% 透明 */
 }
 
 /* --- Tab Controller --- */

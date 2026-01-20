@@ -43,6 +43,10 @@
               @handleMessage="handleMessage"
               @goToUserSettings="GoToUserSettings"
             />
+            
+            <div class="datacard-container">
+               <DataCard :stats="user.stats" />
+            </div>
           </div>
           
           <div class="feature-wrapper cyber-card">
@@ -67,6 +71,8 @@ import { storeToRefs } from 'pinia'
 // 组件导入
 import ProfileMain from '@/UserComponent/Profile/ProfileMainLeft/ProfileMainLeft.vue';
 import Idcard from '@/UserComponent/Profile/Idcard.vue';
+// 确保这里正确导入了 DataCard
+import DataCard from '@/UserComponent/Profile/DataCard.vue'; 
 import FeaturedCard from '@/UserComponent/Profile/FeaturedCard.vue';
 
 const authStore = useAuthStore()
@@ -103,11 +109,7 @@ const user = reactive({
   stats: { likes: 12450, views: 89000, works: 142, followers: 3500 }
 })
 
-const achievements = ref([
-  { id: 1, name: '早期开拓者', desc: '在2023年前注册加入网络', icon: '⚡', unlocked: true },
-  { id: 2, name: '高产机器', desc: '累计发布超过100个作品', icon: '📦', unlocked: true },
-  { id: 3, name: '万人瞩目', desc: '拥有超过10,000名关注者', icon: '👑', unlocked: false },
-])
+
 
 const mockData = {
   works: [
@@ -173,15 +175,15 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   --gray-dark: #CFCBC0;
   
   width: 100%; 
-  min-height: 100vh; /* 取消固定高度，允许自然延伸 */
-  background-color: var(--white);
+  min-height: 100vh;
+  /* background-color: var(--white); -> Changed to transparent */
+  background-color: transparent; 
   color: var(--black);
   font-family: var(--mono), var(--sans);
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow-x: hidden; /* 防止横向溢出 */
-
+  overflow-x: hidden;
 }
 
 /* 背景装饰文字 */
@@ -207,7 +209,6 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   align-items: center;
   padding: 0 24px;
   border-bottom: 4px solid var(--red);
-  /* 头部固定在顶部，随页面滚动分离 */
   position: sticky;
   top: 0;
   z-index: 100;
@@ -281,26 +282,18 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 
 /* --- 主内容区域 --- */
 .main-layout {
-  flex: 1; /* 撑满剩余空间 */
+  flex: 1; 
   display: flex;
   justify-content: center;
   width: 100%;
-  /* --- 背景设计升级 --- */
   background-color: rgb(0, 0, 0);
   background-image: 
-    /* 1. 径向渐变 (Vignette) - 四周略暗，突出中间 */
     radial-gradient(circle at 50% 50%, rgba(70, 70, 70, 0.8) 0%, rgba(240,237,230,1) 100%),
-    /* 2. 主网格 (大格子) */
     linear-gradient(var(--gray-dark) 1px, transparent 1px),
     linear-gradient(90deg, var(--gray-dark) 1px, transparent 1px),
-    /* 3. 次网格 (小格子 - 增加精细度) */
     linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
-    
-  /* 双层背景尺寸：大格子50px，小格子10px */
   background-size: 100% 100%, 50px 50px, 50px 50px, 10px 10px, 10px 10px;
-  
-  /* 仅让大格子层移动 */
   animation: grid-scroll 3s linear infinite;
 }
 
@@ -308,9 +301,8 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   width: 65%;
   max-width: 1400px;
   min-width: 900px;
-  /* 移除高度限制，允许自然滚动 */
   height: auto;
-  padding: 40px 0 80px 0; /* 底部增加padding，防止内容贴底 */
+  padding: 40px 0 80px 0;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -327,6 +319,18 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 .id-wrapper {
   flex-shrink: 0;
   width: 320px;
+  /* 允许高度自适应，但通常由Idcard撑开，这里不写死可以更灵活 */
+  height: auto;
+  flex-direction: column;
+  gap: 20px; /* 控制 ID Card 和 DataCard 之间的间距 */
+}
+
+/* 调整后的 DataCard 容器样式 */
+.datacard-container {
+  width: 100%;
+  padding-top: 6%;
+  height: 10%;
+  /* 移除固定高度和背景，让组件自己控制 */
 }
 
 .feature-wrapper {
@@ -338,13 +342,13 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 /* 底部区域 */
 .bottom-section {
   width: 100%;
-  /* 取消最小高度限制，随内容撑开 */
   height: auto; 
 }
 
 /* --- 赛博卡片通用样式 --- */
 .cyber-card {
-  background: var(--white);
+  /* background: var(--white); -> Changed to transparent */
+  background: transparent;
   border: 1px solid var(--black);
   box-shadow: 8px 8px 0 rgba(0,0,0,0.08);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -355,11 +359,10 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 
 .cyber-card:hover {
   transform: translateY(-2px);
-  box-shadow: 12px 12px 0 rgba(0,0,0,0.12); /* 阴影加深 */
+  box-shadow: 12px 12px 0 rgba(0,0,0,0.12);
   border-color: var(--red);
 }
 
-/* 右下角工业标记装饰 */
 .cyber-card::after {
   content: '';
   position: absolute;
@@ -371,8 +374,6 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 }
 
 /* --- 动画关键帧 --- */
-
-/* 网格滚动：只移动背景层的第2/3层 (大网格) */
 @keyframes grid-scroll {
   0% { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
   100% { background-position: 0 0, 50px 50px, 50px 50px, 0 0, 0 0; }
@@ -390,7 +391,6 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   50% { opacity: 0; }
 }
 
-/* 入场动画 */
 .slide-in-item {
   opacity: 0;
   transform: translateY(30px);

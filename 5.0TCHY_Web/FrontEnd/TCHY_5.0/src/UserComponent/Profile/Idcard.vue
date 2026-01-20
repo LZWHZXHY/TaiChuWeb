@@ -2,7 +2,6 @@
   <aside class="sidebar-left custom-scroll">
     <div class="id-flip-wrapper" :class="{ 'is-flipped': showIdArchive }">
       <div class="id-flipper">
-        <!-- 卡片正面 -->
         <div class="id-face id-front">
           <div class="cyber-card id-card-content">
             <button class="settings-trigger-btn" title="用户资料设置" @click="emit('goToUserSettings')">
@@ -51,39 +50,13 @@
           </div>
         </div>
 
-        <!-- 卡片背面 -->
         <div class="id-face id-back">
           <IdArchiveCard :user="user" @close="emit('toggleIdArchive')" />
         </div>
       </div>
     </div>
-
-    <div class="cyber-card stats-card">
-      <div class="panel-header">
-        <span class="deco">·</span> 数据概览 // METRICS
-      </div>
-      <div class="stats-grid">
-        <div class="stat-item">
-          <span class="label">获赞数</span>
-          <span class="val">{{ formatNumber(user.stats.likes) }}</span>
-        </div>
-        <div class="stat-item">
-          <span class="label">浏览量</span>
-          <span class="val">{{ formatNumber(user.stats.views) }}</span>
-        </div>
-        <div class="stat-item">
-          <span class="label">作品数</span>
-          <span class="val">{{ user.stats.works }}</span>
-        </div>
-        <div class="stat-item">
-          <span class="label">粉丝数</span>
-          <span class="val">{{ formatNumber(user.stats.followers) }}</span>
-        </div>
-      </div>
-    </div>
     
-    
-  </aside>
+    </aside>
 </template>
 
 <script setup>
@@ -122,10 +95,7 @@ const emit = defineEmits([
   'goToUserSettings'
 ])
 
-// 数字格式化工具方法
-const formatNumber = (num) => {
-  return num > 1000 ? (num / 1000).toFixed(1) + 'k' : num
-}
+// 移除了 formatNumber 函数，因为它只在 DataCard 中使用
 </script>
 
 <style scoped>
@@ -142,7 +112,8 @@ const formatNumber = (num) => {
   padding-top: 1%;
   padding-bottom: 1%;
   border-top: #000000 0px solid;
-  height: 100%;
+  height: 68%;
+  
 }
 
 /* ID卡片翻转逻辑 */
@@ -180,7 +151,7 @@ const formatNumber = (num) => {
 
 /* 卡片基础样式 */
 .cyber-card {
-  background: var(--white);
+  background-color: rgba(224, 224, 224, 0.5);
   border: 2px solid var(--black);
   box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
   padding: 0;
@@ -207,21 +178,7 @@ const formatNumber = (num) => {
 .flip-trigger-btn .icon { font-size: 1rem; line-height: 1; }
 .corner-deco { position: absolute; bottom: -4px; left: -4px; width: 8px; height: 8px; border-bottom: 2px solid var(--black); border-left: 2px solid var(--black); }
 
-/* 设置按钮动画 */
-@keyframes move-rotate-loop {
-  0% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(100px) rotate(180deg);
-  }
-  75% {
-    transform: translateY(100px) rotate(180deg);
-  }
-  100% {
-    transform: translateY(0) rotate(360deg);
-  }
-}
+
 .settings-trigger-btn {
   position: absolute;
   top: 10px; left: 10px;
@@ -233,7 +190,6 @@ const formatNumber = (num) => {
   z-index: 5;
   display: flex; align-items: center; justify-content: center;
   transition: background 0.2s ease;
-  animation: move-rotate-loop 2s ease-in-out 8s infinite;
   transform: translateZ(0);
 }
 .settings-trigger-btn:hover {
@@ -255,7 +211,9 @@ const formatNumber = (num) => {
 /* 用户信息 */
 .user-name { font-family: var(--sans); font-weight: 800; font-size: 1.8rem; margin: 0; line-height: 1.2; color: var(--black); }
 .user-role { color: var(--red); font-weight: bold; font-size: 0.85rem; margin-bottom: 15px; font-family: var(--sans); height: auto;}
-.bio-text { font-size: 0.85rem; color: #555; margin-bottom: 20px; line-height: 1.6; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc; padding: 10px 0; font-family: var(--sans); text-align: left;}
+.bio-text { 
+  background: #dddddd;padding: 80px;
+  font-size: 0.85rem; color: #000000; margin-bottom: 20px; line-height: 1.6; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc; padding: 10px 0; font-family: var(--sans); text-align: left;}
 .meta-tags { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; margin-bottom: 20px; }
 .tag { background: #eee; font-size: 0.7rem; padding: 2px 8px; border: 1px solid #ccc; font-family: var(--sans); }
 
@@ -267,12 +225,7 @@ const formatNumber = (num) => {
 .action-btn:hover { background: var(--red); color: var(--white); border-color: var(--black); }
 .action-btn:active{ transform: translateY(2px); }
 
-/* 数据概览卡片 */
-.panel-header { background: var(--black); color: var(--white); padding: 8px 12px; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; font-family: var(--sans); }
-.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--black); border: 2px solid var(--black); margin: 15px; }
-.stat-item { background: var(--white); padding: 15px 10px; display: flex; flex-direction: column; align-items: center; }
-.stat-item .label { font-size: 0.75rem; color: #888; font-weight: bold; margin-bottom: 5px; font-family: var(--sans); }
-.stat-item .val { font-family: var(--heading); font-size: 1.4rem; line-height: 1; color: var(--black); }
+/* 移除了数据概览相关的CSS (panel-header, stats-grid, stat-item) */
 
 /* 成就卡片 */
 .achieve-list { display: flex; flex-direction: column; }
