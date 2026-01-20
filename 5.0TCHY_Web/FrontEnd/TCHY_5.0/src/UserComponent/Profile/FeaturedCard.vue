@@ -125,19 +125,21 @@ defineProps({
   font-family: 'Helvetica Neue', Arial, sans-serif;
   box-sizing: border-box;
   padding: 2%;
+  background-color: rgba(0, 0, 0, 0.1);
 }
 /* 列布局 */
 .deck-column {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  height: 100%;
 }
 .main-column { flex: 2; /* 约 66% */ }
 .aux-column { flex: 1; /* 约 33% */ }
 /* 通用面板容器 */
 .panel-section {
   border: 2px solid #111;
-  background: #F4F1EA;
+  background: rgba(255, 255, 255, 0.55);
   display: flex;
   flex-direction: column;
   box-shadow: #7c7c7c 4px 4px 0;
@@ -172,6 +174,7 @@ defineProps({
   gap: 8px;
   padding: 8px;
   overflow: hidden; /* 关键：防止卡片超出容器 */
+  background-color: rgba(0,0,0,0.4);
 }
 .work-card {
   position: relative;
@@ -190,7 +193,7 @@ defineProps({
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: #eee;
+  background: rgba(238,238,238,0.0);
   min-height: 0; /* 修复 Flex 子元素最小高度问题 */
 }
 .visual-layer img {
@@ -241,8 +244,8 @@ defineProps({
   flex: 1; overflow-y: auto; padding: 10px;
 }
 .log-item {
-  display: flex; align-items: flex-start; margin-bottom: 12px;
-  cursor: pointer;
+  display: flex; align-items: flex-start; margin-bottom: 15%;margin-top: 10px;
+  
 }
 .li-marker {
   width: 6px; height: 6px; background: #ccc;
@@ -252,7 +255,7 @@ defineProps({
 .li-title { font-size: 0.8rem; font-weight: bold; line-height: 1.3; }
 .li-meta { font-size: 0.6rem; color: #999; font-family: monospace; margin-top: 2px; }
 .divider-text {
-  text-align: center; font-size: 0.6rem; color: #ccc;
+  text-align: center; font-size: 0.6rem; color: #000000;
   margin: 15px 0; font-family: monospace;
 }
 .post-item {

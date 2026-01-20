@@ -61,7 +61,7 @@
 
       <div class="barcode-area">
         <div class="barcode"></div>
-        <span class="code-num">UID: {{ user.uid }}</span>
+        <span class="code-num">UID: {{ userID }}</span>
       </div>
     </div>
   </div>
