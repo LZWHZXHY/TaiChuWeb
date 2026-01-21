@@ -95,6 +95,15 @@ const routes = [
     }
   },
   {
+    path:'/MainPush',
+    name:'推送大厅',
+    component:()=>import('@/views/MainPush.vue'),
+    meta:{
+      requiresAuth:true,
+      title:'推送大厅'
+    }
+  },
+  {
     path:'/MissionCenter',
     name:'任务中心',
     component:()=>import('@/views/MissionCenter.vue'),
@@ -125,6 +134,15 @@ const routes = [
     path:'/EntertainmentArea',
     name:'娱乐区',
     component: () => import('@/views/EntertainmentArea.vue'),
+    meta: { 
+      requiresAuth: true,
+      title: '娱乐区'
+    }
+  },
+  {
+    path:'/Terminal',
+    name:'娱乐区',
+    component: () => import('@/views/Terminal.vue'),
     meta: { 
       requiresAuth: true,
       title: '娱乐区'

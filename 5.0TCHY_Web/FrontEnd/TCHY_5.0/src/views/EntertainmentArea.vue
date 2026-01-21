@@ -86,8 +86,7 @@ const channelList = [
     name: 'MINECRAFT_NODE', 
     icon: 'MC', 
     label: '我的世界', 
-    // 错误写法: component: shallowRef(ChannelMinecraft)
-    // 正确写法: 直接赋值，或者用 markRaw 标记为非响应式
+
     component: markRaw(ChannelMinecraft) 
   },
   { 

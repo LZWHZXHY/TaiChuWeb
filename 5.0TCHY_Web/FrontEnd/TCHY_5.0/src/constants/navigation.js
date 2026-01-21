@@ -10,6 +10,7 @@ export const NAV_ITEMS = [
     name: 'nav.community', // 原来是 '寰宇社区'
     type: 'dropdown',
     children: [
+      { name: 'nav.push_center', path: '/MainPush'},
       { name: 'nav.data_center', path: '/DataCenter', mode: 'TERMINAL' }, // 原来是 '交流中枢'
       { name: 'nav.work_center', path: '/WorkCenter', mode: 'GALLERY' },    // 原来是 '艺术大厅'
       { name: 'nav.entertainment', path: '/EntertainmentArea'},        // 原来是 '娱乐区'
@@ -20,6 +21,11 @@ export const NAV_ITEMS = [
   {
     name: 'nav.product', // 原来是 '太初产品'
     path: '/TCHYproduct',
+    type: 'link',
+  },
+  {
+    name: 'nav.Terminal', 
+    path: '/Terminal',
     type: 'link',
   },
   { 
