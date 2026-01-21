@@ -431,14 +431,15 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   gap: 24px;
   width: 100%;
   align-items: stretch;
-  height: 96.5vh;
-  padding-bottom: 0%;
+  height: auto;
+  padding-bottom: 20px;
+
 }
 
 .id-wrapper {
   flex-shrink: 0;
   width: 320px;
-  height: 66%;
+  height: 618px;
   flex-direction: column;
   gap: 20px; 
   display: flex
@@ -457,10 +458,9 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 }
 
 .feature-wrapper {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  height: 95%;
+  height: 900px;
 }
 
 .bottom-section {
