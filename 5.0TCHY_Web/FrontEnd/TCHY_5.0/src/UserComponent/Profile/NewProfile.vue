@@ -45,12 +45,45 @@
             />
             
             <div class="datacard-container">
-               <DataCard :stats="user.stats" />
+               <DataCard :user="user" />
             </div>
           </div>
           
           <div class="feature-wrapper cyber-card">
-            <FeaturedCard :data="mockData" />
+            <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
+              <FeaturedCard :data="mockData" />
+            </div>
+
+            <div class="terminal-link-runner">
+               <div class="runner-header">
+                <div class="runner-title">
+                  <span class="icon">⚡</span> NET_JUMP // 外部链路
+                </div>
+                <div class="runner-status" :class="{ 'active': isRunning }">
+                  {{ isRunning ? 'EXECUTING...' : 'IDLE' }}
+                </div>
+              </div>
+
+              <div class="runner-log" ref="logContainer">
+                <div v-for="(log, index) in logs" :key="index" class="log-line" :style="{ color: log.color }">
+                  <span class="log-prefix">{{ log.prefix }}</span>
+                  <span class="log-content">{{ log.text }}</span>
+                </div>
+              </div>
+
+              <div class="runner-input-box">
+                <span class="prompt">root@link:~$</span>
+                <input 
+                  type="text" 
+                  v-model="terminalInput" 
+                  @keyup.enter="executeLinkCommand"
+                  :disabled="isRunning"
+                  placeholder="输入目标代号 (QQ / Bili / Douyin / XHS)..."
+                  autocomplete="off"
+                />
+                <div class="blinking-cursor">_</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -64,20 +97,20 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+// ... (imports 保持不变) ...
+import { ref, reactive, nextTick } from 'vue'
 import { useRouter } from 'vue-router' 
 import { useAuthStore } from '@/utils/auth' 
 import { storeToRefs } from 'pinia'
-// 组件导入
 import ProfileMain from '@/UserComponent/Profile/ProfileMainLeft/ProfileMainLeft.vue';
 import Idcard from '@/UserComponent/Profile/Idcard.vue';
-// 确保这里正确导入了 DataCard
 import DataCard from '@/UserComponent/Profile/DataCard.vue'; 
 import FeaturedCard from '@/UserComponent/Profile/FeaturedCard.vue';
 
 const authStore = useAuthStore()
 const { userID } = storeToRefs(authStore)
 
+// ... (其余逻辑保持不变) ...
 const router = useRouter() 
 const isFollowing = ref(false)
 const showIdArchive = ref(false)
@@ -86,6 +119,7 @@ const GoToUserSettings = () => {
   router.push('/profile/Usersettings')
 }
 
+// ... (user reactive 对象保持不变) ...
 const user = reactive({
   username: 'USER_114514',
   uid: '89757-X',
@@ -109,10 +143,10 @@ const user = reactive({
   stats: { likes: 12450, views: 89000, works: 142, followers: 3500 }
 })
 
-
-
+// ... (mockData, terminal logic 保持不变) ...
 const mockData = {
-  works: [
+    // ...
+    works: [
     { id: 1, title: 'NEURAL_LINK', category: 'INTERFACE', color: '#ff0055', cover: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop' },
     { id: 2, title: 'GHOST_SHELL', category: '3D_MODEL', color: '#00ccff', cover: 'https://images.unsplash.com/photo-1535295972055-1c762f4483e5?q=80&w=1887&auto=format&fit=crop' },
     { id: 3, title: 'HYPER_DRIVE', category: 'MOTION', color: '#ffcc00', cover: 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?q=80&w=1908&auto=format&fit=crop' },
@@ -132,6 +166,92 @@ const mockData = {
   }
 }
 
+const terminalInput = ref('')
+const isRunning = ref(false)
+const logs = ref([
+  { prefix: '[SYS]', text: 'Terminal ready. Waiting for input...', color: '#666' }
+])
+const logContainer = ref(null)
+
+const linkMap = {
+  qq: { url: 'tencent://message/?uin=1145141919', color: '#0099FF' }, 
+  bilibili: { url: 'https://space.bilibili.com/3493105678420282', color: '#FF6699' },
+  b站: { url: 'https://space.bilibili.com/393582103', color: '#FF6699' },
+  哔哩哔哩: { url: 'https://space.bilibili.com/393582103', color: '#FF6699' },
+  douyin: { url: 'https://www.douyin.com/', color: '#FFFFFF' },
+  抖音: { url: 'https://www.douyin.com/', color: '#FFFFFF' },
+  xiaohongshu: { url: 'https://www.xiaohongshu.com/explore', color: '#FF2442' },
+  小红书: { url: 'https://www.xiaohongshu.com/explore', color: '#FF2442' },
+  weibo: { url: 'https://weibo.com/', color: '#E6162D' },
+  微博: { url: 'https://weibo.com/', color: '#E6162D' }
+}
+
+const generateTechJargon = () => {
+  const hex = Math.random().toString(16).substring(2, 10).toUpperCase();
+  const verbs = ['ALLOC', 'PARSING', 'BYPASS', 'INJECT', 'DECODE', 'PING', 'TRACE', 'MOUNT'];
+  const nouns = ['MEMORY', 'TCP_PACKET', 'FIREWALL', 'PROXY', 'BUFFER', 'KERNEL', 'NODE', 'STACK'];
+  const verb = verbs[Math.floor(Math.random() * verbs.length)];
+  const noun = nouns[Math.floor(Math.random() * nouns.length)];
+  return `0x${hex} // ${verb} > ${noun}... OK`;
+}
+
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (logContainer.value) {
+      logContainer.value.scrollTop = logContainer.value.scrollHeight;
+    }
+  })
+}
+
+const executeLinkCommand = async () => {
+  const key = terminalInput.value.trim().toLowerCase();
+  if (!key) return;
+  
+  let target = linkMap[key];
+  
+  isRunning.value = true;
+  logs.value = []; 
+  
+  logs.value.push({ prefix: '[CMD]', text: `Run: "${key}"`, color: '#fff' });
+  scrollToBottom();
+  await new Promise(r => setTimeout(r, 200));
+
+  if (!target) {
+    logs.value.push({ prefix: '[ERR]', text: `TARGET_NOT_FOUND: ${key}`, color: 'red' });
+    logs.value.push({ prefix: '[SYS]', text: 'Available: QQ, Bili, Douyin, XHS...', color: '#666' });
+    isRunning.value = false;
+    terminalInput.value = '';
+    scrollToBottom();
+    return;
+  }
+
+  const steps = 12; 
+  for (let i = 0; i < steps; i++) {
+    logs.value.push({ 
+      prefix: `[${Math.floor(Math.random()*99)}ms]`, 
+      text: generateTechJargon(), 
+      color: '#444' 
+    });
+    scrollToBottom();
+    await new Promise(r => setTimeout(r, Math.random() * 40 + 20));
+  }
+
+  logs.value.push({ prefix: '[SUCC]', text: `Protocol Handshake: ${target.url.substring(0, 20)}...`, color: '#00ff00' });
+  scrollToBottom();
+  await new Promise(r => setTimeout(r, 600));
+
+  logs.value.push({ prefix: '[SYS]', text: 'REDIRECTING NOW...', color: target.color });
+  scrollToBottom();
+  
+  setTimeout(() => {
+    window.open(target.url, '_blank');
+    terminalInput.value = '';
+    isRunning.value = false;
+    logs.value.push({ prefix: '[SYS]', text: 'Session Closed. Ready.', color: '#666' });
+    scrollToBottom();
+  }, 800);
+}
+
 const goBack = () => {
   if (window.history.length > 1) {
     window.history.back()
@@ -147,8 +267,9 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 </script>
 
 <style scoped>
-@import url('https://gs.jurieo.com/gemini/fonts-googleapis/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap');
-@import url('https://gs.jurieo.com/gemini/fonts-googleapis/css2?family=Caveat:wght@700&display=swap');
+/* ... (原有的 CSS 保持不变，仅修改 datacard-container) ... */
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
 
 :root {
   --red: #D92323;
@@ -168,6 +289,7 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 }
 
 .user-profile-terminal {
+    /* ... 保持不变 ... */
   --red: #D92323;
   --black: #111111;
   --white: #F4F1EA;
@@ -176,7 +298,6 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   
   width: 100%; 
   min-height: 100vh;
-  /* background-color: var(--white); -> Changed to transparent */
   background-color: transparent; 
   color: var(--black);
   font-family: var(--mono), var(--sans);
@@ -186,7 +307,6 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   overflow-x: hidden;
 }
 
-/* 背景装饰文字 */
 .bg-decoration {
   position: fixed;
   bottom: 20px;
@@ -199,7 +319,6 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   user-select: none;
 }
 
-/* --- 头部样式 --- */
 .terminal-header {
   height: 64px;
   background: var(--black);
@@ -280,7 +399,6 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   box-shadow: none;
 }
 
-/* --- 主内容区域 --- */
 .main-layout {
   flex: 1; 
   display: flex;
@@ -302,55 +420,57 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   max-width: 1400px;
   min-width: 900px;
   height: auto;
-  padding: 40px 0 80px 0;
+  padding: 1% 0 80px 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 0%;
 }
 
-/* 顶部双栏结构 */
 .top-section {
   display: flex;
   gap: 24px;
   width: 100%;
   align-items: stretch;
+  height: 96.5vh;
+  padding-bottom: 0%;
 }
 
 .id-wrapper {
   flex-shrink: 0;
   width: 320px;
-  /* 允许高度自适应，但通常由Idcard撑开，这里不写死可以更灵活 */
-  height: auto;
+  height: 66%;
   flex-direction: column;
-  gap: 20px; /* 控制 ID Card 和 DataCard 之间的间距 */
+  gap: 20px; 
+  display: flex
 }
 
-/* 调整后的 DataCard 容器样式 */
+/* --- 修改点: 去除边距，允许 flex 填充 --- */
 .datacard-container {
   width: 100%;
-  padding-top: 6%;
-  height: 10%;
-  /* 移除固定高度和背景，让组件自己控制 */
+  padding-top: 0; /* Removed padding */
+  display: flex;
+  flex-direction: column;
+  flex: 1;             /* 自动填充剩余高度 */
+  max-height: 46%;       /* 防止内容过多时撑破 Flex 容器 */
+  display: flex;
+  
 }
 
 .feature-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 95%;
 }
 
-/* 底部区域 */
 .bottom-section {
   width: 100%;
   height: auto; 
 }
 
-/* --- 赛博卡片通用样式 --- */
 .cyber-card {
-  /* background: var(--white); -> Changed to transparent */
   background: transparent;
-  border: 1px solid var(--black);
-  box-shadow: 8px 8px 0 rgba(0,0,0,0.08);
+  border: 0px solid var(--black);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   display: flex;
@@ -359,7 +479,6 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
 
 .cyber-card:hover {
   transform: translateY(-2px);
-  box-shadow: 12px 12px 0 rgba(0,0,0,0.12);
   border-color: var(--red);
 }
 
@@ -373,7 +492,104 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   pointer-events: none;
 }
 
-/* --- 动画关键帧 --- */
+.terminal-link-runner {
+  height: 200px;
+  width: 100%;
+  background: rgba(10, 10, 10, 0.7);
+  border-top: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 16px;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+}
+
+.terminal-link-runner::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 0;
+  width: 40px; height: 1px;
+  background: var(--red);
+  box-shadow: 0 0 10px var(--red);
+}
+
+.runner-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 8px;
+  border-bottom: 1px dashed #333;
+  padding-bottom: 4px;
+}
+
+.runner-status {
+  font-weight: bold;
+}
+.runner-status.active {
+  color: var(--red);
+  animation: blink-anim 0.5s infinite;
+}
+
+.runner-log {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  scrollbar-width: none;
+}
+.runner-log::-webkit-scrollbar { display: none; }
+
+.log-line {
+  display: flex;
+  gap: 8px;
+}
+.log-prefix { opacity: 0.7; min-width: 50px; }
+
+.runner-input-box {
+  display: flex;
+  align-items: center;
+  background: #111;
+  padding: 4px 8px;
+  border: 1px solid #333;
+}
+.runner-input-box:focus-within {
+  border-color: #666;
+}
+
+.prompt {
+  color: var(--red);
+  font-weight: bold;
+  margin-right: 8px;
+  font-size: 0.9rem;
+  user-select: none;
+}
+
+.runner-input-box input {
+  background: transparent;
+  border: none;
+  color: var(--white);
+  font-family: inherit;
+  font-size: 0.9rem;
+  flex: 1;
+  outline: none;
+}
+
+.runner-input-box input::placeholder {
+  color: #333;
+  font-style: italic;
+}
+
+.blinking-cursor {
+  color: var(--red);
+  font-weight: bold;
+  animation: blink-anim 1s step-end infinite;
+}
+
 @keyframes grid-scroll {
   0% { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
   100% { background-position: 0 0, 50px 50px, 50px 50px, 0 0, 0 0; }
@@ -409,7 +625,6 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   }
 }
 
-/* --- 响应式适配 --- */
 @media (max-width: 1024px) {
   .center-container { 
     width: 95%; 

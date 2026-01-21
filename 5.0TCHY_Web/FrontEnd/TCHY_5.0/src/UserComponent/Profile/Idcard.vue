@@ -4,48 +4,76 @@
       <div class="id-flipper">
         <div class="id-face id-front">
           <div class="cyber-card id-card-content">
+            <div class="grid-bg"></div>
+            
             <button class="settings-trigger-btn" title="用户资料设置" @click="emit('goToUserSettings')">
               <span class="icon">⚙</span>
             </button>
-            <div class="menu-row" @click="emit('goToUserSettings')">
-              <span class="row-icon"></span>
-              <span class="row-label">[ID:{{ userID }}]</span>
+            
+            <div class="tech-header" @click="emit('goToUserSettings')">
+              <span class="tech-id">ID:{{ userID }}</span>
+              <div class="status-dot"></div>
             </div>
 
             <button class="flip-trigger-btn" @click="emit('toggleIdArchive')" title="查看详细资料">
               <span class="icon">▶</span>
-              <span class="corner-deco"></span>
+              <span class="corner-deco-sm"></span>
             </button>
 
-            <div class="card-deco-top"></div>
-            <div class="avatar-frame">
-              <img :src="user.avatar" alt="avatar" />
-              <div class="corner-brackets"></div>
-              <div class="level-badge">LV.{{ user.level }}</div>
+            <div class="caution-stripe"></div>
+
+            <div class="avatar-container">
+              <div class="avatar-frame">
+                <img :src="user.avatar" alt="avatar" />
+                <div class="bracket-tl"></div>
+                <div class="bracket-br"></div>
+                <div class="scan-line"></div>
+              </div>
             </div>
+
             <div class="id-info">
               <h1 class="user-name">{{ user.nickname }}</h1>
-              <div class="user-role">
-                <span class="hash">#</span> {{ user.role }}
+              
+              <div class="user-meta-row">
+                <div class="meta-badge role-badge">
+                  <span class="hash">#</span> {{ user.role }}
+                </div>
+                <div class="meta-badge gender-badge" v-if="user.gender">
+                  <span class="icon-gender">{{ user.gender === '男' || user.gender === 'Male' ? '♂' : (user.gender === '女' || user.gender === 'Female' ? '♀' : '⚥') }}</span>
+                  <span class="text-gender">{{ user.gender }}</span>
+                </div>
               </div>
-              <p class="bio-text">
-                {{ user.bio || '暂无个人简介数据...' }}
-              </p>
+
+              <div class="bio-container">
+                <p class="bio-text">
+                  {{ user.bio || 'NO DATA // 暂无个人简介数据...' }}
+                </p>
+                <div class="bio-deco"></div>
+              </div>
+
               <div class="meta-tags">
-                <span class="tag" v-for="tag in user.tags" :key="tag">{{ tag }}</span>
+                <span class="tag" v-for="tag in user.tags" :key="tag">
+                  {{ tag }}
+                </span>
               </div>
             </div>
+
             <div class="action-row">
               <button 
                 class="action-btn" 
                 :class="isFollowing ? 'active-state' : 'primary'" 
                 @click="emit('toggleFollow')"
               >
-                {{ isFollowing ? '✓ 已关注' : '关注 + FOLLOW' }}
+                {{ isFollowing ? '✓ FOLLOWING' : '+ FOLLOW' }}
               </button>
-              <button class="action-btn" @click="emit('handleMessage')">
-                私信 // MSG
+              <button class="action-btn secondary" @click="emit('handleMessage')">
+                MESSAGE_
               </button>
+            </div>
+            
+            <div class="card-footer-deco">
+              <span>DESIGNED BY JURIEO</span>
+              <span>VER 2.0</span>
             </div>
           </div>
         </div>
@@ -55,15 +83,13 @@
         </div>
       </div>
     </div>
-    
-    </aside>
+  </aside>
 </template>
 
 <script setup>
 import { defineProps, defineEmits } from 'vue'
 import IdArchiveCard from '@/UserComponent/Profile/IdArchiveCard.vue'
 
-// 定义接收的属性
 const props = defineProps({
   user: {
     type: Object,
@@ -87,36 +113,37 @@ const props = defineProps({
   }
 })
 
-// 定义触发的事件
 const emit = defineEmits([
   'toggleIdArchive',
   'toggleFollow',
   'handleMessage',
   'goToUserSettings'
 ])
-
-// 移除了 formatNumber 函数，因为它只在 DataCard 中使用
 </script>
 
 <style scoped>
-@import url('https://gs.jurieo.com/gemini/fonts-googleapis/css2?family=Anton&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap');
-@import url('https://gs.jurieo.com/gemini/fonts-googleapis/css2?family=Caveat:wght@700&display=swap');
+@import url('https://gs.jurieo.com/gemini/fonts-googleapis/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;700;900&display=swap');
 
-/* Sidebar 基础样式 */
+/* 定义赛博工业风变量 */
+:root {
+  --main-bg: #F4F1EA; /* 用户偏好的米色 */
+  --cyber-black: #1a1a1a;
+  --cyber-red: #ff3333;
+  --cyber-gray: #888888;
+  --border-width: 2px;
+}
+
+/* 基础布局 */
 .sidebar-left {
   width: 320px;
   display: flex; flex-direction: column; gap: 20px;
-  overflow-y: auto;
-  padding-right: 5px; 
+  overflow-y: hidden;
+  padding: 5px 5px 0px 0; /* 调整padding防止阴影被切 */
   flex-shrink: 0;
-  padding-top: 1%;
-  padding-bottom: 1%;
-  border-top: #000000 0px solid;
-  height: 68%;
-  
+  height: 97%;
 }
 
-/* ID卡片翻转逻辑 */
+/* 翻转容器 */
 .id-flip-wrapper {
   perspective: 1200px;
   width: 100%;
@@ -127,7 +154,7 @@ const emit = defineEmits([
   width: 100%;
   position: relative;
   transform-style: preserve-3d;
-  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 .id-flip-wrapper.is-flipped .id-flipper {
   transform: rotateY(180deg);
@@ -136,110 +163,273 @@ const emit = defineEmits([
   backface-visibility: hidden;
   width: 100%;
 }
-.id-front {
-  position: relative;
-  z-index: 2;
-}
+.id-front { z-index: 2; }
 .id-back {
   position: absolute;
   top: 0; left: 0;
   height: 100%;
   transform: rotateY(180deg);
   z-index: 1;
-  display: flex;
 }
 
-/* 卡片基础样式 */
+/* --- 核心卡片样式 --- */
 .cyber-card {
-  background-color: rgba(224, 224, 224, 0.5);
-  border: 2px solid var(--black);
-  box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+  background-color: rgba(244, 241, 234, 0.4); /* 核心米色 */
+  border: 2px solid #000;
+  /* 硬朗的黑色投影 */
+  box-shadow: 8px 8px 0px  rgba(0,0,0,0.15); 
   padding: 0;
   position: relative;
-  transition: transform 0.2s;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
-.id-card-content { padding: 25px; text-align: center; height: 100%; }
-.card-deco-top { height: 10px; background: repeating-linear-gradient(45deg, var(--black), var(--black) 5px, transparent 5px, transparent 10px); position: absolute; top:0; left:0; width:100%; opacity: 0.1; }
 
-/* 翻转按钮 */
-.flip-trigger-btn {
+.id-card-content {
+  padding: 24px;
+  text-align: center;
+  position: relative;
+}
+
+/* 背景网格纹理 */
+.grid-bg {
   position: absolute;
-  top: 10px; right: 10px;
-  width: 32px; height: 32px;
-  background: var(--black);
-  color: var(--white);
-  border: none;
-  cursor: pointer;
-  z-index: 5;
-  display: flex; align-items: center; justify-content: center;
-  transition: 0.2s;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: linear-gradient(#00000008 1px, transparent 1px), linear-gradient(90deg, #00000008 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+  z-index: 0;
 }
-.flip-trigger-btn:hover { background: var(--red); transform: rotate(180deg); }
-.flip-trigger-btn .icon { font-size: 1rem; line-height: 1; }
-.corner-deco { position: absolute; bottom: -4px; left: -4px; width: 8px; height: 8px; border-bottom: 2px solid var(--black); border-left: 2px solid var(--black); }
 
-
-.settings-trigger-btn {
+/* 顶部装饰条 (警示条纹) */
+.caution-stripe {
+  height: 12px;
+  width: 100%;
   position: absolute;
-  top: 10px; left: 10px;
-  width: 32px; height: 32px;
-  background: var(--black);
-  color: var(--white);
-  border: none;
-  cursor: pointer;
-  z-index: 5;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.2s ease;
-  transform: translateZ(0);
-}
-.settings-trigger-btn:hover {
-  background: var(--red);
-  animation-play-state: paused;
-  transform: rotate(90deg);
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-.settings-trigger-btn .icon {
-  font-size: 1.2rem;
-  line-height: 1;
+  top: 0; left: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    #000,
+    #000 4px,
+    #F4F1EA 4px,
+    #F4F1EA 8px
+  );
+  opacity: 0.8;
+  z-index: 1;
 }
 
-/* 头像区域 */
-.avatar-frame { width: 120px; height: 120px; margin: 0 auto 20px; position: relative; border: 2px solid var(--black); padding: 4px; }
-.avatar-frame img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(20%); }
-.level-badge { position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); background: var(--red); color: white; padding: 2px 8px; font-size: 0.9rem; font-weight: bold; border: 2px solid var(--black); font-family: var(--heading); letter-spacing: 1px; }
+/* 顶部按钮组 */
+.settings-trigger-btn, .flip-trigger-btn {
+  position: absolute;
+  top: 20px; 
+  width: 36px; height: 36px;
+  background: #fff;
+  border: 2px solid #000;
+  color: #000;
+  cursor: pointer;
+  z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 2px 2px 0 #000;
+}
+.settings-trigger-btn { left: 15px; }
+.flip-trigger-btn { right: 15px; }
+
+.settings-trigger-btn:hover, .flip-trigger-btn:hover {
+  background: #000;
+  color: #fff;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--cyber-red);
+}
+
+.tech-header {
+  margin-top: 40px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: #666;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.7;
+}
+.status-dot { width: 6px; height: 6px; background: #2ecc71; border-radius: 50%; box-shadow: 0 0 4px #2ecc71; }
+
+/* 头像区域优化 */
+.avatar-container {
+  margin: 20px auto;
+  position: relative;
+  width: 110px; height: 110px;
+}
+.avatar-frame {
+  width: 100%; height: 100%;
+  border: 2px solid #000;
+  padding: 4px;
+  background: #fff;
+  position: relative;
+}
+.avatar-frame img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: grayscale(20%) contrast(1.1);
+  display: block;
+}
+/* 头像框装饰 Bracket */
+.bracket-tl, .bracket-br {
+  position: absolute;
+  width: 10px; height: 10px;
+  border-color: #000;
+  border-style: solid;
+  z-index: 5;
+  transition: all 0.3s;
+}
+.bracket-tl { top: -2px; left: -2px; border-width: 2px 0 0 2px; }
+.bracket-br { bottom: -2px; right: -2px; border-width: 0 2px 2px 0; }
+.avatar-container:hover .bracket-tl { transform: translate(-3px, -3px); border-color: var(--cyber-red); }
+.avatar-container:hover .bracket-br { transform: translate(3px, 3px); border-color: var(--cyber-red); }
 
 /* 用户信息 */
-.user-name { font-family: var(--sans); font-weight: 800; font-size: 1.8rem; margin: 0; line-height: 1.2; color: var(--black); }
-.user-role { color: var(--red); font-weight: bold; font-size: 0.85rem; margin-bottom: 15px; font-family: var(--sans); height: auto;}
-.bio-text { 
-  background: #dddddd;padding: 80px;
-  font-size: 0.85rem; color: #000000; margin-bottom: 20px; line-height: 1.6; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc; padding: 10px 0; font-family: var(--sans); text-align: left;}
-.meta-tags { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; margin-bottom: 20px; }
-.tag { background: #eee; font-size: 0.7rem; padding: 2px 8px; border: 1px solid #ccc; font-family: var(--sans); }
+.user-name {
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 900;
+  font-size: 2rem;
+  margin: 0 0 10px 0;
+  color: #cc0f0f;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+}
 
-/* 操作按钮 */
-.action-row { display: flex; gap: 10px; }
-.action-btn { flex: 1; border: 2px solid var(--black); background: transparent; padding: 8px; font-family: var(--sans); font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
-.action-btn.primary { background: var(--black); color: var(--white); }
-.action-btn.active-state { background: var(--white); color: var(--red); border-color: var(--red); }
-.action-btn:hover { background: var(--red); color: var(--white); border-color: var(--black); }
-.action-btn:active{ transform: translateY(2px); }
+/* 角色与性别行 */
+.user-meta-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.meta-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #000;
+  padding: 2px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: #fff;
+}
+.role-badge { color: var(--cyber-red); background: #000; color: #fff; }
+.gender-badge { background: transparent; color: #000; gap: 4px; }
+.icon-gender { font-size: 1rem; line-height: 1; }
 
-/* 移除了数据概览相关的CSS (panel-header, stats-grid, stat-item) */
+/* 简介区域修复 */
+.bio-container {
+  position: relative;
+  margin-bottom: 20px;
+}
+.bio-text {
+  background: rgba(0,0,0,0.05); /* 浅灰底 */
+  padding: 15px; /* 修复了原先巨大的80px padding */
+  font-size: 0.85rem;
+  color: #333;
+  line-height: 1.6;
+  border-left: 2px solid #000;
+  text-align: left;
+  font-family: 'Noto Sans SC', sans-serif;
+  min-height: 60px;
+}
+.bio-deco {
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 10px; height: 10px;
+  background: linear-gradient(135deg, transparent 50%, #000 50%);
+}
 
-/* 成就卡片 */
-.achieve-list { display: flex; flex-direction: column; }
-.ach-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px dashed #ccc; gap: 10px; }
-.ach-item:last-child { border-bottom: none; }
-.ach-icon { font-size: 1.5rem; }
-.ach-info { flex: 1; }
-.ach-name { font-weight: bold; font-size: 0.9rem; font-family: var(--sans); }
-.ach-desc { font-size: 0.75rem; color: #888; font-family: var(--sans); margin-top: 2px; }
-.ach-item.locked { opacity: 0.5; filter: grayscale(1); }
+/* 标签云 */
+.meta-tags {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+}
+.tag {
+  background: transparent;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border: 1px dashed #666;
+  font-family: 'JetBrains Mono', monospace;
+  color: #555;
+  transition: all 0.2s;
+}
+.tag:hover {
+  border-style: solid;
+  border-color: #000;
+  color: #000;
+  background: #fff;
+}
 
-/* 滚动条 */
-.custom-scroll::-webkit-scrollbar { width: 6px; }
-.custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
-.custom-scroll::-webkit-scrollbar-thumb:hover { background: var(--red); }
+/* 底部按钮 */
+.action-row {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}
+.action-btn {
+  flex: 1;
+  padding: 10px 0;
+  border: 2px solid #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+/* 主按钮 - 黑色 */
+.action-btn.primary {
+  background: #000;
+  color: #fff;
+}
+.action-btn.primary:hover {
+  background: var(--cyber-red);
+  border-color: var(--cyber-red);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+  color: #D92323;
+  
+}
+/* 次级按钮 - 透明 */
+.action-btn.secondary {
+  background: transparent;
+  color: #000;
+}
+.action-btn.secondary:hover {
+  background: #D92323;
+  color: #fff;
+}
+.action-btn.active-state {
+  background: #D92323;
+  color: #ffffff;
+}
+.action-btn:active {
+  transform: translateY(2px);
+}
+
+/* 底部文字 */
+.card-footer-deco {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.5rem;
+  color: #aaa;
+  border-top: 1px solid #ddd;
+  padding-top: 5px;
+}
+
+/* 滚动条美化 */
+.custom-scroll::-webkit-scrollbar { width: 4px; }
+.custom-scroll::-webkit-scrollbar-track { background: transparent; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #000; }
 </style>
