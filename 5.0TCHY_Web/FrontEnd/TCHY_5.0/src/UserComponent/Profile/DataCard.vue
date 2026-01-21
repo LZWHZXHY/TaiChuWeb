@@ -84,11 +84,8 @@ const displayName = computed(() => {
 const displayStats = computed(() => {
   const s = props.user.stats || {}
   return {
-    FOLLOWERS: s.followers || 0,
-    VIEWS: s.views || 0,
-    WORKS: s.works || 0,
-    // 这里可以加更多，比如 'CREDITS', 'RANK' 等
-    ACHIEVEMENTS: 12 // 示例固定值
+    FOLLOWERS: s.followers || 100000,
+    LIKES: s.likes || 0,
   }
 })
 
@@ -241,10 +238,9 @@ const formatNumber = (num) => {
 
 /* === 4. Stats Grid (自适应滚动区域) === */
 .stats-grid-container {
-  flex: 1; /* 关键：占据剩余空间 */
   min-height: 0; /* 关键：允许压缩 */
-  overflow-y: auto;
-  
+  overflow-y: hidden;
+  flex: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-auto-rows: max-content;
@@ -262,6 +258,7 @@ const formatNumber = (num) => {
   padding: 10px;
   position: relative;
   transition: all 0.2s;
+  height: 50px;
 }
 .grid-item:hover { background: rgba(255,255,255,0.06); border-color: var(--c-red); }
 

@@ -50,8 +50,8 @@
           </div>
           
           <div class="feature-wrapper cyber-card">
-            <div style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
-              <FeaturedCard :data="mockData" />
+            <div class="featured-wrapper-inner">
+             <FeaturedCard :data="mockData" />
             </div>
 
             <div class="terminal-link-runner">
@@ -430,19 +430,20 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   display: flex;
   gap: 24px;
   width: 100%;
-  align-items: stretch;
   height: auto;
   padding-bottom: 20px;
-
+  min-width: 50%;
 }
 
 .id-wrapper {
   flex-shrink: 0;
   width: 320px;
-  height: 618px;
+  height: auto;
   flex-direction: column;
   gap: 20px; 
-  display: flex
+  display: flex;
+  align-self: flex-start;
+  max-height: 600px;
 }
 
 /* --- 修改点: 去除边距，允许 flex 填充 --- */
@@ -454,14 +455,28 @@ const toggleIdArchive = () => showIdArchive.value = !showIdArchive.value
   flex: 1;             /* 自动填充剩余高度 */
   max-height: 46%;       /* 防止内容过多时撑破 Flex 容器 */
   display: flex;
+  flex-wrap: wrap;
   
 }
 
 .feature-wrapper {
   display: flex;
   flex-direction: column;
-  height: 900px;
+  height: auto;
+  min-width: 50%;
 }
+.featured-wrapper-inner {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  
+  /* --- 新增：占据剩余空间，但保持底线宽度 --- */
+  flex: 1;
+  min-width: 350px; /* 当宽度小于 350px 时，强制换行到下面 */
+  flex-wrap: wrap;
+  min-height: 680px;
+}
+
 
 .bottom-section {
   width: 100%;
