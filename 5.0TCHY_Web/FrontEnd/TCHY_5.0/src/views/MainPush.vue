@@ -8,18 +8,22 @@
         
         <HeroCarousel />
 
+        <ArtMasonry />
+
         <BlogShowcase />
 
         <CyberTicker />
 
         <VideoStream />
 
-        <ArtMasonry />
+        <CyberTicker />
+
+        
 
         <footer class="cyber-footer">
           <div class="footer-line"></div>
-          <p>OMNI_NEXUS SYSTEM // END OF STREAM</p>
-          <p class="copyright">© 2026 DESIGNED BY AI ARCHITECT</p>
+          <p>支持太初寰宇！</p>
+          <p class="copyright">© 2026 DESIGNED BY 太初寰宇</p>
         </footer>
 
       </div>
@@ -37,9 +41,9 @@ import * as THREE from 'three';
 // --- 引入所有子组件 ---
 import HeroCarousel from '@/MainPushComponent/HeroCarousel.vue';
 import BlogShowcase from '@/MainPushComponent/BlogShowcase.vue';
-import CyberTicker from '@/MainPushComponent/CyberTicker.vue';  // 需新建
-import VideoStream from '@/MainPushComponent/VideoStream.vue';  // 需新建
-import ArtMasonry from '@/MainPushComponent/ArtMasonry.vue';    // 需新建
+import CyberTicker from '@/MainPushComponent/CyberTicker.vue';  
+import VideoStream from '@/MainPushComponent/VideoStream.vue';  
+import ArtMasonry from '@/MainPushComponent/ArtMasonry.vue';   
 
 // --- Three.js 背景逻辑 (保持不变) ---
 const containerRef = ref(null);

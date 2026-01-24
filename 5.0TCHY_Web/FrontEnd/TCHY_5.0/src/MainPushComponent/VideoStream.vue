@@ -34,11 +34,7 @@
 
 <script setup>
 const videos = [
-  { title: "2077夜之城建筑美学解析", author: "Neo_Design", duration: "12:45", views: "34k", cover: "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=600&q=80" },
-  { title: "虚幻引擎5：粒子特效入门", author: "Dev_Log", duration: "08:20", views: "12k", cover: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80" },
-  { title: "赛博格改造手术全记录(虚构)", author: "SciFi_Lab", duration: "24:10", views: "89k", cover: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&q=80" },
-  { title: "复古合成波音乐合集 Vol.3", author: "Music_Station", duration: "56:00", views: "5k", cover: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80" },
-  { title: "机甲设定绘制过程Timelapse", author: "Art_Mechanic", duration: "03:45", views: "22k", cover: "https://images.unsplash.com/photo-1535378437327-1e54142ed98e?w=600&q=80" },
+
 ];
 </script>
 

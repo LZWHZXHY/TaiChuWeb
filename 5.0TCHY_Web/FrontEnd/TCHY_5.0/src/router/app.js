@@ -3,10 +3,19 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
   {
     path: '/',
-    name: 'Home',
+    name: 'Home', // 路由名称保持Home或改为MainPush都可以，这里由MainPush接管首页
+    component: () => import('@/views/MainPush.vue'), // 【修改】这里现在指向推送大厅
+    meta: { 
+      title: '推送大厅', // 【修改】标题改为推送大厅
+      public: true
+    }
+  },
+  {
+    path: '/Intro', // 【可选】如果你还想保留原来的首页，可以通过这个链接访问
+    name: '介绍',
     component: () => import('@/views/Home.vue'),
     meta: { 
-      title: '首页',
+      title: '太初寰宇 - 介绍',
       public: true
     }
   },
@@ -99,7 +108,7 @@ const routes = [
     name:'推送大厅',
     component:()=>import('@/views/MainPush.vue'),
     meta:{
-      requiresAuth:true,
+      requiresAuth:false,
       title:'推送大厅'
     }
   },
@@ -140,12 +149,12 @@ const routes = [
     }
   },
   {
-    path:'/Terminal',
-    name:'娱乐区',
-    component: () => import('@/views/Terminal.vue'),
+    path:'/ExperimentalArea',
+    name:'实验区',
+    component: () => import('@/views/ExperimentalArea.vue'),
     meta: { 
       requiresAuth: true,
-      title: '娱乐区'
+      title: '实验区'
     }
   },
   {

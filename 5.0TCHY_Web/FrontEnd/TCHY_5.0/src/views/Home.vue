@@ -72,14 +72,22 @@
 
               <section v-else-if="activeTab === 'about'" key="about" class="content-wrapper full-width-mode">
                  <div class="section-header-block">
-                  <h3 class="giant-text">CORE_KERNEL</h3>
-                  <div class="sub-text">// 开发组 // 核心架构 // 愿景协议</div>
+                  <h3 class="giant-text">核心开发</h3>
+                  <div class="sub-text">// 开发组 // 核心架构 // 助力人员</div>
                 </div>
                 <CommunityAbout />
               </section>
 
               <section v-else-if="activeTab === 'finance'" key="finance" class="content-wrapper">
                 <CommunityFinancial />
+              </section>
+
+              <section v-else-if="activeTab === 'FuturePlan'" key="FuturePlan" class="content-wrapper">
+                <CommunityFuturePlan />
+              </section>
+
+              <section v-else-if="activeTab === 'legal'" key="legal" class="content-wrapper">
+                 <CommunityLegal />
               </section>
 
             </transition>
@@ -99,15 +107,18 @@ import CommunityCalendar from '@/homeComponents/CommunityCalendar.vue'
 import CommunityFinancial from '@/homeComponents/CommunityFinancial.vue'
 import CommnuityUpdate from '@/homeComponents/CommnuityUpdate.vue'
 import CommunityAbout from '@/homeComponents/CommunityAbout.vue'
-
+import CommunityFuturePlan from '@/homeComponents/CommunityFuturePlan.vue'
+import CommunityLegal from '@/homeComponents/CommunityLegal.vue'
 // 导航配置
 const navItems = [
   { id: 'intro', name: '社区介绍' },
   { id: 'rules', name: '社区规则' },
   { id: 'calendar', name:'社区日历'},
   { id: 'update', name: '更新日志' },
+    { id: 'FuturePlan', name:'未来发展'},
   { id: 'about', name: '关于我们' },
-  { id: 'finance', name: '财政记录' }
+  { id: 'finance', name: '财政记录' },
+  { id: 'legal', name: '法律协议' } // [新增] ID 为 legal
 ]
 
 const activeTab = ref('intro')

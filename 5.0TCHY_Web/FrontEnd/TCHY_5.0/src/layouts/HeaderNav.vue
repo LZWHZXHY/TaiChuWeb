@@ -5,10 +5,12 @@
     <div class="nav-container">
       
       <div class="logo-block" @click="navigateToHome">
-        <div class="logo-icon-box">T</div>
+       <div class="logo-icon-box">
+  <img src="/favicon.ico" class="logo-img" alt="LOGO">
+</div>
         <div class="logo-text-group">
-          <span class="logo-main">TAICHU</span>
-          <span class="logo-sub">NETWORK // {{ $t('HeaderNav.site_name') }}</span>
+          <span class="logo-main">太初寰宇</span>
+          <span class="logo-sub">社区 // {{ $t('HeaderNav.site_name') }}</span>
         </div>
       </div>
 
@@ -299,6 +301,13 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   transition: 0.2s;
+}
+/* 新增：限制图片大小并保持比例 */
+.logo-icon-box .logo-img {
+  width: 100%;       /* 宽度占满容器 */
+  height: 100%;      /* 高度占满容器 */
+  object-fit: contain; /* 保持图片比例，显示完整，不被拉伸 */
+  display: block;    /* 消除图片底部的默认间隙 */
 }
 
 .logo-block:hover .logo-icon-box {

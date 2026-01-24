@@ -3,7 +3,7 @@
     
     <div class="section-header">
       <div class="header-left">
-        <h2 class="title">NEURAL_ARCHIVE</h2>
+        <h2 class="title">博客频道</h2>
         <span class="subtitle">深度文章与技术文档</span>
       </div>
       <div class="header-right">
@@ -63,46 +63,7 @@ import { ref } from 'vue';
 
 // --- Mock Data ---
 const blogPosts = ref([
-  {
-    title: "元宇宙架构：从 WebGL 到 WebGPU 的演进之路",
-    excerpt: "深入探讨下一代图形渲染技术如何重塑浏览器端的 3D 体验，以及这对前端开发者意味着什么。",
-    category: "TECH_DEEP_DIVE",
-    author: "Code_Master",
-    date: "2026.05.12",
-    views: "12k",
-    likes: "890",
-    image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    title: "赛博朋克视觉指南：色彩与构图分析",
-    excerpt: "为什么霓虹粉和青色是绝配？拆解经典赛博朋克电影的视觉语言。",
-    category: "DESIGN_ART",
-    author: "Neon_Artist",
-    date: "2026.05.10",
-    views: "8.5k",
-    likes: "1.2k",
-    image: "https://images.unsplash.com/photo-1515630278258-407f66498911?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    title: "独立游戏开发日志 #42：粒子系统的优化",
-    excerpt: "如何在保持 60FPS 的前提下渲染百万级粒子？我的 ECS 架构实践心得。",
-    category: "GAME_DEV",
-    author: "Indie_Dev",
-    date: "2026.05.08",
-    views: "5k",
-    likes: "450",
-    image: "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    title: "未来接口：脑机接口 UI 设计规范猜想",
-    excerpt: "当屏幕消失，我们将如何交互？关于 Neuralink 时代的用户体验设计思考。",
-    category: "FUTURISM",
-    author: "UX_2077",
-    date: "2026.05.05",
-    views: "15k",
-    likes: "2k",
-    image: "https://images.unsplash.com/photo-1515524738708-327f6b0037a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  }
+ 
 ]);
 </script>
 

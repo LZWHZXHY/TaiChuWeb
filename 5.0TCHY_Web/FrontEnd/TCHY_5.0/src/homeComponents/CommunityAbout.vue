@@ -9,22 +9,75 @@
           <span class="dot yellow"></span>
           <span class="dot green"></span>
         </div>
-        <span class="title">SYSTEM_CORE / mission_statement.sh</span>
-        <span class="status-tag">ENCRYPTED</span>
+        <span class="title">KERNEL_INIT.js // 核心协议</span>
+        <span class="status-tag">READ_ONLY</span>
       </div>
-      <div class="term-body">
-        <p class="comment"># INITIALIZING TAICHU_UNIVERSE PROTOCOL...</p>
+      
+      <div class="term-body custom-scroll">
         <div class="code-block">
-          <span class="var">const</span> <span class="func">createSingularity</span> = () => {<br>
-          &nbsp;&nbsp;<span class="key">return</span> {<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;vision: <span class="str">"构建去中心化的创意奇点"</span>,<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;values: [<span class="str">"包容"</span>, <span class="str">"极客"</span>, <span class="str">"共创"</span>]<br>
-          &nbsp;&nbsp;}<br>
-          }
+          <div class="code-line">
+            <span class="line-num">01</span>
+            <span class="kwd">import</span> { <span class="var">Creativity</span>, <span class="var">Passion</span> } <span class="kwd">from</span> <span class="str">'@Universe/Core'</span>;
+          </div>
+          <div class="code-line">
+            <span class="line-num">02</span>
+          </div>
+          <div class="code-line">
+            <span class="line-num">03</span>
+            <span class="cmt">// 定义太初协议接口</span>
+          </div>
+          <div class="code-line">
+            <span class="line-num">04</span>
+            <span class="kwd">class</span> <span class="cls">TaichuNetwork</span> <span class="kwd">extends</span> <span class="cls">Dream</span> {
+          </div>
+          <div class="code-line">
+            <span class="line-num">05</span>
+            &nbsp;&nbsp;<span class="kwd">constructor</span>() {
+          </div>
+          <div class="code-line">
+            <span class="line-num">06</span>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">super</span>();
+          </div>
+          <div class="code-line">
+            <span class="line-num">07</span>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">this</span>.<span class="prop">mission</span> = <span class="str">"REDEFINE_VIRTUAL_REALITY"</span>;
+          </div>
+          <div class="code-line">
+            <span class="line-num">08</span>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">this</span>.<span class="prop">status</span> = <span class="const">Infinity</span>;
+          </div>
+          <div class="code-line">
+            <span class="line-num">09</span>
+            &nbsp;&nbsp;}
+          </div>
+          <div class="code-line">
+            <span class="line-num">10</span>
+          </div>
+          <div class="code-line">
+            <span class="line-num">11</span>
+            &nbsp;&nbsp;<span class="kwd">async</span> <span class="func">forgeFuture</span>() {
+          </div>
+          <div class="code-line">
+            <span class="line-num">12</span>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">await</span> <span class="func">connect</span>(<span class="str">"EVERY_SOUL"</span>);
+          </div>
+          <div class="code-line">
+            <span class="line-num">13</span>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">return</span> <span class="str">"NEW_ERA_LOADING..."</span>;
+          </div>
+          <div class="code-line">
+            <span class="line-num">14</span>
+            &nbsp;&nbsp;}
+          </div>
+          <div class="code-line">
+            <span class="line-num">15</span>
+            }
+          </div>
         </div>
+
         <div class="typing-container">
-          <span class="prompt">></span>
-          <span class="typing-text">我们连接每一个孤独节点的神经元网络。</span>
+          <span class="prompt">root@taichu:~$</span>
+          <span class="typing-text">{{ displayedText }}</span>
           <span class="cursor">_</span>
         </div>
       </div>
@@ -34,19 +87,41 @@
       <div class="metric-card highlight">
         <div class="label">UPTIME // 运行天数</div>
         <div class="value">{{ uptimeDays }} <span class="unit">DAYS</span></div>
-        <div class="bar"><div class="fill" :style="{ width: uptimePercent + '%' }"></div></div>
+        <div class="bar"><div class="fill" :style="{ width: '100%' }"></div></div>
       </div>
       <div class="metric-card">
-        <div class="label">SYNC_RATE // 神经同步率</div>
-        <div class="value">98.4 <span class="unit">%</span></div>
-        <div class="bar"><div class="fill" style="width: 98%"></div></div>
+        <div class="label">距离正式营业进度</div>
+        <div class="value">1 <span class="unit">%</span></div>
+        <div class="bar"><div class="fill" style="width: 1%"></div></div>
       </div>
       <div class="metric-card">
-        <div class="label">OPERATIVES // 活跃成员</div>
-        <div class="value">12,508</div>
-        <div class="bar"><div class="fill" style="width: 75%"></div></div>
+        <div class="label">BUILD_VER // 当前版本</div>
+        <div class="value">5.6.1 <span class="unit">BETA</span></div>
+        <div class="bar"><div class="fill" style="width: 10%"></div></div>
       </div>
     </div>
+
+
+    <div class="roadmap-section">
+      <div class="section-label">
+        <span class="icon">■</span> SYSTEM_LOGS // 历史进程
+      </div>
+      <div class="console-log">
+        <div class="log-scroll-area custom-scroll">
+          <div v-for="(log, index) in historyLogs" :key="index" class="log-entry">
+            <span class="log-time">[{{ log.time }}]</span>
+            <span class="log-type" :class="log.type">{{ log.type }}</span>
+            <span class="log-msg">>> {{ log.msg }}</span>
+          </div>
+          <div class="log-entry current">
+            <span class="log-time">[NOW]</span>
+            <span class="log-type INFO">LISTENING</span>
+            <span class="log-msg">>> 等待新的历史进展......</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
     <div class="section-group">
       <div class="section-label">
@@ -64,7 +139,7 @@
               <div class="avatar-frame" :style="{ borderColor: '#D92323' }"></div>
             </div>
             <div class="op-status">
-              <span class="status-light online"></span> CONNECTED
+              <span class="status-light online"></span> SYSTEM_ADMIN
             </div>
           </div>
           <div class="op-info">
@@ -74,8 +149,8 @@
           </div>
           <div class="op-footer">
             <span>ID: {{ founder.id }}</span>
-            <span>AUTH_LVL: {{ founder.level }}</span>
-            <span class="op-auth" :style="{ color: '#D92323' }">MASTER_KEY</span>
+            <span>LVL: {{ founder.level }}</span>
+            <span class="op-auth" :style="{ color: '#D92323' }">ROOT_ACCESS</span>
           </div>
         </div>
       </div>
@@ -87,7 +162,7 @@
       </div>
       <div class="operator-grid">
         <div v-for="member in coreOperatives" :key="member.id" class="operator-card">
-          <div class="card-bg-text">{{ member.role }}</div>
+          <div class="card-bg-text">{{ member.id }}</div>
           <div class="op-header">
             <div class="op-avatar-wrapper">
               <div class="op-avatar">
@@ -103,7 +178,7 @@
             </div>
             <div class="op-status">
               <span class="status-light" :class="{ online: member.online }"></span> 
-              {{ member.online ? 'CONNECTED' : 'STANDBY' }}
+              {{ member.online ? 'ONLINE' : 'OFFLINE' }}
             </div>
           </div>
           <div class="op-info">
@@ -113,8 +188,8 @@
           </div>
           <div class="op-footer">
             <span>ID: {{ member.id }}</span>
-            <span>AUTH_LVL: {{ member.level }}</span>
-            <span class="op-auth" :style="{ color: member.color }">DECODED</span>
+            <span>LVL: {{ member.level }}</span>
+            <span class="op-auth" :style="{ color: member.color }">AUTHORIZED</span>
           </div>
         </div>
       </div>
@@ -140,7 +215,7 @@
             <div class="aux-name">
               {{ node.name }}
               <span class="aux-status-tag" :class="{ 'is-online': node.online }">
-                {{ node.online ? 'ON' : 'OFF' }}
+                {{ node.online ? 'LINKED' : 'UNLINKED' }}
               </span>
             </div>
             <div class="aux-content">{{ node.content }}</div>
@@ -149,31 +224,13 @@
       </div>
     </div>
 
-    <div class="roadmap-section">
-      <div class="section-label">
-        <span class="icon">■</span> EXECUTION_LOG // 历史进程
-      </div>
-      <div class="console-log">
-        <div class="log-scroll-area">
-          <div v-for="(log, index) in historyLogs" :key="index" class="log-entry">
-            <span class="log-time">{{ log.time }}</span>
-            <span class="log-type" :class="log.type">[{{ log.type }}]</span>
-            <span class="log-msg">{{ log.msg }}</span>
-          </div>
-          <div class="log-entry current">
-            <span class="log-time">NOW</span>
-            <span class="log-type INFO">[WAITING]</span>
-            <span class="log-msg">正在监听新的数据块输入...</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const uptimeDays = computed(() => {
   const startDate = new Date('2025-05-20');
@@ -181,12 +238,34 @@ const uptimeDays = computed(() => {
   const diffTime = Math.abs(today - startDate);
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 });
-const uptimePercent = computed(() => Math.min((uptimeDays.value / 1095) * 100, 100));
 
 const handleImgError = (e) => {
   e.target.src = 'https://api.dicebear.com/7.x/identicon/svg?seed=fallback'; 
 }
 
+// --- 打字机效果逻辑 ---
+const fullText = "以不变的初心前进 // FORGE_THE_FUTURE_WITH_ORIGINAL_HEART";
+const displayedText = ref("");
+
+const startTyping = () => {
+  let i = 0;
+  const speed = 50; // 打字速度
+  
+  const typeWriter = () => {
+    if (i < fullText.length) {
+      displayedText.value += fullText.charAt(i);
+      i++;
+      setTimeout(typeWriter, speed);
+    }
+  };
+  typeWriter();
+};
+
+onMounted(() => {
+  startTyping();
+});
+
+// --- 数据部分 (保持不变) ---
 const founder = ref({
   id: 'DIR_001', 
   name: '腾蛇', 
@@ -208,7 +287,7 @@ const coreOperatives = ref([
     avatar: 'https://image2url.com/r2/default/images/1768690065252-298402c8-483f-4993-bd9a-331c3cc87b73.jpg' 
   },
   { 
-    id: 'OPS_001', name: '援受', role: '社区管理,自媒体运营,动画管理', color: '#f1c40f', level: 'B', online: true,
+    id: 'OPS_001', name: '援受', role: '社区管理,自媒体运营', color: '#f1c40f', level: 'B', online: true,
     desc: '社区执行官。负责内容分发、用户反馈采集及社群秩序维护。负责自媒体矩阵运营、视频剪辑与商业对接',
     avatar: 'https://image2url.com/r2/default/images/1768690111264-18a501cb-2a7d-486b-98ae-206c91b49de6.jpg' 
   },
@@ -228,7 +307,7 @@ const coreOperatives = ref([
     avatar: 'https://image2url.com/r2/default/images/1768690862512-a59e76a0-2c4e-4f37-a573-e02f2301f1bc.jpg' 
   },
   { 
-    id: 'Animation_003', name: '橘橘兔', role: '动画制作，世界观设计', color: '#00D1FF', level: 'A', online: false,
+    id: 'Animation_003', name: '橘橘兔', role: '动画制作,世界观', color: '#00D1FF', level: 'A', online: false,
     desc: '动画制作，世界观内容设计',
     avatar: 'https://image2url.com/r2/default/images/1768691184574-ce55168f-826f-4489-a2a9-e71dac6a343b.jpg' 
   },
@@ -250,9 +329,9 @@ const auxiliaryNodes = ref([
 ])
 
 const historyLogs = ref([
-  { time: '2025.05.20', type: 'INIT', msg: '太初寰宇系统内核启动 (Kernel Panic fixed)' },
-  { time: '2025.12.10', type: 'UPDATE', msg: '发布 "太虚坛" 模块，开启无限制交流协议' },
-  { time: '2026.01.01', type: 'SUCCESS', msg: '核心注册节点突破 10,000 关卡' }
+  { time: '2025.05.20', type: 'INIT', msg: '太初寰宇官网4.0正式上线' },
+  { time: '2025.12.07', type: 'UPDATE', msg: '太初寰宇官网更新至5.0正式版' },
+  { time: '2026.01.23', type: 'SUCCESS', msg: '核心人数突破160+' }
 ])
 </script>
 
@@ -261,7 +340,7 @@ const historyLogs = ref([
 
 .about-industrial {
   --red: #D92323; --black: #0F0F0F; --white: #F4F1EA;
-  --green: #00FF41; --gray: #2A2A2A;
+  --green: #00FF41; --gray: #2A2A2A; --blue: #569cd6; --purple: #c586c0; --orange: #ce9178;
   --mono: 'JetBrains Mono', monospace; --heading: 'Anton', sans-serif;
   
   width: 100%; padding: 40px; box-sizing: border-box;
@@ -275,25 +354,63 @@ const historyLogs = ref([
   background-size: 100% 4px; pointer-events: none; z-index: 100;
 }
 
-/* 1. 终端 */
+/* 1. 宣言终端 (IDE 风格优化) */
 .manifesto-terminal {
-  background: #121212; border: 3px solid var(--black); box-shadow: 10px 10px 0 var(--black); color: #eee;
+  background: #1e1e1e; /* VS Code dark theme bg */
+  border: 4px solid var(--black); 
+  box-shadow: 12px 12px 0 rgba(0,0,0,0.2); 
+  color: #d4d4d4;
+  overflow: hidden;
+  position: relative;
 }
+
+/* 终端发光效果 */
+.manifesto-terminal::after {
+  content: ''; position: absolute; inset: 0;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+
 .term-header {
-  background: var(--gray); padding: 10px 15px; border-bottom: 2px solid #000;
+  background: #2d2d2d; padding: 12px 20px; border-bottom: 2px solid #000;
   display: flex; align-items: center; justify-content: space-between;
 }
 .dots { display: flex; gap: 8px; }
 .dot { width: 12px; height: 12px; border-radius: 50%; }
 .red { background: #ff5f56; } .yellow { background: #ffbd2e; } .green { background: #27c93f; }
-.status-tag { font-size: 0.6rem; background: var(--red); color: white; padding: 2px 5px; }
-.term-body { padding: 30px; }
-.code-block { margin: 15px 0; padding-left: 20px; border-left: 2px solid var(--gray); font-size: 0.9rem; }
-.comment { color: #6a9955; } .var { color: #569cd6; } .func { color: #dcdcaa; } .key { color: #c586c0; } .str { color: #ce9178; }
-.typing-container { color: var(--green); margin-top: 20px; font-weight: bold; }
-.cursor { animation: blink 0.8s infinite; }
+.status-tag { font-size: 0.6rem; background: var(--gray); border: 1px solid #555; color: #aaa; padding: 2px 8px; border-radius: 4px; }
+.title { font-size: 0.8rem; color: #999; letter-spacing: 1px; }
 
-/* 2. 指标 */
+.term-body { padding: 30px; font-size: 14px; line-height: 1.6; }
+
+/* 代码块高亮样式 */
+.code-block { margin-bottom: 30px; }
+.code-line { display: flex; align-items: flex-start; }
+.line-num { 
+  color: #555; margin-right: 20px; user-select: none; width: 20px; text-align: right; 
+  font-size: 0.8rem; opacity: 0.7;
+}
+
+/* 语法高亮颜色 */
+.kwd { color: var(--purple); font-weight: bold; } /* 关键字 */
+.var { color: #9cdcfe; } /* 变量 */
+.str { color: var(--orange); } /* 字符串 */
+.cls { color: #4ec9b0; } /* 类名 */
+.func { color: #dcdcaa; } /* 函数 */
+.cmt { color: #6a9955; font-style: italic; } /* 注释 */
+.prop { color: #9cdcfe; } /* 属性 */
+.const { color: #4fc1ff; } /* 常量 */
+
+/* 打字机样式 */
+.typing-container { 
+  border-top: 1px solid #333; padding-top: 15px; 
+  color: #ccc; font-weight: bold; display: flex; align-items: center; flex-wrap: wrap;
+}
+.prompt { color: var(--green); margin-right: 10px; }
+.typing-text { color: var(--white); }
+.cursor { animation: blink 0.8s infinite; background: var(--white); width: 8px; height: 18px; display: inline-block; margin-left: 5px; vertical-align: middle; }
+
+/* 2. 指标 (保持) */
 .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .metric-card { border: 3px solid var(--black); background: white; padding: 20px; }
 .metric-card.highlight { background: var(--black); color: var(--white); }
@@ -315,14 +432,8 @@ const historyLogs = ref([
 
 /* 头像通用样式 */
 .op-avatar { width: 80px; height: 80px; border: 2px solid var(--black); background: #000; z-index: 2; position: relative; overflow: hidden; }
-/* 修改：默认移除 grayscale，让图片彩色显示 */
 .op-avatar img { width: 100%; height: 100%; object-fit: cover; transition: filter 0.3s ease; }
-
-/* 添加：离线状态的灰度滤镜 */
-.is-offline { 
-  filter: grayscale(100%); 
-  opacity: 0.6; /* 离线时稍微降低透明度，增加“关机”感 */
-}
+.is-offline { filter: grayscale(100%); opacity: 0.7; }
 
 /* 创始人特化 */
 .founder-card { max-width: 500px; margin: 0 auto; border-width: 4px; box-shadow: 12px 12px 0 var(--black); }
@@ -335,7 +446,7 @@ const historyLogs = ref([
 .avatar-frame { position: absolute; top: 4px; left: 4px; width: 80px; height: 80px; border: 2px solid; z-index: 1; }
 
 .op-status { font-size: 0.65rem; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-.status-light { width: 8px; height: 8px; border-radius: 50%; background: #555; }
+.status-light { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
 .status-light.online { background: var(--green); box-shadow: 0 0 5px var(--green); animation: blink 2s infinite; }
 
 .op-info { padding: 20px; min-height: 120px; }
@@ -354,12 +465,11 @@ const historyLogs = ref([
 
 .aux-avatar-container { position: relative; flex-shrink: 0; }
 .aux-avatar { width: 50px; height: 50px; border: 1px solid var(--black); overflow: hidden; background: #000; }
-/* 修改：默认移除 grayscale */
 .aux-avatar img { width: 100%; height: 100%; object-fit: cover; transition: filter 0.3s ease; }
 
 .aux-status-dot {
   position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; 
-  background: #555; border: 2px solid var(--white); z-index: 10;
+  background: #ccc; border: 2px solid var(--white); z-index: 10;
 }
 .aux-status-dot.is-online {
   background: var(--green); box-shadow: 0 0 5px var(--green);
@@ -385,15 +495,27 @@ const historyLogs = ref([
 .console-log { background: #1a1a1a; border: 3px solid var(--black); padding: 5px; }
 .log-scroll-area { max-height: 250px; overflow-y: auto; padding: 15px; }
 .log-entry { margin-bottom: 8px; font-size: 0.8rem; color: #ccc; display: flex; gap: 10px; border-bottom: 1px solid #222; }
-.log-time { color: #555; }
+.log-time { color: #555; font-weight: bold; }
+.log-type { font-weight: bold; min-width: 60px; }
+.log-type.INIT { color: var(--blue); }
+.log-type.UPDATE { color: var(--purple); }
 .log-type.SUCCESS { color: var(--green); }
+.log-type.INFO { color: #aaa; }
+.log-msg { color: #ddd; }
 .current { animation: blink 2s infinite; }
 
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+/* 滚动条 */
+.custom-scroll::-webkit-scrollbar { width: 8px; }
+.custom-scroll::-webkit-scrollbar-track { background: #1e1e1e; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+.custom-scroll::-webkit-scrollbar-thumb:hover { background: #666; }
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 .red-blink { animation: blink 1.5s infinite; color: var(--red) !important; }
 
 @media (max-width: 768px) {
   .metrics-grid { grid-template-columns: 1fr; }
   .aux-grid { grid-template-columns: 1fr; }
+  .manifesto-terminal { font-size: 12px; }
 }
 </style>

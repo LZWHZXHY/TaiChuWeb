@@ -3,7 +3,7 @@
 export const NAV_ITEMS = [
   { 
     name: 'nav.home', // 原来是 '首页'
-    path: '/',
+    path: '/Intro',
     type: 'link'
   },
   { 
@@ -24,8 +24,8 @@ export const NAV_ITEMS = [
     type: 'link',
   },
   {
-    name: 'nav.Terminal', 
-    path: '/Terminal',
+    name: 'nav.ExperimentalArea', 
+    path: '/ExperimentalArea',
     type: 'link',
   },
   { 

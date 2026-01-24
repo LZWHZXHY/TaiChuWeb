@@ -131,7 +131,7 @@ const serverList = ref([
     ip2: '', // 单线演示
     version: 'Forge 1.20.1',
     isOnline: true,
-    coverImage: 'https://images.unsplash.com/photo-1599933591462-8411eb11359c?q=80&w=600&auto=format&fit=crop',
+    coverImage: 'https://image2url.com/r2/default/images/1769209536510-b6e46210-d3cd-4693-8adb-1d62a9450854.blob',
     downloadLinks: {
       modpack: { url: 'https://ug.link/example', pwd: '3JY6' },
       launcher: { url: 'https://ug.link/example', pwd: 'mBT8' }

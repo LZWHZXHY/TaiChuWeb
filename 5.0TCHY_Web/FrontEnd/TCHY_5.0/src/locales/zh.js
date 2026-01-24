@@ -20,7 +20,8 @@ export default{
     entertainment: '娱乐区',
     product: '太初产品',
     manage: '管理',
-    missionCenter:'任务中心'
+    missionCenter:'任务中心',
+    push_center:'推送中心'
   },
   login:{
     LoginAccount:"登录太初寰宇",
@@ -87,6 +88,13 @@ export default{
     uploading: '上传中...',
     ready: '就绪',
     add_img: '添加图片'
+  },
+  legal:{
+    system_title: "法律协议终端", // 页面大标题
+    terms_title: "服务条款 (TOS)",
+    privacy_title: "隐私政策 (PRIVACY)",
+    terms_content: termsText,       // 这里直接把那个长字符串挂载上来
+    privacy_content: privacyText    // 同理
   }
   
 }

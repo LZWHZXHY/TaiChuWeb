@@ -15,16 +15,16 @@
         </h1>
         <div class="hero-sub-box">
           <span class="bracket">[</span>
-          <span class="typewriter-text">A TRUSTED COMMUNITY NETWORK</span>
+          <span class="typewriter-text">一个值得信任的社区</span>
           <span class="bracket">]</span>
         </div>
         <p class="hero-desc">
           > 正在初始化连接... <br>
-          > 欢迎接入创意与灵感的共鸣网络。
+          > 欢迎进入这个极具潜力的未来超级社区！
         </p>
       </div>
       
-      <div class="bg-giant-text">GENESIS</div>
+      <div class="bg-giant-text">TCHY</div>
     </header>
 
     <section class="section-block">
@@ -38,16 +38,16 @@
           <p class="highlight-paragraph">
             <span class="marker">>></span> <strong>太初寰宇</strong> 成立于 
             <span class="code-highlight">2025.05.20</span> 
-            (系统日志确认为巧合)。这是一个去中心化的创意奇点。
+            (系统日志确认为巧合)。
           </p>
           <div class="divider-dashed"></div>
           <p>
-            致力于构建 <span class="tag">#包容</span> <span class="tag">#友善</span> 的数字生态。
-            无论你是代码游侠、视觉艺术家，还是知识猎人，这里都有你的数据接口。
-            我们定期执行 <span class="accent-text">线上活动</span>、<span class="accent-text">创作挑战</span> 和 <span class="accent-text">知识转储</span>。
+            致力于构建 <span class="tag">#友善</span> <span class="tag">#稳定</span> 的社区生态。
+            无论你是想找一个游戏搭子、还是单纯想观赏各种作品、又或者是想体验我们的游戏内容、讨论影视作品的剧情、或者又是需要某些帮助，在这里你都可以找到合适的对象. <br>
+            我们定期执行各种活动，比如说<span class="accent-text">线上活动</span>、<span class="accent-text">创作挑战</span> 还有 <span class="accent-text">日常训练</span> 之类的
           </p>
           <p class="terminal-text">
-            > echo "每一个创意都值得被渲染，每一次交流都是一次握手协议。"
+            > 我们会一直努力坚持运营和维护这个社区，他对得起你的信任和期待
           </p>
         </div>
       </div>
@@ -66,7 +66,7 @@
           </div>
           <div class="step-body">
             <h4>ACCOUNT_REG</h4>
-            <p>注册接入凭证。解锁基础权限，建立你的数字人格。</p>
+            <p>你可以先进行注册登录，对你的信息进行初步的初始化</p>
           </div>
         </div>
 
@@ -79,7 +79,7 @@
           </div>
           <div class="step-body">
             <h4>PROFILE_SYNC</h4>
-            <p>上传头像数据，设置个性签名签名。定义你的唯一标识符。</p>
+            <p>上传头像数据，设置个性签名签名。定义你的社交信息</p>
           </div>
         </div>
 
@@ -92,7 +92,7 @@
           </div>
           <div class="step-body">
             <h4>EXPLORE_NET</h4>
-            <p>浏览节点内容。发送你的第一个信号波（作品/评论）。</p>
+            <p>浏览各个区域板块，开始自由的探索和建设</p>
           </div>
         </div>
       </div>
@@ -171,7 +171,7 @@
           </div>
           <div class="qa-a">
             > [RESULT]: 使用站内反馈模块 或 接入QQ通讯频道。
-          </div>
+          </div> 
         </div>
         
         <div class="terminal-cursor">_</div>

@@ -81,5 +81,12 @@ export default {
     msg_code_fail: 'Failed to send code',
     msg_reg_fail: 'Registration failed',
     msg_reg_success: 'Registration successful! Welcome'
-  }
+  },
+  legal:{
+      system_title: "法律协议终端", // 页面大标题
+      terms_title: "服务条款 (TOS)",
+      privacy_title: "隐私政策 (PRIVACY)",
+      terms_content: termsText,       // 这里直接把那个长字符串挂载上来
+      privacy_content: privacyText    // 同理
+    }
 }

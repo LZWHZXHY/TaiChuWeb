@@ -2,7 +2,7 @@
   <div class="ticker-wrapper">
     <div class="ticker-content">
       <span v-for="n in 10" :key="n">
-        SYSTEM_UPDATE_V3.0 /// WELCOME_TO_OMNI_NEXUS /// DATA_STREAM_ACTIVE ///
+        官网开发5.0 ing..... /// 欢迎来到太初寰宇！ /// 请给我们你的反馈和需求！ ///
       </span>
     </div>
   </div>
