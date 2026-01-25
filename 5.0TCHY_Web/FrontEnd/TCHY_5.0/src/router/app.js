@@ -19,6 +19,18 @@ const routes = [
       public: true
     }
   },
+  // 🔥 【新增】灵脉工作空间 (Notion + Obsidian 生产力工具)
+  {
+    path: '/lingmai',
+    name: '灵脉空间',
+    // 🔥 核心修改：直接指向集成模块，不再需要 NoteLayout
+    component: () => import('@/LingMaiComponents/LingMaiModule.vue'),
+    meta: { 
+      requiresAuth: true, 
+      title: '灵脉工作空间' 
+    }
+    // 🔥 删除 children：因为模块内部现在是通过变量 (currentId) 切换，而不是通过 URL 路由切换
+  },
   {
     path: '/404',
     name: '404',
@@ -44,15 +56,6 @@ const routes = [
     meta: { 
       requiresAuth: true,
       title: '交易站'
-    }
-  },
-  {
-    path:'/TCHYproduct',
-    name:'太初寰宇作品',
-    component:()=>import('@/views/TCHYproduct.vue'),
-    meta: { 
-      requiresAuth: true,
-      title: '太初寰宇'
     }
   },
   {
@@ -100,6 +103,15 @@ const routes = [
     component:()=>import('@/views/WorkCenter.vue'),
     meta:{
       requiresAuth:true,
+      title:'作品大厅'
+    }
+  },
+  {
+    path:'/Resource',
+    name:'资源大厅',
+    component:()=>import('@/views/Resource.vue'),
+    meta:{
+      requiresAuth:false,
       title:'作品大厅'
     }
   },

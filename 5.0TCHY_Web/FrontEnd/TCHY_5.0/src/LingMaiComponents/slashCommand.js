@@ -1,0 +1,174 @@
+import { Extension } from '@tiptap/core'
+import Suggestion from '@tiptap/suggestion'
+import { VueRenderer } from '@tiptap/vue-3'
+import tippy from 'tippy.js'
+import CommandList from './CommandList.vue'
+import apiClient from '@/utils/api'
+
+
+// 定义菜单里有哪些功能
+const getSuggestionItems = ({ query }) => {
+  return [
+    {
+      title: '图片',
+      icon: '🖼️',
+      command: ({ editor, range }) => {
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = 'image/*'
+        
+        input.onchange = async () => {
+          if (input.files.length === 0) return
+          const file = input.files[0]
+
+          const formData = new FormData()
+          formData.append('file', file)
+
+          try {
+            // 🔥 修复点：删除了 headers 配置，让浏览器自动处理 boundary
+            const res = await apiClient.post('/Upload/image', formData)
+            
+            const url = res.data.url
+
+            if (url) {
+              // 删除输入的 "/" 字符，并插入图片
+              editor.chain().focus().deleteRange(range).setImage({ src: url }).run()
+            }
+          } catch (e) {
+            // 🔥 打印详细错误，方便排查
+            console.error('上传失败详情:', e.response || e)
+            alert(`图片上传失败: ${e.response?.data?.message || '请检查网络或后端接口'}`)
+          }
+        }
+        
+        input.click()
+      },
+    },
+    {
+      title: '一级标题',
+      icon: 'H1',
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).setNode('heading', { level: 1 }).run()
+      },
+    },
+    {
+      title: '二级标题',
+      icon: 'H2',
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).setNode('heading', { level: 2 }).run()
+      },
+    },
+    {
+      title: '三级标题',
+      icon: 'H3',
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).setNode('heading', { level: 3 }).run()
+      },
+    },
+    {
+      title: '普通文本',
+      icon: 'T',
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).setParagraph().run()
+      },
+    },
+    {
+      title: '无序列表',
+      icon: '•',
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).toggleBulletList().run()
+      },
+    },
+    {
+      title: '有序列表',
+      icon: '1.',
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).toggleOrderedList().run()
+      },
+    },
+    {
+      title: '引用',
+      icon: '❝',
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).toggleBlockquote().run()
+      },
+    },
+    {
+      title: '代码块',
+      icon: '{}',
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).toggleCodeBlock().run()
+      },
+    },
+    {
+      title: '分割线',
+      icon: '—',
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).setHorizontalRule().run()
+      },
+    },
+  ].filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
+}
+
+// 渲染逻辑 (和你的 Mention 逻辑很像)
+const renderSuggestion = () => {
+  let component
+  let popup
+
+  return {
+    onStart: props => {
+      component = new VueRenderer(CommandList, {
+        props,
+        editor: props.editor,
+      })
+
+      if (!props.clientRect) return
+
+      popup = tippy('body', {
+        getReferenceClientRect: props.clientRect,
+        appendTo: () => document.body,
+        content: component.element,
+        showOnCreate: true,
+        interactive: true,
+        trigger: 'manual',
+        placement: 'bottom-start',
+      })
+    },
+    onUpdate(props) {
+      component.updateProps(props)
+      if (!props.clientRect) return
+      popup[0].setProps({
+        getReferenceClientRect: props.clientRect,
+      })
+    },
+    onKeyDown(props) {
+      if (props.event.key === 'Escape') {
+        popup[0].hide()
+        return true
+      }
+      return component.ref?.onKeyDown(props)
+    },
+    onExit() {
+      popup[0].destroy()
+      component.destroy()
+    },
+  }
+}
+
+export default Extension.create({
+  name: 'slashCommand',
+
+  addProseMirrorPlugins() {
+    return [
+      Suggestion({
+        editor: this.editor,
+        char: '/', // 🔥 核心：监听 / 键
+        command: ({ editor, range, props }) => {
+          props.command({ editor, range })
+        },
+        items: getSuggestionItems,
+        render: renderSuggestion,
+      }),
+    ]
+  },
+})

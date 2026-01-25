@@ -55,6 +55,7 @@ import apiClient from '@/utils/api';
 
 // 1. 引入你的实验组件
 import Terminal from '@/ExperimentalComponents/Terminal.vue';
+import LingMaiModule from '@/LingMaiComponents/LingMaiModule.vue';
 
 // 2. 这里定义你的实验频道列表
 // 使用 markRaw 避免 Vue 对组件本身进行深度响应式代理（性能优化）
@@ -65,14 +66,10 @@ const experiments = [
     component: markRaw(Terminal) 
   },
   { 
-    id: 'api_test', 
-    name: 'API_DEBUGGER', 
-    component: null // 暂时还没有组件，先占位
-  },
-  { 
-    id: 'ui_playground', 
-    name: 'UI_KIT_V2', 
-    component: null 
+    // 现在 LING_MAI_CORE 对应的是一个完整的系统
+    id: 'lingmai', 
+    name: 'LING_MAI_CORE', 
+    component: markRaw(LingMaiModule) 
   }
 ];
 

@@ -77,6 +77,13 @@ const slides = [
     desc: '国内QQ最大的火柴人频道',
     image: 'https://groupprocover.gtimg.cn/55970351642777069?imageView2/1/w/750/h/388&t=1767508176417',
     url: 'https://pd.qq.com/s/g719558f5?b=9', 
+  },{
+    tag: '宣传',
+    title: '太初寰宇B站官方账号',
+    shortTitle: '视频频道',
+    desc: '目前的官网视频上传地',
+    image: 'https://image2url.com/r2/default/images/1769276795298-0c078a07-dce2-4160-90e8-a787bcc339f4.png',
+    url: 'https://space.bilibili.com/3546736970696727?spm_id_from=333.337.0.0', 
   }
 ];
 

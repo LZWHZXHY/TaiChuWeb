@@ -15,13 +15,9 @@ export const NAV_ITEMS = [
       { name: 'nav.work_center', path: '/WorkCenter', mode: 'GALLERY' },    // 原来是 '艺术大厅'
       { name: 'nav.entertainment', path: '/EntertainmentArea'},        // 原来是 '娱乐区'
       { name: 'nav.missionCenter', path:'/MissionCenter'},
+      { name: 'nav.resourse', path:'/Resource'},
       { name: 'nav.RankCenter', path:'/RankCenter'}
     ]
-  },
-  {
-    name: 'nav.product', // 原来是 '太初产品'
-    path: '/TCHYproduct',
-    type: 'link',
   },
   {
     name: 'nav.ExperimentalArea', 
