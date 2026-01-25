@@ -11,7 +11,7 @@
               <span class="term-title">ASSET_VIEWER // {{ artwork.id || 'UNKNOWN_ID' }}</span>
             </div>
             <button class="term-close-btn" @click="handleClose">
-              [ ABORT / ESC ]
+              [ 退出 / ESC ]
             </button>
           </div>
 
@@ -77,7 +77,7 @@
                   <div class="btn-inner">
                     <span class="btn-icon">{{ artwork.isLiked ? '★' : '☆' }}</span>
                     <span class="btn-text">
-                      {{ artwork.isLiked ? 'APPROVED' : 'APPROVE_WORK' }}
+                      {{ artwork.isLiked ? '已点赞' : '点赞' }}
                     </span>
                     <span class="btn-count">[{{ artwork.likes || 0 }}]</span>
                   </div>
@@ -250,7 +250,7 @@ const formatTime = (t) => {
 
 /* 作品信息 */
 .artwork-meta-block { display: flex; flex-direction: column; gap: 15px; }
-.meta-title { font-family: var(--heading); font-size: 2rem; margin: 0; line-height: 1.1; text-transform: uppercase; }
+.meta-title { font-family: var(--heading); font-size: 2rem; margin: 0; line-height: 1.1; text-transform: uppercase; color:#000}
 .meta-desc {
   font-size: 0.9rem; color: #444; line-height: 1.6;
   max-height: 150px; overflow-y: auto;

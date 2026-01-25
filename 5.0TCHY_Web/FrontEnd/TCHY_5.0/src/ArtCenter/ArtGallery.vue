@@ -2,7 +2,7 @@
   <div class="gallery-industrial">
     <div class="gallery-control-bar">
       <div class="header-title-block">
-        <h2 class="giant-text">ARTWORKS</h2>
+        <h2 class="giant-text">艺术画廊</h2>
         <span class="sub-text">VISUAL_DB // 视觉库</span>
       </div>
 
@@ -31,7 +31,7 @@
       </div>
 
       <button class="cyber-upload-btn" @click="showUploadModal = true">
-        <span class="icon">+</span> UPLOAD_DATA
+        <span class="icon">+</span> 上传作品
       </button>
     </div>
 
@@ -58,12 +58,14 @@
                 class="waterfall-column"
               >
                 <div 
-                  v-for="img in col" 
-                  :key="img.id" 
-                  class="cyber-art-card" 
-                  @click="openLightbox(img)"
-                >
+                    v-for="img in col" 
+                    :key="img.id" 
+                    class="cyber-art-card" 
+                    :class="{ 'is-champion': isTopOne(img) }" 
+                    @click="openLightbox(img)"
+                  >
                   <div class="card-frame">
+                    <div v-if="isTopOne(img)" class="champion-badge">榜主大人</div>
                     <div class="img-box">
                       <img :src="upgradeUrlToHttps(img.imageUrlFull || img.url)" @error="handleImgError" loading="lazy" />
                       <div class="scan-line"></div>
@@ -117,7 +119,7 @@
             <span class="deco">🏆</span> HIGH_SCORES
           </div>
           <div class="rank-list">
-            <div v-for="(user, idx) in leaderboard" :key="user.UploaderId" class="rank-item">
+            <div v-for="(user, idx) in leaderboard" :key="user.uploaderId" class="rank-item">
               <div class="rank-idx" :class="'top-' + (idx + 1)">{{ padZero(idx + 1) }}</div>
               <div class="rank-info">
                 <div class="r-name">{{ user.Name }}</div>
@@ -142,7 +144,7 @@
                 <span class="title">DATA_INJECTION // 投稿终端</span>
               </div>
               <button class="close-btn" @click="showUploadModal = false">
-                ABORT [ESC]
+                退出 [ESC]
               </button>
             </div>
 
@@ -174,7 +176,7 @@
                       <div class="icon-frame"><span class="plus">+</span></div>
                       <div class="text-group">
                         <p class="main-tip">DRAG & DROP or CLICK</p>
-                        <span class="sub-tip">SUPPORT: JPG / PNG / WEBP (MAX 20MB)</span>
+                        <span class="sub-tip">SUPPORT: JPG / PNG / WEBP / GIF(MAX 20MB)</span>
                       </div>
                     </div>
                   </div>
@@ -183,17 +185,17 @@
 
               <div class="form-section">
                 <div class="cyber-input-group">
-                  <div class="label-chip">TITLE / 标题</div>
+                  <div class="label-chip">TITLE / 标题 (必填)</div>
                   <input type="text" v-model="uploadForm.title" placeholder="请输入作品标题..." class="cyber-input" maxlength="50" />
                   <div class="input-line"></div>
                 </div>
                 <div class="cyber-input-group">
-                  <div class="label-chip">DESCRIPTION / 描述</div>
+                  <div class="label-chip">DESCRIPTION / 描述 (必填)</div>
                   <textarea v-model="uploadForm.desc" placeholder="输入作品背后的故事或设定..." rows="3" class="cyber-input textarea"></textarea>
                   <div class="input-line"></div>
                 </div>
                 <div class="cyber-input-group">
-                  <div class="label-chip">AUTHOR / 署名</div>
+                  <div class="label-chip">AUTHOR / 署名 (必填)</div>
                   <input type="text" v-model="uploadForm.authorName" placeholder="默认使用当前用户名" class="cyber-input" />
                   <div class="input-line"></div>
                 </div>
@@ -239,6 +241,17 @@ const nextCursor = ref(null)
 const hasMore = ref(true)
 const mainScroll = ref(null) // 绑定到新的滚动容器
 const leaderboard = ref([])
+
+
+// 建议放在 leaderboard 定义之后
+const isTopOne = (img) => {
+  // 1. 如果榜单没加载，直接返回 false
+  if (!leaderboard.value || leaderboard.value.length === 0) return false;
+
+  // 2. 直接对比：榜单第一名的 UploaderId (大写) vs 当前作品的 uploaderId (小写)
+  return leaderboard.value[0].UploaderId === img.uploaderId;
+}
+
 
 // 弹窗相关
 const showUploadModal = ref(false)
@@ -563,7 +576,7 @@ onMounted(() => {
 /* Upload Modal */
 .cyber-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
 .cyber-modal-window.upload-mode { width: 550px; max-width: 95vw; background: #f4f4f4; border: 4px solid var(--black); box-shadow: 15px 15px 0 rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; font-family: var(--mono); }
-.modal-header { background: var(--black); color: var(--white); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--red); flex-shrink: 0; }
+.modal-header { background:#000; color: var(--white); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--red); flex-shrink: 0; }
 .header-left { display: flex; align-items: center; gap: 10px; }
 .status-light { width: 10px; height: 10px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 5px #00ff00; }
 .title { font-family: var(--heading); font-size: 1.2rem; letter-spacing: 1px; }
@@ -571,8 +584,8 @@ onMounted(() => {
 .close-btn:hover { border-color: var(--red); color: var(--red); }
 .modal-body { padding: 30px; overflow-y: auto; flex: 1; }
 .upload-section { margin-bottom: 30px; }
-.upload-zone { height: 220px; border: 2px dashed #999; background: #e0e0e0; position: relative; cursor: pointer; transition: all 0.3s; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-.upload-zone:hover, .upload-zone.is-dragover { border-color: var(--black); background: #fff; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
+.upload-zone { height: 220px; border: 2px dashed #999; background: #676767; position: relative; cursor: pointer; transition: all 0.3s; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+.upload-zone:hover, .upload-zone.is-dragover { border-color: var(--black); background: #373737; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
 .upload-zone.has-file { border-style: solid; border-color: var(--black); padding: 0; background: #000; }
 .scan-grid { position: absolute; inset: 0; background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc); background-size: 20px 20px; opacity: 0.1; pointer-events: none; }
 .center-content { text-align: center; position: relative; z-index: 2; }
@@ -588,7 +601,7 @@ onMounted(() => {
 .file-meta { position: absolute; bottom: 0; left: 0; right: 0; background: var(--black); color: var(--white); font-size: 0.7rem; padding: 4px 10px; text-align: right; }
 .form-section { display: flex; flex-direction: column; gap: 25px; }
 .cyber-input-group { position: relative; }
-.label-chip { position: absolute; top: -10px; left: 10px; background: var(--black); color: var(--white); font-size: 0.75rem; font-weight: bold; padding: 2px 8px; z-index: 2; letter-spacing: 0.5px; }
+.label-chip { position: absolute; top: -10px; left: 10px; background:#333; color: var(--white); font-size: 0.75rem; font-weight: bold; padding: 2px 8px; z-index: 2; letter-spacing: 0.5px; }
 .cyber-input { width: 100%; background: #fff; border: 2px solid #ccc; border-bottom: 4px solid var(--black); padding: 15px 15px 10px; font-family: var(--mono); font-size: 1rem; color: var(--black); outline: none; transition: all 0.3s; }
 .cyber-input.textarea { resize: vertical; min-height: 80px; }
 .cyber-input:focus { border-color: var(--black); background: #fffef0; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
@@ -598,8 +611,8 @@ onMounted(() => {
 .status-display { font-size: 0.8rem; font-weight: bold; color: #666; }
 .status-display .busy { color: var(--red); animation: blink 1s infinite; }
 .status-display .ready { color: #27c93f; }
-.execute-btn { background: var(--black); color: var(--white); border: none; padding: 12px 30px; font-family: var(--heading); font-size: 1.2rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 4px 4px 0 #999; }
-.execute-btn:hover { background: var(--red); transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--black); }
+.execute-btn { background:#333; color: var(--white); border: none; padding: 12px 30px; font-family: var(--heading); font-size: 1.2rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 4px 4px 0 #999; }
+.execute-btn:hover { background:#000; transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--black); }
 .execute-btn:disabled { background: #ccc; color: #888; cursor: not-allowed; box-shadow: none; transform: none; }
 
 /* 动画 */
@@ -618,4 +631,78 @@ onMounted(() => {
 @media (max-width: 1200px) {
   .gallery-sidebar { display: none; }
 }
+
+/* --- 榜单第一名高级特效 --- */
+
+.is-champion .card-frame {
+  border: 2px solid var(--red) !important;
+  /* 呼吸灯阴影效果 */
+  animation: champion-pulse 2s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 顶部精英标签 */
+.champion-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: var(--red);
+  color: #fff;
+  font-family: var(--heading);
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  z-index: 5;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%);
+}
+
+/* 侧边流光特效 */
+.is-champion .card-frame::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    transparent, 
+    transparent, 
+    transparent, 
+    var(--red)
+  );
+  animation: champion-rotate 4s linear infinite;
+  z-index: -1;
+  opacity: 0.3;
+}
+
+/* 第一名专属悬停放大感 */
+.is-champion:hover .card-frame {
+  transform: translate(-5px, -5px) scale(1.02) !important;
+  box-shadow: 10px 10px 0 var(--black), 15px 15px 30px rgba(217, 35, 35, 0.4) !important;
+}
+
+/* 动画定义 */
+@keyframes champion-pulse {
+  0% {
+    box-shadow: 4px 4px 0 var(--black), 0 0 5px rgba(217, 35, 35, 0.2);
+  }
+  100% {
+    box-shadow: 4px 4px 0 var(--black), 0 0 20px rgba(217, 35, 35, 0.6);
+  }
+}
+
+@keyframes champion-rotate {
+  100% {
+    transform: rotate(1turn);
+  }
+}
+
+/* 针对第一名增强扫描线强度 */
+.is-champion .scan-line {
+  background: rgba(217, 35, 35, 0.4);
+  height: 3px;
+  display: block; /* 第一名常驻扫描线 */
+  box-shadow: 0 0 10px var(--red);
+}
+
 </style>

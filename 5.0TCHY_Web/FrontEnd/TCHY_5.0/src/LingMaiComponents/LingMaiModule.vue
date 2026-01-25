@@ -2,7 +2,7 @@
   <div class="lingmai-integrated-module">
     <aside class="module-sidebar">
       <div class="sidebar-header">
-        <span class="title">灵脉空间</span>
+        <span class="title">灵脉空间 v 1.0</span>
         <button class="add-btn" title="新建顶级页面" @click="createRootNote">＋</button>
       </div>
       

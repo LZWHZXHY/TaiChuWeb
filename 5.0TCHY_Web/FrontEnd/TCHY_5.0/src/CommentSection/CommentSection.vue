@@ -296,7 +296,7 @@ watch(() => props.artworkId, loadComments)
 .reply-btn-mini:hover { color: #8b5cf6; text-decoration: underline; }
 
 /* === 底部输入框 === */
-.comment-input-area { padding: 12px 0; border-top: 1px solid #e2e8f0; background: #fff; }
+.comment-input-area { padding: 12px 0; border-radius:12px;  background: #00000000; }
 .reply-hint {
   font-size: 12px; color: #64748b; background: #f1f5f9;
   padding: 4px 10px; border-radius: 4px; margin-bottom: 8px;
@@ -308,14 +308,16 @@ watch(() => props.artworkId, loadComments)
 }
 .input-row { display: flex; gap: 10px; }
 .input-row input { 
-  flex: 1; border: 1px solid #e2e8f0; border-radius: 20px; 
-  padding: 8px 16px; font-size: 13px; outline: none; transition: border 0.2s;
+  flex: 1; border: 1px solid #3e3e3e; border-radius: 20px; 
+  padding: 8px 16px; font-size: 13px; outline: none; transition: border 0.2s; color:#000000
 }
-.input-row input:focus { border-color: #8b5cf6; }
+.input-row input:focus { border-color: #000000; }
 .send-btn { 
-  background: #8b5cf6; color: #fff; border: none; border-radius: 20px; 
+  background: #4d849c; color: #010101; border: none; border-radius: 20px; 
   padding: 0 20px; font-size: 13px; cursor: pointer; font-weight: 500;
   transition: opacity 0.2s;
 }
 .send-btn:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
+
+.empty-comment{color: #334155;}
 </style>
