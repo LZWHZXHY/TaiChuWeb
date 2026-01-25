@@ -31,7 +31,7 @@ const currentNotice = computed(() => notices.value[0])
 .notice-board-container {
   width: 100%;
   /* 米色背景 */
-  background-color: rgba(245, 241, 231, 0.5); 
+  background-color: #F4F1EA; 
   /* 圆角设置 */
   border-radius: 8px;
   /* 隐藏溢出 */

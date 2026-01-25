@@ -34,7 +34,7 @@
     <div class="decoration-sidebar">
       <div class="deco-status-box">
         <span class="label">分区</span>
-        <span class="value">01</span>
+        <span class="value">00</span>
       </div>
       
       <div class="watermark-text">
@@ -244,8 +244,8 @@ onUnmounted(() => {
 
 /* --- 卡片样式 --- */
 .featured-card {
-  flex: 0 0 320px;
-  height: 200px;
+  flex: 0 0 240px;
+  height: 300px;
   display: flex;
   flex-direction: column;
   border: 1px solid #ddd;

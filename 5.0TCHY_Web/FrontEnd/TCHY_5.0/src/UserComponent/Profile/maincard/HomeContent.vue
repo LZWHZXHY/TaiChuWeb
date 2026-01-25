@@ -12,7 +12,7 @@
 
     <div class="side-container">
       <div class="side-wrapper">
-        <StatsCard />
+        <StatsCard :status="status"/>
         
         <NoticeBoard />
       </div>
@@ -30,6 +30,13 @@ import AchievementPanel from './HomeContent/AchievementPanel.vue'
 import GallerySection from './HomeContent/GallerySection.vue'
 import BlogSection from './HomeContent/BlogSection.vue'
 import PostSection from './HomeContent/PostSection.vue'
+
+const props = defineProps({
+  status: {
+    type: Object,
+    default: () => ({})
+  }
+})
 </script>
 
 <style scoped>
