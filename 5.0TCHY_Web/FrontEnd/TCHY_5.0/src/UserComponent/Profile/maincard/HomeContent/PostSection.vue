@@ -41,15 +41,32 @@
           <div class="post-content">
             刚才重构了数据中心的散热控制逻辑，能耗降低了 15%。代码就像精密的机械，每一个齿轮的咬合都令人着迷。 #CodingLife #工业美学
           </div>
+          
+          <div class="post-images">
+            <div class="post-image-item">
+              <img :src="`https://picsum.photos/300/300?random=${n*10+1}`" alt="预览图片1">
+            </div>
+            <div class="post-image-item">
+              <img :src="`https://picsum.photos/300/300?random=${n*10+2}`" alt="预览图片2">
+            </div>
+            <div class="post-image-item">
+              <img :src="`https://picsum.photos/300/300?random=${n*10+3}`" alt="预览图片3">
+              <div class="image-count-overlay">+2</div>
+            </div>
+          </div>
+          
           <div class="post-actions">
             <div class="action-btn">
-              <span class="icon">♥</span> {{ 120 + n }}
+              <span class="icon">➦</span> 分享
             </div>
             <div class="action-btn">
               <span class="icon">💬</span> {{ 5 + n }}
             </div>
-            <div class="action-btn share">
-              <span class="icon">➦</span>
+            <div class="action-btn">
+              <span class="icon">♥</span> {{ 120 + n }}
+            </div>
+            <div class="post-source">
+              发表于: 夜之城开发者社区
             </div>
           </div>
         </div>
@@ -59,7 +76,7 @@
     <div class="decoration-sidebar">
       <div class="deco-status-box">
         <span class="label">分区</span>
-        <span class="value">04</span>
+        <span class="value">00</span>
       </div>
       <div class="watermark-text">实时动态</div>
       <div class="stripe-bar"></div>
@@ -75,12 +92,13 @@ const currentFilter = ref('latest')
 
 const filters = [
   { key: 'latest', label: '最新发布' },
-  { key: 'clicks', label: '最多点击' }, // 已改为最多点击
+  { key: 'clicks', label: '最多点击' },
   { key: 'likes', label: '最多收藏' }
 ]
 </script>
 
 <style scoped>
+/* 保持原有的CSS变量和基础样式不变 */
 .post-section-wrapper {
   --primary-blue: #2c3e50;
   --accent-orange: #e67e22;
@@ -180,10 +198,29 @@ const filters = [
   transform: translateX(4px);
 }
 
-/* --- 帖子卡片样式 (保持不变) --- */
-.post-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-.post-card { background: rgba(255, 255, 255, 0.4); border: 1px solid #ddd; border-radius: 4px; padding: 15px; display: flex; flex-direction: column; transition: all 0.2s; }
-.post-card:hover { border-color: var(--accent-orange); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+/* --- 帖子卡片样式 (修改为单列布局) --- */
+.post-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* 改为单列 */
+  gap: 15px;
+}
+
+.post-card {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s;
+}
+
+.post-card:hover {
+  border-color: var(--accent-orange);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
 .post-header { display: flex; align-items: center; margin-bottom: 10px; }
 .avatar-circle { width: 32px; height: 32px; background: var(--primary-blue); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px; font-size: 14px; }
 .user-info { flex: 1; display: flex; flex-direction: column; }
@@ -191,11 +228,81 @@ const filters = [
 .time-ago { font-size: 10px; color: #999; }
 .more-options { font-weight: bold; color: #ccc; cursor: pointer; letter-spacing: 2px; }
 .post-content { font-size: 13px; line-height: 1.6; color: var(--text-sub); margin-bottom: 12px; text-align: justify; }
-.post-actions { display: flex; align-items: center; gap: 15px; border-top: 1px solid #f5f5f5; padding-top: 10px; margin-top: auto; }
-.action-btn { font-size: 12px; color: #999; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: color 0.2s; }
-.action-btn:hover { color: var(--accent-orange); }
-.action-btn.share { margin-left: auto; }
+
+/* --- 新增图片画廊样式 --- */
+.post-images {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3列布局 */
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.post-image-item {
+  position: relative;
+  aspect-ratio: 1 / 1; /* 保持正方形 */
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+.post-image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.post-image-item:hover img {
+  transform: scale(1.05);
+}
+
+.image-count-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* --- 底部操作栏样式 (调整布局) --- */
+.post-actions {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #f5f5f5;
+  padding-top: 10px;
+  margin-top: auto;
+}
+
+.action-btn {
+  font-size: 12px;
+  color: #999;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s;
+  margin-right: 20px; /* 按钮间距 */
+}
+
+.action-btn:hover {
+  color: var(--accent-orange);
+}
+
 .icon { font-size: 14px; }
+
+.post-source {
+  margin-left: auto; /* 靠右显示 */
+  font-size: 12px;
+  color: #999;
+}
 
 /* --- 右侧装饰条 (保持不变) --- */
 .decoration-sidebar { width: 40px; flex: 0 0 40px; border-left: 1px solid rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding-top: 5px; position: relative; }

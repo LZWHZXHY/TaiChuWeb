@@ -59,7 +59,7 @@
     <div class="decoration-sidebar">
       <div class="deco-status-box">
         <span class="label">分区</span>
-        <span class="value">03</span>
+        <span class="value">00</span>
       </div>
       <div class="watermark-text">深度写作</div>
       <div class="stripe-bar"></div>
