@@ -6,7 +6,7 @@
         
         <div class="header-left">
           <div class="deco-block"></div>
-          <span class="header-main">视觉档案库</span>
+          <span class="header-main">个人画廊</span>
         </div>
 
         <div class="filter-group">

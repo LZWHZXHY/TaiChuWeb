@@ -21,7 +21,10 @@
       <div class="display-area">
         <router-view v-if="false"></router-view> <Transition name="fade" mode="out-in">
           <KeepAlive>
-            <component :is="currentComponent" />
+           <component 
+           :is="currentComponent" 
+           :status="status" 
+           />
           </KeepAlive>
         </Transition>
       </div>
@@ -49,6 +52,9 @@ const navItems = [
   { name: '留言', key: 'message', icon: 'M' }
 ]
 
+const props = defineProps({
+  status: Object
+})
 // 组件映射表：key 对应 navItems 中的 key
 const tabs = {
   home: HomeContent,

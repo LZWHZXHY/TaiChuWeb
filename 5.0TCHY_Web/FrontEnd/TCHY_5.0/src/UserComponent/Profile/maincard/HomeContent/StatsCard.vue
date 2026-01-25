@@ -5,13 +5,13 @@
     <div class="header-group">
       <div class="title-row">
         <span class="deco-label">TITLE //</span>
-        <span class="main-title">{{ title }}</span>
+        <span class="main-title">{{ status.title }}</span>
       </div>
       <div class="level-row">
         <span class="cn-label">等级</span>
         <div class="level-badge">
           <span class="level-deco">LV.</span>
-          <span class="level-val">{{ level }}</span>
+          <span class="level-val">{{ status.level }}</span>
         </div>
       </div>
     </div>
@@ -22,7 +22,7 @@
           <span class="cn-label">声望</span>
           <span class="en-deco">REP</span>
         </div>
-        <div class="stat-val rep-color">{{ reputation }}</div>
+        <div class="stat-val rep-color">{{ status.reputation }}</div>
       </div>
       
       <div class="stat-row">
@@ -30,20 +30,20 @@
           <span class="cn-label">金币</span>
           <span class="en-deco">GOLD</span>
         </div>
-        <div class="stat-val gold-color">{{ formatNumberWithComma(gold) }}</div>
+        <div class="stat-val gold-color">{{ formatNumberWithComma(status.gold) }}</div>
       </div>
     </div>
 
     <div class="exp-group">
       <div class="exp-header">
         <span class="cn-label">同步率</span>
-        <span class="exp-nums">{{ currentExp }} / {{ nextLevelExp }}</span>
+        <span class="exp-nums">{{ status.currentExp }} / {{ status.nextLevelExp }}</span>
       </div>
       <div class="progress-container">
-        <div class="progress-fill" :style="{ width: expPercent + '%' }"></div>
+        <div class="progress-fill" :style="{ width: status.expPercent + '%' }"></div>
         <div class="progress-texture"></div>
       </div>
-      <div class="exp-percent">{{ expPercent }}%</div>
+      <div class="exp-percent">{{ Math.round(status.expPercent) }}%</div>
     </div>
     
     <div class="right-border"></div>
@@ -53,18 +53,26 @@
 <script setup>
 import { defineProps } from 'vue'
 
+// 🔥 核心修改：将分散的 props 封装为单一对象 status
 const props = defineProps({
-  level: { type: Number, default: 12 },
-  currentExp: { type: Number, default: 2450 },
-  nextLevelExp: { type: Number, default: 5000 },
-  gold: { type: Number, default: 9527 },
-  reputation: { type: Number, default: 880 },
-  title: { type: String, default: '资深干员' }, // 默认改成中文，测试效果
-  expPercent: { type: Number, default: 49 }
+  status: {
+    type: Object,
+    required: true,
+    default: () => ({
+      level: 1,
+      currentExp: 0,
+      nextLevelExp: 100,
+      gold: 0,
+      reputation: 0,
+      title: 'Loading...',
+      expPercent: 0
+    })
+  }
 })
 
-// 金币等大数字增加千分位逗号，提升可读性
+// 金币格式化（增加了安全检查，防止数据未加载时报错）
 const formatNumberWithComma = (num) => {
+  if (num === undefined || num === null) return '0';
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 }
 </script>
@@ -79,7 +87,7 @@ const formatNumberWithComma = (num) => {
   max-height: 178px; /* 严格限制高度 */
   padding: 10px 14px 10px 10px; /* 右侧留白给装饰条 */
   box-sizing: border-box;
-  background-color: rgba(245, 241, 231, 0.5); 
+  background-color: #F4F1EA; 
   
   display: flex;
   flex-direction: column;

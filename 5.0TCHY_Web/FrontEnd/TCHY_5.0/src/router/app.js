@@ -151,6 +151,12 @@ const routes = [
     component: () => import("@/UserComponent/Profile/NewProfile.vue"),
     meta: { requiresAuth: true, title: '我的资料 · 新' }
   },
+    {
+    path: "/profile/NewSettings",
+    name: "my-new-settings",
+    component: () => import("@/UserComponent/UserSettings/UserSettings.vue"),
+    meta: { requiresAuth: true, title: '用户资料设置 · 新' }
+  },
   {
     path: "/profile/:userId",
     name: "profile",

@@ -56,7 +56,7 @@ const achievements = ref([
   width: 100%;
   
   /* 背景色保持米色系 */
-  background-color: #EFECE3; 
+  background-color: #F4F1EA; 
   
   /* 圆角与溢出隐藏：保证顶底条贴边 */
   border-radius: 8px;

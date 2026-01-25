@@ -5,7 +5,7 @@
     </div>
 
     <div class="data-card-container">
-      <DataCard />
+      <DataCard :status="status" />
     </div>
   </div>
 </template>
@@ -13,6 +13,11 @@
 <script setup>
 import UserCard from './UserCard.vue'
 import DataCard from './DataCard.vue' // 引入新组件
+
+// 1. 声明接收来自父组件的 status
+const props = defineProps({
+  status: Object
+})
 </script>
 
 <style scoped>

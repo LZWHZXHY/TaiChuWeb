@@ -81,6 +81,10 @@
                 <span class="row-label">NEW PROFILE</span>
                 <span class="row-icon">-></span>
               </div>
+              <div class="menu-row" @click="goToNewSettings">
+                <span class="row-label">PROFILE SETTINGS</span>
+                <span class="row-icon">-></span>
+              </div>
               <div class="menu-divider">----------------</div>
               <div class="menu-row logout" @click="handleLogout">
                 <span class="row-label">>> LOGOUT</span>
@@ -194,6 +198,7 @@ const handleRegister = () => router.push('/register')
 const toggleUserMenu = () => showUserMenu.value = !showUserMenu.value
 const goToProfile = () => { showUserMenu.value = false; router.push('/profile/me') }
 const goToNewProfile = () => { showUserMenu.value = false; router.push('/profile/MEE') }
+const goToNewSettings = () => { showUserMenu.value = false; router.push('/profile/NewSettings') }
 const goToNotifications = () => { showUserMenu.value = false; router.push('/profile/me?tab=notification') }
 
 const handleLogout = async () => {
