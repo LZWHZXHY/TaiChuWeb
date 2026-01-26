@@ -149,7 +149,7 @@ const handleNavClick = (key) => {
   width: 100%;
   padding: 20px;
   box-sizing: border-box;
-  background: rgba(245, 241, 231, 0.5);
+  background: rgba(244, 241, 234, 0.9);
   /* 关键修改：改为 visible，允许内容溢出撑开父容器 */
   overflow-y: visible; 
   height: auto;

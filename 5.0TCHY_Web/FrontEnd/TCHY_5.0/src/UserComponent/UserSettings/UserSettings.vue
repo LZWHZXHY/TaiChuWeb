@@ -7,17 +7,25 @@
     <div class="main-box container">
       
       <div class="left-box container">
-        内容显示区域
+        <component :is="currentComponent" />
       </div>
 
       <div class="right-box container">
-        <button 
-          v-for="(item, index) in menuItems" 
-          :key="index" 
-          class="menu-btn"
-        >
-          {{ item }}
-        </button>
+        <div class="setting-header">
+          设置中心
+        </div>
+
+        <div class="setting-menu">
+          <button 
+            v-for="(item, index) in menuItems" 
+            :key="index" 
+            class="menu-btn"
+            :class="{ active: currentLabel === item }" 
+            @click="switchMenu(item)"
+          >
+            {{ item }}
+          </button>
+        </div>
       </div>
 
       <div class="xuanxiang"></div>
@@ -26,10 +34,25 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 
+// 1. 引入刚才创建的所有子组件
+// 注意：请确保路径正确，如果组件在 components 文件夹下，路径可能是 './components/CenterSetting.vue'
+import CenterSetting from './Settings/CenterSetting.vue'
+import ProfileSetting from './Settings/ProfileSetting.vue'
+import AvatarSetting from './Settings/AvatarSetting.vue'
+import PersonalSetting from './Settings/PersonalSetting.vue'
+import PrivacySetting from './Settings/PrivacySetting.vue'
+import SecuritySetting from './Settings/SecuritySetting.vue'
+import FeatureSetting from './Settings/FeatureSetting.vue'
+import OtherSetting from './Settings/OtherSetting.vue'
+import TestSetting from './Settings/TestSetting.vue'
+
+// 2. 定义菜单项名称列表
 const menuItems = ref([
+  '中心首页', 
   '资料设置', 
+  '头像设置', 
   '个性设置', 
   '隐私设置', 
   '安全设置', 
@@ -37,6 +60,31 @@ const menuItems = ref([
   '其它设置', 
   '测试功能'
 ])
+
+// 3. 建立 "中文名称" 到 "组件对象" 的映射关系
+const componentMap = {
+  '中心首页': CenterSetting,
+  '资料设置': ProfileSetting,
+  '头像设置': AvatarSetting,
+  '个性设置': PersonalSetting,
+  '隐私设置': PrivacySetting,
+  '安全设置': SecuritySetting,
+  '功能设置': FeatureSetting,
+  '其它设置': OtherSetting,
+  '测试功能': TestSetting
+}
+
+// 4. 定义当前选中的状态
+// currentLabel 用于控制按钮的高亮样式
+const currentLabel = ref('中心首页')
+// currentComponent 用于控制左侧显示哪个组件 (使用 shallowRef 优化性能)
+const currentComponent = shallowRef(CenterSetting)
+
+// 5. 切换菜单的方法
+const switchMenu = (itemName) => {
+  currentLabel.value = itemName
+  currentComponent.value = componentMap[itemName]
+}
 </script>
 
 <style scoped>
@@ -44,7 +92,7 @@ const menuItems = ref([
 .container {
   border: 1px solid #000000;
   background: transparent;
-  box-sizing: border-box; /* 防止 padding 撑大盒子 */
+  box-sizing: border-box; 
 }
 
 .background {
@@ -76,37 +124,60 @@ const menuItems = ref([
   display: flex;
 }
 
-/* 左侧盒子 (内容区) */
+/* 左侧盒子 */
 .left-box.container {
   width: 80%;
   height: 100%;
-  /* 左侧样式可以根据需要添加，比如背景色区分 */
-  background: #ffffff; 
+  background: #ffffff;
+  overflow: hidden; /* 防止子组件内容溢出 */
 }
 
-/* 右侧盒子 (菜单区) - 修改点 */
+/* 右侧盒子 */
 .right-box.container {
   width: 20%;
   height: 100%;
   display: flex;
-  flex-direction: column; /* 竖向排列 */
-  gap: 10px;              /* 按钮间距 */
-  padding: 10px;          /* 内边距 */
-  align-items: center;    /* 子元素居中 */
-  background: #f9f9f9;    /* 可选：给菜单栏一个浅色背景 */
+  flex-direction: column; 
+  background: #f9f9f9;
+  padding: 0;             
+  border-left: 1px solid #ddd; 
 }
 
-/* 按钮样式 */
+/* 标题区域 */
+.setting-header {
+  width: 100%;
+  height: 60px;           
+  display: flex;
+  justify-content: center; 
+  align-items: center;     
+  font-size: 16px;         
+  font-weight: bold;       
+  background-color: #fff;  
+  border-bottom: 1px solid #e0e0e0; 
+}
+
+/* 按钮区域 */
+.setting-menu {
+  flex: 1;                
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;              
+  padding: 10px;          
+  align-items: center;
+  overflow-y: auto;       
+  box-sizing: border-box;
+}
+
 .menu-btn {
-  width: 100%;            /* 宽度 100% */
-  height: 50px;           /* 高度固定 50px */
-  max-height: 50px;       /* 最大高度 50px */
-  
-  display: flex;          /* 启用 Flex 居中文字 */
+  width: 100%;
+  height: 50px;
+  max-height: 50px;
+  min-height: 50px; /* 防止被压缩 */
+  display: flex;
   justify-content: center;
   align-items: center;
-  
-  font-size: 14px;        /* 字体大小 */
+  font-size: 14px;
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 5px;
@@ -118,5 +189,12 @@ const menuItems = ref([
   background-color: #e6f7ff;
   border-color: #1890ff;
   color: #1890ff;
+}
+
+/* 新增：选中状态的样式 */
+.menu-btn.active {
+  background-color: #1890ff;
+  color: #ffffff;
+  border-color: #1890ff;
 }
 </style>

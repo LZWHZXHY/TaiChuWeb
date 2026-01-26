@@ -12,6 +12,9 @@
 
     <div class="side-container">
       <div class="side-wrapper">
+
+        <UserActionButtons />
+        
         <StatsCard :status="status"/>
         
         <NoticeBoard />
@@ -30,6 +33,7 @@ import AchievementPanel from './HomeContent/AchievementPanel.vue'
 import GallerySection from './HomeContent/GallerySection.vue'
 import BlogSection from './HomeContent/BlogSection.vue'
 import PostSection from './HomeContent/PostSection.vue'
+import UserActionButtons from './HomeContent/UserActionButtons.vue'
 
 const props = defineProps({
   status: {
