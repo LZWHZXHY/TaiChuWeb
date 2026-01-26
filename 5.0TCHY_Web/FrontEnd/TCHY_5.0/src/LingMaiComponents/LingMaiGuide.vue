@@ -1,215 +1,167 @@
 <template>
   <div class="guide-container">
-    <div class="guide-content">
-      <header class="hero">
-        <div class="icon-wrapper">
-          <img src="/favicon.ico" class="logo-img" alt="LOGO">
+    <div class="guide-paper">
+      
+      <div class="doc-meta">
+        <span class="badge">v1.1 Core</span>
+        <span class="last-updated">Last updated: {{ new Date().toLocaleDateString() }}</span>
+      </div>
+
+      <header class="doc-header">
+        <div class="header-main">
+          <img src="/favicon.ico" class="logo-mini" alt="Logo">
+          <h1>用户手册 User Guide</h1>
         </div>
-        <h1>欢迎来到灵脉空间</h1>
-        <p class="subtitle">不仅仅是笔记，更是你的第二大脑。通过双向链接构建知识网络。</p>
+        <p class="doc-intro">
+          欢迎使用灵脉空间。本文档将帮助您快速掌握<strong>双向链接</strong>、<strong>快捷指令</strong>及<strong>知识图谱</strong>的使用方法，构建您的第二大脑。
+        </p>
       </header>
 
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="card-icon">⚡</div>
-          <h3>快捷指令</h3>
-          <p>
-            在编辑器中输入 <kbd>/</kbd> 唤起菜单，快速插入标题、列表、代码块或<strong>上传图片</strong>。<br>
-            支持 <kbd>Ctrl</kbd> + <kbd>V</kbd> 直接粘贴图片。
-          </p>
-        </div>
+      <hr class="divider" />
 
-        <div class="feature-card highlight">
-          <div class="card-icon">🔗</div>
-          <h3>双向链接 (核心)</h3>
+      <div class="doc-body">
+        
+        <section class="doc-section">
+          <h2>1. 核心概念 Core Concepts</h2>
+          <div class="callout info">
+            <span class="icon">💡</span>
+            <div class="text">
+              <strong>双向链接 (Bi-directional Linking)</strong> 是灵脉空间的灵魂。不同于传统的文件夹分类，我们通过引用让知识互联。
+            </div>
+          </div>
           <p>
-            输入 <kbd>[[</kbd> 即可引用或创建其他笔记。<br>
-            这会在文档间建立<strong>实体连接</strong>，并在知识图谱中显示引用关系。
+            在任意文档中输入 <kbd>[[</kbd> 即可唤起引用菜单。您可以选择现有文档，或直接输入新标题创建新节点。这种连接会在<strong>全局图谱</strong>中可视化呈现。
           </p>
-        </div>
+        </section>
 
-        <div class="feature-card">
-          <div class="card-icon">🕸️</div>
-          <h3>全局图谱</h3>
-          <p>点击侧边栏的“全局关系图谱”，以上帝视角俯瞰你的知识星空。支持缩放查看细节，点击节点直接跳转。</p>
-        </div>
+        <section class="doc-section">
+          <h2>2. 编辑器与指令 Editor & Commands</h2>
+          <p>我们采用“所见即所得”的富文本编辑模式，支持 Markdown 语法快捷键。</p>
+          
+          <div class="table-wrapper">
+            <table class="cmd-table">
+              <thead>
+                <tr>
+                  <th>操作</th>
+                  <th>快捷键 / 指令</th>
+                  <th>说明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>唤起菜单</td>
+                  <td><kbd>/</kbd></td>
+                  <td>插入标题、列表、代码块、图片等</td>
+                </tr>
+                <tr>
+                  <td>建立链接</td>
+                  <td><kbd>[[</kbd></td>
+                  <td>引用或创建新页面</td>
+                </tr>
+                <tr>
+                  <td>上传图片</td>
+                  <td><kbd>Ctrl</kbd> + <kbd>V</kbd></td>
+                  <td>直接粘贴剪贴板中的图片</td>
+                </tr>
+                <tr>
+                  <td>粗体</td>
+                  <td><kbd>Ctrl</kbd> + <kbd>B</kbd></td>
+                  <td>加粗选中的文字 [也可以选中后使用菜单]</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-        <div class="feature-card">
-          <div class="card-icon">📊</div>
-          <h3>看板与文档</h3>
-          <p>
-            在编辑器顶部切换视图。<br>
-            <strong>文档模式</strong>适合深度写作，<strong>看板模式</strong>适合项目管理。(看板功能持续优化中)
-          </p>
-        </div>
+        <section class="doc-section">
+          <h2>3. 视图与组织 Views & Organization</h2>
+          <h3>文档层级</h3>
+          <p>虽然我们强调网状连接，但树状层级依然有效。您可以直接在左侧侧边栏<strong>拖拽文档</strong>来调整父子关系。</p>
+          <h3>多维视图</h3>
+          <ul class="feature-list">
+            <li><strong>📄 文档模式：</strong> 沉浸式写作体验，适合记录笔记、撰写文章。</li>
+            <li><strong>📊 看板模式：</strong> 适合项目管理。由于我们还在持续优化中，目前建议用于简单的任务追踪。</li>
+            <li><strong>🕸️ 全局图谱：</strong> 点击侧边栏入口，查看所有知识点的连接网络。</li>
+          </ul>
+        </section>
 
-        <div class="feature-card warning">
-          <div class="card-icon">💾</div>
-          <h3>保存机制</h3>
-          <p>
-            系统会自动保存内容。请留意右下角的同步状态，当显示<strong>“✅ 已保存”</strong>时，数据才算安全落盘。
-          </p>
-        </div>
+        <section class="doc-section">
+          <h2>4. 数据与安全 Data Safety</h2>
+          <div class="callout warning">
+            <span class="icon">💾</span>
+            <div class="text">
+              <strong>自动保存机制：</strong> 系统会实时监听您的输入并自动保存。请务必留意编辑器右下角的同步状态，当显示 <code>✅ 已保存</code> 时，表示数据已安全写入数据库。
+            </div>
+          </div>
+        </section>
 
-        <div class="feature-card">
-          <div class="card-icon">🚀</div>
-          <h3>未来计划</h3>
-          <p>
-            我们将支持视频链接、社区帖子嵌入等功能。<br>
-            欢迎在意见区反馈，让我们一起打造解决实际生活问题的工具。
-          </p>
-        </div>
       </div>
 
-      <div class="action-area">
-        <button class="start-btn" @click="$emit('start')">开始创建第一篇笔记</button>
+      <div class="doc-footer">
+        <button class="primary-btn" @click="$emit('start')">
+          <span class="icon">✨</span> 开始创建笔记
+        </button>
+        <p class="footer-note">遇到问题？请通过 GitHub Issues 反馈。</p>
       </div>
+
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+$font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+$font-family-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+
 .guide-container {
   height: 100%;
-  overflow-y: auto;
-  background-color: #fff;
-  display: flex;
-  justify-content: center;
-  padding: 60px 20px;
-}
-
-.guide-content {
-  max-width: 900px;
   width: 100%;
-}
-
-.hero {
-  text-align: center;
-  margin-bottom: 60px;
-
-  .icon-wrapper {
-    margin-bottom: 24px;
-    
-    .logo-img {
-      height: 80px;   /* 固定高度 */
-      width: auto;    /* 自适应宽度 */
-      object-fit: contain;
-      display: block;
-      margin: 0 auto; /* 水平居中 */
-      border-radius: 12px; /* 稍微圆角一点更好看 */
-    }
-  }
-
-  h1 { 
-    font-size: 32px; 
-    color: #1f2937; 
-    margin-bottom: 12px; 
-    font-weight: 800; 
-    letter-spacing: -0.5px;
-  }
+  overflow-y: auto; 
+  box-sizing: border-box; 
+  background-color: #f7f7f5;
   
-  .subtitle { 
-    font-size: 18px; 
-    color: #6b7280; 
-    font-weight: 400; 
-    line-height: 1.6;
-  }
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 响应式布局 */
-  gap: 24px;
-  margin-bottom: 60px;
-}
-
-.feature-card {
-  padding: 24px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  transition: all 0.2s ease;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0,0,0,0.06);
-    border-color: #d1d5db;
-  }
-
-  /* 高亮卡片样式 */
-  &.highlight {
-    background: #eff6ff;
-    border-color: #bfdbfe;
-    
-    .card-icon { background: #dbeafe; border-radius: 8px; width: fit-content; padding: 4px; }
-  }
-
-  /* 警告/注意卡片样式 */
-  &.warning {
-    background: #ffffff;
-    border-left: 4px solid #f59e0b; /* 左侧橙色条 */
-  }
-
-  .card-icon { 
-    font-size: 28px; 
-    margin-bottom: 16px; 
-    line-height: 1;
-  }
-
-  h3 { 
-    font-size: 16px; 
-    font-weight: 600; 
-    color: #111827; 
-    margin-bottom: 8px; 
-  }
-
-  p { 
-    font-size: 14px; 
-    color: #4b5563; 
-    line-height: 1.6; 
-    flex: 1; /* 让文字撑满 */
-  }
-
-  /* 键盘按键样式优化 */
-  kbd {
-    background: #f3f4f6;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    padding: 2px 6px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.85em;
-    color: #374151;
-    box-shadow: 0 1px 0 rgba(0,0,0,0.1);
-  }
-}
-
-.action-area {
-  text-align: center;
-  padding-bottom: 40px;
-}
-
-.start-btn {
-  background: #2383e2;
-  color: white;
-  border: none;
-  padding: 14px 40px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px -1px rgba(35, 131, 226, 0.2), 0 2px 4px -1px rgba(35, 131, 226, 0.1);
-
-  &:hover { 
-    background: #1a6fb0; 
-    transform: translateY(-1px);
-    box-shadow: 0 10px 15px -3px rgba(35, 131, 226, 0.3);
-  }
+  /* 🔥 核心改动 1：不再使用 display: flex 居中 */
+  /* display: flex; <--- 删除 */
+  /* justify-content: center; <--- 删除 */
   
-  &:active {
-    transform: translateY(0);
+  /* 改为 padding 挤压 */
+  padding: 40px 20px; 
+  
+  font-family: $font-family-base;
+  color: #37352f;
+}
+
+.guide-paper {
+  /* 🔥 核心改动 2：使用 margin auto 实现居中 */
+  margin: 0 auto; 
+  
+  max-width: 800px;
+  width: 100%;
+  background: #fff;
+  padding: 60px 80px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border-radius: 2px;
+  min-height: 800px;
+  box-sizing: border-box; 
+
+  /* 🔥 核心改动 3：强制断词，防止文字刺穿背景框 */
+  overflow-wrap: break-word; 
+  word-wrap: break-word;
+  word-break: break-word; 
+
+  @media (max-width: 768px) {
+    padding: 40px 24px;
   }
 }
+
+/* ... 以下样式保持不变 ... */
+.doc-meta { display: flex; gap: 12px; font-size: 12px; color: #999; margin-bottom: 24px; align-items: center; .badge { background: #e6f7ff; color: #0078d4; padding: 2px 6px; border-radius: 4px; font-weight: 500; } }
+.doc-header { margin-bottom: 30px; .header-main { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; .logo-mini { width: 32px; height: 32px; border-radius: 4px; } h1 { font-size: 32px; font-weight: 700; margin: 0; color: #333; letter-spacing: -0.5px; } } .doc-intro { font-size: 16px; line-height: 1.6; color: #555; } }
+.divider { border: none; border-bottom: 1px solid #eaeaea; margin: 30px 0; }
+.doc-body { h2 { font-size: 20px; font-weight: 600; margin-top: 40px; margin-bottom: 16px; color: #333; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; } h3 { font-size: 16px; font-weight: 600; margin-top: 24px; margin-bottom: 8px; color: #444; } p { font-size: 15px; line-height: 1.75; color: #37352f; margin-bottom: 16px; } }
+.table-wrapper { border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden; margin: 20px 0; }
+.cmd-table { width: 100%; border-collapse: collapse; font-size: 14px; th, td { padding: 10px 16px; text-align: left; border-bottom: 1px solid #f0f0f0; } th { background: #fafafa; font-weight: 600; color: #666; } tr:last-child td { border-bottom: none; } }
+.callout { display: flex; gap: 12px; padding: 16px; border-radius: 4px; margin: 20px 0; font-size: 14px; line-height: 1.6; .icon { font-size: 18px; flex-shrink: 0; } &.info { background-color: #f1f7ff; border: 1px solid #dce9fa; color: #2c5282; } &.warning { background-color: #fff9db; border: 1px solid #faeccc; color: #745e15; } code { background: rgba(0,0,0,0.06); padding: 2px 4px; border-radius: 3px; font-family: $font-family-mono; } }
+.feature-list { padding-left: 20px; li { margin-bottom: 8px; font-size: 15px; line-height: 1.6; color: #444; strong { color: #222; } } }
+kbd { display: inline-block; padding: 3px 6px; font-family: $font-family-mono; font-size: 12px; line-height: 1; color: #444; vertical-align: middle; background-color: #fafafa; border: 1px solid #d1d5db; border-radius: 3px; box-shadow: 0 1px 0 rgba(0,0,0,0.1); margin: 0 2px; }
+.doc-footer { margin-top: 60px; text-align: center; padding-top: 40px; border-top: 1px solid #eaeaea; .primary-btn { background: #2383e2; color: #fff; border: none; padding: 10px 24px; font-size: 15px; font-weight: 500; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s; &:hover { background: #1a6fb0; } } .footer-note { margin-top: 16px; font-size: 12px; color: #999; } }
 </style>

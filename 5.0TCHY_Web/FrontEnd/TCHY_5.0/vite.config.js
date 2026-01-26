@@ -19,20 +19,20 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // 将 utils 下的文件打包到单独的 chunk
           if (id.includes('/src/utils/')) {
             return 'utils'
           }
-          // 将 vue 相关依赖打包到 vendor chunk
           if (id.includes('node_modules/vue') || id.includes('node_modules/@vue/')) {
             return 'vendor'
           }
         }
       }
     },
-    chunkSizeWarningLimit: 1000 // 提高 chunk 大小警告限制
+    chunkSizeWarningLimit: 1000
   },
   optimizeDeps: {
-    include: ['@/utils/api.js', '@/utils/auth.js'] // 预构建这些模块
+    // 🔥 核心修复：只保留 include，删除之前的 exclude 块！
+    // 让 Vite 重新接管这些包的优化，这能解决 500 错误。
+    include: ['@/utils/api.js', '@/utils/auth.js'] 
   }
 })

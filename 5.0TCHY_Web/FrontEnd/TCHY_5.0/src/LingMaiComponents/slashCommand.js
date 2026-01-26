@@ -45,6 +45,28 @@ const getSuggestionItems = ({ query }) => {
       },
     },
     {
+      title: '折叠列表',
+      icon: '▶',
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range)
+          .insertContent({
+            type: 'details',
+            attrs: { open: true }, // 默认展开
+            content: [
+              {
+                type: 'summary',
+                content: [{ type: 'text', text: '折叠标题' }] // 默认标题
+              },
+              {
+                type: 'paragraph', // 默认在这个折叠块里放一个空段落
+                content: [] 
+              }
+            ]
+          })
+          .run()
+      },
+    },
+    {
       title: '一级标题',
       icon: 'H1',
       command: ({ editor, range }) => {

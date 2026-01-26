@@ -71,6 +71,14 @@ const router = useRouter(); // 初始化路由
 // --- 数据源 (已添加 URL) ---
 const slides = [
   {
+    tag: '热门强推！',
+    title: '太初寰宇 - 灵脉空间 v1.1',
+    shortTitle: '灵脉 v1.1',
+    desc: '太初最强文档编辑系统 - 第二大脑',
+    image: 'https://image2url.com/r2/default/images/1769400514614-4248e1be-dded-4f09-acc4-ad1e3ed91ebb.png',
+    url: '/ExperimentalArea?tab=lingmai', 
+  },
+  {
     tag: '联动',
     title: '火柴人|柴圈柴设OC社区',
     shortTitle: '火柴人频道',
