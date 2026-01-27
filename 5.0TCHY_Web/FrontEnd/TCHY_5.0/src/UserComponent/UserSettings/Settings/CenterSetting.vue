@@ -216,7 +216,7 @@ const formatNumber = (num) => {
   font-weight: 700;
   padding: 2px 6px;
   background: #000;
-  color: #fff;
+  color: #ffffff;
   border-radius: 4px;
   font-family: 'Roboto Mono', monospace;
 }
@@ -224,7 +224,7 @@ const formatNumber = (num) => {
 .job-title {
   margin-top: 4px;
   font-size: 12px;
-  color: #666;
+  color: #666666;
   font-family: 'Roboto Mono', monospace;
 }
 .job-title .highlight { color: #d35400; font-weight: bold; }

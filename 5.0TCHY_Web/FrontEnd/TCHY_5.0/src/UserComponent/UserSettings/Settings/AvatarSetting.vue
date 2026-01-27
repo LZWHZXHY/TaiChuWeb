@@ -43,7 +43,6 @@
           <div class="current-avatar-box">
             <img v-if="currentAvatar" :src="currentAvatar" class="avatar-display" />
             <div v-else class="avatar-placeholder">暂无数据</div>
-            <div class="scan-line"></div>
           </div>
           <div class="avatar-meta">
             <span class="meta-label">当前头像 // CURRENT</span>
@@ -322,13 +321,6 @@ const confirmDefaultSelection = () => { if (!tempSelectedId.value) return; curre
 
 .avatar-display { width: 100%; height: 100%; object-fit: cover; }
 
-.scan-line {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: linear-gradient(to bottom, transparent 50%, rgba(255,255,255,0.3) 50%, transparent);
-  background-size: 100% 4px;
-  pointer-events: none;
-}
 
 .avatar-meta {
   display: flex;
