@@ -271,7 +271,7 @@ textarea {
   flex-direction: column;
 }
 
-.form-header { margin-bottom: 30px; }
+.form-header { margin-bottom: 30px; color: #000;}
 .form-header h2 { font-size: 24px; font-weight: 900; margin: 0; letter-spacing: -1px; font-family: 'Noto Sans SC'; }
 .form-header .line { width: 40px; height: 4px; background: #000; margin-top: 8px; }
 

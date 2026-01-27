@@ -7,7 +7,9 @@
     <div class="main-box container">
       
       <div class="left-box container">
-        <component :is="currentComponent" />
+        <Transition name="fade" mode="out-in">
+          <component :is="currentComponent" :key="currentLabel" />
+        </Transition>
       </div>
 
       <div class="right-box container">
@@ -101,7 +103,7 @@ const switchMenu = (itemName) => {
   justify-content: center; /* 居中 */
   align-items: flex-start;
   width: 100vw;
-  min-height: 100vh;      
+  min-height: 86vh;      
   position: relative;
   padding-top: 60px; /* 顶部留白 */
   z-index: 2;
@@ -202,5 +204,18 @@ const switchMenu = (itemName) => {
 
 /* 如果你的子组件没有 padding，可以在这里给 left-box 加一个 padding */
 /* .left-box.container { padding: 40px; } */
+/* ================= 动画效果 ================= */
 
+/* 进入和离开的激活状态：设置过渡时间和曲线 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* 进入的起点 和 离开的终点：透明度为0，稍微向下位移一点增加动感 */
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px); /* 可选：如果你想要纯淡入淡出，可以删掉这行 */
+}
 </style>
