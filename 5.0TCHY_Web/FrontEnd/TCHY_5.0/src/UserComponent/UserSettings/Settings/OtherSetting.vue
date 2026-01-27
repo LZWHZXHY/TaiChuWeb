@@ -1,52 +1,96 @@
 <template>
-  <div class="common-container">
-    <div class="flashing-text">太初寰宇牛逼</div>
+  <div class="warning-container">
+    <div class="content-wrapper">
+      <img 
+        src="https://image2url.com/r2/default/images/1769474422869-bb762f83-9cdb-41f8-b3ea-ce2bb8add47a.gif" 
+        class="construction-gif" 
+        draggable="false"
+      />
+      
+      <div class="text-box">
+        <h1 class="rainbow-text">没做完！</h1>
+        <h1 class="rainbow-text delayed">滚出切！！</h1>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-// 这里目前不需要逻辑，留空即可
+// 没有任何逻辑，纯粹的情绪输出
 </script>
 
 <style scoped>
-/* 容器样式：占满父盒子，并强制居中 */
-.common-container {
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@900&display=swap');
+
+.warning-container {
   width: 100%;
   height: 100%;
   display: flex;
-  justify-content: center; /* 水平居中 */
-  align-items: center;     /* 垂直居中 */
-  background-color: #ffffff; /* 保持背景干净 */
+  justify-content: center;
+  align-items: center;
+  background-color: #fff; /* 或者 transparent，看你喜好 */
+  overflow: hidden;
 }
 
-/* 文字样式与动画 */
-.flashing-text {
-  font-size: 48px;         /* 特大字号 */
-  font-weight: 900;        /* 特粗字体 */
-  letter-spacing: 4px;     /* 字间距，显得更有气势 */
-  color: #333;             /* 初始颜色 */
+.content-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* 图片和文字的间距 */
+  padding: 40px;
+}
+
+.construction-gif {
+  height: 200px; /* 限制高度，防止图片过大撑爆布局 */
+  object-fit: contain;
+}
+
+.text-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.rainbow-text {
+  margin: 0;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 64px; /* 超大字号 */
+  font-weight: 900;
+  white-space: nowrap;
   
-  /* 动画设置：
-     name: pulse
-     duration: 1.5s (一次循环1.5秒)
-     iteration-count: infinite (无限循环)
-     timing-function: ease-in-out (缓动，更自然)
-     direction: alternate (一来一回，避免突变)
-  */
-  animation: pulse 1.5s infinite ease-in-out alternate;
+  /* 五彩流光 + 疯狂闪烁动画 */
+  background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  animation: 
+    rainbow-flow 2s linear infinite,
+    angry-shake 0.5s ease-in-out infinite alternate;
+  
+  text-shadow: 4px 4px 0px rgba(0,0,0,0.1);
 }
 
-/* 定义动画关键帧 */
-@keyframes pulse {
-  0% {
-    opacity: 1;            /* 完全不透明 */
-    transform: scale(1);   /* 原始大小 */
-    text-shadow: 0 0 10px rgba(0,0,0,0.1);
+.rainbow-text.delayed {
+  font-size: 80px; /* 第二行更大更凶 */
+  animation-delay: 0.1s; /* 稍微错开一点节奏 */
+}
+
+/* 背景流光动画 */
+@keyframes rainbow-flow {
+  to {
+    background-position: 200% center;
   }
-  100% {
-    opacity: 0.3;          /* 变淡 */
-    transform: scale(0.95);/* 稍微缩小一点，增加呼吸感 */
-    color: #1890ff;        /* 变色 (可选，增加科技感) */
-  }
+}
+
+/* 愤怒颤抖/缩放动画 */
+@keyframes angry-shake {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-2deg); }
+  50% { transform: scale(1) rotate(0deg); }
+  75% { transform: scale(1.1) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); }
 }
 </style>
