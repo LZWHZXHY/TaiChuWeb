@@ -32,7 +32,7 @@
             @click.stop="scrollToHeading(item.pos)"
           >
             {{ item.text }}
-          </div>
+    </div>  
         </div>
       </aside>
 
