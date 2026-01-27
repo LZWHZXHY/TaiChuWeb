@@ -83,7 +83,7 @@ const formatNumberWithComma = (num) => {
   width: 100%;
   height: 100%;
   max-height: 178px; /* 严格限制高度 */
-  padding: 10px 14px 10px 0; /* 右侧留白给装饰条 */
+  padding: 10px 14px 10px 20px; /* 右侧留白给装饰条 */
   box-sizing: border-box;
   background: transparent;
   
