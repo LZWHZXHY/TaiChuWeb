@@ -3,7 +3,7 @@
     <div class="guide-paper">
       
       <div class="doc-meta">
-        <span class="badge">v1.1 Core</span>
+        <span class="badge">v1.2 Core</span>
         <span class="last-updated">Last updated: {{ new Date().toLocaleDateString() }}</span>
       </div>
 
@@ -51,12 +51,12 @@
                 <tr>
                   <td>唤起菜单</td>
                   <td><kbd>/</kbd></td>
-                  <td>插入标题、列表、代码块、图片等</td>
+                  <td>插入标题、列表、代码块、图片等 (需要用空格隔开)</td>
                 </tr>
                 <tr>
                   <td>建立链接</td>
                   <td><kbd>[[</kbd></td>
-                  <td>引用或创建新页面</td>
+                  <td>引用或创建新页面 (需要用空格隔开)</td>
                 </tr>
                 <tr>
                   <td>上传图片</td>
@@ -80,7 +80,7 @@
           <h3>多维视图</h3>
           <ul class="feature-list">
             <li><strong>📄 文档模式：</strong> 沉浸式写作体验，适合记录笔记、撰写文章。</li>
-            <li><strong>📊 看板模式：</strong> 适合项目管理。由于我们还在持续优化中，目前建议用于简单的任务追踪。</li>
+            <li><strong>📊 看板模式：</strong> 适合项目管理。由于我们还在持续优化中，目前建议用于简单的任务追踪。 这个被挪动到了 / 菜单中</li>
             <li><strong>🕸️ 全局图谱：</strong> 点击侧边栏入口，查看所有知识点的连接网络。</li>
           </ul>
         </section>

@@ -364,12 +364,14 @@ input {
   font-size: 1rem;
   transition: all 0.3s ease;
   font-family: inherit;
+  color: #4a5568;
 }
 
 input:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  color: #2f855a;
 }
 
 input.error {

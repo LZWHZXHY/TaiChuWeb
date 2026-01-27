@@ -66,6 +66,41 @@ const getSuggestionItems = ({ query }) => {
           .run()
       },
     },
+    // ... 在 items 数组中添加
+    {
+      title: '看板块',
+      description: '插入当前页面的任务看板',
+      icon: '📊', // 如果你有图标库可以使用
+      command: ({ editor, range }) => {
+        // 获取当前编辑器的 noteId 属性
+        const noteId = editor.options.editorProps.noteId 
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .insertContent({
+            type: 'kanbanBoard',
+            attrs: { parentId: noteId }
+          })
+          .run()
+      },
+    },
+    {
+      title: '插入表格',
+      description: '创建一个 3x3 的表格',
+      // 你可以使用图标组件或者 svg 字符串
+      icon: '', 
+      
+      // 🔥 核心执行逻辑
+      command: ({ editor, range }) => {
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range) // 删除输入的 "/" 字符
+          .insertTable({ rows: 3, cols: 3, withHeaderRow: true }) // 插入表格
+          .run()
+      },
+    },
     {
       title: '一级标题',
       icon: 'H1',

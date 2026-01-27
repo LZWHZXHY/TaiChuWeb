@@ -1,19 +1,6 @@
 <template>
   <div class="editor-scroll-container" @click="handleEditorClick">
     <div class="editor-header">
-      
-      <div class="header-toolbar">
-        <div class="view-switcher">
-          <button :class="{ active: viewMode === 'doc' }" @click="viewMode = 'doc'">
-            <span class="icon">📄</span> 文档
-          </button>
-          <button :class="{ active: viewMode === 'kanban' }" @click="viewMode = 'kanban'">
-            <span class="icon">📊</span> 看板
-          </button>
-        </div>
-        <div class="spacer"></div>
-        </div>
-
       <input 
         v-model="note.title" 
         class="title-field" 
@@ -28,8 +15,8 @@
       </div>
     </div>
 
-    <div v-if="viewMode === 'doc'" class="fade-in doc-layout">
-      <div class="editor-body">
+    <div class="fade-in doc-layout" ref="editorAreaRef">
+      <div class="editor-body preview-target-area">
         <LingMaiBubbleMenu v-if="editor" :editor="editor" />
         <editor-content :editor="editor" />
       </div>
@@ -59,10 +46,6 @@
       </div>
     </div>
 
-    <div v-else class="kanban-wrapper fade-in">
-       <KanbanBoard :parent-id="note.id" @open-card="handleNavigate" />
-    </div>
-
     <div class="sync-indicator" :class="{ 'is-syncing': syncing }">
       <span v-if="syncing">☁️ 保存中...</span>
       <span v-else>✅ 已保存</span>
@@ -71,7 +54,8 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, ref, reactive, watch } from 'vue'
+// 🔥 必须加上 createVNode 和 render
+import { onBeforeUnmount, onMounted, ref, reactive, watch, createVNode, render } from 'vue'
 import { useEditor, EditorContent, VueRenderer } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -81,7 +65,6 @@ import tippy from 'tippy.js'
 import apiClient from '@/utils/api'
 import SuggestionList from '@/LingMaiComponents/SuggestionList.vue'
 import SlashCommand from './slashCommand' 
-import KanbanBoard from './KanbanBoard.vue' 
 import { Details, Summary } from '@/LingMaiComponents/ToggleNodes.js' 
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
@@ -90,20 +73,31 @@ import { BubbleMenu as BubbleMenuExtension } from '@tiptap/extension-bubble-menu
 import LingMaiBubbleMenu from './LingMaiBubbleMenu.vue'
 import Underline from '@tiptap/extension-underline'
 import { FontSize } from './FontSize.js'
+import KanbanNode from './KanbanNode.js' // 🔥 引入看板插件
+import  { delegate } from 'tippy.js' // 引入 delegate
+import LinkPreviewCard from '@/LingMaiComponents/LinkPreviewCard.vue' // 引入卡片组件
+// 🟢 注意这里加上了花括号 { }
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
+
+
+
+
+
 
 const props = defineProps(['noteId'])
 const emit = defineEmits(['navigate', 'deleted']) 
 
-const viewMode = ref('doc')
 const tocItems = ref([])
 const activeHeadingIndex = ref(-1)
-
-const handleNavigate = (id) => { emit('navigate', id); viewMode.value = 'doc' }
 
 const note = reactive({ id: props.noteId, title: '', updatedAt: new Date(), parentNoteId: null })
 const syncing = ref(false)
 const backlinks = ref([])
-
+const editorAreaRef = ref(null)
+let tippyInstance = null
 const uploadImage = async (file) => {
   const formData = new FormData(); formData.append('file', file)
   try { const res = await apiClient.post('/Upload/image', formData, { headers: { 'Content-Type': 'multipart/form-data' } }); return res.data.url } catch (e) { return null }
@@ -124,7 +118,25 @@ const scrollToHeading = (pos) => {
 
 const editor = useEditor({
   extensions: [
-    StarterKit, Placeholder.configure({ placeholder: '输入 / 唤起命令，输入 [[ 建立关联...' }), SlashCommand, Image.configure({ inline: true }), Details, Summary, TextStyle, Color, Underline, FontSize, Highlight.configure({ multicolor: true }), BubbleMenuExtension.configure({ element: null }),
+    KanbanNode, // 🔥 注册看板插件
+    StarterKit, 
+    Placeholder.configure({ placeholder: '输入 / 唤起命令，输入 [[ 建立关联...' }), 
+    SlashCommand, 
+    Image.configure({ inline: true }), 
+    Details, 
+    Summary, 
+    Table.configure({
+      resizable: true, // 允许拖拽调整列宽
+    }),
+    TableRow,
+    TableHeader,
+    TableCell,
+    TextStyle, 
+    Color, 
+    Underline, 
+    FontSize, 
+    Highlight.configure({ multicolor: true }), 
+    BubbleMenuExtension.configure({ element: null }),
     Mention.configure({
       HTMLAttributes: { class: 'internal-link' },
       renderHTML({ options, node }) { return ['span', { class: 'internal-link', 'data-id': node.attrs.id, style: 'color: #0078d4; cursor: pointer; text-decoration: underline; font-weight: 500;' }, `@${node.attrs.label ?? node.attrs.id}`] },
@@ -142,6 +154,7 @@ const editor = useEditor({
     })
   ],
   editorProps: {
+    noteId: props.noteId, // 🔥 关键：将 noteId 存入 props，供 SlashCommand 调用
     handlePaste: (view, event) => {
       const items = (event.clipboardData || event.originalEvent.clipboardData).items
       for (const item of items) { if (item.type.indexOf('image') === 0) { event.preventDefault(); const file = item.getAsFile(); uploadImage(file).then(url => { if (url) { const { schema } = view.state; const node = schema.nodes.image.create({ src: url }); view.dispatch(view.state.tr.replaceSelectionWith(node)) } }); return true } } return false
@@ -172,10 +185,8 @@ const debouncedSave = (json) => {
 }
 const syncTitle = () => { if (editor.value) debouncedSave(editor.value.getJSON()) }
 
-// 只处理空白处的点击
 const handleEditorClick = (event) => {
   const target = event.target.closest('.internal-link'); if (target) { emit('navigate', target.getAttribute('data-id')); return }
-  // input 上已经加了 @click.stop，这里其实是一个双重保险
   if (event.target.closest('input') || event.target.closest('button')) return
   if (editor.value && !editor.value.isFocused) editor.value.chain().focus().run()
 }
@@ -183,13 +194,73 @@ const handleEditorClick = (event) => {
 const handleBacklinkClick = (targetId) => emit('navigate', targetId)
 const formatDate = (d) => d ? new Date(d).toLocaleString('zh-CN', { hour12: false }) : ''
 
+
+onMounted(() => {
+  window.addEventListener('navigate-note', (e) => {
+    emit('navigate', e.detail)
+  })
+
+  // 🟢 2. 修改：使用 editorAreaRef.value 作为挂载目标
+  // 确保 DOM 已经存在
+  if (editorAreaRef.value) {
+    tippyInstance = delegate(editorAreaRef.value, { // <--- 这里改了，不用字符串 ID 了
+      target: '.internal-link', 
+      content: '加载中...',
+      animation: 'shift-away',
+      interactive: true,
+      theme: 'light-border',
+      placement: 'bottom-start',
+      delay: [500, 0], 
+      allowHTML: true,
+      appendTo: () => document.body,
+      onShow(instance) {
+        // ... 这里的逻辑保持不变 ...
+        const targetId = instance.reference.getAttribute('data-id')
+        if (!targetId) return false;
+
+        const container = document.createElement('div')
+        const vnode = createVNode(LinkPreviewCard, { noteId: targetId })
+        render(vnode, container)
+        instance.setContent(container)
+      }
+    })
+  }
+})
+
 watch([() => props.noteId, editor], ([newId, newEditor]) => { if (newId && newEditor) { note.id = newId; loadData(newId) } }, { immediate: true })
-onBeforeUnmount(() => { if (timer) clearTimeout(timer); editor.value?.destroy() })
+onBeforeUnmount(() => { 
+  if (timer) clearTimeout(timer); 
+  editor.value?.destroy();
+  window.removeEventListener('navigate-note', (e) => emit('navigate', e.detail))
+  
+  if (tippyInstance) {
+    tippyInstance.destroy() // 现在可以放心销毁，不会影响新页面
+  }
+})
 </script>
 
 <style lang="scss">
-/* 保持原有 CSS 不变，因为样式是没问题的 */
-.editor-scroll-container { max-width: 900px; margin: 0 auto; padding: 40px 60px; min-height: 100%; background: #fff; position: relative; cursor: text; }
+/* ➕ 补充 Tippy 白色主题样式 */
+.tippy-box[data-theme~='light-border'] {
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #eee;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  .tippy-content { padding: 0; }
+  .tippy-arrow { color: #fff; }
+}
+
+.editor-scroll-container { 
+  max-width: 100%; /* 🚀 稍微放宽宽度，让内部看板块更舒展 */
+  margin: 0 auto; 
+  padding: 40px 60px; 
+  min-height: 100%; 
+  background: #ffffff; 
+  position: relative; 
+  cursor: text; 
+}
+
 .doc-layout { position: relative; }
 .toc-sidebar { position: fixed; top: 50%; transform: translateY(-50%); right: 40px; width: 200px; max-height: 70vh; overflow-y: auto; border-left: 2px solid #f0f0f0; padding-left: 15px; z-index: 10; @media (max-width: 1400px) { display: none; } }
 .toc-header { font-size: 13px; font-weight: 700; color: #37352f; margin-bottom: 12px; opacity: 0.6; }
@@ -197,14 +268,85 @@ onBeforeUnmount(() => { if (timer) clearTimeout(timer); editor.value?.destroy() 
 .toc-item { font-size: 13px; color: #666; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: all 0.2s; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; &:hover { background-color: #f3f3f3; color: #000; } &.active { background-color: #e6f7ff; color: #1890ff; } &.level-1 { font-weight: 600; color: #333; } &.level-2 { padding-left: 16px; } &.level-3 { padding-left: 28px; font-size: 12px; } &.level-4 { padding-left: 36px; font-size: 12px; color: #999; } }
 .toc-sidebar::-webkit-scrollbar { width: 4px; } .toc-sidebar::-webkit-scrollbar-thumb { background: #eee; border-radius: 4px; }
 .editor-header { margin-bottom: 40px; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 20px; }
-.header-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-.view-switcher { display: inline-flex; background-color: #f3f3f3; padding: 3px; border-radius: 8px; position: relative; border: 1px solid rgba(0,0,0,0.04); button { position: relative; z-index: 2; border: none; background: transparent; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: #666; display: flex; align-items: center; gap: 6px; transition: color 0.2s ease; .icon { font-size: 14px; } &:hover { color: #333; } &.active { color: #000; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06); } } }
 .title-field { width: 100%; font-size: 40px; font-weight: 700; border: none; outline: none; margin-bottom: 8px; color: #111; background: transparent; line-height: 1.2; &::placeholder { color: #e5e5e5; } }
 .meta-info { font-size: 12px; color: #999; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; .time-label { margin-right: 6px; opacity: 0.7; } }
-.ProseMirror { outline: none; min-height: 400px; font-size: 16px; line-height: 1.75; color: #37352f; margin-top: 20px; padding-bottom: 30vh; h1, h2, h3, h4, h5, h6 { scroll-margin-top: 140px; } > * { position: relative; transition: background-color 0.2s ease; border-radius: 4px; margin-left: -12px; padding-left: 12px; border-left: 3px solid transparent; } > *:hover { border-left-color: rgba(0, 0, 0, 0.08); background-color: rgba(0, 0, 0, 0.01); } .ProseMirror-selectednode { outline: 2px solid #b4d5fe; background-color: transparent !important; } p.is-editor-empty:first-child::before { color: #9ca3af; content: attr(data-placeholder); float: left; height: 0; pointer-events: none; font-style: italic; opacity: 0.7; } blockquote { border-left: 3px solid #333; padding-left: 14px; margin: 1.5em 0; font-style: italic; color: #555; background: transparent; } pre { background: #f7f6f3; border-radius: 4px; padding: 16px; font-family: monospace; code { background: none; color: inherit; } } code { background-color: rgba(97, 97, 97, 0.1); color: #eb5757; padding: 0.25rem; border-radius: 4px; font-size: 0.85rem; } img { max-width: 100%; height: auto; border-radius: 4px; margin: 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); &.ProseMirror-selectednode { outline: 2px solid #0078d4; } } details { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin: 10px 0; background-color: #fbfbfa; transition: all 0.2s ease; &[open] { background-color: #fff; border-color: #d1d5db; box-shadow: 0 2px 5px rgba(0,0,0,0.02); } summary { font-weight: 600; cursor: pointer; outline: none; color: #37352f; padding: 4px 0; &::marker { color: #9ca3af; font-size: 0.8em; transition: color 0.2s; } &:hover { color: #2383e2; &::marker { color: #2383e2; } } } div { margin-top: 8px; padding-left: 14px; border-left: 2px solid #f3f4f6; color: #4b5563; } } }
+
+.ProseMirror { 
+  outline: none; 
+  min-height: 400px; 
+  font-size: 16px; 
+  line-height: 1.75; 
+  color: #37352f; 
+  margin-top: 20px; 
+  padding-bottom: 30vh; 
+  
+  h1, h2, h3, h4, h5, h6 { scroll-margin-top: 140px; } 
+  > * { position: relative; transition: background-color 0.2s ease; border-radius: 4px; margin-left: -12px; padding-left: 12px; border-left: 3px solid transparent; } 
+  > *:hover { border-left-color: rgba(0, 0, 0, 0.08); background-color: rgba(0, 0, 0, 0.01); } 
+  .ProseMirror-selectednode { outline: 2px solid #b4d5fe; background-color: transparent !important; } 
+  p.is-editor-empty:first-child::before { color: #9ca3af; content: attr(data-placeholder); float: left; height: 0; pointer-events: none; font-style: italic; opacity: 0.7; } 
+  blockquote { border-left: 3px solid #333; padding-left: 14px; margin: 1.5em 0; font-style: italic; color: #555; background: transparent; } 
+  pre { background: #f7f6f3; border-radius: 4px; padding: 16px; font-family: monospace; code { background: none; color: inherit; } } 
+  code { background-color: rgba(97, 97, 97, 0.1); color: #eb5757; padding: 0.25rem; border-radius: 4px; font-size: 0.85rem; } 
+  img { max-width: 100%; height: auto; border-radius: 4px; margin: 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); &.ProseMirror-selectednode { outline: 2px solid #0078d4; } } 
+  table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+
+    td,
+    th {
+      min-width: 1em;
+      border: 2px solid #ced4da; /* 边框颜色 */
+      padding: 3px 5px;
+      vertical-align: top;
+      box-sizing: border-box;
+      position: relative;
+
+      > * {
+        margin-bottom: 0;
+      }
+    }
+
+    th {
+      font-weight: bold;
+      text-align: left;
+      background-color: #f1f3f5; /* 表头背景色 */
+    }
+
+    /* 选中单元格时的样式 (Tiptap 自动添加的类) */
+    .selectedCell:after {
+      z-index: 2;
+      position: absolute;
+      content: "";
+      left: 0; right: 0; top: 0; bottom: 0;
+      background: rgba(200, 200, 255, 0.4);
+      pointer-events: none;
+    }
+
+    /* 拖拽列宽的控制手柄样式 */
+    .column-resize-handle {
+      position: absolute;
+      right: -2px;
+      top: 0;
+      bottom: -2px;
+      width: 4px;
+      background-color: #adf;
+      pointer-events: none;
+    }
+  }
+  
+  /* 解决表格容器溢出问题 */
+  .tableWrapper {
+    overflow-x: auto;
+  }
+  details { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin: 10px 0; background-color: #fbfbfa; transition: all 0.2s ease; &[open] { background-color: #fff; border-color: #d1d5db; box-shadow: 0 2px 5px rgba(0,0,0,0.02); } summary { font-weight: 600; cursor: pointer; outline: none; color: #37352f; padding: 4px 0; &::marker { color: #9ca3af; font-size: 0.8em; transition: color 0.2s; } &:hover { color: #2383e2; &::marker { color: #2383e2; } } } div { margin-top: 8px; padding-left: 14px; border-left: 2px solid #f3f4f6; color: #4b5563; } } 
+}
+
 .backlinks-section { margin-top: 80px; border-top: 1px solid #eaeaea; padding-top: 24px; .section-title { font-size: 14px; font-weight: 600; color: #37352f; margin-bottom: 16px; text-transform: uppercase; } .backlink-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; } .backlink-card { padding: 12px 16px; border: 1px solid #eaeaea; border-radius: 6px; cursor: pointer; transition: all 0.2s; background: #fff; &:hover { border-color: #d4d4d4; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-1px); } .bl-title { font-size: 14px; color: #333; font-weight: 500; } } }
 .sync-indicator { position: fixed; bottom: 20px; right: 20px; font-size: 12px; color: #999; background: #fff; padding: 6px 12px; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); pointer-events: none; transition: all 0.3s; border: 1px solid #eee; &.is-syncing { color: #2383e2; border-color: #2383e2; } }
 .fade-in { animation: fadeIn 0.3s ease-in-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-.kanban-wrapper { margin-top: 20px; }
 </style>

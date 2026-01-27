@@ -2,7 +2,7 @@
   <div class="lingmai-integrated-module">
     <aside class="module-sidebar">
       <div class="sidebar-header">
-        <span class="title">灵脉空间 v 1.1</span>
+        <span class="title">灵脉空间 v 1.2</span>
         <button class="add-btn" title="新建顶级页面" @click="createRootNote">＋</button>
       </div>
       
@@ -232,7 +232,7 @@ onMounted(fetchTree)
 
   .module-editor {
     flex: 1; overflow: hidden; background: #fff; position: relative; display: flex; flex-direction: column; 
-    .editor-wrapper { flex: 1; height: 100%; overflow-y: auto; position: relative; scroll-behavior: smooth; }
+    .editor-wrapper { flex: 1; height: 100%; overflow-y: auto; position: relative; scroll-behavior: smooth; overflow-x: auto; }
     .empty-prompt { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ccc; .icon { font-size: 60px; margin-bottom: 20px; opacity: 0.8; } p { margin-bottom: 20px; font-size: 16px; } .btn-group { display: flex; gap: 12px; } .link-btn { padding: 8px 20px; background: #fff; border: 1px solid #eee; border-radius: 4px; color: #666; cursor: pointer; transition: all 0.2s; &:hover { background: #f5f5f5; color: #333; } &.primary { background: #2383e2; color: #fff; border: none; &:hover { background: #1a6fb0; } } } }
   }
 }

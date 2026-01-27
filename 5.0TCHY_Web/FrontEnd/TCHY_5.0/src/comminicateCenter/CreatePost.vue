@@ -21,7 +21,7 @@
             
             <div v-if="!submitResult" class="form-view">
               <div class="form-group">
-                <label class="input-label">// TITLE_FIELD</label>
+                <label class="input-label">// 帖子标题</label>
                 <input 
                   v-model="formData.title" 
                   type="text" 
@@ -32,7 +32,7 @@
               </div>
 
               <div class="form-group">
-                <label class="input-label">// CONTENT_STREAM (OPTIONAL)</label>
+                <label class="input-label">// 帖子内容 (可选)</label>
                 <textarea 
                   v-model="formData.content" 
                   class="cp-input content-area custom-scroll" 
@@ -41,7 +41,7 @@
               </div>
 
               <div class="media-section">
-                <label class="input-label">// ATTACHED_MEDIA</label>
+                <label class="input-label">// 图片附加</label>
                 <div class="media-grid">
                   <div v-for="(img, index) in previewImages" :key="index" class="img-preview-card">
                     <img :src="img.url" />
@@ -333,7 +333,7 @@ const submitPost = async () => {
 
 .cp-input {
   width: 100%;
-  background: #fff;
+  background: #ffffff;
   border: 2px solid var(--black);
   padding: 12px;
   font-family: var(--mono);
@@ -344,7 +344,7 @@ const submitPost = async () => {
 }
 
 .cp-input:focus {
-  background: #fff;
+  background: #ffffff;
   border-color: var(--red);
   box-shadow: 4px 4px 0 rgba(217, 35, 35, 0.1);
 }
@@ -353,11 +353,13 @@ const submitPost = async () => {
   font-weight: 800;
   font-size: 18px;
   text-transform: uppercase;
+  color:#000
 }
 
 .content-area {
   min-height: 120px;
   resize: vertical;
+  color:#000
 }
 
 /* Media Grid */

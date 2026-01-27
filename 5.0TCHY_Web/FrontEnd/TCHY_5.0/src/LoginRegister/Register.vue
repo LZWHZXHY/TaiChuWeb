@@ -380,7 +380,7 @@ onUnmounted(() => {
 .register-form { display: flex; flex-direction: column; gap: 1.5rem; }
 .form-group { display: flex; flex-direction: column; }
 label { margin-bottom: 0.5rem; color: #4a5568; font-weight: 500; font-size: 0.9rem; }
-input { padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s ease; }
+input { padding: 0.75rem 1rem; border: 2px solid #757575; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s ease; color:#2d3748}
 input:focus { outline: none; border-color: #667eea; }
 input.error { border-color: #e53e3e; }
 .error-text { color: #e53e3e; font-size: 0.8rem; margin-top: 0.25rem; }

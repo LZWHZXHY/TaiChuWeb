@@ -487,7 +487,7 @@ onUnmounted(() => { clearInterval(clockTimer); });
 .cyber-modal-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(17,17,17,0.85); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; }
 .cyber-modal-window { width: 90vw; max-width: 1200px; height: 90vh; background: #f4f4f4; border: 1px solid #444; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); border-radius: 4px; overflow: hidden; }
 .cyber-modal-header { height: 60px; background: var(--black); color: var(--off-white); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 10; flex-shrink: 0; }
-.cyber-close-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 6px 12px; font-family: var(--mono); cursor: pointer; transition: 0.2s; }
+.cyber-close-btn { background: rgba(255,255,255,0.1); border: none; color: #1e2967; padding: 6px 12px; font-family: var(--mono); cursor: pointer; transition: 0.2s; }
 .cyber-close-btn:hover { background: var(--red); }
 .detail-wrapper { flex: 1; overflow-y: auto; background: var(--off-white); }
 
