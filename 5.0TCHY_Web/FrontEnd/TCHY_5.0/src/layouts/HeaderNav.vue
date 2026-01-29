@@ -94,6 +94,24 @@
             </div>
           </div>
 
+          <div class="notification-wrapper">
+            <button 
+              class="cyber-icon-btn notify-trigger" 
+              :class="{ 'active': showNotifications }"
+              @click="toggleNotifications"
+              title="NOTIFICATIONS"
+            >
+              <span class="btn-inner">信</span>
+              <div v-if="unreadCount > 0" class="mini-badge"></div>
+            </button>
+
+            <transition name="pop-down">
+              <div v-if="showNotifications" class="notification-popover">
+                <NotificationPanel />
+              </div>
+            </transition>
+          </div>
+
           <div class="tactical-btn-wrapper" @click="router.push('/suggest')">
             <button class="tactical-btn red">
               <span class="btn-icon">✎</span>
@@ -123,6 +141,7 @@ import DropdownMenu from './DropdownMenu.vue'
 import apiClient from '@/utils/api'
 import { useAuthStore } from '@/utils/auth'
 import { useI18n } from 'vue-i18n' 
+import NotificationPanel from './Widget/NotificationPanel.vue' // [INSERT NEW IMPORT]
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -140,6 +159,13 @@ const toggleLang = () => {
   const newLang = locale.value === 'zh' ? 'en' : 'zh'
   locale.value = newLang
   localStorage.setItem('app_language', newLang) 
+}
+
+// [INSERT NEW FUNCTION] 切换通知
+const toggleNotifications = () => {
+  showNotifications.value = !showNotifications.value
+  // 如果打开通知，关闭用户菜单，反之亦然，避免重叠
+  if (showNotifications.value) showUserMenu.value = false
 }
 
 const fetchLatestUserInfo = async () => {
@@ -197,7 +223,10 @@ const handleNavClick = (item) => {
 const navigateToHome = () => router.push('/')
 const handleLogin = () => router.push('/login')
 const handleRegister = () => router.push('/register')
-const toggleUserMenu = () => showUserMenu.value = !showUserMenu.value
+const toggleUserMenu = () => {
+  showUserMenu.value = !showUserMenu.value
+  if (showUserMenu.value) showNotifications.value = false
+}
 const goToProfile = () => { showUserMenu.value = false; router.push('/profile/me') }
 const goToNewProfile = () => { showUserMenu.value = false; router.push('/profile/MEE') }
 const goToNewSettings = () => { showUserMenu.value = false; router.push('/profile/NewSettings') }
@@ -212,10 +241,16 @@ const handleLogout = async () => {
   router.push('/')
 }
 
+// 修改原有的 closeUserMenu
 const closeUserMenu = (event) => {
-  if (!event.target.closest('.user-control-panel')) showUserMenu.value = false
+  if (!event.target.closest('.user-control-panel')) {
+    showUserMenu.value = false
+  }
+  // [INSERT] 点击外部关闭通知面板逻辑
+  if (!event.target.closest('.notification-wrapper')) {
+    showNotifications.value = false
+  }
 }
-
 const handleScroll = () => isScrolled.value = window.scrollY > 10
 
 onMounted(() => {
@@ -229,6 +264,10 @@ onUnmounted(() => {
   document.removeEventListener('click', closeUserMenu)
   window.removeEventListener('scroll', handleScroll)
 })
+
+const showNotifications = ref(false) // [INSERT NEW STATE]
+
+
 </script>
 
 <style scoped>
@@ -615,6 +654,38 @@ onUnmounted(() => {
 .cyber-btn-solid:hover {
   background: var(--cyber-red);
   border-color: var(--cyber-red);
+}
+
+.notification-popover {
+  position: absolute;
+  /* 垂直定位：HeaderNav总高72px。按钮垂直居中，顶部距离header顶约20px。
+     设置 top: 52px 刚好让组件顶部贴合 HeaderNav 的底边 (20px + 32px按钮高 = 52px) 
+     多加几个像素(如55px)可以制造一点呼吸感 */
+  top: 55px; 
+  
+  /* 水平定位：改为 0 或负的较小值。
+     之前是 -80px (向右偏移80px)，导致超出屏幕。
+     设置为 0，让组件的右边缘与按钮的右边缘对齐。 */
+  right: 0; 
+  
+  z-index: 2000;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+}
+
+/* 增加移动端适配，防止手机上 400px 宽度也超出 */
+@media (max-width: 480px) {
+  .notification-popover {
+    position: fixed; /* 移动端改用 fixed 全屏定位逻辑 */
+    top: 72px;       /* 紧贴 Header 下方 */
+    right: 0;
+    left: 0;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+  }
+  
+  /* 配合修改 NotificationPanel 的宽度限制（这部分在 HeaderNav 样式里无法直接改组件内部，
+     但通常组件会有 max-width。如果没有，建议去 NotificationPanel.vue 把 width: 400px 改为 width: 100%; max-width: 400px;） */
 }
 
 /* 动画 */
