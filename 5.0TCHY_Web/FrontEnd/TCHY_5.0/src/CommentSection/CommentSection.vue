@@ -51,7 +51,7 @@
 
           </div>
         </div>
-        </div>
+      </div>
       
       <div v-if="comments.length === 0" class="empty-comment">
         还没有人评论，快来抢沙发~
@@ -88,8 +88,9 @@
 import { ref, onMounted, watch, nextTick } from 'vue'
 import apiClient from '@/utils/api'
 
+// 🔥 修改 1: 属性名改为 drawingId，与父组件传参保持一致
 const props = defineProps({
-  artworkId: { type: Number, required: true }
+  drawingId: { type: Number, required: true }
 })
 
 // --- 常量 ---
@@ -137,21 +138,24 @@ const formatTime = (t) => {
 // --- API ---
 
 const loadComments = async () => {
+  // 🔥 防御性检查：如果没有 ID，不发请求
+  if (!props.drawingId) return;
+
   try {
     const res = await apiClient.get(`/Drawing/comment_list`, {
-      params: { drawingId: props.artworkId }
+      // 🔥 修改 2: 使用 props.drawingId
+      params: { drawingId: props.drawingId }
     })
     
     if (res.data.success) {
       const rawData = res.data.data || [];
 
-      // 递归拍平函数：把所有子孙节点放到一个数组里
+      // 递归拍平函数
       const flattenReplies = (nodes) => {
         let result = [];
         if (!nodes || nodes.length === 0) return result;
         
         nodes.forEach(node => {
-          // 兼容 Id 大小写
           const safeNode = { ...node, Id: node.Id || node.id };
           result.push(safeNode);
           
@@ -159,14 +163,12 @@ const loadComments = async () => {
             result = result.concat(flattenReplies(node.Replies));
           }
         });
-        // 关键：必须按时间排序，让对话看起来是线性的
         return result.sort((a, b) => new Date(a.CreateTime) - new Date(b.CreateTime));
       };
 
       let count = 0;
       const processedData = rawData.map(item => {
         count++;
-        // 获取该一级评论下的所有后代
         const flatList = flattenReplies(item.Replies || []);
         count += flatList.length;
 
@@ -187,17 +189,27 @@ const loadComments = async () => {
 
 const handleSubmit = async () => {
   if (!inputContent.value.trim() || isSubmitting.value) return
+  
+  // 🔥 防御性检查
+  if (!props.drawingId) {
+    alert("数据尚未加载完成，请稍后再试");
+    return;
+  }
+
   isSubmitting.value = true
   try {
     const target = replyTarget.value;
-    // 确保取到 ID
     const parentId = target ? (target.Id || target.id) : null;
 
     const payload = {
-      DrawingId: props.artworkId,
+      // 🔥 修改 3: 使用 props.drawingId
+      DrawingId: props.drawingId,
       Content: inputContent.value,
       ParentId: parentId
     }
+
+    // 打印一下，方便调试
+    console.log("提交评论:", payload);
 
     const res = await apiClient.post(`/Drawing/add_comment`, payload)
     if (res.data.success) {
@@ -207,6 +219,10 @@ const handleSubmit = async () => {
     }
   } catch (err) {
     console.error(err)
+    // 如果后端返回了具体的错误信息，可以 alert 出来
+    if (err.response && err.response.data && err.response.data.message) {
+      alert(err.response.data.message);
+    }
   } finally {
     isSubmitting.value = false
   }
@@ -220,7 +236,10 @@ const handleSetReply = (item) => {
 }
 
 onMounted(loadComments)
-watch(() => props.artworkId, loadComments)
+// 🔥 修改 4: 监听 drawingId 变化
+watch(() => props.drawingId, (newVal) => {
+  if(newVal) loadComments();
+})
 </script>
 
 <style scoped>

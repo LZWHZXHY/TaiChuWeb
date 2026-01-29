@@ -260,16 +260,14 @@ const fetchStats = async () => {
 };
 
 // --- 详情与交互 ---
-const openPostDetail = async (id) => {
-  currentType.value = 'post'; showDetail.value = true; detailLoading.value = true;
-  comments.value = []; replyTarget.value = null; // 重置
-  try {
-    const postRes = await apiClient.get(`/ThePost/${id}`);
-    if (postRes.data.success) currentData.value = postRes.data.data;
-    // 获取评论 (由 Detail 组件内部也可再次获取，这里预加载)
-    const commentRes = await apiClient.get(`/ThePost/${id}/comments`);
-    if(commentRes.data.success) comments.value = processCommentTree(commentRes.data.data);
-  } finally { detailLoading.value = false; }
+// 找到原本的 openPostDetail 函数
+const openPostDetail = (id) => {
+  // 不再设置 showDetail.value = true
+  // 而是直接跳转
+  router.push({
+    name: 'PostDetail',
+    params: { id: id }
+  });
 };
 
 const openBlogDetail = async (id) => {

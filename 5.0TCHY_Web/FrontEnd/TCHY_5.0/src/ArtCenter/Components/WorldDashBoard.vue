@@ -14,25 +14,24 @@
       </div>
       
       <div class="mode-switcher">
-        <div class="mode-btn active"><span class="icon">📄</span> DOCS</div>
-        <div class="mode-btn disabled"><span class="icon">🕸️</span> GRAPH</div>
+        <div class="mode-btn" :class="{ active: viewMode === 'docs' }" @click="viewMode = 'docs'">
+          <span class="icon">📄</span> DOCS
+        </div>
+        <div class="mode-btn" :class="{ active: viewMode === 'graph' }" @click="viewMode = 'graph'">
+          <span class="icon">🕸️</span> GRAPH
+        </div>
         <div class="mode-btn disabled"><span class="icon">⏳</span> TIME</div>
       </div>
 
       <div class="header-right">
-        <button class="cyber-btn-header alert" @click="showAuditModal = true">
-          📢 AUDIT
-        </button>
-        <button class="cyber-btn-header" @click="showTeamModal = true">
-          👥 TEAM
-        </button>
+        <button class="cyber-btn-header alert" @click="showAuditModal = true">📢 AUDIT</button>
+        <button class="cyber-btn-header" @click="showTeamModal = true">👥 TEAM</button>
         <div class="status-indicator online">SYNCED</div>
       </div>
     </header>
 
     <div class="dashboard-body">
-      <div class="doc-layout">
-        
+      <div v-if="viewMode === 'docs'" class="doc-layout">
         <aside class="doc-sidebar">
           <div class="sidebar-tools">
             <input v-model="searchQuery" class="cyber-input-sm" placeholder="FILTER..." />
@@ -45,6 +44,7 @@
             <div 
               v-for="item in flattenedTree" 
               :key="item.id"
+              :id="'tree-node-' + item.id"
               class="tree-node"
               :class="{ 
                 active: selectedNodeId === item.id,
@@ -87,6 +87,13 @@
           </div>
         </main>
       </div>
+
+      <div v-else-if="viewMode === 'graph'" class="graph-layout">
+        <WorldGraph 
+          :ip-id="id"
+          @select-node="handleGraphSelect" 
+        />
+      </div>
     </div>
 
     <CollaboratorModal :show="showTeamModal" :ip-id="id" @close="showTeamModal = false" />
@@ -105,17 +112,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import apiClient from '@/utils/api'
 import WorldDocViewer from './WorldDocViewer.vue'
+import WorldGraph from './WorldGraph.vue'
+// 🔥 补全之前遗漏的组件导入
 import CollaboratorModal from './CollaboratorModal.vue'
 import AuditModal from './AuditModal.vue'
-import NodeManagerModal from './NodeManagerModal.vue' // ✅ 确保已创建该文件
+import NodeManagerModal from './NodeManagerModal.vue'
 
 const props = defineProps({ id: { type: [String, Number], required: true } })
 const emit = defineEmits(['close'])
 
 // --- State ---
+const viewMode = ref('docs')
 const loading = ref(false)
 const rawNodes = ref([]) 
 const worldInfo = ref({})
@@ -166,7 +176,7 @@ const flattenedTree = computed(() => {
 
 const currentNode = computed(() => rawNodes.value.find(n => n.id === selectedNodeId.value))
 
-// --- Helpers ---
+// 🔥 补全之前遗漏的 Helper 函数
 const getNodeIcon = (type) => {
   const t = (type || '').toLowerCase()
   if (t.includes('角色') || t.includes('character')) return '👤'
@@ -191,36 +201,59 @@ const initData = async () => {
 
 const selectNode = (item) => { selectedNodeId.value = item.id }
 
+// 🔥 核心跳转逻辑 (包含类型转换 + 自动滚动)
+const handleGraphSelect = async (nodeId) => {
+  // 1. 强制转为数字，解决 id 类型不匹配导致内容不显示的问题
+  const targetId = parseInt(nodeId);
+  selectedNodeId.value = targetId;
+  
+  // 2. 切换视图
+  viewMode.value = 'docs'; 
+  
+  // 3. 等待 DOM 渲染
+  await nextTick();
+  
+  // 4. 找到并滚动到列表项
+  const element = document.getElementById(`tree-node-${targetId}`);
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // 5. 闪烁高亮提示
+    element.style.transition = 'background 0.3s';
+    element.style.background = '#D92323'; 
+    element.style.color = '#fff';
+    setTimeout(() => {
+      element.style.background = ''; 
+      element.style.color = '';
+    }, 800);
+  }
+}
+
 const handleSelectNode = (targetId) => {
   const target = rawNodes.value.find(n => n.id === targetId)
   if (target) selectNode(target)
 }
 
-// 🔥 打开管理弹窗
 const openNodeModal = (mode, node = null) => {
   nodeModalMode.value = mode
   if (mode === 'create') {
-    // 默认父级设为当前选中的节点（实现快速创建子节点）
     nodeModalData.value = { id: null, name: '', parentId: selectedNodeId.value }
   } else {
-    // 移动模式：传入当前节点信息
     nodeModalData.value = { id: node.id, name: node.name, parentId: node.parentId }
   }
   showNodeModal.value = true
 }
 
-// WorldGraph.vue
 const handleNodeSubmit = async (data, done) => {
   try {
     if (nodeModalMode.value === 'create') {
       await apiClient.post('/Setting', { 
         IpId: parseInt(props.id), 
         Name: data.name, 
-        Type: data.type, // ✅ 使用弹窗里选中的类型
+        Type: data.type, 
         ParentId: data.parentId 
       })
     } else {
-      // 移动已有节点
       await apiClient.post('/Setting/move', { 
         NodeId: data.id, 
         TargetParentId: data.parentId 
@@ -236,12 +269,25 @@ const handleNodeSubmit = async (data, done) => {
 const handleUpdateNode = async (formData, done) => {
   try {
     await apiClient.put(`/Setting/${formData.id}`, {
-      Name: formData.name, Description: formData.description,Type: formData.type,
-      Author: formData.author, MetaData: JSON.parse(formData.metaStr)
+      Name: formData.name, 
+      Description: formData.description,
+      Type: formData.type,
+      Author: formData.author, 
+      
+      // 🔥 核心修复：必须在这里要把 parentId 传给后端
+      // 这里的 formData.parentId 来自子组件的 emit
+      ParentId: formData.parentId, 
+      
+      MetaData: JSON.parse(formData.metaStr)
     })
-    await initData()
+    
+    await initData() // 刷新列表，这样左侧树状图也会更新位置
     if(done) done() 
-  } catch (e) { alert("Save failed"); if(done) done() }
+  } catch (e) { 
+    console.error(e)
+    alert("Save failed")
+    if(done) done() 
+  }
 }
 
 const handleDeleteNode = async (id) => {
@@ -277,7 +323,7 @@ onMounted(initData)
 .w-name { margin: 0; font-size: 1.1rem; letter-spacing: 1px; font-family: var(--heading); }
 
 .mode-switcher { display: flex; gap: -1px; }
-.mode-btn { padding: 6px 15px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: 1px solid var(--border-color); background: #eee; color: #999; display: flex; align-items: center; gap: 5px; margin-right: -1px; }
+.mode-btn { padding: 6px 15px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: 1px solid var(--border-color); background: #eee; color: #999; display: flex; align-items: center; gap: 5px; margin-right: -1px; transition: all 0.2s ease; }
 .mode-btn.active { background: var(--text-main); color: var(--bg-panel); border-color: var(--text-main); z-index: 2; }
 
 .header-right { display: flex; align-items: center; gap: 15px; }
@@ -287,13 +333,9 @@ onMounted(initData)
 
 .dashboard-body { flex: 1; overflow: hidden; display: flex; }
 .doc-layout { display: flex; width: 100%; height: 100%; }
-
+.graph-layout { flex: 1; width: 100%; height: 100%; position: relative; overflow: hidden; }
 
 .doc-sidebar { width: 280px; background: #EEECE6; border-right: 2px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; padding-bottom: 5%;}
-
-
-
-
 
 .sidebar-tools { padding: 10px; border-bottom: 1px solid #ccc; display: flex; gap: 5px; background: #e8e8e8; }
 .cyber-input-sm { width: 120px; flex: 1; background: #fff; border: 1px solid #999; padding: 5px; outline: none; }
@@ -304,7 +346,6 @@ onMounted(initData)
 .tree-node:hover { background: #fff; }
 .tree-node.active { background: var(--text-main); color: #fff; }
 
-/* 🔥 Move Button Styling */
 .node-move-btn {
   margin-left: auto; background: transparent; border: 1px solid #ccc; color: #999;
   font-size: 10px; cursor: pointer; padding: 0 4px; opacity: 0; transition: 0.2s;

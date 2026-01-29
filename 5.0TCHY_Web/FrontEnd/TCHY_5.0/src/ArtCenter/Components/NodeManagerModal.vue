@@ -47,7 +47,7 @@
             </div>
 
             <div class="form-actions-heavy">
-              <button class="cyber-btn-rect ghost" @click="$emit('close')">ABORT</button>
+              <button class="cyber-btn-rect ghost" @click="$emit('close')">退出</button>
               <button class="cyber-btn-rect primary-red" @click="handleSubmit" :disabled="submitting">
                 {{ submitting ? 'SYNCING...' : 'CONFIRM_EXECUTION' }}
               </button>
@@ -195,6 +195,7 @@ const handleSubmit = () => {
   outline: none;
   box-sizing: border-box;
   transition: 0.2s;
+  color:#111111;
 }
 
 .cyber-input-heavy:focus, .cyber-select-heavy:focus {

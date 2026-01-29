@@ -121,8 +121,8 @@ const serverList = ref([
     isOnline: true,
     coverImage: 'https://image2url.com/r2/default/images/1768800240160-f79ab1ee-64bc-43da-9a51-7977301da6de.blob',
     downloadLinks: {
-      modpack: { url: 'https://ug.link/example', pwd: 'W1ST' },
-      launcher: { url: 'https://ug.link/example', pwd: 'mBT8' }
+      modpack: { url: 'https://ug.link/TaiChuHuanYu/filemgr/share-download/?id=f98ee8ef3350405db3fd6fcb36a3a646', pwd: 'W1ST' },
+      launcher: { url: 'https://ug.link/TaiChuHuanYu/filemgr/share-download/?id=5868d1b8cbde4907bc29d750fbbd3c25', pwd: 'mBT8' }
     }
   },
   {
@@ -133,8 +133,8 @@ const serverList = ref([
     isOnline: true,
     coverImage: 'https://image2url.com/r2/default/images/1769209536510-b6e46210-d3cd-4693-8adb-1d62a9450854.blob',
     downloadLinks: {
-      modpack: { url: 'https://ug.link/example', pwd: '3JY6' },
-      launcher: { url: 'https://ug.link/example', pwd: 'mBT8' }
+      modpack: { url: 'https://ug.link/TaiChuHuanYu/filemgr/share-download/?id=c7dac1dd2eb84a178416c47a2b4f7fe7', pwd: '3JY6' },
+      launcher: { url: 'https://ug.link/TaiChuHuanYu/filemgr/share-download/?id=5868d1b8cbde4907bc29d750fbbd3c25', pwd: 'mBT8' }
     }
   }
 ]);

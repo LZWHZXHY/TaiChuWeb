@@ -22,17 +22,24 @@
       </div>
 
       <aside class="toc-sidebar" v-if="tocItems.length > 0">
-        <div class="toc-header">大纲</div>
-        <div class="toc-list">
-          <div 
-            v-for="(item, index) in tocItems" 
-            :key="index"
-            class="toc-item"
-            :class="[`level-${item.level}`, { active: activeHeadingIndex === index }]"
-            @click.stop="scrollToHeading(item.pos)"
-          >
-            {{ item.text }}
-    </div>  
+        <div class="toc-trigger">
+          <span class="trigger-icon">📑</span>
+          <span class="trigger-text">目录</span>
+        </div>
+        
+        <div class="toc-content-wrapper">
+          <div class="toc-header">文档大纲</div>
+          <div class="toc-list">
+            <div 
+              v-for="(item, index) in tocItems" 
+              :key="index"
+              class="toc-item"
+              :class="[`level-${item.level}`, { active: activeHeadingIndex === index }]"
+              @click.stop="scrollToHeading(item.pos)"
+            >
+              {{ item.text }}
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -54,7 +61,6 @@
 </template>
 
 <script setup>
-// 🔥 必须加上 createVNode 和 render
 import { onBeforeUnmount, onMounted, ref, reactive, watch, createVNode, render } from 'vue'
 import { useEditor, EditorContent, VueRenderer } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
@@ -73,19 +79,13 @@ import { BubbleMenu as BubbleMenuExtension } from '@tiptap/extension-bubble-menu
 import LingMaiBubbleMenu from './LingMaiBubbleMenu.vue'
 import Underline from '@tiptap/extension-underline'
 import { FontSize } from './FontSize.js'
-import KanbanNode from './KanbanNode.js' // 🔥 引入看板插件
-import  { delegate } from 'tippy.js' // 引入 delegate
-import LinkPreviewCard from '@/LingMaiComponents/LinkPreviewCard.vue' // 引入卡片组件
-// 🟢 注意这里加上了花括号 { }
+import KanbanNode from './KanbanNode.js'
+import { delegate } from 'tippy.js'
+import LinkPreviewCard from '@/LingMaiComponents/LinkPreviewCard.vue'
 import { Table } from '@tiptap/extension-table'
 import { TableRow } from '@tiptap/extension-table-row'
 import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
-
-
-
-
-
 
 const props = defineProps(['noteId'])
 const emit = defineEmits(['navigate', 'deleted']) 
@@ -98,6 +98,7 @@ const syncing = ref(false)
 const backlinks = ref([])
 const editorAreaRef = ref(null)
 let tippyInstance = null
+
 const uploadImage = async (file) => {
   const formData = new FormData(); formData.append('file', file)
   try { const res = await apiClient.post('/Upload/image', formData, { headers: { 'Content-Type': 'multipart/form-data' } }); return res.data.url } catch (e) { return null }
@@ -118,16 +119,14 @@ const scrollToHeading = (pos) => {
 
 const editor = useEditor({
   extensions: [
-    KanbanNode, // 🔥 注册看板插件
+    KanbanNode,
     StarterKit, 
     Placeholder.configure({ placeholder: '输入 / 唤起命令，输入 [[ 建立关联...' }), 
     SlashCommand, 
     Image.configure({ inline: true }), 
     Details, 
     Summary, 
-    Table.configure({
-      resizable: true, // 允许拖拽调整列宽
-    }),
+    Table.configure({ resizable: true }),
     TableRow,
     TableHeader,
     TableCell,
@@ -154,7 +153,7 @@ const editor = useEditor({
     })
   ],
   editorProps: {
-    noteId: props.noteId, // 🔥 关键：将 noteId 存入 props，供 SlashCommand 调用
+    noteId: props.noteId,
     handlePaste: (view, event) => {
       const items = (event.clipboardData || event.originalEvent.clipboardData).items
       for (const item of items) { if (item.type.indexOf('image') === 0) { event.preventDefault(); const file = item.getAsFile(); uploadImage(file).then(url => { if (url) { const { schema } = view.state; const node = schema.nodes.image.create({ src: url }); view.dispatch(view.state.tr.replaceSelectionWith(node)) } }); return true } } return false
@@ -194,16 +193,10 @@ const handleEditorClick = (event) => {
 const handleBacklinkClick = (targetId) => emit('navigate', targetId)
 const formatDate = (d) => d ? new Date(d).toLocaleString('zh-CN', { hour12: false }) : ''
 
-
 onMounted(() => {
-  window.addEventListener('navigate-note', (e) => {
-    emit('navigate', e.detail)
-  })
-
-  // 🟢 2. 修改：使用 editorAreaRef.value 作为挂载目标
-  // 确保 DOM 已经存在
+  window.addEventListener('navigate-note', (e) => { emit('navigate', e.detail) })
   if (editorAreaRef.value) {
-    tippyInstance = delegate(editorAreaRef.value, { // <--- 这里改了，不用字符串 ID 了
+    tippyInstance = delegate(editorAreaRef.value, {
       target: '.internal-link', 
       content: '加载中...',
       animation: 'shift-away',
@@ -214,10 +207,8 @@ onMounted(() => {
       allowHTML: true,
       appendTo: () => document.body,
       onShow(instance) {
-        // ... 这里的逻辑保持不变 ...
         const targetId = instance.reference.getAttribute('data-id')
         if (!targetId) return false;
-
         const container = document.createElement('div')
         const vnode = createVNode(LinkPreviewCard, { noteId: targetId })
         render(vnode, container)
@@ -231,16 +222,116 @@ watch([() => props.noteId, editor], ([newId, newEditor]) => { if (newId && newEd
 onBeforeUnmount(() => { 
   if (timer) clearTimeout(timer); 
   editor.value?.destroy();
-  window.removeEventListener('navigate-note', (e) => emit('navigate', e.detail))
-  
-  if (tippyInstance) {
-    tippyInstance.destroy() // 现在可以放心销毁，不会影响新页面
-  }
+  if (tippyInstance) tippyInstance.destroy()
 })
 </script>
 
 <style lang="scss">
-/* ➕ 补充 Tippy 白色主题样式 */
+/* 🟢 修改后的收缩式大纲样式 */
+.toc-sidebar {
+  position: fixed;
+  top: 200px;
+  right: 30px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  .toc-trigger {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 10px 16px;
+    border-radius: 50px; /* 药丸状按钮 */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #475569;
+    transition: all 0.3s ease;
+    
+    .trigger-icon { font-size: 16px; }
+    .trigger-text { font-size: 14px; font-weight: 500; }
+
+    &:hover {
+      border-color: #cbd5e1;
+      background: #f8fafc;
+    }
+  }
+
+  .toc-content-wrapper {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 260px;
+    max-height: 75vh;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px) scale(0.95);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    pointer-events: none; /* 默认不可点击 */
+  }
+
+  /* 悬停展示逻辑 */
+  &:hover {
+    .toc-trigger {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    .toc-content-wrapper {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+      pointer-events: auto; /* 展开后可点击 */
+    }
+  }
+
+  .toc-header {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .toc-list {
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+  }
+
+  .toc-item {
+    font-size: 13px;
+    color: #64748b;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.2s;
+
+    &:hover { background-color: #f1f5f9; color: #2563eb; }
+    &.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; }
+    &.level-1 { font-weight: 600; color: #334155; }
+    &.level-2 { padding-left: 18px; }
+    &.level-3 { padding-left: 30px; font-size: 12px; }
+  }
+}
+
+/* 其他样式保持不变... */
 .tippy-box[data-theme~='light-border'] {
   background-color: #fff;
   color: #333;
@@ -252,7 +343,7 @@ onBeforeUnmount(() => {
 }
 
 .editor-scroll-container { 
-  max-width: 100%; /* 🚀 稍微放宽宽度，让内部看板块更舒展 */
+  max-width: 100%; 
   margin: 0 auto; 
   padding: 40px 60px; 
   min-height: 100%; 
@@ -262,11 +353,6 @@ onBeforeUnmount(() => {
 }
 
 .doc-layout { position: relative; }
-.toc-sidebar { position: fixed; top: 50%; transform: translateY(-50%); right: 40px; width: 200px; max-height: 70vh; overflow-y: auto; border-left: 2px solid #f0f0f0; padding-left: 15px; z-index: 10; @media (max-width: 1400px) { display: none; } }
-.toc-header { font-size: 13px; font-weight: 700; color: #37352f; margin-bottom: 12px; opacity: 0.6; }
-.toc-list { display: flex; flex-direction: column; gap: 2px; }
-.toc-item { font-size: 13px; color: #666; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: all 0.2s; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; &:hover { background-color: #f3f3f3; color: #000; } &.active { background-color: #e6f7ff; color: #1890ff; } &.level-1 { font-weight: 600; color: #333; } &.level-2 { padding-left: 16px; } &.level-3 { padding-left: 28px; font-size: 12px; } &.level-4 { padding-left: 36px; font-size: 12px; color: #999; } }
-.toc-sidebar::-webkit-scrollbar { width: 4px; } .toc-sidebar::-webkit-scrollbar-thumb { background: #eee; border-radius: 4px; }
 .editor-header { margin-bottom: 40px; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 20px; }
 .title-field { width: 100%; font-size: 40px; font-weight: 700; border: none; outline: none; margin-bottom: 8px; color: #111; background: transparent; line-height: 1.2; &::placeholder { color: #e5e5e5; } }
 .meta-info { font-size: 12px; color: #999; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; .time-label { margin-right: 6px; opacity: 0.7; } }
@@ -295,53 +381,26 @@ onBeforeUnmount(() => {
     width: 100%;
     margin: 0;
     overflow: hidden;
-
-    td,
-    th {
+    td, th {
       min-width: 1em;
-      border: 2px solid #ced4da; /* 边框颜色 */
+      border: 2px solid #ced4da;
       padding: 3px 5px;
       vertical-align: top;
       box-sizing: border-box;
       position: relative;
-
-      > * {
-        margin-bottom: 0;
-      }
+      > * { margin-bottom: 0; }
     }
-
-    th {
-      font-weight: bold;
-      text-align: left;
-      background-color: #f1f3f5; /* 表头背景色 */
-    }
-
-    /* 选中单元格时的样式 (Tiptap 自动添加的类) */
+    th { font-weight: bold; text-align: left; background-color: #f1f3f5; }
     .selectedCell:after {
-      z-index: 2;
-      position: absolute;
-      content: "";
-      left: 0; right: 0; top: 0; bottom: 0;
-      background: rgba(200, 200, 255, 0.4);
-      pointer-events: none;
+      z-index: 2; position: absolute; content: ""; left: 0; right: 0; top: 0; bottom: 0;
+      background: rgba(200, 200, 255, 0.4); pointer-events: none;
     }
-
-    /* 拖拽列宽的控制手柄样式 */
     .column-resize-handle {
-      position: absolute;
-      right: -2px;
-      top: 0;
-      bottom: -2px;
-      width: 4px;
-      background-color: #adf;
-      pointer-events: none;
+      position: absolute; right: -2px; top: 0; bottom: -2px; width: 4px;
+      background-color: #adf; pointer-events: none;
     }
   }
-  
-  /* 解决表格容器溢出问题 */
-  .tableWrapper {
-    overflow-x: auto;
-  }
+  .tableWrapper { overflow-x: auto; }
   details { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin: 10px 0; background-color: #fbfbfa; transition: all 0.2s ease; &[open] { background-color: #fff; border-color: #d1d5db; box-shadow: 0 2px 5px rgba(0,0,0,0.02); } summary { font-weight: 600; cursor: pointer; outline: none; color: #37352f; padding: 4px 0; &::marker { color: #9ca3af; font-size: 0.8em; transition: color 0.2s; } &:hover { color: #2383e2; &::marker { color: #2383e2; } } } div { margin-top: 8px; padding-left: 14px; border-left: 2px solid #f3f4f6; color: #4b5563; } } 
 }
 

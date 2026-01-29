@@ -178,6 +178,28 @@ const routes = [
       title: '意见箱'
     }
   },
+
+  {
+  path: '/post/:id',
+  name: 'PostDetail',
+  component: () => import('@/PostComponents/PostDetailPage.vue'), // 新建一个独立的页面组件
+  meta: { 
+      requiresAuth: false,
+      title: '太初网络 // 数据节点详情'
+    },
+    props: true
+  },
+  {
+    path: '/gallery/:id',
+    name: 'ArtWorkDetail',
+    component: () => import('@/ArtCenter/Components/ArtWorkDetailPage.vue'), // 路径根据你的项目调整
+    meta: { 
+      requiresAuth: false,
+      title: '太初寰宇画廊'
+    },
+    props: true
+  },
+  
   {
     path: "/profile/me",
     name: "my-profile",

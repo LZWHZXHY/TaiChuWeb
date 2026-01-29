@@ -46,6 +46,7 @@
                   <th>快捷键 / 指令</th>
                   <th>说明</th>
                 </tr>
+                </thead>
               <tbody>
                 <tr>
                   <td>唤起菜单</td>

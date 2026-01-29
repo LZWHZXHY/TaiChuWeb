@@ -36,7 +36,6 @@
     </div>
 
     <div class="gallery-body">
-      
       <main class="gallery-main">
         <div 
           id="gallery-scroller"
@@ -62,7 +61,7 @@
                     :key="img.id" 
                     class="cyber-art-card" 
                     :class="{ 'is-champion': isTopOne(img) }" 
-                    @click="openLightbox(img)"
+                    @click="goToDetail(img)"
                   >
                   <div class="card-frame">
                     <div v-if="isTopOne(img)" class="champion-badge">榜主大人</div>
@@ -216,21 +215,16 @@
       </Transition>
     </Teleport>
 
-    <ArtWorkDetail 
-      :visible="!!lightboxImg" 
-      :artwork="lightboxImg || {}"
-      @close="lightboxImg = null"
-      @like="handleLike"
-    />
-
-  </div>
+    </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, computed, nextTick } from 'vue'
-import ArtWorkDetail from './Components/ArtWorkDetail.vue'
+import { useRouter } from 'vue-router' // 👈 1. 引入路由
 import apiClient from '@/utils/api'
 
+
+const router = useRouter() // 👈 2. 初始化路由实例
 const emit = defineEmits(['refresh-stats'])
 
 // --- 状态定义 ---
@@ -239,19 +233,8 @@ const waterfallColumns = ref([[], [], [], []])
 const loading = ref(false)
 const nextCursor = ref(null)
 const hasMore = ref(true)
-const mainScroll = ref(null) // 绑定到新的滚动容器
+const mainScroll = ref(null) 
 const leaderboard = ref([])
-
-
-// 建议放在 leaderboard 定义之后
-const isTopOne = (img) => {
-  // 1. 如果榜单没加载，直接返回 false
-  if (!leaderboard.value || leaderboard.value.length === 0) return false;
-
-  // 2. 直接对比：榜单第一名的 UploaderId (大写) vs 当前作品的 uploaderId (小写)
-  return leaderboard.value[0].UploaderId === img.uploaderId;
-}
-
 
 // 弹窗相关
 const showUploadModal = ref(false)
@@ -259,22 +242,27 @@ const isUploading = ref(false)
 const isDragOver = ref(false) 
 const fileInput = ref(null)
 const uploadForm = reactive({ title: '', desc: '', authorName: '', file: null, previewUrl: '' })
-const lightboxImg = ref(null)
+
+// lightboxImg 变量也不再需要了，因为不弹窗
+// const lightboxImg = ref(null) 
 
 const totalCount = computed(() => waterfallColumns.value.reduce((acc, col) => acc + col.length, 0))
 
 // --- 方法 ---
 
+const isTopOne = (img) => {
+  if (!leaderboard.value || leaderboard.value.length === 0) return false;
+  return leaderboard.value[0].UploaderId === img.uploaderId;
+}
+
 const handleSegmentClick = (segment) => {
   if (selectedSegment.value === segment) return
   selectedSegment.value = segment
   
-  // 重置数据
   waterfallColumns.value = [[], [], [], []]
   nextCursor.value = null
   hasMore.value = true
   
-  // 滚回顶部
   if (mainScroll.value) {
     mainScroll.value.scrollTop = 0
   }
@@ -288,8 +276,11 @@ const upgradeUrlToHttps = (url) => {
   return url.replace('http://', 'https://')
 }
 
-// 核心：加载列表
-// 修改 fetchArtworks 里的分发逻辑
+// 核心跳转逻辑
+const goToDetail = (img) => {
+  router.push(`/gallery/${img.id}`)
+}
+
 const fetchArtworks = async (isRefresh = false) => {
   if (loading.value) return;
   if (!isRefresh && !hasMore.value) return;
@@ -309,10 +300,7 @@ const fetchArtworks = async (isRefresh = false) => {
       const { items, nextCursor: newCursor, hasMore: more } = res.data.data;
       if (isRefresh) waterfallColumns.value = [[], [], [], []];
 
-      // 修复 BUG 的关键：不要简单的 (i % 4)
-      // 在“综合”模式下，按照每列现有的高度平衡插入
       items.forEach((item) => {
-        // 找到当前四列中，内容最少（最短）的那一列
         let shortestIdx = 0;
         let minLen = waterfallColumns.value[0].length;
         for (let i = 1; i < 4; i++) {
@@ -332,14 +320,8 @@ const fetchArtworks = async (isRefresh = false) => {
   }
 };
 
-// 核心：滚动监听 (无限加载)
 const handleScroll = (e) => {
   const { scrollTop, scrollHeight, clientHeight } = e.target
-  
-  // 调试日志：如果发现不触发，打开控制台查看数值
-  // console.log(`Top: ${scrollTop}, H: ${clientHeight}, Total: ${scrollHeight}`)
-  
-  // 距离底部 150px 时加载
   if (scrollTop + clientHeight >= scrollHeight - 150) {
     fetchArtworks(false)
   }
@@ -350,24 +332,6 @@ const fetchLeaderboard = async () => {
     const res = await apiClient.get('/Drawing/leaderboard?limit=15')
     if (res.data.success) leaderboard.value = res.data.data
   } catch (error) {}
-}
-
-const handleLike = async (img) => {
-  if (!img) return
-  const originalLiked = img.isLiked
-  const originalLikes = img.likes || 0
-  img.isLiked = !originalLiked
-  img.likes = originalLiked ? originalLikes - 1 : originalLikes + 1
-  try {
-    const res = await apiClient.post(`/Drawing/like/${img.id}`)
-    if (res.data.success) {
-      img.likes = res.data.likes; img.isLiked = res.data.isLiked
-    } else {
-      img.isLiked = originalLiked; img.likes = originalLikes
-    }
-  } catch (error) {
-    img.isLiked = originalLiked; img.likes = originalLikes
-  }
 }
 
 // 上传相关
@@ -410,7 +374,6 @@ const submitArtwork = async () => {
 }
 
 const handleImgError = (e) => { e.target.src = '/土豆.jpg' }
-const openLightbox = (img) => { lightboxImg.value = img }
 const padZero = (n) => n < 10 ? `0${n}` : n
 
 onMounted(() => {
@@ -440,7 +403,7 @@ onMounted(() => {
 
 /* 1. 控制条 (固定不滚动) */
 .gallery-control-bar {
-  flex-shrink: 0; /* 禁止压缩 */
+  flex-shrink: 0; 
   display: flex; justify-content: space-between; align-items: center;
   padding: 10px 20px;
   background: var(--white);
@@ -455,12 +418,10 @@ onMounted(() => {
   gap: 20px;
   padding: 20px;
   
-  /* 关键：锁定高度，禁止父容器被内容撑开 */
   overflow: hidden; 
   min-height: 0; 
   position: relative;
   
-  /* 确保它在整个视口内是有上限的 */
   height: 100%; 
 }
 
@@ -469,22 +430,22 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* 自身不滚动 */
+  overflow: hidden; 
   min-width: 0;
-  min-height: 0; /* 关键 */
+  min-height: 0; 
 }
 
 /* 滚动容器 */
 .gallery-scroll-container {
   flex: 1;
-  overflow-y: auto; /* 这里产生滚动条 */
+  overflow-y: auto; 
   overflow-x: hidden;
-  min-height: 0; /* 再次确保不会被内容撑开 */
+  min-height: 0; 
 }
 
 /* 内容包装器 */
 .gallery-content-wrapper {
-  padding-bottom: 40px; /* 底部留白，方便触发加载 */
+  padding-bottom: 40px; 
 }
 
 .gallery-waterfall {
@@ -501,20 +462,14 @@ onMounted(() => {
   flex-direction: column;
   gap: 20px;
   
-  /* 关键：不再使用 max-height，改用以下组合 */
   height: 100%; 
   overflow-y: auto;
   overflow-x: hidden;
-
-  /* 解决“滚不到底”视觉问题的核心：底部内边距 */
-  /* 因为底部可能有阴影或边框遮挡，预留 40px 以上的间距 */
   padding-bottom: 60px; 
   
-  /* 确保 padding 不会增加总高度 */
   box-sizing: border-box; 
 }
 
-/* 别忘了美化滚动条，确保它在视觉上是完整的 */
 .gallery-sidebar::-webkit-scrollbar {
   width: 4px;
 }
@@ -604,7 +559,7 @@ onMounted(() => {
 .label-chip { position: absolute; top: -10px; left: 10px; background:#333; color: var(--white); font-size: 0.75rem; font-weight: bold; padding: 2px 8px; z-index: 2; letter-spacing: 0.5px; }
 .cyber-input { width: 100%; background: #fff; border: 2px solid #ccc; border-bottom: 4px solid var(--black); padding: 15px 15px 10px; font-family: var(--mono); font-size: 1rem; color: var(--black); outline: none; transition: all 0.3s; }
 .cyber-input.textarea { resize: vertical; min-height: 80px; }
-.cyber-input:focus { border-color: var(--black); background: #fffef0; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
+.cyber-input:focus { border-color: var(--black); background: #fffef0; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); color:#000}
 .input-line { position: absolute; bottom: -4px; left: 0; height: 4px; width: 0; background: var(--red); transition: width 0.3s; }
 .cyber-input:focus + .input-line { width: 100%; }
 .modal-footer { margin-top: 30px; display: flex; justify-content: space-between; align-items: center; border-top: 2px dashed #ccc; padding-top: 20px; }
@@ -636,13 +591,11 @@ onMounted(() => {
 
 .is-champion .card-frame {
   border: 2px solid var(--red) !important;
-  /* 呼吸灯阴影效果 */
   animation: champion-pulse 2s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
   position: relative;
   overflow: hidden;
 }
 
-/* 顶部精英标签 */
 .champion-badge {
   position: absolute;
   top: -2px;
@@ -656,7 +609,6 @@ onMounted(() => {
   clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%);
 }
 
-/* 侧边流光特效 */
 .is-champion .card-frame::before {
   content: "";
   position: absolute;
@@ -675,33 +627,22 @@ onMounted(() => {
   opacity: 0.3;
 }
 
-/* 第一名专属悬停放大感 */
 .is-champion:hover .card-frame {
   transform: translate(-5px, -5px) scale(1.02) !important;
   box-shadow: 10px 10px 0 var(--black), 15px 15px 30px rgba(217, 35, 35, 0.4) !important;
 }
 
-/* 动画定义 */
 @keyframes champion-pulse {
-  0% {
-    box-shadow: 4px 4px 0 var(--black), 0 0 5px rgba(217, 35, 35, 0.2);
-  }
-  100% {
-    box-shadow: 4px 4px 0 var(--black), 0 0 20px rgba(217, 35, 35, 0.6);
-  }
+  0% { box-shadow: 4px 4px 0 var(--black), 0 0 5px rgba(217, 35, 35, 0.2); }
+  100% { box-shadow: 4px 4px 0 var(--black), 0 0 20px rgba(217, 35, 35, 0.6); }
 }
 
-@keyframes champion-rotate {
-  100% {
-    transform: rotate(1turn);
-  }
-}
+@keyframes champion-rotate { 100% { transform: rotate(1turn); } }
 
-/* 针对第一名增强扫描线强度 */
 .is-champion .scan-line {
   background: rgba(217, 35, 35, 0.4);
   height: 3px;
-  display: block; /* 第一名常驻扫描线 */
+  display: block; 
   box-shadow: 0 0 10px var(--red);
 }
 
