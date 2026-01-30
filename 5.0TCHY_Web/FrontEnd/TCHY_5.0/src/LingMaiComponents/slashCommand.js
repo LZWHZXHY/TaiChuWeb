@@ -86,6 +86,32 @@ const getSuggestionItems = ({ query }) => {
       },
     },
     {
+      title: '项目热力图',
+      description: '展示长期项目的每日贡献热度',
+      icon: '🔥', 
+      command: ({ editor, range }) => {
+        // 获取当前编辑器的 noteId 属性 (这需要在 LingMaiEditor.vue 初始化 editor 时传入)
+        const noteId = editor.options.editorProps.noteId
+        
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range) // 删除输入的 "/"
+          .insertContent({
+            type: 'projectHeatmap', // 🔥 对应 HeatmapNode.js 里的 name
+            attrs: { parentId: noteId } // 绑定当前页面ID
+          })
+          .run()
+      },
+    },
+    {
+      title: '待办列表',
+      icon: '☑️',
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).toggleTaskList().run()
+      },
+    },
+    {
       title: '插入表格',
       description: '创建一个 3x3 的表格',
       // 你可以使用图标组件或者 svg 字符串

@@ -5,19 +5,23 @@
       <div class="skeleton body-sk"></div>
       <div class="skeleton body-sk short"></div>
     </div>
+    
     <div v-else-if="error" class="error-state">
       ⚠️ 无法加载内容
     </div>
+    
     <div v-else class="preview-content">
       <div class="preview-header">
         <span class="icon">📄</span>
-        <span class="title">{{ noteData.title }}</span>
+        <span class="title">{{ noteData.Title || '无标题' }}</span>
       </div>
+      
       <div class="preview-body">
         {{ previewText || '暂无内容...' }}
       </div>
+      
       <div class="preview-footer">
-        最后更新: {{ formatDate(noteData.updatedAt) }}
+        最后更新: {{ formatDate(noteData.UpdatedAt) }}
       </div>
     </div>
   </div>
@@ -33,25 +37,39 @@ const error = ref(false)
 const noteData = ref({})
 const previewText = ref('')
 
-const formatDate = (d) => new Date(d).toLocaleDateString()
+const formatDate = (d) => {
+  if (!d) return ''
+  return new Date(d).toLocaleDateString('zh-CN')
+}
 
-// 简单的 JSON 转纯文本辅助函数
+// 🟢 修复 3: 升级版文字提取 (支持递归)
+// 之前的版本只能读取第一层，这个版本可以读取列表、引用块深处的文字
 const extractTextFromJson = (contentJson) => {
   try {
+    if (!contentJson || contentJson === '""') return ''
     const json = JSON.parse(contentJson)
-    if (!json || !json.content) return ''
+    if (!json.content || !Array.isArray(json.content)) return ''
     
     let text = ''
-    // 简单遍历前几个 block 获取文本
-    for (const block of json.content) {
-      if (text.length > 100) break; // 最多取 100 字
-      if (block.content) {
-        block.content.forEach(span => {
-          if (span.text) text += span.text
-        })
-        text += ' '
+    
+    // 递归函数：钻进所有节点里找 text
+    const traverse = (nodes) => {
+      for (const node of nodes) {
+        if (text.length > 100) return // 只要 100 字就够了
+        
+        // 找到文字节点
+        if (node.type === 'text' && node.text) {
+          text += node.text + ' '
+        }
+        
+        // 如果还有子节点 (比如 list -> listItem -> paragraph)
+        if (node.content) {
+          traverse(node.content)
+        }
       }
     }
+    
+    traverse(json.content)
     return text.slice(0, 100) + (text.length > 100 ? '...' : '')
   } catch (e) {
     return ''
@@ -59,11 +77,23 @@ const extractTextFromJson = (contentJson) => {
 }
 
 onMounted(async () => {
+  if (!props.noteId) {
+    error.value = true; 
+    loading.value = false;
+    return;
+  }
+  
   try {
     const res = await apiClient.get(`/Notes/detail/${props.noteId}`)
     noteData.value = res.data
-    previewText.value = extractTextFromJson(res.data.ContentJson)
+    
+    // 🟢 确保 ContentJson 存在且字段名正确
+    // 后端返回的是 ContentJson (大写 C)
+    if (res.data.ContentJson) {
+      previewText.value = extractTextFromJson(res.data.ContentJson)
+    }
   } catch (e) {
+    console.error("预览加载失败:", e)
     error.value = true
   } finally {
     loading.value = false
@@ -81,6 +111,8 @@ onMounted(async () => {
   border: 1px solid #eee;
   font-family: sans-serif;
   text-align: left;
+  z-index: 99999; /* 确保层级够高 */
+  position: relative;
 }
 
 .loading-state .skeleton {
@@ -92,6 +124,11 @@ onMounted(async () => {
 .title-sk { height: 20px; width: 60%; }
 .body-sk { height: 14px; width: 100%; }
 .body-sk.short { width: 80%; }
+
+.error-state {
+  color: #ef4444;
+  font-size: 13px;
+}
 
 .preview-header {
   display: flex;
@@ -105,6 +142,11 @@ onMounted(async () => {
   font-weight: 600;
   font-size: 14px;
   color: #333;
+  /* 防止标题太长撑开 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
 }
 
 .preview-body {
@@ -112,7 +154,12 @@ onMounted(async () => {
   color: #666;
   line-height: 1.5;
   margin-bottom: 8px;
-  min-height: 40px;
+  min-height: 20px;
+  max-height: 60px; /* 限制高度 */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
 .preview-footer {
