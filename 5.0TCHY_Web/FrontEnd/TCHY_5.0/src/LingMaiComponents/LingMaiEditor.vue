@@ -287,34 +287,154 @@ onBeforeUnmount(() => {
 .meta-info { font-size: 12px; color: #999; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; .time-label { margin-right: 6px; opacity: 0.7; } }
 
 /* =========================================
-   3. ProseMirror 基础样式 (不包含 Checkbox)
+   终极修复版：保留标题的折叠样式
    ========================================= */
 .ProseMirror { 
-  outline: none; min-height: 400px; font-size: 16px; line-height: 1.75; color: #37352f; margin-top: 20px; padding-bottom: 30vh; 
+  outline: none; 
+  min-height: 400px; 
+  font-size: 16px; 
+  line-height: 1.75; 
+  color: #37352f; 
+  margin-top: 20px; 
+  padding-bottom: 30vh; 
+
+  // 1. 标题层级
   h1, h2, h3, h4, h5, h6 { scroll-margin-top: 140px; } 
-  > * { position: relative; transition: background-color 0.2s ease; border-radius: 4px; margin-left: -12px; padding-left: 12px; border-left: 3px solid transparent; } 
-  > *:hover { border-left-color: rgba(0, 0, 0, 0.08); background-color: rgba(0, 0, 0, 0.01); } 
+
+  // 2. 基础块元素交互 (保留你原本的悬停效果)
+  > * { 
+    position: relative; 
+    transition: background-color 0.2s ease; 
+    border-radius: 4px; 
+    margin-left: -12px; 
+    padding-left: 12px; 
+    border-left: 3px solid transparent; 
+  } 
+  > *:hover { 
+    border-left-color: rgba(0, 0, 0, 0.08); 
+    background-color: rgba(0, 0, 0, 0.01); 
+  } 
+
+  // 3. 选区与占位符
   .ProseMirror-selectednode { outline: 2px solid #b4d5fe; background-color: transparent !important; } 
   p.is-editor-empty:first-child::before { color: #9ca3af; content: attr(data-placeholder); float: left; height: 0; pointer-events: none; font-style: italic; opacity: 0.7; } 
-  blockquote { border-left: 3px solid #333; padding-left: 14px; margin: 1.5em 0; font-style: italic; color: #555; background: transparent; } 
-  pre { background: #f7f6f3; border-radius: 4px; padding: 16px; font-family: monospace; code { background: none; color: inherit; } } 
-  code { background-color: rgba(97, 97, 97, 0.1); color: #eb5757; padding: 0.25rem; border-radius: 4px; font-size: 0.85rem; } 
-  img { max-width: 100%; height: auto; border-radius: 4px; margin: 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); &.ProseMirror-selectednode { outline: 2px solid #0078d4; } } 
+
+  // 4. 表格系统
   table {
     border-collapse: collapse; table-layout: fixed; width: 100%; margin: 0; overflow: hidden;
-    td, th { min-width: 1em; border: 2px solid #ced4da; padding: 3px 5px; vertical-align: top; box-sizing: border-box; position: relative; > * { margin-bottom: 0; } }
+    td, th { 
+      min-width: 1em; border: 2px solid #ced4da; padding: 3px 5px; vertical-align: top; box-sizing: border-box; position: relative; 
+      > * { margin-bottom: 0; } 
+    }
     th { font-weight: bold; text-align: left; background-color: #f1f3f5; }
     .selectedCell:after { z-index: 2; position: absolute; content: ""; left: 0; right: 0; top: 0; bottom: 0; background: rgba(200, 200, 255, 0.4); pointer-events: none; }
-    .column-resize-handle { position: absolute; right: -2px; top: 0; bottom: -2px; width: 4px; background-color: #adf; pointer-events: none; }
   }
-  .tableWrapper { overflow-x: auto; }
-  details { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin: 10px 0; background-color: #fbfbfa; transition: all 0.2s ease; &[open] { background-color: #fff; border-color: #d1d5db; box-shadow: 0 2px 5px rgba(0,0,0,0.02); } summary { font-weight: 600; cursor: pointer; outline: none; color: #37352f; padding: 4px 0; &::marker { color: #9ca3af; font-size: 0.8em; transition: color 0.2s; } &:hover { color: #2383e2; &::marker { color: #2383e2; } } } div { margin-top: 8px; padding-left: 14px; border-left: 2px solid #f3f4f6; color: #4b5563; } } 
-}
 
-/* =========================================
-   4. 🟢 修复版 Checkbox (移到了 ProseMirror 外面!)
-   ========================================= */
-/* :deep() 确保样式能穿透 Vue 组件，影响到 TipTap 动态生成的 HTML */
+  /* =======================================================
+     🟢 核心修复：Details 节点 (折叠后保留标题)
+     ======================================================= */
+  .details-node { 
+    border: 1px solid #e2e8f0; 
+    border-radius: 6px; 
+    padding: 8px 12px; 
+    margin: 10px 0; 
+    background-color: #fbfbfa; 
+    transition: all 0.2s;
+    display: block !important;
+    user-select: text !important;
+
+    // 状态：折叠
+    &.is-closed {
+      background-color: #f8fafc;
+      
+      // 🔴 核心修复：只隐藏 summary 之后的兄弟节点
+      .details-content {
+        > *:not([data-type="summary"]) {
+          display: none !important;
+        }
+      }
+    }
+
+    // 状态：打开
+    &.is-open { 
+      background-color: #fff; 
+      border-color: #d1d5db; 
+      [data-type="summary"]::before { transform: rotate(90deg); }
+    } 
+
+    // 标题行容器
+    [data-type="summary"] { 
+      font-weight: 600; 
+      cursor: pointer; 
+      color: #37352f; 
+      padding: 4px 0; 
+      display: flex !important;
+      align-items: center;
+      user-select: text !important;
+
+      &::before {
+        content: "▶";
+        font-size: 10px;
+        margin-right: 10px;
+        color: #9ca3af;
+        transition: transform 0.2s;
+        display: inline-block;
+      }
+    }
+
+    // 内容布局缩进
+    .details-content { 
+      margin-top: 4px; 
+      > *:not([data-type="summary"]) {
+        margin-left: 14px;
+        padding-left: 14px;
+        border-left: 2px solid #f3f4f6;
+        color: #4b5563;
+      }
+    } 
+  }
+
+    /* Summary 标题行渲染 */
+    .summary-node { 
+      font-weight: 600; 
+      cursor: pointer; 
+      color: #37352f; 
+      padding: 4px 0; 
+      display: flex !important;
+      align-items: center;
+      position: relative;
+      user-select: text !important;
+
+      &::before {
+        content: "▶";
+        font-size: 10px;
+        margin-right: 10px;
+        color: #9ca3af;
+        transition: transform 0.2s;
+        display: inline-block;
+        flex-shrink: 0;
+      }
+
+      &:hover { color: #2383e2; &::before { color: #2383e2; } } 
+    }
+
+    /* 旋转图标 */
+    &.is-open .summary-node::before {
+      transform: rotate(90deg);
+    }
+
+    /* 内容区域包装层 */
+    .details-content { 
+      margin-top: 8px; 
+      padding-left: 14px; 
+      border-left: 2px solid #f3f4f6; 
+      color: #4b5563; 
+      user-select: text !important;
+    } 
+  } 
+
+
+
 :deep(ul[data-type="taskList"]) {
   list-style: none !important;
   padding: 0 !important;

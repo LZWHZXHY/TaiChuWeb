@@ -115,7 +115,7 @@
           <div class="tactical-btn-wrapper" @click="router.push('/suggest')">
             <button class="tactical-btn red">
               <span class="btn-icon">✎</span>
-              <span class="btn-label">FEEDBACK</span>
+              <span class="btn-label">反馈区</span>
             </button>
             <div class="btn-deco-line"></div>
           </div>

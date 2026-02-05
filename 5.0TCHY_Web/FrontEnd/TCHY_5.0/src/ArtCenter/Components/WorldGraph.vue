@@ -153,7 +153,6 @@ const startEvolution = () => {
 
   const pendingNodes = JSON.parse(JSON.stringify(rawNodes.value));
 
-  // 按时间排序
   pendingNodes.sort((a, b) => {
     const timeA = new Date(a.updated_at).getTime() || 0;
     const timeB = new Date(b.updated_at).getTime() || 0;
@@ -173,22 +172,16 @@ const startEvolution = () => {
     const chunk = pendingNodes.splice(0, evolutionSpeed.value);
     
     chunk.forEach(node => {
-      // 优化：初始位置稍微分散一点，避免所有点都在 (0,0) 导致瞬间斥力过大炸开
-      // 给一个微小的随机偏移量
       node.x = (Math.random() - 0.5) * 20; 
       node.y = (Math.random() - 0.5) * 20;
-      
-      // 初速度不用太大，依靠物理引擎推开即可
       node.vx = (Math.random() - 0.5) * 2; 
       node.vy = (Math.random() - 0.5) * 2;
-      
       visibleNodeIds.add(String(node.id));
     });
 
     displayedNodes.value.push(...chunk);
     currentRenderCount.value = displayedNodes.value.length;
 
-    // 处理连线
     const newLinksToAdd = [];
     rawLinks.value.forEach(link => {
       const sId = String(link.source);
@@ -214,8 +207,6 @@ const startEvolution = () => {
         nodes: displayedNodes.value,
         links: displayedLinks.value
       });
-      // 温和加热，保持 alpha 在较低水平，防止剧烈抖动
-      // alphaTarget(0.1) 意味着维持低热量，而不是 restart(1.0) 的高热量
       graphInstance.value.d3AlphaTarget(0.1).d3Restart();
     }
 
@@ -263,7 +254,7 @@ const initGraph = async () => {
       .width(width).height(height).backgroundColor('#080808')
       .graphData({ nodes: [], links: [] }) 
 
-      // === 渲染逻辑 (保持不变) ===
+      // === 渲染逻辑 (已修复文字放大问题) ===
       .nodeCanvasObject((node, ctx, globalScale) => {
         const isSelected = selectedNode.value?.id === node.id
         const isHover = node === hoverNode
@@ -288,7 +279,8 @@ const initGraph = async () => {
           ctx.beginPath();
           ctx.arc(node.x, node.y, r + 4, 0, 2 * Math.PI, false);
           ctx.strokeStyle = '#D92323';
-          ctx.lineWidth = 1 / globalScale; 
+          // 边框粗细仍建议随比例微调，防止放大后边框像堵墙
+          ctx.lineWidth = 2 / globalScale; 
           ctx.stroke();
         }
 
@@ -297,10 +289,12 @@ const initGraph = async () => {
 
         if (showText) {
           const label = node.label;
-          const fontSize = isSelected ? (14 / globalScale) : (12 / globalScale);
+          // 🔥 修复点：不再除以 globalScale。文字将随 Canvas 放大
+          const fontSize = isSelected ? 16 : 12; 
           ctx.font = `${fontSize}px 'JetBrains Mono'`;
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.fillStyle = (isSelected || isMatch) ? '#D92323' : '#cccccc';
+          // 偏移量也同步固定，不再除以比例
           ctx.fillText(label, node.x, node.y + r + fontSize + 2);
         }
         ctx.globalAlpha = 1;
@@ -338,7 +332,8 @@ const initGraph = async () => {
           if (showLabel) {
             const midX = link.source.x + (link.target.x - link.source.x) * 0.5;
             const midY = link.source.y + (link.target.y - link.source.y) * 0.5;
-            const fontSize = 10 / globalScale; 
+            // 🔥 修复点：连线文字同样取消 scale 除法
+            const fontSize = 10; 
             ctx.font = `${fontSize}px 'JetBrains Mono'`;
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             const label = link.label;
@@ -362,12 +357,8 @@ const initGraph = async () => {
       })
       .onBackgroundClick(() => { selectedNode.value = null })
 
-    // === 🔥🔥🔥 物理引擎调优：高阻尼 = 稳定 🔥🔥🔥 ===
-    
-    // 1. 排斥力：保持较强排斥，拉开间距
     graphInstance.value.d3Force('charge').strength(node => node.val > 15 ? -600 : -100);
 
-    // 2. 连线：收紧一点，避免甩太远
     graphInstance.value.d3Force('link').distance(link => {
         const isStructure = link.label === '包含';
         if (isStructure) return (link.source.val > 15 || link.target.val > 15) ? 40 : 80;
@@ -375,14 +366,10 @@ const initGraph = async () => {
     });
 
     import('d3-force').then(d3 => {
-      // 3. 径向力：向心力稍微加大一点点，防止飞出屏幕
       graphInstance.value.d3Force('radial', d3.forceRadial(100, width / 2, height / 2).strength(0.1));
       graphInstance.value.d3Force('collide', d3.forceCollide(node => node.val + 8));
     })
     
-    // 4. 🔥 核心修复：阻尼系数调高到 0.6
-    // 0.15 = 冰面（滑个不停，疯狂抖动）
-    // 0.60 = 蜂蜜（动一下就停，非常稳重）
     graphInstance.value.d3VelocityDecay(0.6);
 
     startEvolution();
@@ -390,7 +377,6 @@ const initGraph = async () => {
   } catch (e) { console.error("Graph Error:", e) } finally { loading.value = false }
 }
 
-// ... 尾部代码不变 ...
 const handleSearch = () => { if (graphInstance.value) graphInstance.value.d3ReheatSimulation() }
 const resetCamera = () => { if(graphInstance.value) graphInstance.value.zoomToFit(800, 80) }
 
