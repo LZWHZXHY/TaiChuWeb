@@ -46,13 +46,22 @@
     </div>
 
     <div class="notify-scroll-area">
+      <div v-if="loading" class="empty-state">
+        <div class="loading-spinner"></div>
+        <span>SYNCING_DATA...</span>
+      </div>
+
       <div 
+        v-else
         v-for="(item, index) in filteredNotifications" 
         :key="item.id || index" 
         class="notify-item"
+        :class="{ 'is-read': item.isRead }"
+        @click="handleItemClick(item)"
       >
         <div class="item-avatar-box">
           <img :src="item.avatar" class="item-avatar" alt="User" loading="lazy">
+          <div v-if="!item.isRead" class="unread-signal"></div>
           <div class="type-badge" :class="item.type">
             {{ getTypeIcon(item.type) }}
           </div>
@@ -70,13 +79,9 @@
             "{{ item.content }}"
           </div>
         </div>
-
-        <div class="item-ref-box" v-if="item.refImage">
-          <img :src="item.refImage" class="ref-img" alt="Ref" loading="lazy">
-        </div>
       </div>
       
-      <div v-if="filteredNotifications.length === 0" class="empty-state">
+      <div v-if="!loading && filteredNotifications.length === 0" class="empty-state">
         <div class="empty-icon">/</div>
         <span>NO_DATA_MATCHED</span>
         <span class="empty-sub">没有找到相关信号</span>
@@ -86,15 +91,11 @@
     <div class="panel-footer">
       <div class="footer-info">
         <span class="footer-label">接收状态 // RECEPTION</span>
-        <span class="footer-val">24ms / Synced</span>
+        <span class="footer-val">{{ loading ? 'Syncing...' : '24ms / Synced' }}</span>
       </div>
-      
       <div class="progress-track">
-        <div class="progress-bar" style="width: 92%">
-          <div class="progress-glare"></div>
-        </div>
+        <div class="progress-bar" :style="{ width: loading ? '40%' : '100%' }"></div>
       </div>
-      
       <div class="bg-watermark bottom">DATA</div>
     </div>
   </div>
@@ -102,322 +103,243 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router' // 引入路由
+import apiClient from '@/utils/api' 
 
+const router = useRouter()
+// 定义向父组件发送的事件：
+// update-count: 通知 HeaderNav 更新红点
+// item-click: 通知 HeaderNav 关闭面板
+const emit = defineEmits(['update-count', 'item-click'])
+
+// --- 状态定义 ---
 const showFilterMenu = ref(false)
 const currentFilter = ref('all')
+const allNotifications = ref([])
+const loading = ref(false)
 
 const filterOptions = [
   { label: '全部消息', value: 'all' },
-  { label: '粉丝', value: 'follow' },
-  { label: '@我的', value: 'mention' },
   { label: '评论', value: 'comment' },
-  { label: '喜欢', value: 'like' },
-  { label: '推荐', value: 'recommend' },
-  { label: '收藏', value: 'collect' }
+  { label: '点赞', value: 'like' },
+  { label: '系统', value: 'system' }
 ]
 
-const currentFilterLabel = computed(() => {
-  const opt = filterOptions.find(o => o.value === currentFilter.value)
-  return opt ? opt.label : '全部消息'
-})
+// --- 文本生成 ---
+const generateActionText = (cat, act, title) => {
+  if (cat === 4) return '发布了全员系统通告'
+  
+  const actions = { 1: '赞了', 2: '评论了', 3: '收藏了' }
+  const categories = { 1: '帖子', 2: '画廊作品', 3: '博客文章' }
+  
+  const actionStr = actions[act] || '交互了'
+  const catStr = categories[cat] || '内容'
+  
+  // 如果有标题，显示标题；否则显示泛指
+  if (title) {
+      const safeTitle = title.length > 10 ? title.substring(0, 10) + '...' : title
+      return `${actionStr}：${safeTitle}`
+  } else {
+      return `${actionStr}你的${catStr}`
+  }
+}
 
+const mapNotificationType = (cat, act) => {
+  if (cat === 4) return 'system'
+  if (act === 1) return 'like'
+  if (act === 2) return 'comment'
+  return 'collect' // 默认归类
+}
+
+const formatRelativeTime = (dateStr) => {
+  const date = new Date(dateStr)
+  const diff = (new Date() - date) / 1000
+  if (diff < 60) return `${Math.floor(diff)}s ago`
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+  return date.toLocaleDateString()
+}
+
+// --- 核心：获取数据 ---
+const fetchNotifications = async () => {
+  loading.value = true
+  try {
+    const res = await apiClient.get('/Notification/mine')
+    if (res.data.success) {
+      allNotifications.value = res.data.data.items.map(i => ({
+        id: i.Id, 
+        category: i.Category, // 1:帖子, 2:画廊, 3:博客, 4:系统
+        targetId: i.TargetId, // 这里的 TargetId 就是 PostId (例如 82)
+        
+        type: mapNotificationType(i.Category, i.ActionType),
+        user: i.SenderName || '系统用户', 
+        avatar: i.SenderLogo || '/favicon.ico', 
+        action: generateActionText(i.Category, i.ActionType, i.TargetTitle), // 包含标题的文案
+        content: i.Content,
+        time: formatRelativeTime(i.CreatedAt),
+        isRead: i.IsRead
+      }))
+    }
+  } catch (error) {
+    console.error("信号同步失败 //", error)
+  } finally {
+    loading.value = false
+  }
+}
+
+// --- 核心：点击跳转逻辑 ---
+const handleItemClick = async (item) => {
+  // 1. 标记已读
+  if (!item.isRead) {
+    try {
+      await apiClient.patch(`/Notification/${item.id}/read`)
+      item.isRead = true
+      emit('update-count') // 刷新导航栏红点
+    } catch (err) { console.error(err) }
+  }
+
+  // 2. 路由跳转
+  if (item.targetId) {
+    switch (item.category) {
+      case 1: // 帖子 -> /post/82
+        await router.push(`/post/${item.targetId}`)
+        break
+      case 2: // 画廊 -> /gallery/82
+        await router.push(`/gallery/${item.targetId}`)
+        break
+      case 3: // 博客 -> 假设跳到 post
+        await router.push(`/post/${item.targetId}`)
+        break
+      case 4: // 系统通知 -> 推送大厅
+        await router.push('/MainPush')
+        break
+    }
+  }
+
+  // 3. 关闭面板
+  emit('item-click')
+}
+
+// --- UI 逻辑 ---
 const toggleFilter = () => { showFilterMenu.value = !showFilterMenu.value }
 const selectFilter = (opt) => { currentFilter.value = opt.value; showFilterMenu.value = false }
 const closeDropdown = (e) => { if (!e.target.closest('.filter-wrapper')) showFilterMenu.value = false }
 
-onMounted(() => document.addEventListener('click', closeDropdown))
-onUnmounted(() => document.removeEventListener('click', closeDropdown))
-
-// 模拟数据 (保持不变，为了节省篇幅省略部分重复内容，逻辑一致)
-const allNotifications = ref([
-  { type: 'like', user: '曹小样儿', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix', action: '赞了你的评论', content: '确实，这种风格很难得...', time: '10m ago', refImage: 'https://picsum.photos/id/12/80/80' },
-  { type: 'mention', user: '机能风bot', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=cyber', action: '在动态中@了你', content: '来看看这套新的UI设计方案 @峰峰子', time: '1h ago', refImage: 'https://picsum.photos/id/48/80/80' },
-  { type: 'comment', user: '一棵小栗', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka', action: '回复了你', content: '我也觉得那个组件很有意思！', time: '2h ago', refImage: 'https://picsum.photos/id/24/80/80' },
-  { type: 'collect', user: '设计收藏夹', avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=collect', action: '收藏了你的作品', content: '', time: '3h ago', refImage: 'https://picsum.photos/id/55/80/80' },
-  { type: 'system', user: '太初核心', avatar: '/favicon.ico', action: '权限变更通知', content: '您的账户权限已提升至 LV.2', time: '1d ago', refImage: '' },
-  ...Array.from({ length: 5 }).map((_, i) => ({ type: 'like', user: `User_${8000 + i}`, avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${i}`, action: '收藏了你的作品', content: '', time: '2d ago', refImage: `https://picsum.photos/id/${60+i}/80/80` }))
-])
-
 const filteredNotifications = computed(() => {
   if (currentFilter.value === 'all') return allNotifications.value
-  if (currentFilter.value === 'recommend') return allNotifications.value.filter(n => n.type === 'recommend' || n.type === 'system')
   return allNotifications.value.filter(n => n.type === currentFilter.value)
 })
 
-const getTypeIcon = (type) => {
-  const map = { like: '❤', comment: '✎', system: '⚡', mention: '@', follow: '+', collect: '★', recommend: '☀' }
-  return map[type] || '●'
-}
+const currentFilterLabel = computed(() => {
+  return filterOptions.find(o => o.value === currentFilter.value)?.label || '全部消息'
+})
+
+const getTypeIcon = (t) => ({ like: '❤', comment: '✎', system: '⚡', collect: '★' }[t] || '●')
+
+onMounted(() => {
+  fetchNotifications()
+  document.addEventListener('click', closeDropdown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdown)
+})
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;700;900&display=swap');
+/* 机能风 CSS 样式 (保持不变) */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;900&display=swap');
 
 .cyber-notify-panel {
-  /* [核心修改] 强制固定宽度，不再随内容伸缩 */
-  width: 420px;
-  height: 620px;
-  
-  /* 移动端兜底，防止在小屏幕上撑破 */
-  max-width: 90vw; 
-
-  background-color: #F4F1EA;
-  border-radius: 24px;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  font-family: 'Noto Sans SC', sans-serif;
-  position: relative;
-  border: 1px solid rgba(0,0,0,0.05);
-  /* 确保内边距不会撑大总宽度 */
-  box-sizing: border-box; 
+  width: 420px; height: 620px; max-width: 90vw;
+  background-color: #F4F1EA; border-radius: 24px;
+  display: flex; flex-direction: column; overflow: hidden;
+  font-family: 'Noto Sans SC', sans-serif; position: relative;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05);
 }
 
-/* 水印 */
 .bg-watermark {
-  position: absolute;
-  font-family: 'Roboto Mono', monospace;
-  font-weight: 900;
-  font-size: 80px;
-  color: rgba(0,0,0,0.04);
-  pointer-events: none;
-  z-index: 0;
+  position: absolute; font-family: 'Roboto Mono'; font-weight: 900;
+  font-size: 80px; color: rgba(0,0,0,0.04); pointer-events: none;
 }
 .bg-watermark:not(.bottom) { top: -15px; right: 20px; }
 .bg-watermark.bottom { bottom: -15px; left: 10px; font-size: 60px; }
 
-/* --- 头部 --- */
 .panel-header {
-  padding: 32px 32px 20px;
-  position: relative;
-  z-index: 2;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0; /* 防止头部被压缩 */
+  padding: 32px 32px 20px; border-bottom: 1px solid rgba(0,0,0,0.06);
+  display: flex; justify-content: space-between; align-items: center; z-index: 2;
 }
 
-.title-main {
-  font-size: 24px;
-  font-weight: 900;
-  color: #1a1a1a;
-  letter-spacing: -0.5px;
-}
-
+.title-main { font-size: 24px; font-weight: 900; color: #1a1a1a; }
 .count-pill {
-  background: #000;
-  color: #fff;
-  padding: 4px 10px;
-  border-radius: 14px;
-  width: 50%;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  font-size: 11px;
-  font-family: 'Roboto Mono';
-  
+  background: #000; color: #fff; padding: 4px 10px; border-radius: 14px;
+  display: flex; gap: 6px; font-size: 11px; font-family: 'Roboto Mono'; margin-top: 4px;
 }
-
-.pill-val {
-  background: #D35400;  
-  padding: 5px;
-  border-radius: 14px;
-  color: #ffffff;
-}
-.title-sub {
-  margin-top: 6px;
-  font-size: 11px;
-  font-family: 'Roboto Mono';
-  color: #999;
-  letter-spacing: 0.5px;
-}
-
-/* --- 筛选区 --- */
-.header-actions { position: relative; }
+.pill-val { background: #D35400; padding: 0 6px; border-radius: 10px; }
 
 .filter-btn {
-  height: 42px;
-  padding: 0 20px;
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.1);
-  border-radius: 21px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #333;
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  height: 40px; padding: 0 16px; background: #fff; border: 1px solid #ddd;
+  border-radius: 20px; cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 8px;
 }
-
-.filter-btn:hover {
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transform: translateY(-1px);
-}
-
-.filter-btn.active {
-  background: #000;
-  color: #fff;
-  border-color: #000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
-.btn-arrow { font-size: 10px; opacity: 0.6; transition: transform 0.3s; }
-.btn-arrow.rotated { transform: rotate(180deg); }
+.filter-btn.active { background: #000; color: #fff; border-color: #000; }
 
 .filter-dropdown {
-  position: absolute;
-  top: calc(100% + 12px);
-  right: 0;
-  width: 160px;
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-  overflow: hidden;
-  z-index: 100;
-  padding: 8px;
+  position: absolute; top: 50px; right: 0; width: 150px; background: #fff;
+  border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 8px; z-index: 10;
 }
-
 .dropdown-item {
-  padding: 10px 14px;
-  font-size: 13px;
-  color: #555;
-  cursor: pointer;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: background 0.1s;
-  margin-bottom: 2px;
+  padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px;
 }
+.dropdown-item:hover { background: #f0f0f0; }
 
-.dropdown-item:hover { background: #F4F1EA; color: #000; font-weight: 600; }
-.dropdown-item.selected { background: rgba(0,0,0,0.04); color: #000; font-weight: 700; }
-.opt-check { font-size: 8px; color: #d35400; }
-
-.scale-fade-enter-active, .scale-fade-leave-active { transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
-.scale-fade-enter-from, .scale-fade-leave-to { opacity: 0; transform: translateY(-8px) scale(0.96); }
-
-/* --- 列表区 --- */
-.notify-scroll-area {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px 24px;
-  /* 确保宽度包含 padding */
-  width: 100%; 
-  box-sizing: border-box;
-}
-
-/* 滚动条美化 */
-.notify-scroll-area::-webkit-scrollbar { width: 4px; }
-.notify-scroll-area::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
-
+.notify-scroll-area { flex: 1; overflow-y: auto; padding: 10px 24px; }
 .notify-item {
-  /* 让卡片占满容器宽度 */
-  width: 100%;
-  box-sizing: border-box; 
-  
-  display: flex;
-  padding: 18px;
-  margin-bottom: 10px;
-  border-radius: 12px;
-  transition: all 0.2s ease;
-  background: transparent;
-  cursor: pointer;
-  position: relative;
-  gap: 16px; /* 控制子元素间距 */
+  display: flex; padding: 16px; margin-bottom: 8px; border-radius: 12px;
+  background: rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; gap: 12px;
 }
+.notify-item:hover { background: #fff; transform: translateX(5px); }
+.notify-item.is-read { opacity: 0.5; filter: grayscale(0.5); }
 
-.notify-item:hover {
-  background: rgba(255,255,255,0.6);
-  transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-}
+.item-avatar-box { position: relative; width: 44px; height: 44px; flex-shrink: 0; }
+.item-avatar { width: 100%; height: 100%; border-radius: 50%; border: 2px solid #fff; }
 
-.notify-item::before {
-  content: ''; position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
-  width: 3px; height: 0; background: #d35400; border-radius: 2px; transition: 0.2s;
+.unread-signal {
+  position: absolute; top: -2px; left: -2px; width: 10px; height: 10px;
+  background: #D35400; border-radius: 50%; box-shadow: 0 0 8px #D35400;
+  animation: pulse 1.5s infinite;
 }
-.notify-item:hover::before { height: 20px; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-.item-avatar-box {
-  position: relative; width: 44px; height: 44px; flex-shrink: 0;
-}
-.item-avatar {
-  width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
 .type-badge {
-  position: absolute; bottom: -5px; right: -5px; width: 20px; height: 20px;
-  background: #1a1a1a; color: #fff; border-radius: 50%; font-size: 11px;
-  display: flex; align-items: center; justify-content: center; border: 2px solid #F4F1EA;
+  position: absolute; bottom: -4px; right: -4px; width: 18px; height: 18px;
+  background: #1a1a1a; color: #fff; border-radius: 50%; font-size: 10px;
+  display: flex; align-items: center; justify-content: center;
 }
-.type-badge.like { background: #d35400; }
+.type-badge.like { background: #D35400; }
 .type-badge.system { background: #2980b9; }
-.type-badge.mention { background: #8e44ad; }
-.type-badge.follow { background: #27ae60; }
-.type-badge.collect { background: #f39c12; }
 
-/* --- 消息内容自适应 --- */
-.item-content {
-  flex: 1; /* 关键：占满剩余空间 */
-  min-width: 0; /* 关键：防止 Flex 子项被长文本撑大，允许截断 */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
-.user-name { font-size: 14px; font-weight: 700; color: #2c3e50; }
-.time-stamp { font-size: 10px; font-family: 'Roboto Mono'; color: #aaa; flex-shrink: 0; margin-left: 8px; }
-
-.action-row { font-size: 13px; color: #666; margin-bottom: 4px; }
-
+.item-content { flex: 1; min-width: 0; }
+.user-name { font-size: 14px; font-weight: 700; }
+.time-stamp { font-size: 10px; color: #999; float: right; }
+.action-desc { font-size: 12px; color: #666; margin: 4px 0; }
 .content-text {
-  font-size: 12px; color: #888; background: rgba(0,0,0,0.03); padding: 6px 10px;
-  border-radius: 6px; 
-  font-family: 'Roboto Mono';
-  
-  /* 文本截断处理 */
-  white-space: nowrap; 
-  overflow: hidden; 
-  text-overflow: ellipsis;
-  max-width: 100%;
+  font-size: 11px; color: #888; background: rgba(0,0,0,0.03);
+  padding: 4px 8px; border-radius: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-.item-ref-box {
-  width: 52px; height: 52px; flex-shrink: 0; 
-  border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,0,0,0.1);
+.panel-footer {
+  height: 70px; background: rgba(0,0,0,0.02); padding: 0 32px;
+  display: flex; flex-direction: column; justify-content: center; gap: 6px;
 }
-.ref-img { width: 100%; height: 100%; object-fit: cover; }
+.footer-info { display: flex; justify-content: space-between; font-size: 10px; color: #666; font-family: 'Roboto Mono'; }
+.progress-track { height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+.progress-bar { height: 100%; background: #1a1a1a; transition: 0.3s; }
 
 .empty-state {
-  height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  color: #ccc; font-family: 'Roboto Mono'; font-size: 12px; gap: 4px;
+  height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #bbb;
 }
-.empty-icon { font-size: 24px; margin-bottom: 4px; opacity: 0.5; }
-.empty-sub { font-size: 10px; opacity: 0.6; font-family: 'Noto Sans SC'; }
-
-/* --- 底部 --- */
-.panel-footer {
-  flex-shrink: 0; height: 80px; background: rgba(0,0,0,0.03); padding: 0 32px;
-  display: flex; flex-direction: column; justify-content: center; gap: 8px;
-  position: relative; z-index: 1; border-top: 1px solid rgba(0,0,0,0.05);
+.loading-spinner {
+  width: 20px; height: 20px; border: 2px solid #ddd; border-top-color: #D35400; border-radius: 50%; animation: spin 0.8s linear infinite;
 }
-.footer-info { display: flex; justify-content: space-between; font-family: 'Roboto Mono'; font-size: 11px; color: #666; }
-.footer-val { font-weight: 700; color: #1a1a1a; }
-.progress-track { width: 100%; height: 8px; background: rgba(0,0,0,0.06); border-radius: 4px; overflow: hidden; position: relative; }
-.progress-bar { height: 100%; background: #1a1a1a; border-radius: 4px; position: relative; }
-.progress-glare {
-  position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  animation: glare 2s infinite linear;
-}
-@keyframes glare { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>

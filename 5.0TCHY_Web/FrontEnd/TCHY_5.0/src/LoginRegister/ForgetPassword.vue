@@ -287,8 +287,8 @@ input {
   padding: 0.75rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px;
   font-size: 1rem; transition: all .2s ease; font-family: inherit;
 }
-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,.1); }
-input.error { border-color: #e53e3e; }
+input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,.1); color:#2c3e50}
+input.error { border-color: #e53e3e; color:black}
 
 .error-text { color: #e53e3e; font-size: .85rem; margin-top: .25rem; min-height: 1rem; }
 
