@@ -29,6 +29,7 @@
       <div class="main-bridge">
         
         <aside class="left-column">
+          
           <div class="cyber-card">
             <div class="card-label-strip"><span>// CHANNEL_SELECT</span></div>
             <div class="nav-stack">
@@ -52,6 +53,30 @@
               <p>> 渲染引擎: VUE_3_CORE</p>
             </div>
           </div>
+
+          <div class="cyber-card comms-panel">
+            <div class="card-label-strip"><span>// COMMS_UPLINK</span></div>
+            <div class="link-stack">
+              
+              <a href="https://oopz.cn/i/iZDd74" target="_blank" class="comms-btn oopz">
+                <div class="btn-inner">
+                  <span class="c-label">OOPZ</span>
+                  <span class="c-sub">邀请通道</span>
+                </div>
+                <div class="c-icon">↗</div>
+              </a>
+
+              <a href="https://kook.vip/NkVRhO" target="_blank" class="comms-btn kook">
+                <div class="btn-inner">
+                  <span class="c-label">KOOK</span>
+                  <span class="c-sub">邀请通道</span>
+                </div>
+                <div class="c-icon">↗</div>
+              </a>
+
+            </div>
+          </div>
+
         </aside>
 
         <div class="content-viewport">
@@ -73,20 +98,16 @@ import { ref, computed, onMounted, onUnmounted, markRaw } from 'vue';
 // 引入子组件
 import ChannelMinecraft from '@/EnterainmentComponents/MCServerModule.vue';
 import Steam from '@/EnterainmentComponents/Steam.vue';
-// 如果其他频道还没写好，暂时都指向 MC 组件以防止报错
-// import ChannelSteam from './channels/ChannelSteam.vue'; 
 
 const currentTime = ref(new Date().toLocaleTimeString());
 let clockTimer = null;
 
-// --- ⚠️ 修复关键：去掉 shallowRef，改用 markRaw 或直接赋值 ---
 const channelList = [
   { 
     id: 'mc', 
     name: 'MINECRAFT_NODE', 
     icon: 'MC', 
     label: '我的世界', 
-
     component: markRaw(ChannelMinecraft) 
   },
   { 
@@ -94,10 +115,8 @@ const channelList = [
     name: 'STEAM_GAMES', 
     icon: 'ST', 
     label: '综合游戏', 
-    // 暂时用 MC 占位
     component: markRaw(Steam) 
   }
-  
 ];
 
 const currentId = ref('mc');
@@ -118,7 +137,6 @@ onUnmounted(() => clearInterval(clockTimer));
 </script>
 
 <style scoped>
-/* 样式保持不变，直接复用之前的 */
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
 
 .cyber-dashboard { 
@@ -139,6 +157,7 @@ onUnmounted(() => clearInterval(clockTimer));
 
 .panel-scroll-container { flex: 1; overflow-y: hidden; position: relative; z-index: 1; display: flex; flex-direction: column; }
 
+/* Header Styles */
 .main-header { 
   display: flex; align-items: stretch; height: 100px; flex-shrink: 0;
   border-bottom: 4px solid var(--black); background: var(--off-white); position: relative; z-index: 10;
@@ -162,6 +181,7 @@ onUnmounted(() => clearInterval(clockTimer));
 .dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: pulse 1s infinite; }
 .sys-time-display { font-family: var(--mono); font-size: 1.2rem; font-weight: bold; padding: 0 20px; line-height: 100px; }
 
+/* Marquee Strip */
 .tech-strip { 
   background: var(--black); color: var(--off-white); 
   height: 30px; border-bottom: 4px solid var(--black); flex-shrink: 0;
@@ -170,15 +190,19 @@ onUnmounted(() => clearInterval(clockTimer));
 .strip-content { animation: marquee 30s linear infinite; padding-left: 100%; }
 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
 
+/* Main Layout */
 .main-bridge { display: flex; gap: var(--gap); padding: var(--gap); flex: 1; min-height: 0; }
 .left-column { flex: 0 0 260px; display: flex; flex-direction: column; gap: var(--gap); }
 .content-viewport { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; }
 
+/* General Card Styles */
 .cyber-card { 
   background: #fff; border: 2px solid var(--black); 
   box-shadow: 4px 4px 0 rgba(0,0,0,0.15); display: flex; flex-direction: column; 
 }
 .card-label-strip { background: var(--black); color: var(--off-white); padding: 4px 10px; font-family: var(--mono); font-size: 0.7rem; }
+
+/* Navigation Buttons */
 .nav-stack { display: flex; flex-direction: column; }
 .nav-btn {
   width: 100%; display: flex; align-items: center; border: none; background: transparent;
@@ -188,8 +212,85 @@ onUnmounted(() => clearInterval(clockTimer));
 .nav-btn:hover { background: rgba(0,0,0,0.05); padding-left: 20px; }
 .nav-btn.active { background: #fff; border-left: 6px solid var(--red); font-weight: 800; padding-left: 20px; }
 .n-icon { width: 24px; display: inline-block; font-weight: bold; margin-right: 10px; color: var(--red); }
+
+/* System Log */
 .log-text { padding: 15px; font-family: var(--mono); font-size: 0.75rem; line-height: 1.6; color: #666; }
 
+/* --- Comms/Social Panel Styles (NEW) --- */
+.comms-panel {
+  /* 让它自动填补空间或保持在下方，如果需要紧凑布局可去掉 margin-top: auto */
+  /* margin-top: auto; */ 
+}
+
+.link-stack {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comms-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-decoration: none;
+  background: var(--off-white);
+  border: 1px solid var(--black);
+  padding: 12px;
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.btn-inner {
+  display: flex;
+  flex-direction: column;
+}
+
+.c-label {
+  font-family: var(--heading);
+  font-size: 1.1rem;
+  color: var(--black);
+  line-height: 1;
+}
+
+.c-sub {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+.c-icon {
+  font-family: var(--mono);
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: var(--black);
+}
+
+/* Comms Button Hover Effects */
+.comms-btn:hover {
+  background: var(--black);
+  transform: translateX(4px);
+  box-shadow: -4px 4px 0 var(--red);
+}
+
+.comms-btn:hover .c-label, 
+.comms-btn:hover .c-icon {
+  color: var(--off-white);
+}
+
+.comms-btn:hover .c-sub {
+  color: var(--red);
+}
+
+.comms-btn:active {
+  transform: translateX(2px) translateY(2px);
+  box-shadow: none;
+}
+
+/* Animations */
 .cyber-fade-enter-active, .cyber-fade-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
 .cyber-fade-enter-from { opacity: 0; transform: translateX(10px); }
 .cyber-fade-leave-to { opacity: 0; transform: translateX(-10px); }
