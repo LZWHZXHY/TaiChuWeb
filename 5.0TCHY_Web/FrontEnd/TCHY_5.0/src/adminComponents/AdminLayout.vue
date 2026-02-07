@@ -96,7 +96,8 @@ const items = [
   { id: 'settings', label: '系统设置', icon: '⚙️'},
   { id: 'updates', label: '更新日志', icon: '📝'},
   { id: 'rules', label: '社区规则', icon: '📜' },
-  { id: 'feedback', label: '意见箱', icon: '📫' }
+  { id: 'feedback', label: '意见箱', icon: '📫' },
+  { id: 'calendar', label:'日历',icon:''}
 ]
 
 const activeItem = computed(() => items.find(i => i.id === props.active))

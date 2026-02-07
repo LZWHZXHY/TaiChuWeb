@@ -70,6 +70,11 @@ import NotificationPanel from '@/adminComponents/NotificationPanel.vue'
 import UpdatePanel from '@/adminComponents/UpdatePanel.vue'
 import RulesPanel from '@/adminComponents/RulesPanel.vue'
 import FeedBackPanel from '@/adminComponents/FeedBackPanel.vue'
+import CalendarPanel from '@/adminComponents/CalendarPanel.vue'
+
+
+
+
 
 const activeTab = ref('review')
 const currentTime = ref(new Date().toLocaleTimeString())
@@ -83,7 +88,8 @@ const map = {
   notifications: NotificationPanel,
   updates: UpdatePanel,
   rules: RulesPanel,
-  feedback: FeedBackPanel
+  feedback: FeedBackPanel,
+  calendar: CalendarPanel
 }
 
 const currentComponent = computed(() => map[activeTab.value] || ReviewSocieties)

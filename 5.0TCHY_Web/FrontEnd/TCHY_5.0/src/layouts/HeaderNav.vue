@@ -72,14 +72,8 @@
             <div v-if="showUserMenu" class="cyber-dropdown-menu">
               <div class="menu-header">// USER_ACTIONS</div>
               <div class="menu-list">
-                <div class="menu-row" @click="goToNotifications">
-                  <span class="row-label">NOTIFICATIONS</span>
-                  <span v-if="localUnreadCount > 0" class="row-val alert">{{ localUnreadCount }}</span>
-                </div>
-                <div class="menu-row" @click="goToProfile">
-                  <span class="row-label">PROFILE</span>
-                  <span class="row-icon">-></span>
-                </div>
+
+
                 <div class="menu-row" @click="goToNewProfile">
                   <span class="row-label">NEW PROFILE</span>
                   <span class="row-icon">-></span>
@@ -282,10 +276,10 @@ const navigateToHome = () => router.push('/')
 const handleLogin = () => router.push('/login')
 const handleRegister = () => router.push('/register')
 
-const goToProfile = () => { showUserMenu.value = false; router.push('/profile/me') }
+
 const goToNewProfile = () => { showUserMenu.value = false; router.push('/profile/MEE') }
 const goToNewSettings = () => { showUserMenu.value = false; router.push('/profile/NewSettings') }
-const goToNotifications = () => { showUserMenu.value = false; router.push('/profile/me?tab=notification') }
+
 
 const handleLogout = async () => {
   showUserMenu.value = false

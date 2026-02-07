@@ -38,22 +38,42 @@
           </div>
           <div class="meta-group">
             <span class="priority">PRIORITY: HIGH</span>
-            <span class="date">2023-11-25</span>
+            <span class="date">2026</span>
           </div>
         </div>
         
         <div class="broadcast-content">
-          <h3 class="sub-title">>> 关于“机械时代”赛季结算的通知</h3>
+          <h3 class="sub-title">>> 关于太初寰宇服务器的区块更新</h3>
           <p class="text-body">
-            各位干员请注意，当前赛季将于本月底进行结算。请尽快备份您的私人数据终端（整理背包）。
-            新赛季将引入 <span class="highlight">Create: Above and Beyond</span> 核心玩法。
+            各位玩家请注意，太初寰宇服务器的地图区块会不定期更新，更新时候会对没有建筑的区块进行删除然后重新生成。<br>
+            为了防止用户的建筑丢失，请务必在地表做出标识或标记，以防被误删。 <span class="highlight">建议按 F3+G 开启区块显示进行地表标记</span> 
           </p>
           <ul class="bullet-list">
-            <li>[+] 新增：由 ytonidc 提供的 CN2 优化线路</li>
-            <li>[!] 警告：末地维度将于 24 小时后重置</li>
-            <li>[-] 移除：旧版经济系统插件</li>
+            <li>[+] 新增：增加了自开发 Mod 展示区</li>
+            <li>[!] 提醒：请及时备份重要建筑坐标</li>
+            <li>[!] 提醒：太初寰宇难度调整mod目前需要手动下载，因为MC百科和modrinth还在审核阶段，不能通过PCL直接下载 (已包含在服务器整合包下载网盘里)</li>
           </ul>
           <div class="signature">-- SERVER_ADMIN // 001</div>
+        </div>
+      </div>
+
+      <div class="mod-section">
+        <div class="section-title">
+          <span class="icon">🛠</span> Our_MODS // 太初寰宇模组
+        </div>
+        <div class="mod-grid">
+          <div v-for="mod in myMods" :key="mod.name" class="mod-card">
+            <div class="mod-thumbnail" :style="{ backgroundImage: `url(${mod.cover})` }">
+              <div class="mod-links">
+                <button class="link-btn mcbbs" @click="openLink(mod.mcbbs)">MC百科</button>
+                <button class="link-btn modrinth" @click="openLink(mod.modrinth)">Modrinth</button>
+              </div>
+            </div>
+            <div class="mod-detail">
+              <h4 class="name">{{ mod.name }}</h4>
+              <p class="description">{{ mod.desc }}</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -104,14 +124,26 @@
 import { ref } from 'vue';
 import ServerCard from './ServerCard.vue';
 
-// 滚动公告数据
+// 滚动公告
 const notices = ref([
   { type: '公告', content: '服务器将于每周五凌晨 4:00 进行例行维护，请留意时间。' },
   { type: '活动', content: '新服“齿轮盛宴”开荒活动火热进行中，进群领取新手礼包！' },
   { type: '警告', content: '严禁在游戏内使用任何作弊客户端，违者封号处理。' }
 ]);
 
-// 服务器数据
+// [新增数据] 我的模组列表
+const myMods = ref([ 
+  {
+    name: '太初寰宇难度调整模组',
+    desc: '对原版的mod的一些游戏机制进行了调整',
+    cover: 'https://image2url.com/r2/default/images/1770446209300-40fe84df-c1f3-4970-8a8c-2d9b86cec491.png',
+    mcbbs: 'https://www.mcmod.cn/', 
+    modrinth: 'https://modrinth.com/mod/tchy_difficultyadjustment'
+  }
+  
+]);
+
+// 服务器列表
 const serverList = ref([
   {
     title: '太初寰宇 · 自整合服',
@@ -128,7 +160,7 @@ const serverList = ref([
   {
     title: '齿轮盛宴',
     ip1: 'p24.ytonidc.com:42134',
-    ip2: '', // 单线演示
+    ip2: '',
     version: 'Forge 1.20.1',
     isOnline: true,
     coverImage: 'https://image2url.com/r2/default/images/1769209536510-b6e46210-d3cd-4693-8adb-1d62a9450854.blob',
@@ -155,6 +187,10 @@ const handleDownload = async (type, server = null) => {
     window.open(url);
   }
 };
+
+const openLink = (url) => {
+  window.open(url, '_blank');
+};
 </script>
 
 <style scoped>
@@ -174,16 +210,9 @@ const handleDownload = async (type, server = null) => {
 .desc { color: #ccc; font-size: 14px; }
 .desc span { margin-right: 15px; }
 
-/* --- 滚动公告条 (Ticker) --- */
-.notice-bar {
-  display: flex; background: #111; border-radius: 6px; overflow: hidden;
-  height: 40px; align-items: center; border: 1px solid #333;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex-shrink: 0;
-}
-.notice-label {
-  background: #D92323; color: #fff; font-size: 12px; font-weight: bold;
-  padding: 0 15px; height: 100%; display: flex; align-items: center; gap: 8px; z-index: 2;
-}
+/* --- 滚动公告条 --- */
+.notice-bar { display: flex; background: #111; border-radius: 6px; overflow: hidden; height: 40px; align-items: center; border: 1px solid #333; flex-shrink: 0; }
+.notice-label { background: #D92323; color: #fff; font-size: 12px; font-weight: bold; padding: 0 15px; height: 100%; display: flex; align-items: center; gap: 8px; z-index: 2; }
 .notice-scroller { flex: 1; overflow: hidden; position: relative; height: 100%; display: flex; align-items: center; background: #1a1a1a; }
 .scrolling-content { display: flex; white-space: nowrap; animation: scroll-left 25s linear infinite; }
 .notice-scroller:hover .scrolling-content { animation-play-state: paused; }
@@ -193,33 +222,39 @@ const handleDownload = async (type, server = null) => {
 @keyframes blinker { 50% { opacity: 0; } }
 
 /* --- 静态公告板 (Broadcast) --- */
-.broadcast-card {
-  background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;
-  margin-bottom: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.03); flex-shrink: 0;
-}
-.broadcast-header {
-  background: #1a1a1a; color: #fff; padding: 10px 20px;
-  display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #D92323;
-}
+.broadcast-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+.broadcast-header { background: #1a1a1a; color: #fff; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #D92323; }
 .title-group { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 14px; }
 .title-group .icon { color: #D92323; font-size: 16px; }
 .meta-group { display: flex; gap: 15px; font-size: 12px; }
 .priority { color: #facc15; font-weight: bold; animation: pulse 2s infinite; }
 .date { color: #666; }
-.broadcast-content {
-  padding: 20px; background: #fafafa;
-  background-image: radial-gradient(#ddd 1px, transparent 1px); background-size: 20px 20px;
-}
+.broadcast-content { padding: 20px; background: #fafafa; background-image: radial-gradient(#ddd 1px, transparent 1px); background-size: 20px 20px; }
 .sub-title { margin: 0 0 10px 0; font-size: 16px; color: #111; font-weight: bold; }
 .text-body { font-size: 13px; color: #444; line-height: 1.6; margin-bottom: 12px; }
 .highlight { background: #ffe4e6; color: #D92323; padding: 2px 4px; border-radius: 4px; font-weight: bold; }
 .bullet-list { list-style: none; padding: 0; margin: 0; font-size: 13px; color: #555; }
 .bullet-list li { margin-bottom: 6px; padding-left: 10px; border-left: 2px solid #ccc; }
-.bullet-list li:nth-child(1) { border-color: #0f0; }
-.bullet-list li:nth-child(2) { border-color: #facc15; }
-.bullet-list li:nth-child(3) { border-color: #D92323; }
 .signature { margin-top: 15px; text-align: right; font-size: 12px; color: #999; font-style: italic; }
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+/* --- [新增] 我的模组展示区样式 --- */
+.mod-section { margin-bottom: 10px; }
+.section-title { font-size: 16px; font-weight: bold; color: #111; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.section-title .icon { color: #D92323; }
+.mod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+.mod-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; transition: transform 0.2s; }
+.mod-card:hover { transform: translateY(-4px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+.mod-thumbnail { height: 140px; background-size: cover; background-position: center; position: relative; }
+.mod-links { position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; opacity: 0; transition: opacity 0.3s; }
+.mod-thumbnail:hover .mod-links { opacity: 1; }
+.link-btn { width: 110px; padding: 6px 0; border: none; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; transition: filter 0.2s; }
+.link-btn.mcbbs { background: #3c8dbc; color: white; }
+.link-btn.modrinth { background: #1bd96a; color: #111; }
+.link-btn:hover { filter: brightness(1.2); }
+.mod-detail { padding: 12px; }
+.mod-detail .name { margin: 0 0 5px 0; font-size: 14px; color: #111; }
+.mod-detail .description { font-size: 12px; color: #666; margin: 0; line-height: 1.4; }
 
 /* --- 列表与侧边栏 --- */
 .server-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding-bottom: 40px; }

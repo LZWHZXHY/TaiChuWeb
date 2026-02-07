@@ -178,7 +178,16 @@ const routes = [
       title: '意见箱'
     }
   },
-
+  {
+    path: '/blog/:id',  // :id 是动态参数
+    name: 'BlogDetail',
+    component: () => import('@/BlogComponents/BlogDetailPage.vue'), 
+    meta: { 
+      requiresAuth: false, // 通常博客是公开可见的
+      title: '太初寰宇 // 博客详情'
+    },
+    props: true // 开启 props 传参，组件内可以直接通过 props.id 获取路由参数
+  },
   {
   path: '/post/:id',
   name: 'PostDetail',

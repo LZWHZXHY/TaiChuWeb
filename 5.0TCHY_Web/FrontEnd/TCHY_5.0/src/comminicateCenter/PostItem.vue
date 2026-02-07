@@ -26,7 +26,7 @@
     </div>
 
     <div v-if="post.images?.length" class="entry-thumb-wrapper">
-      <img :src="post.images[0]" @error="handleImgError" class="entry-thumb" />
+      <img :src="cleanUrl(post.images[0])" @error="handleImgError" class="entry-thumb" />
       <span v-if="post.images.length > 1" class="img-count-badge">+{{ post.images.length }}</span>
     </div>
   </div>
@@ -42,38 +42,51 @@ const props = defineProps({
 
 defineEmits(['click']);
 
-const avatarUrl = computed(() => {
-  const url = props.post.author?.avatar;
+/**
+ * 极简修复：只换域名，绝不改路径
+ */
+const cleanUrl = (url) => {
   if (!url) return '/土豆.jpg';
-  if (url.startsWith('http')) return url;
-  return `${props.baseUrl}/${url.replace(/\\/g, '/')}`;
-});
+  
+  let res = String(url);
+
+  // 只要匹配到 localhost（带不带端口、http/https都算），只替换头部域名
+  // 哪怕后面是 /uploads/头像/ 也不动它，严格保持原样
+  if (res.match(/localhost/i)) {
+    res = res.replace(/https?:\/\/localhost(:\d+)?/i, 'https://img.bianyuzhou.com');
+  }
+
+  return res;
+};
+
+// 计算属性
+const avatarUrl = computed(() => cleanUrl(props.post.author?.avatar));
 
 const formatTime = (t) => t ? new Date(t).toLocaleDateString() : 'N/A';
-const handleImgError = (e) => { e.target.src = '/土豆.jpg'; };
+const handleImgError = (e) => { 
+  e.target.src = '/土豆.jpg'; 
+};
 </script>
 
 <style scoped>
+/* 样式保持不变 */
 .post-entry {
   background: #fff; border: 1px solid #111; margin-bottom: 12px;
   padding: 20px; position: relative; display: flex; gap: 15px; cursor: pointer;
   transition: transform 0.2s; overflow: hidden;
 }
 .post-entry:hover { transform: translateX(5px); box-shadow: -4px 4px 0 rgba(0,0,0,0.1); }
-
 .entry-scanline {
   position: absolute; left: 0; top: 0; width: 4px; height: 100%;
   background: #D92323; transform: scaleY(0); transition: transform 0.2s;
 }
 .post-entry:hover .entry-scanline { transform: scaleY(1); }
-
-.avatar-box { width: 24px; height: 24px; border: 1px solid #111; }
+.avatar-box { width: 24px; height: 24px; border: 1px solid #111; flex-shrink: 0;}
 .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
 .username { font-family: 'JetBrains Mono'; font-weight: 700; font-size: 0.8rem; }
 .post-time { font-family: 'JetBrains Mono'; font-size: 0.7rem; color: #666; }
 .entry-title { font-weight: 800; font-size: 1.1rem; margin: 5px 0 10px 0; }
 .entry-actions { display: flex; gap: 15px; font-family: 'JetBrains Mono'; font-size: 0.7rem; color: #555; }
-
 .entry-thumb-wrapper { width: 90px; height: 90px; border: 1px solid #111; position: relative; flex-shrink: 0; }
 .entry-thumb { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); }
 .post-entry:hover .entry-thumb { filter: grayscale(0); }

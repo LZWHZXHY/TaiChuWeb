@@ -104,21 +104,27 @@ const isSubmitting = ref(false)
 const replyTarget = ref(null)
 const commentInputRef = ref(null)
 
-// --- 工具函数 ---
 const fixAvatarUrl = (url) => {
   if (!url || typeof url !== 'string') return '/土豆.jpg';
-  const TARGET_HOST = 'https://bianyuzhou.com';
-  let path = url.replace(/\\/g, '/');
-  if (path.startsWith('http')) {
-    const thirdSlashIndex = path.indexOf('/', 8);
-    if (thirdSlashIndex > -1) {
-      path = path.substring(thirdSlashIndex);
-    }
+
+  // 清洗掉可能的空格或反斜杠
+  let path = url.trim().replace(/\\/g, '/');
+
+  // 🔥 核心逻辑：如果地址已经包含了 img.bianyuzhou.com，说明后端已经拼好了，直接返回
+  if (path.includes('img.bianyuzhou.com')) {
+    return path;
   }
+
+  // 如果是那种旧的、不带域名的相对路径，才执行下面的拼接逻辑
+  const TARGET_HOST = 'https://img.bianyuzhou.com'; // 统一使用图片服务器域名
+  
   if (!path.startsWith('/')) path = '/' + path;
-  if (path !== '/土豆.jpg' && !path.startsWith('/uploads')) {
+
+  // 确保 /uploads 不重复
+  if (!path.startsWith('/uploads') && path !== '/土豆.jpg') {
     path = '/uploads' + path;
   }
+
   return `${TARGET_HOST}${path}`;
 };
 

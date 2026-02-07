@@ -41,7 +41,13 @@
           <div class="card-label-strip"><span>// BLOG_ARCHIVES</span></div>
           <div class="blog-min-list custom-scroll">
             <div v-if="blogLoading" class="status-text">[ LOADING... ]</div>
-            <BlogItem v-for="b in blogs" :key="b.Id" :blog="b" :base-url="BASE_URL" @click="openBlogDetail(b.Id)" />
+           <BlogItem 
+  v-for="b in blogs" 
+  :key="b.Id" 
+  :blog="b" 
+  :base-url="BASE_URL" 
+  @click="openBlogDetail(b.Id)" 
+/>
           </div>
         </section>
       </aside>
@@ -221,10 +227,31 @@ const replyTarget = ref(null);
 
 const fixAvatarUrl = (url) => {
   if (!url || typeof url !== 'string') return '/土豆.jpg';
-  if (url.startsWith('http') || url.startsWith('data:image')) return url;
-  return `${BASE_URL}/uploads/${url.replace(/\\/g, '/')}`;
-};
+  if (url.startsWith('data:image')) return url;
 
+  const IMAGE_DOMAIN = 'https://img.bianyuzhou.com';
+  
+  // 1. 强力剥离协议和域名（不管是 localhost 还是 线上域名，统统去掉）
+  let path = url.replace(/^(https?:\/\/[^\/]+)?/, '');
+  
+  // 2. 统一斜杠
+  path = path.replace(/\\/g, '/');
+
+  // 3. 确保 /uploads 结构正确
+  if (path.includes('/uploads/')) {
+    path = '/uploads/' + path.split('/uploads/')[1];
+  } else {
+    if (!path.startsWith('/')) path = '/' + path;
+    path = '/uploads' + path;
+  }
+
+  // 4. 【关键】同步修复路径命名差异
+  if (path.includes('/头像/')) {
+     path = path.replace('/头像/', '/用户头像/');
+  }
+
+  return `${IMAGE_DOMAIN}${path}`;
+};
 // --- API 方法 ---
 const fetchPosts = async (isFirstLoad = true) => {
   if (loading.value || (!hasMore.value && !isFirstLoad)) return;
@@ -270,12 +297,11 @@ const openPostDetail = (id) => {
   });
 };
 
-const openBlogDetail = async (id) => {
-  currentType.value = 'blog'; showDetail.value = true; detailLoading.value = true;
-  try {
-    const res = await apiClient.get(`/Blog/articles/${id}`);
-    currentData.value = res.data;
-  } finally { detailLoading.value = false; }
+const openBlogDetail = (id) => {
+  router.push({
+    name: 'BlogDetail', // 对应路由配置中的 name
+    params: { id: id }
+  });
 };
 
 const submitComment = async (content) => {

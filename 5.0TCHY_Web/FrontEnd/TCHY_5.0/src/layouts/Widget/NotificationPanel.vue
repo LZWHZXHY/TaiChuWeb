@@ -208,7 +208,7 @@ const handleItemClick = async (item) => {
         await router.push(`/gallery/${item.targetId}`)
         break
       case 3: // 博客 -> 假设跳到 post
-        await router.push(`/post/${item.targetId}`)
+        await router.push(`/blog/${item.targetId}`)
         break
       case 4: // 系统通知 -> 推送大厅
         await router.push('/MainPush')
