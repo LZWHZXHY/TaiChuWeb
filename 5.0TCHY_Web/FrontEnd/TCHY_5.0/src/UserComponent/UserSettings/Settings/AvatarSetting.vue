@@ -106,7 +106,7 @@
       <div class="gallery-content">
         <div v-if="activeTab === 'default'" class="avatar-grid">
           <div 
-            v-for="(item, index) in defaultAvatars" 
+            v-for="item in defaultAvatars" 
             :key="item.id"
             class="avatar-slot"
             :class="{ selected: tempSelectedId === item.id }" 
@@ -146,7 +146,7 @@ const currentAvatar = ref('');
 const tempImgUrl = ref('');    
 const isEditing = ref(false);  
 const isDragging = ref(false);
-const isUploading = ref(false); // 上传 loading 状态
+const isUploading = ref(false);
 
 const activeTab = ref('default'); 
 const tempSelectedId = ref(null);   
@@ -165,7 +165,7 @@ const cropState = reactive({
   naturalWidth: 0, naturalHeight: 0
 });
 
-// 系统预设头像 (如果后端没有专门的预设列表接口，这里可以保留前端硬编码，或者换成API获取)
+// 系统预设头像 (请确保这些 URL 是有效的)
 const defaultAvatars = [
   { id: 1, name: '预设_01', url: 'https://img.bianyuzhou.com/uploads/默认头像/默认头像1.png' },
   { id: 2, name: '预设_02', url: 'https://img.bianyuzhou.com/uploads/默认头像/默认头像2.png' },
@@ -177,20 +177,16 @@ const cropBoxStyle = computed(() => ({
   top: `${cropState.boxY}px`, left: `${cropState.boxX}px`, width: `${cropState.boxSize}px`, height: `${cropState.boxSize}px`
 }));
 
-
+// 初始化
 const initData = async () => {
   try {
     const res = await apiClient.get('/profile/detail');
     if (res.data && res.data.success) {
       const data = res.data.data;
-      
-      // 🔥 修正点：后端返回的字段名是 Avatar
+      // ✅ 修正：直接读取 Avatar (后端已映射为 AvatarUrl)
       if (data.Avatar) {
         currentAvatar.value = data.Avatar;
-      } else if (data.logo || data.Logo) {
-        // 保留旧字段兼容 (以防万一)
-        currentAvatar.value = data.logo || data.Logo;
-      }
+      } 
     }
   } catch (error) {
     console.error('获取头像失败:', error);
@@ -202,7 +198,7 @@ onMounted(() => {
 });
 
 // ==========================================
-// 📤 核心上传逻辑 (复用)
+// 📤 核心上传逻辑 (上传文件)
 // ==========================================
 const uploadFile = async (fileObj) => {
   if (!fileObj) return;
@@ -212,17 +208,15 @@ const uploadFile = async (fileObj) => {
   formData.append('file', fileObj); 
 
   try {
-    // 你的后端接口: [HttpPost("upload-avatar")]
+    // 对应 ProfileController.cs -> [HttpPost("upload-avatar")]
     const res = await apiClient.post('/profile/upload-avatar', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
     if (res.data && res.data.success) {
-      // 上传成功，更新视图
       currentAvatar.value = res.data.url;
       alert('头像更新成功 // SUCCESS');
       
-      // 重置所有状态
       isEditing.value = false;
       tempSelectedId.value = null;
       tempImgUrl.value = '';
@@ -238,77 +232,7 @@ const uploadFile = async (fileObj) => {
 };
 
 // ==========================================
-// 🖼️ 场景 1：自定义上传 & 裁剪
-// ==========================================
-
-const processFile = (file) => {
-  if (!file) return;
-  const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
-  if (!validTypes.includes(file.type)) {
-    alert('不支持的文件格式 (仅限 JPG/PNG/GIF)'); return;
-  }
-  if (file.size > 5 * 1024 * 1024) { 
-    alert('文件过大: 5MB (MAX SIZE)'); return; 
-  }
-
-  tempSelectedId.value = null; 
-
-  if (file.type === 'image/gif') {
-    // GIF 不裁剪，直接确认上传
-    const confirmGif = confirm('检测到 GIF 图片，是否直接设为头像？');
-    if (confirmGif) {
-      uploadFile(file);
-    }
-  } else {
-    // 图片进入裁剪模式
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      tempImgUrl.value = evt.target.result;
-      isEditing.value = true; 
-      cropState.boxSize = 130; cropState.boxX = 0; cropState.boxY = 0;
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-// 确定裁剪
-const confirmCrop = () => {
-  if (!sourceImgRef.value) return;
-
-  const canvas = document.createElement('canvas');
-  const size = cropState.boxSize;
-  const scaleX = cropState.naturalWidth / cropState.imgRenderW;
-  
-  // 设置 Canvas 大小为裁剪区域的真实像素大小
-  canvas.width = size * scaleX; 
-  canvas.height = canvas.width;
-  
-  const ctx = canvas.getContext('2d');
-  
-  // 绘制裁剪部分
-  ctx.drawImage(
-    sourceImgRef.value, 
-    (cropState.boxX - cropState.imgRenderX) * scaleX, 
-    (cropState.boxY - cropState.imgRenderY) * scaleX, 
-    canvas.width, 
-    canvas.height, 
-    0, 0, canvas.width, canvas.height
-  );
-
-  // 将 Canvas 转换为 Blob 对象进行上传
-  canvas.toBlob((blob) => {
-    if (blob) {
-      // 创建一个伪造的文件对象，文件名加个时间戳防止缓存
-      const file = new File([blob], `avatar_crop_${Date.now()}.png`, { type: 'image/png' });
-      uploadFile(file);
-    }
-  }, 'image/png');
-};
-
-const cancelEdit = () => { isEditing.value = false; tempImgUrl.value = ''; };
-
-// ==========================================
-// 🎨 场景 2：选择官方预设
+// 🎨 系统预设逻辑 (设置 URL)
 // ==========================================
 const preSelectDefaultAvatar = (item) => { 
   tempSelectedId.value = item.id; 
@@ -316,26 +240,20 @@ const preSelectDefaultAvatar = (item) => {
   tempSelectedUrl.value = item.url; 
 };
 
-// 确认预设：将远程图片转为 File 上传 (适配现有的文件上传接口)
 const confirmDefaultSelection = async () => {
   if (!tempSelectedUrl.value) return;
-  
-  // 防止重复点击
   if (isUploading.value) return; 
   isUploading.value = true;
 
   try {
-    // 直接发送 JSON: { "url": "..." }
+    // ✅ 对应我们在后端刚补上的 [HttpPost("set-avatar-url")]
     const res = await apiClient.post('/profile/set-avatar-url', {
       url: tempSelectedUrl.value
     });
     
     if (res.data && res.data.success) {
-      // 更新成功，前端立刻显示新头像
       currentAvatar.value = tempSelectedUrl.value;
       alert('头像设置成功 // SUCCESS');
-      
-      // 清空选择状态
       tempSelectedId.value = null;
     } else {
       alert(res.data.message || '设置失败');
@@ -350,8 +268,66 @@ const confirmDefaultSelection = async () => {
 };
 
 // ==========================================
-// 🖱️ 交互事件绑定 (保持原样)
+// 🖼️ 裁剪与文件处理逻辑 (复用逻辑)
 // ==========================================
+const processFile = (file) => {
+  if (!file) return;
+  const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+  if (!validTypes.includes(file.type)) {
+    alert('不支持的文件格式 (仅限 JPG/PNG/GIF)'); return;
+  }
+  if (file.size > 5 * 1024 * 1024) { 
+    alert('文件过大: 5MB (MAX SIZE)'); return; 
+  }
+
+  tempSelectedId.value = null; 
+
+  if (file.type === 'image/gif') {
+    const confirmGif = confirm('检测到 GIF 图片，是否直接设为头像？');
+    if (confirmGif) uploadFile(file);
+  } else {
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      tempImgUrl.value = evt.target.result;
+      isEditing.value = true; 
+      // 重置裁剪框位置
+      cropState.boxSize = 130; 
+      cropState.boxX = 0; 
+      cropState.boxY = 0;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const confirmCrop = () => {
+  if (!sourceImgRef.value) return;
+
+  const canvas = document.createElement('canvas');
+  const size = cropState.boxSize;
+  const scaleX = cropState.naturalWidth / cropState.imgRenderW;
+  
+  canvas.width = size * scaleX; 
+  canvas.height = canvas.width;
+  
+  const ctx = canvas.getContext('2d');
+  
+  ctx.drawImage(
+    sourceImgRef.value, 
+    (cropState.boxX - cropState.imgRenderX) * scaleX, 
+    (cropState.boxY - cropState.imgRenderY) * scaleX, 
+    canvas.width, canvas.height, 
+    0, 0, canvas.width, canvas.height
+  );
+
+  canvas.toBlob((blob) => {
+    if (blob) {
+      const file = new File([blob], `avatar_crop_${Date.now()}.png`, { type: 'image/png' });
+      uploadFile(file);
+    }
+  }, 'image/png');
+};
+
+const cancelEdit = () => { isEditing.value = false; tempImgUrl.value = ''; };
 const triggerUpload = () => { fileInputRef.value.click(); };
 const handleFileChange = (e) => {
   const file = e.target.files[0];
@@ -366,7 +342,7 @@ const handleDrop = (e) => {
   processFile(file);
 };
 
-// 裁剪框拖拽逻辑
+// 裁剪框交互逻辑
 const onImageLoad = (e) => {
   const img = e.target;
   cropState.imgRenderW = img.width; cropState.imgRenderH = img.height;
@@ -404,6 +380,7 @@ const checkBoundaries = () => {
 </script>
 
 <style scoped>
+/* 样式部分保持不变，直接复用你原有的即可 */
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;700;900&display=swap');
 
 .main-wrapper {
@@ -415,7 +392,6 @@ const checkBoundaries = () => {
   position: relative;
 }
 
-/* 全局 Loading */
 .global-loading {
   position: absolute; inset: 0;
   background: rgba(255,255,255,0.85);
@@ -432,10 +408,8 @@ const checkBoundaries = () => {
 }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
-/* --- 上半部分 --- */
 .top-section { flex: 0 0 auto; min-height: 220px; }
 
-/* 预览卡片 */
 .preview-card {
   width: 100%; height: 100%;
   background: #F4F1EA; border-radius: 24px;
@@ -461,7 +435,6 @@ const checkBoundaries = () => {
 .meta-label { font-size: 10px; color: #999; }
 .meta-status { font-size: 12px; font-weight: bold; color: #000; letter-spacing: 1px; }
 
-/* 上传区域 */
 .upload-right {
   flex: 1; border: 2px dashed rgba(0,0,0,0.1); border-radius: 16px;
   transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -480,7 +453,6 @@ const checkBoundaries = () => {
 .upload-text h3 { margin: 0; font-size: 16px; font-weight: 800; }
 .upload-text p { margin: 4px 0 0 0; font-size: 12px; color: #666; }
 
-/* 编辑卡片 */
 .editor-card {
   width: 100%; height: 300px; background: #1a1a1a; border-radius: 24px;
   display: flex; overflow: hidden; color: #fff;
@@ -522,7 +494,6 @@ const checkBoundaries = () => {
 .cancel-btn { background: #000; color: #666; border-radius: 4px;}
 .cancel-btn:hover { color: #fff; }
 
-/* --- 底部部分 --- */
 .bottom-section { flex: 1; display: flex; flex-direction: column; position: relative; }
 .gallery-header { margin-bottom: 16px; border-bottom: 1px solid rgba(0,0,0,0.05); }
 .tabs { display: flex; gap: 30px; }
@@ -557,7 +528,6 @@ const checkBoundaries = () => {
   align-items: center; justify-content: center; color: #ccc; font-family: 'Roboto Mono';
 }
 
-/* 浮动操作栏 */
 .floating-bar {
   position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
   background: #000; border-radius: 30px; display: flex; align-items: center;
@@ -575,4 +545,5 @@ const checkBoundaries = () => {
 
 .slide-up-enter-active, .slide-up-leave-active { transition: all 0.3s ease; }
 .slide-up-enter-from, .slide-up-leave-to { transform: translateY(100%); opacity: 0; }
+.upload-text{color:black}
 </style>

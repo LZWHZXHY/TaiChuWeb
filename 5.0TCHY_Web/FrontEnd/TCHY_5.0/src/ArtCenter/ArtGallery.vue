@@ -66,7 +66,11 @@
                   <div class="card-frame">
                     <div v-if="isTopOne(img)" class="champion-badge">榜主大人</div>
                     <div class="img-box">
-                      <img :src="upgradeUrlToHttps(img.imageUrlFull || img.url)" @error="handleImgError" loading="lazy" />
+                      <img 
+  :src="upgradeUrlToHttps(img.imageUrl || img.imageUrlFull || img.url)" 
+  @error="handleImgError" 
+  loading="lazy" 
+/>
                       <div class="scan-line"></div>
                     </div>
                     <div class="card-info">

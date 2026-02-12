@@ -2,18 +2,18 @@
 
 export const NAV_ITEMS = [
   { 
-    name: 'nav.home', // 原来是 '首页'
+    name: 'nav.home', 
     path: '/Intro',
     type: 'link'
   },
   { 
-    name: 'nav.community', // 原来是 '寰宇社区'
+    name: 'nav.community', 
     type: 'dropdown',
     children: [
       { name: 'nav.push_center', path: '/MainPush'},
-      { name: 'nav.data_center', path: '/DataCenter', mode: 'TERMINAL' }, // 原来是 '交流中枢'
-      { name: 'nav.work_center', path: '/WorkCenter', mode: 'GALLERY' },    // 原来是 '艺术大厅'
-      { name: 'nav.entertainment', path: '/EntertainmentArea'},        // 原来是 '娱乐区'
+      { name: 'nav.data_center', path: '/DataCenter', mode: 'TERMINAL' },
+      { name: 'nav.work_center', path: '/WorkCenter', mode: 'GALLERY' },
+      { name: 'nav.entertainment', path: '/EntertainmentArea'},
       { name: 'nav.missionCenter', path:'/MissionCenter'},
       { name: 'nav.resourse', path:'/Resource'},
       { name: 'nav.RankCenter', path:'/RankCenter'}
@@ -25,9 +25,11 @@ export const NAV_ITEMS = [
     type: 'link',
   },
   { 
-    name: 'nav.manage', // 原来是 '管理'
+    name: 'nav.manage', 
     path: '/admin',
-    type: 'link'
+    type: 'link',
+    // ✅ 【新增】添加这一行，对应 HeaderNav.vue 里的 item.minRole 判断
+    minRole: 1  
   }
 ]
 

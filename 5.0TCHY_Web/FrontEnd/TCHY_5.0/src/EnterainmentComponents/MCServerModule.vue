@@ -8,7 +8,7 @@
           <span class="tag">FEATURED_SERVER // 推荐</span>
           <h1 class="title">太初寰宇 · MC频道区</h1>
           <p class="desc">
-            <span class="ver">VER: 1.20.1</span>
+            <span class="ver">VER: 1.20.1</span> 
             <span class="status">STATUS: STABLE</span>
           </p>
         </div>
@@ -46,12 +46,14 @@
           <h3 class="sub-title">>> 关于太初寰宇服务器的区块更新</h3>
           <p class="text-body">
             各位玩家请注意，太初寰宇服务器的地图区块会不定期更新，更新时候会对没有建筑的区块进行删除然后重新生成。<br>
-            为了防止用户的建筑丢失，请务必在地表做出标识或标记，以防被误删。 <span class="highlight">建议按 F3+G 开启区块显示进行地表标记</span> 
+            为了防止用户的建筑丢失，请务必在地表做出标识或标记，以防被误删。 <span class="highlight">建议按 F3+G 开启区块显示进行地表标记</span> <br>
+
+            另外，目前更换了一个新的服务器
           </p>
           <ul class="bullet-list">
             <li>[+] 新增：增加了自开发 Mod 展示区</li>
             <li>[!] 提醒：请及时备份重要建筑坐标</li>
-            <li>[!] 提醒：太初寰宇难度调整mod目前需要手动下载，因为MC百科和modrinth还在审核阶段，不能通过PCL直接下载 (已包含在服务器整合包下载网盘里)</li>
+            <li>[!] 提醒：如果你发现无法加入服务器请即时来此处查看最新情报</li>
           </ul>
           <div class="signature">-- SERVER_ADMIN // 001</div>
         </div>
@@ -126,9 +128,9 @@ import ServerCard from './ServerCard.vue';
 
 // 滚动公告
 const notices = ref([
-  { type: '公告', content: '服务器将于每周五凌晨 4:00 进行例行维护，请留意时间。' },
-  { type: '活动', content: '新服“齿轮盛宴”开荒活动火热进行中，进群领取新手礼包！' },
-  { type: '警告', content: '严禁在游戏内使用任何作弊客户端，违者封号处理。' }
+  { type: '公告', content: '占位。' },
+  { type: '活动', content: '占位。' },
+  { type: '警告', content: '占位。' }
 ]);
 
 // [新增数据] 我的模组列表
@@ -147,7 +149,7 @@ const myMods = ref([
 const serverList = ref([
   {
     title: '太初寰宇 · 自整合服',
-    ip1: 'www.bianyuzhou.com:25565',
+    ip1: 'bianyuzhou.com:25565',
     ip2: '120.53.224.225:25565',
     version: 'Fabric 1.20.1',
     isOnline: true,

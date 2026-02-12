@@ -134,8 +134,8 @@
           <div class="online-list custom-scroll">
             <div class="user-grid">
                <div v-for="u in onlineStore.onlineUsersList" :key="u.userId" class="online-avatar" :title="u.userName">
-                 <img :src="fixAvatarUrl(u.avatar)" />
-               </div>
+  <UserAvatar :user-id="u.userId" :show-level="false" />
+</div>
             </div>
           </div>
         </div>
@@ -183,7 +183,7 @@ import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import apiClient from '@/utils/api';
 import { useOnlineStore } from '@/stores/online';
-
+import UserAvatar from '@/GeneralComponents/UserAvatar.vue'; // ✨ 引入头像组件
 // 组件引入
 import PostItem from '@/comminicateCenter/PostItem.vue';
 import BlogItem from '@/comminicateCenter/BlogItem.vue';
@@ -503,8 +503,21 @@ onUnmounted(() => { clearInterval(clockTimer); });
 .card-header-simple { padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
 .online-list { flex: 1; overflow-y: auto; padding: 15px; }
 .user-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 12px; }
-.online-avatar { width: 40px; height: 40px; border: 2px solid var(--black); border-radius: 4px; overflow: hidden; transition: 0.2s; }
-.online-avatar:hover { transform: scale(1.1) rotate(3deg); border-color: var(--red); z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+/* 修改 CSS 对应部分 */
+.online-avatar { 
+  width: 40px; 
+  height: 40px; 
+  /* 移除原有的 border: 2px solid var(--black); 因为 UserAvatar 自带边框 */
+  border-radius: 4px; 
+  overflow: visible; /* 允许组件内部的微调溢出（如果有） */
+  transition: 0.2s; 
+}
+
+.online-avatar:hover { 
+  transform: scale(1.15) rotate(3deg); 
+  z-index: 10; 
+  /* 移除原有的 border-color: var(--red); */
+}
 .online-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 /* 模态框 */

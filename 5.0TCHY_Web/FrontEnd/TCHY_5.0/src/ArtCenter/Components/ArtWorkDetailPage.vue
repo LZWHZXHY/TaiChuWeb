@@ -71,10 +71,13 @@
             <span class="id-serial">#{{ artwork.uploaderId?.toString().padStart(4, '0') || '0000' }}</span>
           </div>
           <div class="id-main">
-            <div class="avatar-frame">
-              <img :src="fixAvatarUrl(artwork.userAvatar)" class="author-img" />
-              <div class="scan-line"></div>
-            </div>
+           <div class="avatar-container">
+  <UserAvatar 
+    :user-id="artwork.uploaderId" 
+    :passed-avatar="artwork.userAvatar"
+    :show-level="true"
+  />
+</div>
             <div class="name-zone">
               <div class="username">@{{ artwork.userName || 'UNKNOWN' }}</div>
               <div class="user-status"><span class="dot"></span> CREATOR_ONLINE</div>
@@ -135,7 +138,7 @@ import { ref, onMounted, computed, reactive, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import apiClient from '@/utils/api';
 import CommentSection from '@/CommentSection/CommentSection.vue'; 
-
+import UserAvatar from '@/GeneralComponents/UserAvatar.vue'; // ✨ 引入组件
 const route = useRoute();
 const router = useRouter();
 const artwork = ref(null);
@@ -328,9 +331,12 @@ onUnmounted(() => {
 .id-header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; font-family: 'JetBrains Mono'; font-size: 0.7rem; }
 .id-label { color: var(--red); font-weight: bold; }
 .id-main { display: flex; gap: 15px; align-items: center; }
-.avatar-frame { width: 60px; height: 60px; border: 2px solid var(--red); position: relative; overflow: hidden; padding: 2px; }
-.author-img { width: 100%; height: 100%; object-fit: cover; }
-.scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--red); animation: scan 3s infinite; }
+.avatar-container { 
+  width: 65px; 
+  height: 65px; 
+  flex-shrink: 0;
+  position: relative;
+}
 .name-zone { flex: 1; }
 .username { font-weight: 900; font-size: 1.1rem; color: #fff; }
 .user-status { font-family: 'JetBrains Mono'; font-size: 0.6rem; color: #0f0; display: flex; align-items: center; gap: 5px; margin-top: 4px; }

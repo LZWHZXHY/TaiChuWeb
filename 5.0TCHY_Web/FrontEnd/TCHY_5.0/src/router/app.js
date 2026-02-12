@@ -208,13 +208,7 @@ const routes = [
     },
     props: true
   },
-  
-  {
-    path: "/profile/me",
-    name: "my-profile",
-    component: () => import("@/userComponents/profile.vue"),
-    meta: { requiresAuth: true, title: '我的资料' }
-  },
+
   {
     path: "/profile/MEE",
     name: "my-new-profile",
@@ -230,7 +224,7 @@ const routes = [
   {
     path: "/profile/:userId",
     name: "profile",
-    component: () => import("@/userComponents/profile.vue"),
+    component: () => import("@/UserComponent/Profile/NewProfile.vue"),
     meta: { requiresAuth: true, title: '用户资料' }
   },
   // 可选：覆盖 /profile 自动跳转到/profile/me
@@ -339,6 +333,8 @@ const authorizeByLevel = async (minLevel) => {
 }
 
 // 路由守卫
+// src/router/app.js (或 index.js)
+
 router.beforeEach(async (to, from, next) => {
   console.log('🛣️ 路由导航:', from.path, '->', to.path)
   console.log('📋 路由元信息:', to.meta)
@@ -351,30 +347,49 @@ router.beforeEach(async (to, from, next) => {
   try {
     await Promise.all([initAuthStore(), initApiClient()])
 
-    const isLoggedIn = checkAuthStatus()
-    console.log('🔐 认证状态:', isLoggedIn)
+    // 1. 获取两边的状态
+    const isLocalStorageReady = checkAuthStatus() // 本地缓存是否有 Token + User
+    const isPiniaReady = authStore && authStore.isAuthenticated // 内存是否已认证
 
-    // 同步 Pinia 与本地缓存
-    if (authStore && isLoggedIn !== authStore.isAuthenticated) {
-      if (isLoggedIn) {
-        try {
-          const userData = JSON.parse(localStorage.getItem('user'))
-          const token = localStorage.getItem('auth_token')
+    console.log(`🔐 状态检查 | LocalStorage: ${isLocalStorageReady} | Pinia: ${isPiniaReady}`)
+
+    // 🔥🔥🔥【核心修复开始】🔥🔥🔥
+    // 逻辑：不再单纯因为两边不一致就登出，而是尝试互补
+    
+    if (isPiniaReady && !isLocalStorageReady) {
+      // 场景：刚登录成功 (Pinia 有数据)，但 LocalStorage 还没来得及写入或丢失
+      // 动作：信任 Pinia，补写到 LocalStorage，而不是踢出用户
+      console.warn('⚠️ 检测到 Pinia 在线但 LocalStorage 缺失，正在修复缓存...')
+      if (authStore.user && authStore.token) {
+        localStorage.setItem('auth_token', authStore.token)
+        localStorage.setItem('user', JSON.stringify(authStore.user))
+        console.log('✅ [缓存修复] 已将 Pinia 状态同步至 LocalStorage')
+      }
+    } 
+    else if (!isPiniaReady && isLocalStorageReady) {
+      // 场景：用户刷新页面 (Pinia 被清空)，但 LocalStorage 还在
+      // 动作：从 LocalStorage 恢复到 Pinia
+      try {
+        const userData = JSON.parse(localStorage.getItem('user'))
+        const token = localStorage.getItem('auth_token')
+        if (userData && token) {
           authStore.user = userData
           authStore.token = token
           authStore.isAuthenticated = true
-          console.log('🔄 已同步认证状态到 Pinia')
-        } catch (error) {
-          console.error('❌ 同步认证状态失败:', error)
+          console.log('🔄 [刷新恢复] 已从 LocalStorage 恢复用户状态')
         }
-      } else {
+      } catch (error) {
+        console.error('❌ 恢复状态失败，清除异常缓存', error)
         authStore.logout?.()
-        console.log('🔄 已清除 Pinia 认证状态')
       }
     }
+    // 🔥🔥🔥【核心修复结束】🔥🔥🔥
 
-    // 需要登录
-    if (to.meta.requiresAuth && !isLoggedIn) {
+    // 重新计算最终认证状态 (只要有一边是通的，就算已登录)
+    const finalIsLoggedIn = checkAuthStatus() || (authStore && authStore.isAuthenticated)
+
+    // 需要登录的页面
+    if (to.meta.requiresAuth && !finalIsLoggedIn) {
       console.log('🔐 需要登录，重定向到登录页')
       next({
         path: '/login',
@@ -383,12 +398,14 @@ router.beforeEach(async (to, from, next) => {
       return
     }
 
-    // 游客专用
-    if (to.meta.requiresGuest && isLoggedIn) {
+    // 游客专用页面 (如登录页)
+    if (to.meta.requiresGuest && finalIsLoggedIn) {
       next('/')
       return
     }
 
+    // --- 下面是 Rank 和 Level 的校验逻辑，保持不变 ---
+    
     // 如果目标路由声明了最小 Rank，实时向后端校验
     if (to.meta.minRank != null) {
       try {
@@ -400,22 +417,20 @@ router.beforeEach(async (to, from, next) => {
         }
       } catch (e) {
         if (e?.message === 'unauthorized') {
-          // Token 失效或未登录
           next({ path: '/login', query: { redirect: to.fullPath } })
           return
         }
-        // 其他错误：退回首页
         next({ path: '/', query: { noAccess: 1 } })
         return
       }
     }
 
-    // 🔥 新增：如果目标路由声明了最小 Level，实时向后端校验
+    // 如果目标路由声明了最小 Level，实时向后端校验
     if (to.meta.minLevel != null) {
       try {
         const ok = await authorizeByLevel(Number(to.meta.minLevel))
         if (!ok) {
-          console.warn('⛔ 等级不足，禁止访问意见箱')
+          console.warn('⛔ 等级不足，禁止访问')
           next({ 
             path: '/404', 
             query: { 
@@ -427,11 +442,9 @@ router.beforeEach(async (to, from, next) => {
         }
       } catch (e) {
         if (e?.message === 'unauthorized') {
-          // Token 失效或未登录
           next({ path: '/login', query: { redirect: to.fullPath } })
           return
         }
-        // 其他错误：退回首页
         next({ path: '/', query: { noAccess: 1 } })
         return
       }

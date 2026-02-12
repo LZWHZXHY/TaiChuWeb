@@ -15,7 +15,7 @@
       </div>
 
       <nav class="cyber-nav">
-        <template v-for="item in navItems" :key="item.path || item.name">
+        <template v-for="item in filteredNavItems" :key="item.path || item.name">
           <div
             v-if="item.type === 'link'"
             class="nav-link-item"
@@ -72,17 +72,19 @@
             <div v-if="showUserMenu" class="cyber-dropdown-menu">
               <div class="menu-header">// USER_ACTIONS</div>
               <div class="menu-list">
-
-
+                
                 <div class="menu-row" @click="goToNewProfile">
-                  <span class="row-label">NEW PROFILE</span>
+                  <span class="row-label">MY PROFILE</span>
                   <span class="row-icon">-></span>
                 </div>
+                
                 <div class="menu-row" @click="goToNewSettings">
-                  <span class="row-label">PROFILE SETTINGS</span>
+                  <span class="row-label">SETTINGS</span>
                   <span class="row-icon">-></span>
                 </div>
+
                 <div class="menu-divider">----------------</div>
+                
                 <div class="menu-row logout" @click="handleLogout">
                   <span class="row-label">>> LOGOUT</span>
                 </div>
@@ -137,25 +139,24 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/utils/auth'
 import apiClient from '@/utils/api'
 import DropdownMenu from './DropdownMenu.vue' 
-import NotificationPanel from './Widget/NotificationPanel.vue' // 引入通知组件
+import NotificationPanel from './Widget/NotificationPanel.vue'
 
 // --- 初始化 ---
 const authStore = useAuthStore()
 const router = useRouter()
 const { t, locale } = useI18n() 
 
-const BASE_URL = 'https://bianyuzhou.com' // 你的图片服务器地址
+const BASE_URL = 'https://bianyuzhou.com'
 
 // --- 响应式状态 ---
 const userCount = ref(0)
-const localUnreadCount = ref(0) // 未读消息数
+const localUnreadCount = ref(0) 
 const showUserMenu = ref(false)
-const showNotifications = ref(false) // 通知面板显示状态
+const showNotifications = ref(false)
 const isScrolled = ref(false)
 const avatarLoadError = ref(false)
-let unreadTimer = null // 轮询定时器
+let unreadTimer = null 
 
-// --- Props ---
 const props = defineProps({
   navItems: { type: Array, required: true }
 })
@@ -163,7 +164,43 @@ const emit = defineEmits(['nav-change', 'user-action'])
 
 // --- 核心业务逻辑 ---
 
-// 1. 获取未读数 (调用后端接口)
+const fetchLatestUserInfo = async () => {
+  if (!authStore.isAuthenticated) return
+  try {
+    const res = await apiClient.get('/profile/detail') 
+    if (res.data && res.data.success) {
+      const userData = res.data.data
+      
+      // 更新 Pinia Store
+      authStore.user = { 
+        ...authStore.user, 
+        username: userData.Username, 
+        avatar: userData.Avatar,    
+        level: userData.Level,
+        title: userData.Title,
+        // ✅ [新增] 保存权限字段 (优先取 Role，若无取 Rank，最后默认为 0)
+        role: userData.Role ?? userData.Rank ?? 0 
+      }
+    }
+  } catch (error) { 
+    console.warn('User Info Sync Failed', error) 
+  }
+}
+
+// ✅ [新增] 过滤导航菜单
+// 只有当 item.minRole 存在且当前用户 role >= item.minRole 时才显示
+// 如果 item 没有 minRole 限制，则默认显示
+const filteredNavItems = computed(() => {
+  const currentRole = authStore.user?.role || 0; 
+
+  return props.navItems.filter(item => {
+    if (item.minRole !== undefined) {
+      return currentRole >= item.minRole;
+    }
+    return true;
+  });
+});
+
 const fetchUnreadCount = async () => {
   if (!authStore.isAuthenticated) return
   try {
@@ -172,53 +209,35 @@ const fetchUnreadCount = async () => {
       localUnreadCount.value = res.data.count
     }
   } catch (err) {
-    // 静默失败，不打扰用户
     console.warn('Sync Signal Error:', err)
   }
 }
 
-// 2. 切换通知面板
+// 2. 交互处理
 const toggleNotifications = () => {
   showNotifications.value = !showNotifications.value
-  
   if (showNotifications.value) {
-    // 打开通知时，关闭用户菜单
     showUserMenu.value = false
-    // 顺便刷新一下未读数
     fetchUnreadCount()
   } else {
-    // 关闭时也刷新一下，确保红点同步
     fetchUnreadCount()
   }
 }
 
-// 3. 切换用户菜单
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value
   if (showUserMenu.value) {
-    // 打开用户菜单时，关闭通知面板
     showNotifications.value = false
   }
 }
 
-// 4. 点击外部关闭面板 (Global Click Handler)
 const closeAllMenus = (event) => {
-  // 如果点击的目标不在 .user-control-panel 内部，则关闭所有菜单
   const target = event.target
-  
-  // 检查是否点击了用户菜单触发器或内部
-  if (!target.closest('.user-control-panel')) {
+  if (!target.closest('.user-control-panel') && !target.closest('.notification-wrapper')) {
     showUserMenu.value = false
     showNotifications.value = false
-    return
   }
-
-  // 特殊处理：如果已经打开了通知面板，但点击了用户头像，逻辑在 toggleUserMenu 处理
-  // 这里主要处理点击空白处关闭
-  // 由于使用了 @click.stop 在按钮上，这里主要兜底
 }
-
-// --- 辅助逻辑 ---
 
 const toggleLang = () => {
   const newLang = locale.value === 'zh' ? 'en' : 'zh'
@@ -226,21 +245,17 @@ const toggleLang = () => {
   localStorage.setItem('app_language', newLang) 
 }
 
-const fetchLatestUserInfo = async () => {
-  if (!authStore.isAuthenticated) return
-  try {
-    const res = await apiClient.get('/default/user/me')
-    if (res.data && res.data.success) {
-      const userData = res.data.data
-      authStore.user = { ...authStore.user, ...userData }
-    }
-  } catch (error) { console.warn('User Info Sync Failed', error) }
-}
-
+// 3. 计算属性 - 修复头像逻辑
 const realAvatarUrl = computed(() => {
-  let path = authStore.user?.avatar || authStore.user?.logo
+  // 尝试获取 store 中的 avatar，兼容大小写
+  let path = authStore.user?.avatar || authStore.user?.Avatar || authStore.user?.logo
+  
   if (!path || avatarLoadError.value) return null
+  
+  // 关键修复：如果已经是 http 开头的完整链接 (如腾讯云 COS)，直接返回
   if (path.startsWith('http')) return path
+  
+  // 否则按旧逻辑处理相对路径
   path = path.replace(/\\/g, '/')
   if (path.startsWith('/')) path = path.substring(1)
   if (!path.startsWith('uploads/')) path = `uploads/${path}`
@@ -248,11 +263,23 @@ const realAvatarUrl = computed(() => {
 })
 
 const userNameText = computed(() => {
-  return authStore.user?.name || authStore.user?.username || 'GUEST'
+  // 兼容大小写字段
+  return authStore.user?.username || authStore.user?.Username || authStore.user?.name || 'GUEST'
 })
 
 const handleImageError = () => { avatarLoadError.value = true }
-watch(() => authStore.user, () => { avatarLoadError.value = false })
+
+// 4. 监听器
+// 监听 authStore.user 的变化，重置头像错误状态
+watch(() => authStore.user, () => { avatarLoadError.value = false }, { deep: true })
+
+// 监听登录状态，登录成功后立即拉取数据
+watch(() => authStore.isAuthenticated, (val) => {
+  if (val) {
+    fetchLatestUserInfo()
+    fetchUnreadCount()
+  }
+}, { immediate: true })
 
 const isActive = (path) => {
   const currentPath = router.currentRoute.value.path
@@ -276,10 +303,16 @@ const navigateToHome = () => router.push('/')
 const handleLogin = () => router.push('/login')
 const handleRegister = () => router.push('/register')
 
+// 页面跳转逻辑
+const goToNewProfile = () => { 
+  showUserMenu.value = false; 
+  router.push('/profile/MEE') 
+}
 
-const goToNewProfile = () => { showUserMenu.value = false; router.push('/profile/MEE') }
-const goToNewSettings = () => { showUserMenu.value = false; router.push('/profile/NewSettings') }
-
+const goToNewSettings = () => { 
+  showUserMenu.value = false; 
+  router.push('/profile/NewSettings') 
+}
 
 const handleLogout = async () => {
   showUserMenu.value = false
@@ -292,17 +325,13 @@ const handleLogout = async () => {
 
 const handleScroll = () => isScrolled.value = window.scrollY > 10
 
-// --- 生命周期 ---
 onMounted(() => {
   loadUserCount()
-  fetchLatestUserInfo()
-  
-  // 启动未读数同步
-  fetchUnreadCount()
-  // 每 60 秒轮询一次，作为 SignalR 断连的兜底方案
+  if (authStore.isAuthenticated) {
+    fetchLatestUserInfo()
+    fetchUnreadCount()
+  }
   unreadTimer = setInterval(fetchUnreadCount, 60000)
-
-  // 全局点击监听，用于关闭下拉菜单
   document.addEventListener('click', closeAllMenus)
   window.addEventListener('scroll', handleScroll)
 })
@@ -393,7 +422,7 @@ onUnmounted(() => {
   width: 32px; height: 32px; border: 2px solid var(--ink-black); background: transparent;
   cursor: pointer; font-family: var(--font-mono); font-weight: 700; font-size: 12px;
   display: flex; align-items: center; justify-content: center; transition: 0.2s;
-  position: relative; /* 为红点定位 */
+  position: relative; 
 }
 .cyber-icon-btn:hover, .cyber-icon-btn.active {
   background: var(--ink-black); color: #fff;
@@ -435,7 +464,7 @@ onUnmounted(() => {
   position: absolute; top: -5px; right: -5px;
 }
 
-/* --- 通知面板样式 (关键新增) --- */
+/* --- 通知面板样式 --- */
 .notification-wrapper {
   position: relative;
 }
@@ -460,8 +489,8 @@ onUnmounted(() => {
 
 .notification-popover {
   position: absolute;
-  top: 52px; /* 贴合按钮下方 */
-  right: -50px; /* 向左微调，确保不贴边 */
+  top: 52px; 
+  right: -50px; 
   z-index: 2000;
   filter: drop-shadow(0 10px 30px rgba(0,0,0,0.2));
 }

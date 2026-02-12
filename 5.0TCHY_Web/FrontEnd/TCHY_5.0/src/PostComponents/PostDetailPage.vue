@@ -19,9 +19,9 @@
           <PostDetailContent 
             :key="postData.id"
             :data="postData" 
-            :fixAvatar="fixAvatarUrl"
+            :fixAvatar="fixAvatarUrl" 
           />
-        </div>
+          </div>
       </main>
 
       <aside class="post-sidebar custom-scroll">
@@ -32,18 +32,20 @@
           </div>
           
           <div class="id-main">
-            <div class="avatar-frame">
-              <img :src="fixAvatarUrl(postData.author?.avatar)" class="author-img" />
-              <div class="scan-line"></div>
+            <div class="avatar-container">
+              <UserAvatar :user-id="postData.author_id" />
             </div>
+
             <div class="name-zone">
-              <div class="username">@{{ postData.author?.username }}</div>
+              <div class="username" @click="router.push(`/profile/${postData.author_id}`)">
+                @{{ postData.author?.username }}
+              </div>
               <div class="user-status"><span class="dot"></span> NODE_ACTIVE</div>
             </div>
           </div>
 
           <div class="id-stats">
-            <div class="stat-item"><span class="l">LV.</span><span class="v">03</span></div>
+            <div class="stat-item"><span class="l">LV.</span><span class="v">DATA</span></div>
             <div class="stat-item"><span class="l">RANK</span><span class="v">PRO</span></div>
           </div>
 
@@ -89,6 +91,7 @@ import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import apiClient from '@/utils/api';
 import PostDetailContent from '@/comminicateCenter/PostDetailContent.vue';
+import UserAvatar from '@/GeneralComponents/UserAvatar.vue'; // 引入组件
 
 const route = useRoute();
 const router = useRouter();
@@ -98,8 +101,10 @@ const relatedPosts = ref([]);
 const loading = ref(true);
 const shareStatus = ref('READY');
 
+// 这个 BASE_URL 如果 PostDetailContent 里还在用，就保留；否则可以删除
 const BASE_URL = window.location.hostname === 'localhost' ? 'https://localhost:44359' : 'https://bianyuzhou.com';
 
+// 同上，如果 PostDetailContent 需要，则保留
 const fixAvatarUrl = (url) => {
   if (!url || typeof url !== 'string') return '/土豆.jpg';
   if (url.startsWith('http') || url.startsWith('data:image')) return url;
@@ -170,13 +175,25 @@ onMounted(() => { fetchFullData(route.params.id); });
 .id-header { display: flex; justify-content: space-between; font-family: 'JetBrains Mono'; font-size: 0.7rem; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
 .id-label { color: var(--red); font-weight: bold; }
 .id-main { display: flex; gap: 15px; align-items: center; }
-.avatar-frame { 
-  width: 70px; height: 70px; border: 2px solid var(--red); padding: 3px; position: relative; overflow: hidden;
-}
-.author-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(0.2); }
-.scan-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--red); opacity: 0.5; animation: scan 3s linear infinite; }
 
-.username { font-size: 1.1rem; font-weight: 900; margin-bottom: 4px; color: var(--off-white); }
+/* ✨ 新增：头像容器样式 */
+.avatar-container {
+  width: 70px; 
+  height: 70px;
+  /* UserAvatar 组件会自动填充这个容器 */
+}
+
+/* 移除不再需要的 .avatar-frame, .author-img, .scan-line 样式 */
+
+.username { 
+  font-size: 1.1rem; 
+  font-weight: 900; 
+  margin-bottom: 4px; 
+  color: var(--off-white); 
+  cursor: pointer; /* 增加手型 */
+}
+.username:hover { color: var(--red); }
+
 .user-status { font-family: 'JetBrains Mono'; font-size: 0.6rem; color: #0f0; display: flex; align-items: center; gap: 5px; }
 .user-status .dot { width: 6px; height: 6px; background: #0f0; border-radius: 50%; animation: pulse 1.5s infinite; }
 
@@ -207,7 +224,6 @@ onMounted(() => { fetchFullData(route.params.id); });
 .metric .green { color: #0f0; }
 
 /* 动画与修饰 */
-@keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 .grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
 .moving-grid { animation: gridScroll 60s linear infinite; }

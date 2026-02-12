@@ -1,15 +1,15 @@
 <template>
-  <div class="uc-left">
+  <div class="uc-left" v-if="!loading || hasData">
     <div class="top-row">
       <div class="identity-info">
         <div class="name-wrapper">
-          <h1 class="user-name">{{ name || '未命名' }}</h1>
-          <span v-if="gender" class="gender-badge">
-            {{ gender }}
+          <h1 class="user-name">{{ displayData.username || '未命名' }}</h1>
+          <span v-if="displayData.gender" class="gender-badge">
+            {{ displayData.gender }}
           </span>
         </div>
         <div class="signature-text">
-          {{ signature || 'NO_SIGNATURE // 暂无签名' }}
+          {{ displayData.signature || 'NO_SIGNATURE // 暂无签名' }}
         </div>
       </div>
     </div>
@@ -20,50 +20,141 @@
           #{{ tag }}
         </span>
       </div>
-      <p class="bio-text">{{ bio || '用户很懒，什么都没写...' }}</p>
+      <p class="bio-text">{{ displayData.bio || '用户很懒，什么都没写...' }}</p>
     </div>
 
     <div class="footer-row">
-      <span class="ft-item" v-if="location">
-        📍 {{ location }}
+      <span class="ft-item" v-if="displayData.region">
+        📍 {{ displayData.region }}
       </span>
-      <span class="ft-divider" v-if="location && birthday">|</span>
+      <span class="ft-divider" v-if="displayData.region && formattedBirthday">|</span>
       
-      <span class="ft-item" v-if="birthday">
-        🎂 {{ birthday }}
+      <span class="ft-item" v-if="formattedBirthday">
+        🎂 {{ formattedBirthday }}
       </span>
-      <span class="ft-divider" v-if="(location || birthday) && contact">|</span>
       
-      <span class="ft-item" v-if="contact">
-        ✉ {{ contact }}
+      <span class="ft-divider" v-if="(displayData.region || formattedBirthday) && displayData.email">|</span>
+      
+      <span class="ft-item" v-if="displayData.email">
+        ✉ {{ displayData.email }}
       </span>
     </div>
     
     <div class="grid-bg"></div>
   </div>
+  
+  <div v-else class="uc-left loading-state">
+    LOADING USER DATA...
+  </div>
 </template>
 
 <script setup>
-import { defineProps, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import apiClient from '@/utils/api'
+import { useAuthStore } from '@/utils/auth' // 👈 引入 Store
 
 const props = defineProps({
-  name: { type: String, default: '' },
-  gender: { type: String, default: '' },
-  bio: { type: String, default: '' },
-  // 对应 ProfileSetting 中的 interests (String)
-  interests: { type: String, default: '' }, 
-  location: { type: String, default: '' },
-  contact: { type: String, default: '' },
-  // 新增字段
-  signature: { type: String, default: '' },
-  birthday: { type: String, default: '' }
+  userId: {
+    type: [String, Number],
+    default: null
+  }
 })
 
-// 处理兴趣字段：将中文或英文逗号分隔的字符串转为数组
+const authStore = useAuthStore()
+const loading = ref(true)
+const remoteData = ref({}) // 用于存储“别人”的数据
+
+// 1. 判断是否是当前用户
+const isMe = computed(() => {
+  // 如果没传 ID，或者 ID 是 'MEE'，或者是当前登录用户的 ID
+  if (!props.userId || props.userId === 'MEE') return true
+  return String(props.userId) === String(authStore.userID)
+})
+
+// 2. 核心：双源数据选择器
+// 如果是自己 -> 取 Store (带缓存)
+// 如果是别人 -> 取 remoteData (API获取)
+const displayData = computed(() => {
+  if (isMe.value) {
+    return authStore.user || {}
+  }
+  return remoteData.value
+})
+
+// 3. 辅助判断：是否有足够的数据显示 (防止空对象导致界面塌陷)
+const hasData = computed(() => {
+  return !!displayData.value.username
+})
+
 const processedInterests = computed(() => {
-  if (!props.interests) return [];
-  // 替换中文逗号为英文逗号，然后分割，并过滤空项
-  return props.interests.replace(/，/g, ',').split(',').map(i => i.trim()).filter(i => i);
+  const raw = displayData.value.interests || ''
+  return raw.replace(/，/g, ',').split(',').map(i => i.trim()).filter(i => i)
+})
+
+const formattedBirthday = computed(() => {
+  const d = displayData.value.birthDate
+  if (!d) return ''
+  try { return new Date(d).toLocaleDateString() } catch { return d }
+})
+
+// 4. 数据获取逻辑
+const fetchUserData = async () => {
+  // ✅ 优化点：如果是看自己，且 Store 里已经有缓存数据（比如 username 存在）
+  // 直接结束 Loading，不再请求 API (因为 AuthStore 会在后台静默更新)
+  if (isMe.value && authStore.user?.username) {
+    loading.value = false
+    return
+  }
+
+  loading.value = true
+  try {
+    // 只有看别人，或者 Store 里完全没数据时，才发起请求
+    let url = ''
+    if (isMe.value) {
+      url = '/profile/detail'
+    } else {
+      url = `/profile/get-id/${props.userId}`
+    }
+
+    const res = await apiClient.get(url)
+    
+    if (res.data && res.data.success) {
+      const data = res.data.data
+      
+      const mappedData = {
+        username: data.Username || data.username,
+        gender: data.Gender,
+        bio: data.Bio,
+        interests: data.Interests,
+        region: data.Region,
+        birthDate: data.BirthDate,
+        signature: data.Signature,
+        email: data.Email || ''
+      }
+
+      if (isMe.value) {
+        // 如果这里触发了请求（比如强制刷新），顺便更新 Store
+        // 但通常 Store 的 fetchLatestUser 已经处理了
+        authStore.user = { ...authStore.user, ...mappedData }
+      } else {
+        remoteData.value = mappedData
+      }
+    }
+  } catch (error) {
+    console.error("Fetch Profile Error:", error)
+    if (!isMe.value) remoteData.value = { username: "ERR", bio: "连接断开..." }
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchUserData()
+})
+
+watch(() => props.userId, () => {
+  remoteData.value = {} // 切换用户时清空旧数据
+  fetchUserData()
 })
 </script>
 
@@ -80,7 +171,19 @@ const processedInterests = computed(() => {
   position: relative;
   z-index: 1;
   font-family: 'Noto Sans SC', sans-serif;
-  overflow: hidden; /* 防止内容溢出 */
+  overflow: hidden;
+  background-color: #F4F1EA; 
+  min-height: 200px; 
+  transition: opacity 0.2s; /* 增加一点淡入淡出 */
+}
+
+.loading-state {
+  align-items: center;
+  justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+  color: #888;
+  border: 1px dashed #ccc;
+  background: repeating-linear-gradient(45deg, #f9f9f9, #f9f9f9 10px, #eee 10px, #eee 20px);
 }
 
 /* 顶部布局 */
@@ -114,23 +217,24 @@ const processedInterests = computed(() => {
   letter-spacing: -0.5px;
 }
 
-/* 性别徽章：改为通用的工业黑风格，适配自定义输入 */
+/* 性别徽章 */
 .gender-badge {
   font-size: 10px;
   padding: 2px 6px;
   border-radius: 4px;
   background-color: #111;
-  color: #F4F1EA; /* 米色文字 */
+  color: #F4F1EA; 
   font-weight: bold;
   font-family: 'Share Tech Mono', monospace;
   text-transform: uppercase;
   display: inline-block;
+  transform: translateY(2px);
 }
 
-/* 个性签名样式 (原 Job Title 位置) */
+/* 个性签名样式 */
 .signature-text {
   font-size: 12px;
-  color: #d35400; /* 工业橙/红 */
+  color: #d35400; 
   font-weight: bold;
   letter-spacing: 0.5px;
   font-family: 'Share Tech Mono', 'Noto Sans SC', monospace;
@@ -149,6 +253,8 @@ const processedInterests = computed(() => {
   gap: 10px;
   margin-bottom: 12px;
   overflow: hidden;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(0,0,0,0.1);
 }
 
 .tags-list {
@@ -158,12 +264,13 @@ const processedInterests = computed(() => {
 }
 .tag-item {
   font-size: 11px;
-  background: rgba(0,0,0,0.06);
+  background: #fff;
   color: #444;
   padding: 2px 8px;
   border-radius: 4px;
   font-weight: 500;
-  border: 1px solid rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.1);
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.05);
 }
 
 .bio-text {
@@ -172,11 +279,11 @@ const processedInterests = computed(() => {
   line-height: 1.6;
   color: #444;
   display: -webkit-box;
-  -webkit-line-clamp: 4; /* 限制行数 */
+  -webkit-line-clamp: 4; 
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: pre-wrap; /* 保留换行符 */
+  white-space: pre-wrap; 
 }
 
 /* --- 底部信息 --- */
@@ -190,7 +297,7 @@ const processedInterests = computed(() => {
   font-family: 'Share Tech Mono', 'Noto Sans SC', sans-serif;
   border-top: 2px solid #eee;
   padding-top: 10px;
-  margin-top: auto; /* 推到底部 */
+  margin-top: auto; 
 }
 
 .ft-item {

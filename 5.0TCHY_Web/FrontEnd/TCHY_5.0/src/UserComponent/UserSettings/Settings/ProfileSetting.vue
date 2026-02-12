@@ -38,11 +38,11 @@
                 <div class="link-body">
                   <div class="input-cell title-cell">
                     <span class="cell-label">标题</span>
-                    <input v-model="link.title" class="link-input" placeholder="如: B站" />
+                    <input v-model="link.title" class="link-input" placeholder="如: B站/QQ" />
                   </div>
                   <div class="input-cell url-cell">
                     <span class="cell-label">URL</span>
-                    <input v-model="link.url" class="link-input font-mono" placeholder="https://" />
+                    <input v-model="link.url" class="link-input font-mono" placeholder="链接或号码" />
                   </div>
                 </div>
                 <button class="del-btn" @click="removeLink(index)">×</button>
@@ -81,7 +81,7 @@
           <div class="form-row">
             <div class="form-group half">
               <label>性别 // GENDER</label>
-              <input v-model="formData.gender" type="text" class="standard-input" placeholder="自定义性别 (如: 武装直升机)" maxlength="50" />
+              <input v-model="formData.gender" type="text" class="standard-input" placeholder="自定义性别" maxlength="50" />
             </div>
             
             <div class="form-group half">
@@ -93,16 +93,6 @@
           <div class="form-group full">
             <label>地区 // LOCATION</label>
             <input v-model="formData.location" type="text" class="standard-input" placeholder="例如：夜之城" />
-          </div>
-          
-          <div class="form-group full">
-              <label>详细地址 // ADDRESS</label>
-              <input v-model="formData.address" type="text" class="standard-input" placeholder="街道/门牌号 (选填)" />
-          </div>
-
-          <div class="form-group full">
-            <label>联系方式 // CONTACT</label>
-            <input v-model="formData.contact" type="text" class="standard-input" placeholder="VX / Email / QQ" />
           </div>
           
           <div class="form-group full">
@@ -153,21 +143,20 @@ const isSaving = ref(false);
 const showExtra = ref(false); 
 const jsonError = ref('');
 
-// 表单数据
+// 表单数据结构 (与后端 DTO 对齐)
 const formData = reactive({
   name: '', 
   gender: '', 
-  location: '',
-  address: '',
+  location: '', // 对应后端 Region
   birthday: '',
-  contact: '',
   bio: '',
-  personalSignature: '',
+  personalSignature: '', // 对应后端 Signature
   interests: '',
-  extraContent: '', 
-  links: [] 
+  extraContent: '', // 对应后端 ExtraConfig
+  links: [] // 对应后端 SocialLinks
 });
 
+// JSON 校验
 const validateJson = () => {
   if (!formData.extraContent) {
     jsonError.value = '';
@@ -188,40 +177,31 @@ const initData = async () => {
   try {
     loading.value = true;
     
-    // 并行请求
-    const [detailRes, statusRes] = await Promise.all([
-      apiClient.get('/profile/detail'),
-      apiClient.get('/profile/me') 
-    ]);
+    // 调用详情接口
+    const res = await apiClient.get('/profile/detail');
 
-    // A. 这里的 statusRes 主要是获取等级状态，不需要用来覆盖名字
-    // (之前的错误逻辑已移除)
-
-    // B. 填充 Profile 资料 (包含 Name, Bio, Links 等)
-    if (detailRes.data && detailRes.data.success) {
-      const data = detailRes.data.data;
+    if (res.data && res.data.success) {
+      const data = res.data.data;
       
-      // ✅ 修正点：从 detail 接口获取真实的 Name (用户名)
-      formData.name = data.Name || '未知用户'; 
-
-      // 其他字段映射 (注意 PascalCase)
+      // 映射基础字段
+      formData.name = data.Username || '未知用户'; 
       formData.bio = data.Bio || '';
       formData.gender = data.Gender || ''; 
-      formData.location = data.Region || ''; 
-      formData.address = data.Address || '';
-      formData.contact = data.ContactInfo || ''; 
-      formData.personalSignature = data.PersonalSignature || '';
+      formData.location = data.Region || ''; // Region -> location
+      formData.personalSignature = data.Signature || ''; // Signature -> personalSignature
       formData.interests = data.Interests || '';
-      formData.extraContent = data.ExtraContent || ''; 
+      
+      // 映射高级配置 (后端可能叫 ExtraConfig，DTO 叫 ExtraContent，这里做兼容)
+      formData.extraContent = data.ExtraConfig || data.ExtraContent || ''; 
 
-      // 处理日期
+      // 处理日期格式 (yyyy-MM-dd)
       if (data.BirthDate) {
         formData.birthday = data.BirthDate.split('T')[0];
       } else {
         formData.birthday = '';
       }
 
-      // 处理链接
+      // 处理社交链接 (SocialLinks -> links)
       if (data.SocialLinks && Array.isArray(data.SocialLinks)) {
         formData.links = data.SocialLinks.map(link => ({
           title: link.Name, 
@@ -230,15 +210,7 @@ const initData = async () => {
       } else {
         formData.links = [];
       }
-    } else {
-        // 如果 detail 获取失败，尝试从本地缓存兜底显示名字
-        const userStr = localStorage.getItem('user_info');
-        if(userStr) {
-            const user = JSON.parse(userStr);
-            formData.name = user.name || user.nickname || '未命名用户';
-        }
-    }
-
+    } 
   } catch (error) {
     console.error('获取资料失败:', error);
   } finally {
@@ -246,33 +218,38 @@ const initData = async () => {
   }
 };
 
-// 2. 添加/删除链接
+// 2. 链接增删操作
 const addLink = () => { formData.links.push({ title: '', url: '' }); };
 const removeLink = (index) => { formData.links.splice(index, 1); };
 
 // 3. 保存逻辑
 const handleSave = async () => {
   if (isSaving.value) return;
+  
+  // 校验 JSON
   if (!validateJson()) {
     showExtra.value = true; 
     return;
   }
+
   isSaving.value = true;
 
   try {
+    // 构造 Payload (必须与后端 UpdateProfileDto 属性名一致)
     const payload = {
       bio: formData.bio,
       gender: formData.gender,
-      region: formData.location, 
-      address: formData.address,
-      contactInfo: formData.contact,
-      personalSignature: formData.personalSignature,
+      region: formData.location,            // 前端 location -> DTO Region
+      personalSignature: formData.personalSignature, // DTO PersonalSignature
       interests: formData.interests,
-      extraContent: formData.extraContent, 
+      extraContent: formData.extraContent,  // DTO ExtraContent
+      
+      // 日期处理：空字符串转 null
       birthDate: formData.birthday ? formData.birthday : null,
       
+      // 社交链接转换
       socialLinks: formData.links
-        .filter(l => l.title && l.url)
+        .filter(l => l.title && l.url) // 过滤掉空行
         .map(l => ({
           name: l.title,
           url: l.url
@@ -311,7 +288,7 @@ onMounted(() => {
   box-sizing: border-box;
   font-family: 'Noto Sans SC', sans-serif;
   position: relative;
-  overflow: hidden; /* 防止最外层出现滚动条 */
+  overflow: hidden; 
 }
 
 .loading-mask {
@@ -384,10 +361,10 @@ textarea {
 /* === 右侧面板 === */
 .right-panel {
   flex: 1.5; padding: 0 10px;
-  display: flex; flex-direction: column; overflow: hidden; /* 防止超出 */
+  display: flex; flex-direction: column; overflow: hidden; 
 }
 .scroll-container {
-    height: 100%; overflow-y: auto; padding-right: 10px; /* 内部滚动 */
+    height: 100%; overflow-y: auto; padding-right: 10px; 
     display: flex; flex-direction: column;
 }
 /* 隐藏滚动条但保留功能 */

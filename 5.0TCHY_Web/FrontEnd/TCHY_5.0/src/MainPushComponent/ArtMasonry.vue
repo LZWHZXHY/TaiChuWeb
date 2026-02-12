@@ -66,7 +66,7 @@ const fetchRandomArtworks = async () => {
     // 3. 核心修改：加入 _t 时间戳参数，强制浏览器不读取缓存，实现真实随机刷新
     const res = await apiClient.get('/Drawing/random', {
       params: {
-        count: 10,
+        count: 12,
         _t: new Date().getTime() 
       }
     });
