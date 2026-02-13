@@ -77,9 +77,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue' // 去掉了 onMounted，交给 watch 处理
+import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router' // 1. 引入 useRouter
 import apiClient from '@/utils/api'
-
 
 const props = defineProps({
   userId: {
@@ -88,6 +88,7 @@ const props = defineProps({
   }
 })
 
+const router = useRouter() // 2. 初始化 router
 const galleryList = ref([])
 const isLoading = ref(false)
 const currentFilter = ref('latest')
@@ -102,17 +103,23 @@ const filters = [
  * 核心请求方法
  */
 const fetchGallery = async () => {
-  // 如果 ID 还没传过来，直接返回，不触发无效 API 调用
-  if (props.userId === null || props.userId === undefined || props.userId === '') {
+  if (!props.userId || props.userId === '') {
     return
   }
 
+  // 身份识别转换 (处理 MEE 模式)
+  let finalId = props.userId;
+  if (finalId === 'MEE') {
+    const userData = JSON.parse(localStorage.getItem('user_info') || '{}');
+    finalId = userData.id;
+    if (!finalId) return;
+  }
+
   isLoading.value = true
-  console.log("Gallery: 开始同步数据，当前 ID ->", props.userId)
+  console.log("Gallery: 开始同步数据，当前 ID ->", finalId)
 
   try {
-    // 自动适配 ID 类型，如果是字符串则按原样发送，如果是数字则保持数字
-    const response = await apiClient.get(`/Drawing/user/${props.userId}`, {
+    const response = await apiClient.get(`/Drawing/user/${finalId}`, {
       params: { 
         sortBy: currentFilter.value,
         limit: 12 
@@ -129,23 +136,29 @@ const fetchGallery = async () => {
   }
 }
 
-
 watch(
   () => [props.userId, currentFilter.value],
-  ([newId, newFilter]) => {
-    if (newId) {
-      fetchGallery()
-    }
+  () => {
+    fetchGallery()
   },
   { immediate: true }
 )
 
+/**
+ * 3. 实现真实的跳转逻辑
+ */
 const goToDetail = (id) => {
-  console.log('查看详情:', id)
+  router.push({
+    name: 'ArtWorkDetail', // 对应路由表中的 name
+    params: { id: id }
+  })
 }
 
+/**
+ * 4. 实现“查看全部”跳转至作品大厅
+ */
 const handleViewAll = () => {
-  console.log('跳转至完整画廊页面')
+  router.push('/WorkCenter') 
 }
 </script>
 

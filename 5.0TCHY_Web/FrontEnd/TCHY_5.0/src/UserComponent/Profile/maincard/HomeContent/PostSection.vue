@@ -32,7 +32,12 @@
         <div v-if="isLoading" class="status-msg">正在同步实时数据流...</div>
         <div v-else-if="postList.length === 0" class="status-msg">中枢数据库未发现相关动态记录</div>
 
-        <div v-for="post in postList" :key="post.id" class="post-card">
+        <div 
+          v-for="post in postList" 
+          :key="post.id" 
+          class="post-card"
+          @click="goToDetail(post.id)"
+        >
           <div class="post-header">
             <img v-if="post.authorAvatar" :src="post.authorAvatar" class="avatar-img" alt="avatar">
             <div v-else class="avatar-circle">{{ post.authorName ? post.authorName.charAt(0).toUpperCase() : '?' }}</div>
@@ -97,6 +102,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router' // 1. 引入 useRouter
 import apiClient from '@/utils/api'
 
 const props = defineProps({
@@ -106,6 +112,7 @@ const props = defineProps({
   }
 })
 
+const router = useRouter() // 2. 初始化 router
 const postList = ref([])
 const isLoading = ref(false)
 const currentFilter = ref('latest')
@@ -116,15 +123,11 @@ const filters = [
   { key: 'likes', label: '最多收藏' }
 ]
 
-/**
- * 核心请求方法
- */
 const fetchPosts = async () => {
   if (!props.userId || props.userId === '') return
 
   let finalId = props.userId;
 
-  // 身份识别转换 (处理 MEE 模式)
   if (finalId === 'MEE') {
     const userData = JSON.parse(localStorage.getItem('user_info') || '{}');
     finalId = userData.id;
@@ -136,12 +139,11 @@ const fetchPosts = async () => {
     const response = await apiClient.get(`/ThePost/user/${finalId}`, {
       params: { 
         sortBy: currentFilter.value,
-        limit: 5 // 首页展示 5 条动态预览
+        limit: 5 
       }
     })
     
     if (response.data.success) {
-      // 这里的字段名需与后端 C# Controller 返回的对象属性严格一致
       postList.value = response.data.data
     }
   } catch (error) {
@@ -151,13 +153,10 @@ const fetchPosts = async () => {
   }
 }
 
-/**
- * 相对时间转换助手
- */
 const formatRelativeTime = (dateStr) => {
   const date = new Date(dateStr)
   const now = new Date()
-  const diff = (now - date) / 1000 // 秒
+  const diff = (now - date) / 1000 
 
   if (diff < 60) return '刚刚'
   if (diff < 3600) return Math.floor(diff / 60) + '分钟前'
@@ -166,7 +165,6 @@ const formatRelativeTime = (dateStr) => {
   return date.toLocaleDateString()
 }
 
-// 监听 ID 和 筛选器
 watch(
   () => [props.userId, currentFilter.value],
   ([newId]) => {
@@ -175,13 +173,25 @@ watch(
   { immediate: true }
 )
 
+/**
+ * 3. 实现动态详情跳转
+ */
+const goToDetail = (id) => {
+  router.push({
+    name: 'PostDetail', // 对应路由表中的数据节点详情
+    params: { id: id }
+  })
+}
+
+/**
+ * 4. 跳转至动态大厅/交流中枢
+ */
 const handleViewAll = () => {
-  console.log('跳转至动态广场页面')
+  router.push('/DataCenter') 
 }
 </script>
 
 <style scoped>
-/* 样式保持原有的工业风格，并补充新增逻辑的样式 */
 .post-section-wrapper {
   --primary-blue: #2c3e50;
   --accent-orange: #e67e22;
@@ -217,47 +227,16 @@ const handleViewAll = () => {
 .deco-block { width: 6px; height: 22px; background: var(--accent-orange); margin-right: 4px; }
 .header-main { font-size: 20px; font-weight: 900; color: var(--primary-blue); }
 
-.filter-group {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
+.filter-group { display: flex; gap: 12px; align-items: center; }
+.filter-btn { background: transparent; border: none; font-size: 13px; color: var(--text-sub); cursor: pointer; padding: 4px 8px; transition: all 0.3s; font-weight: bold; }
+.filter-btn.active { color: var(--accent-orange); border-bottom: 2px solid var(--accent-orange); }
 
-.filter-btn {
-  background: transparent;
-  border: none;
-  font-size: 13px;
-  color: var(--text-sub);
-  cursor: pointer;
-  padding: 4px 8px;
-  transition: all 0.3s;
-  font-weight: bold;
-}
+.header-right-line { flex: 1; height: 1px; margin: 0 20px; opacity: 0.3; background: repeating-linear-gradient(90deg, var(--primary-blue), var(--primary-blue) 4px, transparent 4px, transparent 8px); }
 
-.filter-btn.active {
-  color: var(--accent-orange);
-  border-bottom: 2px solid var(--accent-orange);
-}
+.view-all-btn { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-sub); cursor: pointer; }
+.view-all-btn:hover { color: var(--accent-orange); }
 
-.header-right-line {
-  flex: 1; height: 1px; margin: 0 20px; opacity: 0.3;
-  background: repeating-linear-gradient(90deg, var(--primary-blue), var(--primary-blue) 4px, transparent 4px, transparent 8px);
-}
-
-.view-all-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--text-sub);
-  cursor: pointer;
-}
-
-.post-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 15px;
-}
+.post-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
 
 .post-card {
   background: rgba(255, 255, 255, 0.4);
@@ -267,83 +246,35 @@ const handleViewAll = () => {
   display: flex;
   flex-direction: column;
   transition: all 0.2s;
+  cursor: pointer; /* 确保显示手型 */
 }
 
 .post-card:hover {
   border-color: var(--accent-orange);
   transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .post-header { display: flex; align-items: center; margin-bottom: 10px; }
-
-.avatar-img {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  margin-right: 10px;
-  object-fit: cover;
-  border: 1px solid #eee;
-}
-
-.avatar-circle { 
-  width: 32px; height: 32px; background: var(--primary-blue); color: #fff; 
-  border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-  font-weight: bold; margin-right: 10px; font-size: 14px; 
-}
-
+.avatar-img { width: 32px; height: 32px; border-radius: 50%; margin-right: 10px; object-fit: cover; border: 1px solid #eee; }
+.avatar-circle { width: 32px; height: 32px; background: var(--primary-blue); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px; font-size: 14px; }
 .user-info { flex: 1; display: flex; flex-direction: column; }
 .username { font-size: 13px; font-weight: bold; color: var(--text-main); }
 .time-ago { font-size: 10px; color: #999; }
-
 .post-content { font-size: 13px; line-height: 1.6; color: var(--text-sub); margin-bottom: 12px; text-align: justify; }
 .post-title-tag { color: var(--primary-blue); font-weight: bold; }
-
 .post-tags { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
 .tag-item { color: var(--accent-orange); font-size: 12px; font-weight: bold; }
 
-.post-images {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.post-image-item {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  border-radius: 4px;
-  overflow: hidden;
-  background-color: #f0f0f0;
-}
-
+.post-images { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.post-image-item { position: relative; aspect-ratio: 1 / 1; border-radius: 4px; overflow: hidden; background-color: #f0f0f0; }
 .post-image-item img { width: 100%; height: 100%; object-fit: cover; }
+.image-count-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; }
 
-.image-count-overlay {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.5); color: #fff; display: flex;
-  align-items: center; justify-content: center; font-size: 18px; font-weight: bold;
-}
-
-.post-actions {
-  display: flex;
-  align-items: center;
-  border-top: 1px solid #f5f5f5;
-  padding-top: 10px;
-  margin-top: auto;
-}
-
-.action-btn {
-  font-size: 12px; color: #999; cursor: pointer;
-  display: flex; align-items: center; gap: 4px; margin-right: 20px;
-}
-
+.post-actions { display: flex; align-items: center; border-top: 1px solid #f5f5f5; padding-top: 10px; margin-top: auto; }
+.action-btn { font-size: 12px; color: #999; cursor: pointer; display: flex; align-items: center; gap: 4px; margin-right: 20px; }
 .post-source { margin-left: auto; font-size: 12px; color: #999; }
-
-.status-msg {
-  text-align: center; padding: 40px; color: var(--text-sub);
-  font-size: 13px; border: 1px dashed #ccc;
-}
-
+.status-msg { text-align: center; padding: 40px; color: var(--text-sub); font-size: 13px; border: 1px dashed #ccc; }
 .decoration-sidebar { width: 40px; flex: 0 0 40px; border-left: 1px solid rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding-top: 5px; position: relative; }
 .deco-status-box { width: 100%; text-align: center; border-right: 3px solid var(--accent-orange); }
 .deco-status-box .label { font-size: 10px; color: var(--text-sub); }
