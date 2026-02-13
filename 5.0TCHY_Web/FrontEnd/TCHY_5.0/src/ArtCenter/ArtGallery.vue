@@ -67,20 +67,33 @@
                     <div v-if="isTopOne(img)" class="champion-badge">榜主大人</div>
                     <div class="img-box">
                       <img 
-  :src="upgradeUrlToHttps(img.imageUrl || img.imageUrlFull || img.url)" 
-  @error="handleImgError" 
-  loading="lazy" 
-/>
+                        :src="upgradeUrlToHttps(img.imageUrl || img.imageUrlFull || img.url)" 
+                        @error="handleImgError" 
+                        loading="lazy" 
+                      />
                       <div class="scan-line"></div>
                     </div>
+                    
                     <div class="card-info">
-                      <h3 class="art-title">{{ img.title }}</h3>
+                      <h3 class="art-title" :title="img.title">{{ img.title }}</h3>
+                      
                       <div class="art-meta-row">
-                        <span class="author">BY: {{ img.authorName || img.author }}</span>
-                        <span class="likes">♥ {{ img.likes }}</span>
+                        <span class="author" :title="img.AuthorName || img.authorName">
+                          <span class="prefix">BY</span> 
+                          {{ img.AuthorName || img.authorName || 'UNKNOWN' }}
+                        </span>
+
+                        <div class="stats-group">
+                          <span class="stat-item likes">
+                            ♥ {{ img.likes || 0 }}
+                          </span>
+                          <span class="stat-item comments">
+                            💬 {{ img.commentCount || img.CommentCount || 0 }}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                    </div>
                   <div class="corner-dec"></div>
                 </div>
               </div>
@@ -122,13 +135,24 @@
             <span class="deco">🏆</span> HIGH_SCORES
           </div>
           <div class="rank-list">
-            <div v-for="(user, idx) in leaderboard" :key="user.uploaderId" class="rank-item">
+            <div v-for="(user, idx) in leaderboard" :key="user.UploaderId" class="rank-item">
               <div class="rank-idx" :class="'top-' + (idx + 1)">{{ padZero(idx + 1) }}</div>
+              
+              <div class="rank-avatar">
+                <UserAvatar 
+                  :user-id="user.UploaderId" 
+                  :size="35" 
+                  :show-level="false" 
+                  :passed-avatar="user.Avatar" 
+                />
+              </div>
+
               <div class="rank-info">
-                <div class="r-name">{{ user.Name }}</div>
+                <div class="r-name" :title="user.name">{{ user.name || 'UNKNOWN' }}</div>
                 <div class="r-score">LIKES: <span class="val">{{ user.TotalLikes }}</span></div>
               </div>
             </div>
+            
             <div v-if="leaderboard.length === 0" class="empty-rank">
               [ WAITING_FOR_PLAYERS... ]
             </div>
@@ -219,16 +243,18 @@
       </Transition>
     </Teleport>
 
-    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, nextTick } from 'vue'
-import { useRouter } from 'vue-router' // 👈 1. 引入路由
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import apiClient from '@/utils/api'
 
+// ✅ 引入通用头像组件 (用于侧边栏排行榜)
+import UserAvatar from '@/GeneralComponents/UserAvatar.vue'; 
 
-const router = useRouter() // 👈 2. 初始化路由实例
+const router = useRouter()
 const emit = defineEmits(['refresh-stats'])
 
 // --- 状态定义 ---
@@ -246,9 +272,6 @@ const isUploading = ref(false)
 const isDragOver = ref(false) 
 const fileInput = ref(null)
 const uploadForm = reactive({ title: '', desc: '', authorName: '', file: null, previewUrl: '' })
-
-// lightboxImg 变量也不再需要了，因为不弹窗
-// const lightboxImg = ref(null) 
 
 const totalCount = computed(() => waterfallColumns.value.reduce((acc, col) => acc + col.length, 0))
 
@@ -481,7 +504,7 @@ onMounted(() => {
   background: var(--black);
 }
 
-/* --- 以下样式保持原样 --- */
+/* --- 样式 --- */
 .header-title-block .giant-text { font-family: var(--heading); font-size: 2rem; margin: 0; line-height: 1; }
 .header-title-block .sub-text { font-size: 0.7rem; color: #666; font-weight: bold; }
 .cyber-upload-btn { background: var(--black); color: var(--white); border: none; padding: 10px 20px; font-family: var(--heading); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
@@ -506,10 +529,31 @@ onMounted(() => {
 .cyber-art-card:hover img { filter: contrast(1.1); }
 .scan-line { position: absolute; top:0; left:0; width:100%; height:2px; background:rgba(255,255,255,0.3); animation: scan 3s linear infinite; display: none; }
 .cyber-art-card:hover .scan-line { display: block; }
-.card-info { padding: 0 4px; }
-.art-title { font-family: var(--heading); font-size: 1.1rem; margin: 0 0 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; }
-.art-meta-row { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: bold; color: #666; }
+
+/* ✅ 卡片信息样式更新 */
+.card-info { padding: 10px 8px; }
+.art-title { 
+  font-family: var(--heading); font-size: 1.1rem; margin: 0 0 8px 0; 
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+  text-transform: uppercase; color: var(--black);
+}
+.art-meta-row { 
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.75rem; font-family: var(--mono); color: #666; 
+}
+.author {
+  font-weight: bold; max-width: 55%; white-space: nowrap; 
+  overflow: hidden; text-overflow: ellipsis; display: flex; align-items: baseline; gap: 4px;
+}
+.author .prefix { font-size: 0.6rem; color: #999; font-weight: normal; }
+.stats-group { display: flex; gap: 10px; }
+.stat-item { display: flex; align-items: center; gap: 4px; font-weight: bold; transition: transform 0.2s; }
 .likes { color: var(--red); }
+.comments { color: #555; }
+.cyber-art-card:hover .author { color: var(--black); }
+.cyber-art-card:hover .stats-group { transform: translateX(-2px); }
+
+/* 侧边栏通用组件样式 */
 .cyber-panel { border: 2px solid var(--black); background: var(--white); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
 .panel-header { background: var(--black); color: var(--white); padding: 8px 10px; font-weight: bold; font-size: 0.9rem; border-bottom: 2px solid var(--black); }
 .deco { color: var(--red); margin-right: 5px; }
@@ -519,20 +563,26 @@ onMounted(() => {
 .cyber-tag.red-mode { border-color: var(--red); color: var(--red); }
 .cyber-tag.red-mode:hover { background: var(--red); color: var(--white); }
 .rank-list { padding: 10px; }
+
+/* ✅ 排行榜样式修正 */
 .rank-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed #ccc; }
 .rank-item:last-child { border-bottom: none; }
 .rank-idx { font-family: var(--heading); font-size: 1.2rem; width: 30px; text-align: center; color: #ccc; }
 .top-1 { color: var(--red); font-size: 1.5rem; text-shadow: 2px 2px 0 #000; }
 .top-2 { color: var(--black); }
 .top-3 { color: #666; }
-.rank-info { flex: 1; }
-.r-name { font-weight: bold; font-size: 0.9rem; }
+
+/* ✅ 头像与名字样式 */
+.rank-avatar { width: 35px; height: 35px; flex-shrink: 0; position: relative; }
+.rank-info { flex: 1; overflow: hidden; }
+.r-name { font-weight: bold; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .r-score { font-size: 0.7rem; color: #666; }
 .r-score .val { font-weight: bold; color: var(--black); }
+
 .list-footer { text-align: center; padding: 20px; font-size: 0.8rem; color: #888; font-weight: bold; }
 .blink { animation: blink 1s infinite; }
 
-/* Upload Modal */
+/* Upload Modal Styles ... (保持不变) */
 .cyber-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
 .cyber-modal-window.upload-mode { width: 550px; max-width: 95vw; background: #f4f4f4; border: 4px solid var(--black); box-shadow: 15px 15px 0 rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; font-family: var(--mono); }
 .modal-header { background:#000; color: var(--white); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--red); flex-shrink: 0; }
@@ -592,7 +642,6 @@ onMounted(() => {
 }
 
 /* --- 榜单第一名高级特效 --- */
-
 .is-champion .card-frame {
   border: 2px solid var(--red) !important;
   animation: champion-pulse 2s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
@@ -649,5 +698,4 @@ onMounted(() => {
   display: block; 
   box-shadow: 0 0 10px var(--red);
 }
-
 </style>

@@ -4,7 +4,7 @@
 
     <header class="page-header">
       <div class="nav-back" @click="handleBack">
-        <span class="arrow"> < </span> RETURN_TO_GALLERY
+        <span class="arrow"> &lt; </span> RETURN_TO_GALLERY
       </div>
       <div class="header-title">ASSET_VIEWER // NODE_ID: {{ route.params.id }}</div>
     </header>
@@ -41,23 +41,24 @@
 
             <div class="interaction-console">
               <div class="console-header">>> USER_INTERACTION_PROTOCOL</div>
-              <button 
-                class="cyber-like-btn" 
-                :class="{ 'is-liked': artwork.isLiked }"
-                @click="handleLike"
-              >
-                <span class="icon">♥</span>
-                <span class="label">{{ artwork.isLiked ? 'ACKNOWLEDGED (LIKED)' : 'SEND_LIKE_SIGNAL' }}</span>
-                <span class="count">[{{ artwork.likes || 0 }}]</span>
-              </button>
+              
+              <div class="like-btn-wrapper">
+                <UniversalLikeBtn 
+                  v-if="artwork && artwork.id"
+                  targetType="Drawing" 
+                  :targetId="artwork.id" 
+                  :initialCount="artwork.likes || 0" 
+                />
+              </div>
             </div>
 
             <div class="comment-zone">
               <div class="zone-deco-line"></div>
-              <h3 class="zone-title">FEEDBACK_STREAM // 评论流</h3>
-              <CommentSection 
+              
+              <UniversalComments 
                 v-if="artwork && artwork.id" 
-                :drawing-id="artwork.id" 
+                targetType="Drawing" 
+                :targetId="artwork.id" 
               />
             </div>
           </div>
@@ -71,13 +72,13 @@
             <span class="id-serial">#{{ artwork.uploaderId?.toString().padStart(4, '0') || '0000' }}</span>
           </div>
           <div class="id-main">
-           <div class="avatar-container">
-  <UserAvatar 
-    :user-id="artwork.uploaderId" 
-    :passed-avatar="artwork.userAvatar"
-    :show-level="true"
-  />
-</div>
+            <div class="avatar-container">
+              <UserAvatar 
+                :user-id="artwork.uploaderId" 
+                :passed-avatar="artwork.userAvatar"
+                :show-level="true"
+              />
+            </div>
             <div class="name-zone">
               <div class="username">@{{ artwork.userName || 'UNKNOWN' }}</div>
               <div class="user-status"><span class="dot"></span> CREATOR_ONLINE</div>
@@ -86,7 +87,7 @@
           <div class="id-actions">
             <button class="id-btn follow">FOLLOW_CREATOR</button>
             <button class="id-btn share" @click="handleShare">
-               {{ shareStatus === 'READY' ? 'SHARE_ASSET' : 'LINK_COPIED!' }}
+                {{ shareStatus === 'READY' ? 'SHARE_ASSET' : 'LINK_COPIED!' }}
             </button>
           </div>
         </section>
@@ -137,8 +138,12 @@
 import { ref, onMounted, computed, reactive, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import apiClient from '@/utils/api';
-import CommentSection from '@/CommentSection/CommentSection.vue'; 
-import UserAvatar from '@/GeneralComponents/UserAvatar.vue'; // ✨ 引入组件
+
+// ✅ 引入两大通用组件
+import UniversalComments from '@/GeneralComponents/UniversalComments.vue'; 
+import UniversalLikeBtn from '@/GeneralComponents/UniversalLikeBtn.vue';
+import UserAvatar from '@/GeneralComponents/UserAvatar.vue'; 
+
 const route = useRoute();
 const router = useRouter();
 const artwork = ref(null);
@@ -148,7 +153,7 @@ const shareStatus = ref('READY');
 // --- Lightbox 状态 ---
 const isLightboxOpen = ref(false);
 const isZoomed = ref(false);
-const mousePos = reactive({ x: 0, y: 0 }); // 记录鼠标在屏幕上的百分比位置
+const mousePos = reactive({ x: 0, y: 0 }); 
 
 const BASE_URL = window.location.hostname === 'localhost' ? 'https://localhost:44359' : 'https://bianyuzhou.com';
 
@@ -178,14 +183,14 @@ const fetchArtwork = async () => {
 // --- Lightbox 逻辑 ---
 const openLightbox = () => {
   isLightboxOpen.value = true;
-  document.body.style.overflow = 'hidden'; // 禁止背景滚动
+  document.body.style.overflow = 'hidden'; 
   window.addEventListener('keydown', handleKeydown);
 };
 
 const closeLightbox = () => {
   isLightboxOpen.value = false;
   isZoomed.value = false;
-  document.body.style.overflow = ''; // 恢复滚动
+  document.body.style.overflow = ''; 
   window.removeEventListener('keydown', handleKeydown);
 };
 
@@ -197,15 +202,12 @@ const toggleZoom = () => {
   isZoomed.value = !isZoomed.value;
 };
 
-// 核心：计算鼠标移动时的偏移量
 const handleMouseMove = (e) => {
   if (!isZoomed.value) return;
-  // 计算鼠标在当前视口宽高的百分比 (0~100)
   mousePos.x = (e.clientX / window.innerWidth) * 100;
   mousePos.y = (e.clientY / window.innerHeight) * 100;
 };
 
-// 动态计算 transform-origin，实现“指哪打哪”的放大效果
 const zoomStyle = computed(() => {
   if (!isZoomed.value) return {};
   return {
@@ -213,28 +215,7 @@ const zoomStyle = computed(() => {
   };
 });
 
-// --- 点赞与分享 ---
-const handleLike = async () => {
-  if (!artwork.value) return;
-  const originalState = { liked: artwork.value.isLiked, count: artwork.value.likes };
-  artwork.value.isLiked = !artwork.value.isLiked;
-  artwork.value.likes = artwork.value.isLiked ? (artwork.value.likes + 1) : (artwork.value.likes - 1);
-
-  try {
-    const res = await apiClient.post(`/Drawing/like/${artwork.value.id}`);
-    if (res.data.success) {
-      artwork.value.likes = res.data.likes;
-      artwork.value.isLiked = res.data.isLiked;
-    } else {
-      artwork.value.isLiked = originalState.liked;
-      artwork.value.likes = originalState.count;
-    }
-  } catch (e) {
-    artwork.value.isLiked = originalState.liked;
-    artwork.value.likes = originalState.count;
-  }
-};
-
+// --- 分享逻辑 ---
 const handleShare = async () => {
   try {
     await navigator.clipboard.writeText(window.location.href);
@@ -245,14 +226,13 @@ const handleShare = async () => {
 
 onMounted(fetchArtwork);
 onUnmounted(() => {
-  // 确保组件销毁时恢复滚动条
   document.body.style.overflow = '';
   window.removeEventListener('keydown', handleKeydown);
 });
 </script>
 
 <style scoped>
-/* 保持赛博风格样式 */
+/* 保持原有赛博风格样式 */
 .cyber-artwork-page {
   --red: #D92323; --black: #111111; --off-white: #F4F1EA;
   width: 100%; height: 100vh; background: var(--off-white);
@@ -274,22 +254,19 @@ onUnmounted(() => {
   flex: 1; overflow-y: auto; display: flex; flex-direction: column;
 }
 
-/* --- 主视口 (添加了悬停效果) --- */
+/* --- 主视口 --- */
 .image-viewport {
   position: relative; padding: 40px; display: flex; justify-content: center; align-items: center;
   min-height: 60vh; background: radial-gradient(circle, #222 0%, #000 100%);
   border-bottom: 4px solid var(--red);
   flex-shrink: 0;
-  cursor: zoom-in; /* 提示可点击 */
-  overflow: hidden;
+  cursor: zoom-in; overflow: hidden;
 }
 
-/* 悬停时的遮罩 */
 .hover-overlay {
   position: absolute; inset: 0; background: rgba(217, 35, 35, 0.1);
   display: flex; flex-direction: column; justify-content: center; align-items: center;
-  opacity: 0; transition: opacity 0.3s; pointer-events: none; /* 让点击穿透给 div */
-  z-index: 10;
+  opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 10;
 }
 .image-viewport:hover .hover-overlay { opacity: 1; }
 .scan-icon { font-size: 3rem; color: var(--red); text-shadow: 0 0 10px var(--red); margin-bottom: 10px; }
@@ -315,15 +292,10 @@ onUnmounted(() => {
 
 .interaction-console { padding: 0 40px 30px; }
 .console-header { font-family: 'JetBrains Mono'; font-size: 0.75rem; color: #999; margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 5px; width: fit-content; }
-.cyber-like-btn { background: var(--black); color: #fff; border: 2px solid var(--black); padding: 12px 30px; font-family: 'JetBrains Mono'; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s; box-shadow: 6px 6px 0 rgba(0,0,0,0.1); }
-.cyber-like-btn:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 var(--red); }
-.cyber-like-btn .icon { font-size: 1.2rem; transition: 0.2s; }
-.cyber-like-btn.is-liked { background: var(--red); border-color: var(--red); }
-.cyber-like-btn.is-liked .icon { animation: heartBeat 0.4s ease-in-out; }
 
+/* 评论区样式 */
 .comment-zone { padding: 0 40px 60px; background: #fafafa; border-top: 2px solid #eee; flex: 1; }
 .zone-deco-line { width: 40px; height: 4px; background: var(--black); margin-bottom: 20px; }
-.zone-title { font-family: 'Anton'; font-size: 1.5rem; margin-bottom: 20px; color: #333; }
 
 /* 侧边栏 */
 .post-sidebar { width: 350px; display: flex; flex-direction: column; gap: 20px; }
@@ -331,12 +303,7 @@ onUnmounted(() => {
 .id-header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; font-family: 'JetBrains Mono'; font-size: 0.7rem; }
 .id-label { color: var(--red); font-weight: bold; }
 .id-main { display: flex; gap: 15px; align-items: center; }
-.avatar-container { 
-  width: 65px; 
-  height: 65px; 
-  flex-shrink: 0;
-  position: relative;
-}
+.avatar-container { width: 65px; height: 65px; flex-shrink: 0; position: relative; }
 .name-zone { flex: 1; }
 .username { font-weight: 900; font-size: 1.1rem; color: #fff; }
 .user-status { font-family: 'JetBrains Mono'; font-size: 0.6rem; color: #0f0; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
@@ -351,47 +318,17 @@ onUnmounted(() => {
 .metric .lab { color: #666; }
 .green { color: #0f0; }
 
-/* --- Lightbox Styles (全屏查看器) --- */
-.lightbox-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-  cursor: zoom-out; /* 默认点击关闭 */
-}
-
-.lightbox-img-wrapper {
-  width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;
-  transition: transform 0.2s;
-  cursor: zoom-in; /* 提示可放大 */
-}
-
-.lightbox-img {
-  max-width: 95vw; max-height: 90vh; object-fit: contain;
-  transition: transform 0.1s linear; /* 放大时平滑 */
-  box-shadow: 0 0 50px rgba(217, 35, 35, 0.2);
-}
-
-/* 放大模式 */
-.lightbox-img-wrapper.is-zoomed {
-  cursor: move; /* 提示可移动 */
-}
-.lightbox-img-wrapper.is-zoomed .lightbox-img {
-  max-width: none; max-height: none;
-  width: 100vw; /* 此时宽度撑满，高度自适应 */
-  transform: scale(2.5); /* 放大2.5倍 */
-}
-
-/* Lightbox HUD */
-.lightbox-hud-top, .lightbox-hud-bottom {
-  position: absolute; left: 0; right: 0; padding: 20px;
-  display: flex; justify-content: space-between; pointer-events: none;
-  font-family: 'JetBrains Mono'; color: #fff; text-shadow: 0 0 5px #fff;
-  font-size: 0.8rem; z-index: 10000;
-}
+/* --- Lightbox Styles --- */
+.lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: zoom-out; }
+.lightbox-img-wrapper { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; transition: transform 0.2s; cursor: zoom-in; }
+.lightbox-img { max-width: 95vw; max-height: 90vh; object-fit: contain; transition: transform 0.1s linear; box-shadow: 0 0 50px rgba(217, 35, 35, 0.2); }
+.lightbox-img-wrapper.is-zoomed { cursor: move; }
+.lightbox-img-wrapper.is-zoomed .lightbox-img { max-width: none; max-height: none; width: 100vw; transform: scale(2.5); }
+.lightbox-hud-top, .lightbox-hud-bottom { position: absolute; left: 0; right: 0; padding: 20px; display: flex; justify-content: space-between; pointer-events: none; font-family: 'JetBrains Mono'; color: #fff; text-shadow: 0 0 5px #fff; font-size: 0.8rem; z-index: 10000; }
 .lightbox-hud-top { top: 0; border-bottom: 1px solid rgba(255,255,255,0.1); background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
 .lightbox-hud-bottom { bottom: 0; border-top: 1px solid rgba(255,255,255,0.1); background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
 .blink { animation: pulse 1s infinite; }
 
-/* 基础布局 */
 .grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
 .page-header { height: 60px; background: var(--black); color: #fff; display: flex; align-items: center; padding: 0 40px; gap: 30px; border-bottom: 4px solid var(--red); flex-shrink: 0; }
 .nav-back { cursor: pointer; font-family: 'JetBrains Mono'; font-weight: bold; }
@@ -402,11 +339,8 @@ onUnmounted(() => {
 .custom-scroll::-webkit-scrollbar { width: 6px; }
 .custom-scroll::-webkit-scrollbar-thumb { background: #333; }
 
-/* Vue Transition */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-@keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
 @keyframes pulse { 50% { opacity: 0.5; } }
-@keyframes heartBeat { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
 </style>
