@@ -31,12 +31,21 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 // 计算目标用户 ID
+// NewProfile.vue
+
 const targetUserId = computed(() => {
   const paramId = route.params.userId
-  // 如果没有参数，或者参数是 MEE，或者是当前登录用户的 ID，都视为 'MEE' (看自己)
-  if (!paramId || paramId === 'MEE' || String(paramId) === String(authStore.userID)) {
-    return 'MEE'
+  
+  // 逻辑判断：是否是在看“我”自己
+  const isMe = !paramId || paramId === 'MEE' || String(paramId) === String(authStore.userID)
+
+  if (isMe) {
+    // 【核心修复】不要返回字符串 'MEE'，直接返回存储在 authStore 里的数字 ID
+    // 这样传给 Maincard 的就是 1, 2, 10 等真实数字了
+    return authStore.userID 
   }
+  
+  // 如果是看别人，则返回路由里的 ID
   return paramId
 })
 

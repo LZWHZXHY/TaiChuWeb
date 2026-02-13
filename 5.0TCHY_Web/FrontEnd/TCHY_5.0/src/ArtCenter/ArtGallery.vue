@@ -92,7 +92,22 @@
                           </span>
                         </div>
                       </div>
+
+                      <div class="card-tags" v-if="img.tags">
+  <span 
+    v-for="tag in img.tags.split(',').filter(t => t.trim())" 
+    :key="tag" 
+    class="mini-tag"
+  >
+    <span class="tag-hash">#</span>{{ tag }}
+  </span>
+</div>
+
                     </div>
+
+
+
+
                     </div>
                   <div class="corner-dec"></div>
                 </div>
@@ -697,5 +712,42 @@ onMounted(() => {
   height: 3px;
   display: block; 
   box-shadow: 0 0 10px var(--red);
+}
+
+/* ✅ 新增：卡片标签容器 */
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  max-height: 48px; /* 限制高度防止撑破卡片 */
+}
+
+/* ✅ 新增：微型标签样式 */
+.mini-tag {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: bold;
+  background: var(--black);
+  color: var(--white);
+  padding: 1px 6px;
+  border-radius: 0; /* 工业风不需要圆角 */
+  display: inline-flex;
+  align-items: center;
+  border-left: 2px solid var(--red); /* 侧边的红色战术条 */
+  transition: 0.2s;
+}
+
+.mini-tag .tag-hash {
+  color: var(--red);
+  margin-right: 2px;
+}
+
+/* 悬停效果：卡片变红时，标签反色 */
+.cyber-art-card:hover .mini-tag {
+  background: var(--white);
+  color: var(--black);
+  border-left-color: var(--black);
 }
 </style>

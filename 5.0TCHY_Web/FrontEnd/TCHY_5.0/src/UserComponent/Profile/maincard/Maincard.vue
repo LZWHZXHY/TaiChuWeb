@@ -21,11 +21,11 @@
       <div class="display-area">
         <router-view v-if="false"></router-view> <Transition name="fade" mode="out-in">
           <KeepAlive>
-           <component 
-           :is="currentComponent" 
-           :status="status" 
-           />
-          </KeepAlive>
+      <component 
+        :is="currentComponent" 
+        :status="status" 
+        :userId="userId"  />
+    </KeepAlive>
         </Transition>
       </div>
     </div>
@@ -53,7 +53,8 @@ const navItems = [
 ]
 
 const props = defineProps({
-  status: Object
+  status: Object,
+  userId: [Number, String] // 添加这一行，允许接收 ID
 })
 // 组件映射表：key 对应 navItems 中的 key
 const tabs = {

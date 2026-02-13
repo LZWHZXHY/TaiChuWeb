@@ -15,7 +15,8 @@
       </div>
 
       <nav class="cyber-nav">
-        <template v-for="item in filteredNavItems" :key="item.path || item.name">
+        <template v-for="(item, index) in filteredNavItems" :key="item.path || item.name || index">
+          
           <div
             v-if="item.type === 'link'"
             class="nav-link-item"
@@ -27,6 +28,11 @@
             <span class="bracket">]</span>
           </div>
           
+          <CyberMegaMenu 
+            v-else-if="item.type === 'mega'"
+            class="nav-mega-item"
+          />
+
           <DropdownMenu
             v-else-if="item.type === 'dropdown'"
             :items="item.children"
@@ -50,6 +56,14 @@
 
         <div v-if="authStore.isAuthenticated" class="user-control-panel">
           
+          <div class="tactical-btn-wrapper" @click="openPublisher">
+            <button class="tactical-btn">
+              <span class="btn-icon">+</span>
+              <span class="btn-label">PUBLISH // 发布</span>
+            </button>
+            <div class="btn-deco-line"></div>
+          </div>
+
           <div class="user-trigger" @click.stop="toggleUserMenu" :class="{ 'menu-open': showUserMenu }">
             <div class="avatar-frame">
               <img 
@@ -72,19 +86,15 @@
             <div v-if="showUserMenu" class="cyber-dropdown-menu">
               <div class="menu-header">// USER_ACTIONS</div>
               <div class="menu-list">
-                
                 <div class="menu-row" @click="goToNewProfile">
                   <span class="row-label">MY PROFILE</span>
                   <span class="row-icon">-></span>
                 </div>
-                
                 <div class="menu-row" @click="goToNewSettings">
                   <span class="row-label">SETTINGS</span>
                   <span class="row-icon">-></span>
                 </div>
-
                 <div class="menu-divider">----------------</div>
-                
                 <div class="menu-row logout" @click="handleLogout">
                   <span class="row-label">>> LOGOUT</span>
                 </div>
@@ -137,12 +147,15 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n' 
 import { useAuthStore } from '@/utils/auth'
+import { usePublisherStore } from '@/stores/publisher' // ✅ 引入发布器 Store
 import apiClient from '@/utils/api'
 import DropdownMenu from './DropdownMenu.vue' 
 import NotificationPanel from './Widget/NotificationPanel.vue'
+import CyberMegaMenu from '@/GeneralComponents/CyberMegaMenu.vue' 
 
 // --- 初始化 ---
 const authStore = useAuthStore()
+const publisherStore = usePublisherStore() // ✅ 初始化发布器 Store
 const router = useRouter()
 const { t, locale } = useI18n() 
 
@@ -162,6 +175,11 @@ const props = defineProps({
 })
 const emit = defineEmits(['nav-change', 'user-action'])
 
+// ✅ 新增：开启全局发布器
+const openPublisher = () => {
+  publisherStore.open();
+};
+
 // --- 核心业务逻辑 ---
 
 const fetchLatestUserInfo = async () => {
@@ -170,15 +188,12 @@ const fetchLatestUserInfo = async () => {
     const res = await apiClient.get('/profile/detail') 
     if (res.data && res.data.success) {
       const userData = res.data.data
-      
-      // 更新 Pinia Store
       authStore.user = { 
         ...authStore.user, 
         username: userData.Username, 
         avatar: userData.Avatar,    
         level: userData.Level,
         title: userData.Title,
-        // ✅ [新增] 保存权限字段 (优先取 Role，若无取 Rank，最后默认为 0)
         role: userData.Role ?? userData.Rank ?? 0 
       }
     }
@@ -187,12 +202,8 @@ const fetchLatestUserInfo = async () => {
   }
 }
 
-// ✅ [新增] 过滤导航菜单
-// 只有当 item.minRole 存在且当前用户 role >= item.minRole 时才显示
-// 如果 item 没有 minRole 限制，则默认显示
 const filteredNavItems = computed(() => {
   const currentRole = authStore.user?.role || 0; 
-
   return props.navItems.filter(item => {
     if (item.minRole !== undefined) {
       return currentRole >= item.minRole;
@@ -213,7 +224,6 @@ const fetchUnreadCount = async () => {
   }
 }
 
-// 2. 交互处理
 const toggleNotifications = () => {
   showNotifications.value = !showNotifications.value
   if (showNotifications.value) {
@@ -245,17 +255,10 @@ const toggleLang = () => {
   localStorage.setItem('app_language', newLang) 
 }
 
-// 3. 计算属性 - 修复头像逻辑
 const realAvatarUrl = computed(() => {
-  // 尝试获取 store 中的 avatar，兼容大小写
   let path = authStore.user?.avatar || authStore.user?.Avatar || authStore.user?.logo
-  
   if (!path || avatarLoadError.value) return null
-  
-  // 关键修复：如果已经是 http 开头的完整链接 (如腾讯云 COS)，直接返回
   if (path.startsWith('http')) return path
-  
-  // 否则按旧逻辑处理相对路径
   path = path.replace(/\\/g, '/')
   if (path.startsWith('/')) path = path.substring(1)
   if (!path.startsWith('uploads/')) path = `uploads/${path}`
@@ -263,17 +266,13 @@ const realAvatarUrl = computed(() => {
 })
 
 const userNameText = computed(() => {
-  // 兼容大小写字段
   return authStore.user?.username || authStore.user?.Username || authStore.user?.name || 'GUEST'
 })
 
 const handleImageError = () => { avatarLoadError.value = true }
 
-// 4. 监听器
-// 监听 authStore.user 的变化，重置头像错误状态
 watch(() => authStore.user, () => { avatarLoadError.value = false }, { deep: true })
 
-// 监听登录状态，登录成功后立即拉取数据
 watch(() => authStore.isAuthenticated, (val) => {
   if (val) {
     fetchLatestUserInfo()
@@ -282,6 +281,7 @@ watch(() => authStore.isAuthenticated, (val) => {
 }, { immediate: true })
 
 const isActive = (path) => {
+  if (!path) return false
   const currentPath = router.currentRoute.value.path
   if (path === '/') return currentPath === '/'
   return currentPath === path || currentPath.startsWith(path + '/')
@@ -303,7 +303,6 @@ const navigateToHome = () => router.push('/')
 const handleLogin = () => router.push('/login')
 const handleRegister = () => router.push('/register')
 
-// 页面跳转逻辑
 const goToNewProfile = () => { 
   showUserMenu.value = false; 
   router.push('/profile/MEE') 
@@ -415,6 +414,8 @@ onUnmounted(() => {
 .nav-link-item:hover, .nav-link-item.active { color: var(--ink-black); }
 .nav-link-item:hover .bracket, .nav-link-item.active .bracket { opacity: 1; }
 
+.nav-mega-item { height: 100%; display: flex; align-items: center; }
+
 /* --- 右侧功能区 --- */
 .cyber-actions { display: flex; align-items: center; gap: 16px; }
 
@@ -435,7 +436,7 @@ onUnmounted(() => {
 .status-indicator { color: #00AA00; animation: blink 2s infinite; }
 
 /* --- 用户面板 --- */
-.user-control-panel { display: flex; align-items: center; gap: 15px; position: relative; }
+.user-control-panel { display: flex; align-items: center; gap: 12px; position: relative; }
 
 .user-trigger {
   display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 4px;
@@ -464,20 +465,12 @@ onUnmounted(() => {
   position: absolute; top: -5px; right: -5px;
 }
 
-/* --- 通知面板样式 --- */
-.notification-wrapper {
-  position: relative;
-}
+.notification-wrapper { position: relative; }
 
 .mini-badge {
-  position: absolute;
-  top: -2px; right: -2px;
-  width: 8px; height: 8px;
-  background-color: var(--cyber-red);
-  border-radius: 50%;
-  border: 2px solid #F4F1EA;
-  z-index: 5;
-  box-shadow: 0 0 6px var(--cyber-red);
+  position: absolute; top: -2px; right: -2px; width: 8px; height: 8px;
+  background-color: var(--cyber-red); border-radius: 50%; border: 2px solid #F4F1EA;
+  z-index: 5; box-shadow: 0 0 6px var(--cyber-red);
   animation: badge-pulse 2s infinite ease-in-out;
 }
 
@@ -488,14 +481,10 @@ onUnmounted(() => {
 }
 
 .notification-popover {
-  position: absolute;
-  top: 52px; 
-  right: -50px; 
-  z-index: 2000;
+  position: absolute; top: 52px; right: -50px; z-index: 2000;
   filter: drop-shadow(0 10px 30px rgba(0,0,0,0.2));
 }
 
-/* --- 用户下拉菜单 --- */
 .cyber-dropdown-menu {
   position: absolute; top: 60px; right: 0; width: 200px;
   background: #fff; border: 2px solid var(--ink-black);
@@ -506,17 +495,15 @@ onUnmounted(() => {
 .menu-row { display: flex; justify-content: space-between; padding: 8px 16px; cursor: pointer; font-size: 12px; font-weight: 700; color: #555; }
 .menu-row:hover { background: #eee; color: var(--ink-black); }
 .menu-row.logout:hover { background: var(--cyber-red); color: #fff; }
-.row-val.alert { background: var(--cyber-red); color: #fff; padding: 0 4px; }
 .menu-divider { text-align: center; color: #ddd; font-size: 10px; margin: 4px 0; overflow: hidden; }
 
-/* --- 按钮动画与适配 --- */
 .scale-fade-enter-active, .scale-fade-leave-active { transition: all 0.2s; }
 .scale-fade-enter-from, .scale-fade-leave-to { opacity: 0; transform: translateY(-10px) scale(0.95); }
 .pop-down-enter-active, .pop-down-leave-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .pop-down-enter-from, .pop-down-leave-to { opacity: 0; transform: translateY(-20px) scale(0.9); }
 
-/* --- 其他 --- */
-.tactical-btn-wrapper { position: relative; margin-left: 5px; }
+/* --- 战术按钮通用样式 --- */
+.tactical-btn-wrapper { position: relative; }
 .tactical-btn {
   height: 36px; padding: 0 16px; background: var(--ink-black); color: #fff; border: none;
   font-family: var(--font-mono); font-weight: 700; font-size: 12px; cursor: pointer;
@@ -545,18 +532,19 @@ onUnmounted(() => {
 
 @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
 
-/* 移动端适配 */
 @media (max-width: 480px) {
   .notification-popover {
     position: fixed; top: 72px; right: 0; left: 0; width: 100vw;
     display: flex; justify-content: center;
   }
 }
+@media (max-width: 992px) {
+  .tactical-btn .btn-label { display: none; }
+  .tactical-btn { padding: 0 12px; }
+}
 @media (max-width: 768px) {
   .nav-container { padding: 0 15px; }
   .cyber-nav, .status-terminal, .id-label, .id-name, .logo-sub { display: none; }
-  .tactical-btn .btn-label { display: none; }
-  .tactical-btn { padding: 0 10px; }
   .header-decoration-line { height: 2px; }
 }
 </style>

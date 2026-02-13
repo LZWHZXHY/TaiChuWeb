@@ -226,17 +226,6 @@ const routes = [
     name: "profile",
     component: () => import("@/UserComponent/Profile/NewProfile.vue"),
     meta: { requiresAuth: true, title: '用户资料' }
-  },
-  // 可选：覆盖 /profile 自动跳转到/profile/me
-  {
-    path: "/profile",
-    redirect: "/profile/me"
-  },
-  {
-  path: "/profile/Usersettings", // 建议使用固定路径
-  name: "UserSettings",      // 设置路由名称，方便跳转
-  component: () => import("@/UserComponent/UserSettings/UserSettings.vue"),
-  meta: { requiresAuth: true, title: '用户资料设置' }
   }
 ]
 

@@ -45,9 +45,9 @@ import SecuritySetting from './Settings/SecuritySetting.vue'
 import FeatureSetting from './Settings/FeatureSetting.vue'
 import OtherSetting from './Settings/OtherSetting.vue'
 import TestSetting from './Settings/TestSetting.vue'
-
+import ContentSetting from './Settings/ContentSetting.vue'
 const menuItems = ref([
-  '中心首页', '资料设置', '头像设置', '个性设置', 
+  '中心首页', '资料设置', '内容管理', '头像设置', '个性设置', 
   '隐私设置', '安全设置', '功能设置', '其它设置', '测试功能'
 ])
 
@@ -55,6 +55,7 @@ const componentMap = {
   '中心首页': CenterSetting,
   '资料设置': ProfileSetting,
   '头像设置': AvatarSetting,
+  '内容管理': ContentSetting, // 新增映射
   '个性设置': PersonalSetting,
   '隐私设置': PrivacySetting,
   '安全设置': SecuritySetting,
@@ -98,60 +99,54 @@ const switchMenu = (itemName) => {
 /* ================= 主布局容器 ================= */
 .New-Profile.container {
   display: flex;
-  justify-content: center; /* 居中 */
+  justify-content: center; 
   align-items: flex-start;
   width: 100vw;
   min-height: 100vh;      
   position: relative;
-  padding-top: 60px; /* 顶部留白 */
+  padding-top: 60px; 
   z-index: 2;
 }
 
 .main-box.container {
-  width: 1200px; /* 固定最大宽度，大屏更舒服 */
+  width: 1200px; 
   max-width: 95%;
   height: 80vh; /* 视口高度的80% */
   display: flex;
-  /* 关键改动：反转方向，使 Menu(right-box) 在左，Content(left-box) 在右，符合参考图 */
+  /* 菜单(right-box) 在左，Content(left-box) 在右 */
   flex-direction: row-reverse; 
-  gap: 40px; /* 左右板块间距 */
+  gap: 40px; 
 }
 
 /* ================= 侧边栏 (原 Right Box) ================= */
-/* 视觉上现在位于左侧 */
 .right-box.container {
-  width: 240px; /* 菜单栏宽度固定 */
+  width: 240px; 
   height: auto;
   display: flex;
   flex-direction: column; 
-  background: transparent; /* 透明背景融入大背景 */
+  background: transparent; 
   padding: 0;             
-  border: none; /* 移除边框 */
+  border: none; 
   flex-shrink: 0;
 }
 
-/* 标题 "设置" */
 .setting-header {
   width: 100%;
   height: auto;           
-  padding: 20px 20px 20px 20px;
+  padding: 20px;
   display: flex;
-  justify-content: flex-start; /* 左对齐 */
+  justify-content: flex-start; 
   align-items: center;     
   font-size: 24px;         
   font-weight: 800;       
-  background-color: transparent;  
-  border: none;
   color: #1a1a1a;
 }
 
-/* 菜单列表容器 */
 .setting-menu {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;              
-  padding: 0;          
 }
 
 /* ================= 菜单按钮样式 ================= */
@@ -160,47 +155,72 @@ const switchMenu = (itemName) => {
   height: 48px;
   display: flex;
   align-items: center;
-  padding-left: 20px; /* 文字左对齐 */
+  padding-left: 20px; 
   font-size: 15px;
   font-weight: 500;
-  color: #666; /* 默认灰色文字 */
-  
-  /* 去除默认按钮样式 */
+  color: #666; 
   background-color: transparent;
   border: none;
-  border-radius: 24px; /* 胶囊形状 */
+  border-radius: 24px; 
   cursor: pointer;
   transition: all 0.2s ease-in-out;
 }
 
-/* 悬浮效果 */
 .menu-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05); /* 极浅的黑色背景 */
+  background-color: rgba(0, 0, 0, 0.05); 
   color: #000;
 }
 
-/* 选中状态 - 黑色背景 */
 .menu-btn.active {
-  background-color: #000000; /* 纯黑 */
-  color: #ffffff; /* 纯白文字 */
+  background-color: #000000; 
+  color: #ffffff; 
   font-weight: bold;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* 选中时的投影 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); 
 }
 
-/* ================= 内容区域 (原 Left Box) ================= */
-/* 视觉上现在位于右侧，作为主卡片 */
+/* ================= 内容区域 (核心修改点) ================= */
 .left-box.container {
-  flex: 1; /* 占据剩余宽度 */
-  height: 100%;
-  background: #FFFDF8; /* 纯白卡片 */
-  border-radius: 24px; /* 大圆角 */
-  box-shadow: 0 4px 20px rgba(0,0,0,0.02); /* 极轻微的阴影，增加层次 */
-  overflow: hidden; 
-  padding: 0; /* 内部 padding 由子组件控制，或者在这里加 padding */
+  flex: 1; 
+  height: 100%; /* 继承父容器 80vh 的高度 */
+  background: #FFFDF8; 
+  border-radius: 24px; 
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02); 
+  
+  /* --- 关键修复：开启内部滚动 --- */
+  overflow-y: auto;  
+  overflow-x: hidden; 
+  /* ---------------------------- */
+  
+  padding: 0; 
   border: none;
+  scroll-behavior: smooth;
 }
 
-/* 如果你的子组件没有 padding，可以在这里给 left-box 加一个 padding */
-/* .left-box.container { padding: 40px; } */
+/* ================= 自定义精致滚动条 (工业美学) ================= */
+/* 滚动条整体宽度 */
+.left-box.container::-webkit-scrollbar {
+  width: 6px;
+}
+
+/* 滚动条轨道 */
+.left-box.container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 滚动条滑块 (默认浅色，呼应背景) */
+.left-box.container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+/* 鼠标悬停在卡片上时滑块变深，起到提示作用 */
+.left-box.container:hover::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* 手动抓取滚动条时变深 */
+.left-box.container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
 
 </style>

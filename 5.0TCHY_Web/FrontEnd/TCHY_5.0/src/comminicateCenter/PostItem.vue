@@ -27,6 +27,17 @@
 
       <h3 class="entry-title">{{ post.post_title || post.Post_title }}</h3>
 
+      <div class="entry-tags" v-if="postTags && postTags.length > 0">
+        <span 
+          v-for="(tag, index) in postTags" 
+          :key="index" 
+          class="mini-tag"
+          @click.stop="handleTagClick(tag)"
+        >
+          #{{ tag }}
+        </span>
+      </div>
+
       <div class="entry-actions">
         <span class="action-item">
           <i class="far fa-comment-alt"></i> REPLIES: {{ post.comment_count ?? 0 }}
@@ -57,14 +68,20 @@ const props = defineProps({
 const emit = defineEmits(['click']);
 const router = useRouter();
 
-/**
- * ✨ ID 探测逻辑：
- * 优先匹配后端 JSON 中的 author.Id (注意大写 I)
- */
 const validUserId = computed(() => {
   const p = props.post;
   if (!p) return null;
   return p.author?.Id || p.author?.id || p.Author?.Id || p.author_id || null;
+});
+
+// ✅ 新增：处理标签数据
+const postTags = computed(() => {
+  // 兼容后端返回的 tags (List<string>) 或 Tags (大小写不敏感)
+  const t = props.post.tags || props.post.Tags;
+  
+  if (Array.isArray(t)) return t;
+  if (typeof t === 'string' && t.length > 0) return t.split(',');
+  return [];
 });
 
 const handlePostClick = () => emit('click');
@@ -73,6 +90,12 @@ const navigateToProfile = () => {
   if (validUserId.value) {
     router.push(`/profile/${validUserId.value}`);
   }
+};
+
+// ✅ 新增：点击标签跳转
+const handleTagClick = (tagName) => {
+  // 假设你的搜索页路由是 /search
+  router.push({ path: '/search', query: { q: tagName, type: 'tag' } });
 };
 
 // 辅助计算属性
@@ -107,7 +130,36 @@ const handleImgError = (e) => { e.target.src = '/土豆.jpg'; };
 .username { font-family: 'JetBrains Mono'; font-weight: 700; font-size: 0.85rem; cursor: pointer; position: relative; z-index: 10; }
 .username:hover { color: #D92323; text-decoration: underline; }
 .post-time { font-family: 'JetBrains Mono'; font-size: 0.7rem; color: #666; }
-.entry-title { font-weight: 800; font-size: 1.1rem; margin: 0 0 10px 0; color: #111; }
+.entry-title { font-weight: 800; font-size: 1.1rem; margin: 0 0 8px 0; color: #111; } /* margin改小点，给标签留位置 */
+
+/* ✅ 新增：标签样式 */
+.entry-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.mini-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: #555;
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.mini-tag:hover {
+  color: #fff;
+  background: #D92323;
+  border-color: #D92323;
+  transform: translateY(-1px);
+  box-shadow: 2px 2px 0 rgba(217, 35, 35, 0.2);
+}
+
 .entry-actions { display: flex; gap: 15px; font-family: 'JetBrains Mono'; font-size: 0.7rem; color: #555; }
 .entry-thumb-wrapper { width: 90px; height: 90px; border: 1px solid #111; position: relative; flex-shrink: 0; }
 .entry-thumb { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); transition: 0.3s; }

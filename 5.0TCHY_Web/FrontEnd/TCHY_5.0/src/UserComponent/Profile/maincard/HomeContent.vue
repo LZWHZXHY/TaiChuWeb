@@ -1,18 +1,17 @@
 <template>
   <div class="home-layout">
     <div class="main-content-area">
-      <FeaturedSection />
+      <FeaturedSection :userId="userId" />
 
-      <GallerySection />
+      <GallerySection :userId="userId" />
 
-      <BlogSection />
+      <BlogSection :userId="userId" />
 
-      <PostSection />
+      <PostSection :userId="userId" />
     </div>
 
     <div class="side-container">
       <div class="side-wrapper">
-
         <UserActionButtons />
         
         <StatsCard :status="status"/>
@@ -26,6 +25,7 @@
 </template>
 
 <script setup>
+import { defineProps } from 'vue' // 显式引入（可选）
 import FeaturedSection from './HomeContent/FeaturedSection.vue'
 import StatsCard from './HomeContent/StatsCard.vue'
 import NoticeBoard from './HomeContent/NoticeBoard.vue'
@@ -35,10 +35,16 @@ import BlogSection from './HomeContent/BlogSection.vue'
 import PostSection from './HomeContent/PostSection.vue'
 import UserActionButtons from './HomeContent/UserActionButtons.vue'
 
+// 【修复】定义 Props 接收来自父组件 (Maincard) 的数据
 const props = defineProps({
   status: {
     type: Object,
     default: () => ({})
+  },
+  // 接收传下来的 userId，允许数字或字符串（应对 MEE 这种情况）
+  userId: {
+    type: [Number, String],
+    default: null
   }
 })
 </script>
@@ -69,9 +75,20 @@ const props = defineProps({
 .side-wrapper {
   display: flex;
   flex-direction: column;
-  /* 这里不需要 gap，因为 NoticeBoard 组件自带了 margin-top，或者你可以由父级控制 */
 }
 
-.item-label { font-size: 10px; color: #FF2A2A; margin-bottom: 8px; letter-spacing: 1px; }
-.mini-list { list-style: none; padding: 0; margin: 0; font-size: 11px; line-height: 1.6; }
+.item-label { 
+  font-size: 10px; 
+  color: #FF2A2A; 
+  margin-bottom: 8px; 
+  letter-spacing: 1px; 
+}
+
+.mini-list { 
+  list-style: none; 
+  padding: 0; 
+  margin: 0; 
+  font-size: 11px; 
+  line-height: 1.6; 
+}
 </style>

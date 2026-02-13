@@ -23,7 +23,7 @@
 
         <div class="header-right-line"></div>
 
-        <div class="view-all-btn">
+        <div class="view-all-btn" @click="handleViewAll">
           <span>查看全部</span>
           <span class="arrow">>></span>
         </div>
@@ -31,27 +31,45 @@
       </div>
 
       <div class="gallery-grid">
-        <div v-for="n in 8" :key="n" class="gallery-card">
+        <div v-if="!userId" class="status-msg">正在链接身份识别系统...</div>
+        <div v-else-if="isLoading" class="status-msg">正在接入神经网络视图...</div>
+        
+        <div v-else-if="galleryList.length === 0" class="status-msg">
+          此分区未检测到有效数据记录
+        </div>
+
+        <div 
+          v-for="item in galleryList" 
+          :key="item.id" 
+          class="gallery-card"
+          @click="goToDetail(item.id)"
+        >
           <div class="thumb-container">
-            <div class="thumb-placeholder">
-              <span>图像记录_00{{ n }}</span>
+            <img 
+              v-if="item.url" 
+              :src="item.url" 
+              class="thumb-img" 
+              loading="lazy"
+            />
+            <div v-else class="thumb-placeholder">
+              <span>IMAGE_ERR_{{ item.id }}</span>
             </div>
-            </div>
+          </div>
           <div class="info-container">
-            <div class="item-title">
-              【绝密记录】第{{ n }}次神经网络潜入行动纪实，发现未知数据幽灵
+            <div class="item-title" :title="item.title">
+              {{ item.title }}
             </div>
-            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="decoration-sidebar">
       <div class="deco-status-box">
-        <span class="label">分区</span>
-        <span class="value">00</span>
+        <span class="label">记录数</span>
+        <span class="value">{{ galleryList.length }}</span>
       </div>
-      <div class="watermark-text">数据视图</div>
+      <div class="watermark-text">DATA VIEW</div>
       <div class="stripe-bar"></div>
     </div>
 
@@ -59,8 +77,19 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue' // 去掉了 onMounted，交给 watch 处理
+import apiClient from '@/utils/api'
 
+
+const props = defineProps({
+  userId: {
+    type: [Number, String],
+    default: null
+  }
+})
+
+const galleryList = ref([])
+const isLoading = ref(false)
 const currentFilter = ref('latest')
 
 const filters = [
@@ -68,21 +97,69 @@ const filters = [
   { key: 'views', label: '最多点击' },
   { key: 'likes', label: '最多收藏' }
 ]
+
+/**
+ * 核心请求方法
+ */
+const fetchGallery = async () => {
+  // 如果 ID 还没传过来，直接返回，不触发无效 API 调用
+  if (props.userId === null || props.userId === undefined || props.userId === '') {
+    return
+  }
+
+  isLoading.value = true
+  console.log("Gallery: 开始同步数据，当前 ID ->", props.userId)
+
+  try {
+    // 自动适配 ID 类型，如果是字符串则按原样发送，如果是数字则保持数字
+    const response = await apiClient.get(`/Drawing/user/${props.userId}`, {
+      params: { 
+        sortBy: currentFilter.value,
+        limit: 12 
+      }
+    })
+    
+    if (response.data.success) {
+      galleryList.value = response.data.data
+    }
+  } catch (error) {
+    console.error("画廊同步失败:", error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+
+watch(
+  () => [props.userId, currentFilter.value],
+  ([newId, newFilter]) => {
+    if (newId) {
+      fetchGallery()
+    }
+  },
+  { immediate: true }
+)
+
+const goToDetail = (id) => {
+  console.log('查看详情:', id)
+}
+
+const handleViewAll = () => {
+  console.log('跳转至完整画廊页面')
+}
 </script>
 
 <style scoped>
-/* 定义新配色的 CSS 变量 */
+/* 样式保持不变 */
 .gallery-section-wrapper {
   --primary-blue: #2c3e50;
   --accent-orange: #e67e22;
   --text-main: #333333;
   --text-sub: #666666;
   --bg-light: transparent;
-  
   font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
-/* --- 基础结构 --- */
 .gallery-section-wrapper {
   display: flex;
   width: 100%;
@@ -90,11 +167,9 @@ const filters = [
   background-image: radial-gradient(#ddd 1px, transparent 1px);
   background-size: 20px 20px;
   background-color: var(--bg-light);
-  margin-top: 0px;
   padding: 10px 0 20px 0;
   overflow: hidden;
   color: var(--text-main);
-  max-height: 31%;
 }
 
 .content-area {
@@ -105,7 +180,6 @@ const filters = [
   padding-right: 20px;
 }
 
-/* --- 标题栏 --- */
 .section-header {
   display: flex;
   align-items: center;
@@ -126,17 +200,14 @@ const filters = [
   width: 6px; 
   height: 22px; 
   background: var(--accent-orange);
-  margin-right: 4px; 
 }
 
 .header-main {
   font-size: 20px; 
   font-weight: 900; 
   color: var(--primary-blue);
-  letter-spacing: 0px;
 }
 
-/* --- 筛选按钮组 --- */
 .filter-group {
   display: flex;
   gap: 12px;
@@ -146,27 +217,19 @@ const filters = [
 .filter-btn {
   background: transparent;
   border: none;
-  font-family: inherit;
   font-size: 13px;
   color: var(--text-sub);
   cursor: pointer;
   padding: 4px 8px;
   transition: all 0.3s;
   font-weight: bold;
-  border-radius: 2px;
-}
-
-.filter-btn:hover {
-  color: var(--primary-blue);
 }
 
 .filter-btn.active {
   color: var(--accent-orange);
-  font-weight: 900;
   border-bottom: 2px solid var(--accent-orange);
 }
 
-/* --- 装饰虚线 --- */
 .header-right-line {
   flex: 1;
   height: 1px;
@@ -175,7 +238,6 @@ const filters = [
   background: repeating-linear-gradient(90deg, var(--primary-blue), var(--primary-blue) 4px, transparent 4px, transparent 8px);
 }
 
-/* --- 查看全部按钮 --- */
 .view-all-btn {
   display: flex;
   align-items: center;
@@ -183,58 +245,14 @@ const filters = [
   font-size: 12px;
   color: var(--text-sub);
   cursor: pointer;
-  transition: all 0.3s;
-  font-family: inherit;
-  padding: 4px 8px;
 }
 
-.view-all-btn:hover {
-  color: var(--accent-orange);
-}
+.view-all-btn:hover { color: var(--accent-orange); }
 
-.view-all-btn .arrow {
-  font-weight: bold;
-  transition: transform 0.3s;
-}
-
-.view-all-btn:hover .arrow {
-  transform: translateX(4px);
-}
-
-/* --- 右侧装饰条 --- */
-.decoration-sidebar {
-  width: 40px; flex: 0 0 40px; 
-  border-left: 1px solid rgba(0,0,0,0.1); 
-  display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding-top: 5px; position: relative;
-}
-.deco-status-box {
-  background: transparent; width: 100%; padding: 6px 0; text-align: center; display: flex; flex-direction: column; 
-  border-right: 3px solid var(--accent-orange);
-}
-.deco-status-box .label { font-size: 10px; color: var(--text-sub); font-weight: bold; }
-.deco-status-box .value { font-size: 14px; font-weight: bold; color: var(--primary-blue); }
-
-.watermark-text {
-  writing-mode: vertical-rl; text-orientation: mixed; font-size: 24px; font-weight: 900; 
-  color: rgba(0, 0, 0, 0.05);
-  letter-spacing: 4px; white-space: nowrap; user-select: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-}
-.stripe-bar {
-  width: 6px; height: 100px; opacity: 0.6; margin-bottom: 10px;
-  background: repeating-linear-gradient(45deg, var(--primary-blue), var(--primary-blue) 2px, transparent 2px, transparent 4px);
-}
-
-/* --- 网格布局 (核心修改) --- */
 .gallery-grid {
   display: grid;
-  /* 关键修改：
-     使用 auto-fill 自动计算列数，
-     minmax(220px, 1fr) 保证卡片最小 220px，
-     通常宽度会落在 220px~270px 之间，且自动填满行，无间隙。
-  */
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  grid-auto-rows: auto;
-  gap: 15px 12px; /* 间距微调 */
+  gap: 15px 12px;
 }
 
 .gallery-card {
@@ -246,44 +264,82 @@ const filters = [
 .thumb-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1; /* 保持正方形 */
-  background: rgba(238, 238, 238, 0.1);
+  aspect-ratio: 1 / 1;
+  background: rgba(238, 238, 238, 0.4);
   border: 1px solid #ddd;
   overflow: hidden;
   transition: all 0.3s ease;
   border-radius: 4px;
 }
 
+.thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.gallery-card:hover .thumb-img {
+  transform: scale(1.1);
+}
+
 .gallery-card:hover .thumb-container {
   border-color: var(--accent-orange);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transform: translateY(-2px);
-}
-
-.thumb-placeholder {
-  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; 
-  color: #999; font-weight: bold; font-size: 12px;
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.info-container { 
-  padding-top: 8px; 
 }
 
 .item-title {
-  font-size: 13px; /* 稍微调大一点点，保证清晰 */
+  padding-top: 8px;
+  font-size: 13px;
   font-weight: bold;
   color: var(--text-main);
-  line-height: 1.4;
-  margin-bottom: 0;
-  
-  display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  
-  transition: color 0.2s;
 }
 
 .gallery-card:hover .item-title { color: var(--accent-orange); }
+
+.status-msg {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: var(--text-sub);
+  font-size: 13px;
+  border: 1px dashed #ccc;
+}
+
+.decoration-sidebar {
+  width: 40px; 
+  border-left: 1px solid rgba(0,0,0,0.1); 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: space-between; 
+  position: relative;
+}
+
+.deco-status-box {
+  width: 100%; 
+  text-align: center; 
+  padding: 10px 0;
+  border-right: 3px solid var(--accent-orange);
+}
+
+.deco-status-box .label { font-size: 10px; color: var(--text-sub); }
+.deco-status-box .value { font-size: 14px; font-weight: bold; color: var(--primary-blue); }
+
+.watermark-text {
+  writing-mode: vertical-rl;
+  font-size: 20px;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.05);
+  letter-spacing: 4px;
+}
+
+.stripe-bar {
+  width: 6px; 
+  height: 80px;
+  background: repeating-linear-gradient(45deg, var(--primary-blue), var(--primary-blue) 2px, transparent 2px, transparent 4px);
+}
 </style>
