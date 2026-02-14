@@ -107,6 +107,16 @@ const routes = [
     }
   },
   {
+    path: '/operators',
+    name: 'Operators',
+    // 假设你把新页面放在 views/Operators 目录下
+    component: () => import('@/views/OperatorList.vue'), 
+    meta: { 
+      requiresAuth: false, // 如果你希望游客也能看到社区人数和名录，设为 false
+      title: '操作员名录' 
+    }
+  },
+  {
     path:'/Resource',
     name:'资源大厅',
     component:()=>import('@/views/Resource.vue'),

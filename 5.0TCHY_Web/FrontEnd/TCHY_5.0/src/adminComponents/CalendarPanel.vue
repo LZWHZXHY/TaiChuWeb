@@ -319,7 +319,7 @@ onMounted(async () => {
 .close-btn { background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer; }
 
 .window-body { padding: 25px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto; }
-.cyber-input { width: 100%; padding: 10px; border: 2px solid #ddd; background: #fcfcfc; font-family: 'Inter', sans-serif; box-sizing: border-box; font-size: 0.9rem; }
+.cyber-input { width: 100%; padding: 10px; border: 2px solid #ddd; background: #fcfcfc; font-family: 'Inter', sans-serif; box-sizing: border-box; font-size: 0.9rem; color:#111111}
 .cyber-input:focus { border-color: var(--black); outline: none; }
 .form-row { display: flex; gap: 20px; }
 .form-group { flex: 1; }

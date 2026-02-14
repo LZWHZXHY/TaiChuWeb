@@ -49,10 +49,15 @@
           <span class="btn-inner">{{ locale === 'zh' ? 'CN' : 'EN' }}</span>
         </button>
 
-        <div class="status-terminal" v-if="userCount > 0">
-          <span class="status-indicator">●</span>
-          <span class="status-text">ONLINE: {{ userCount }}</span>
-        </div>
+       <div 
+  class="status-terminal clickable" 
+  v-if="userCount > 0" 
+  @click="router.push('/operators')"
+  title="VIEW ALL OPERATORS"
+>
+  <span class="status-indicator">●</span>
+  <span class="status-text">OPERATORS: {{ userCount }}</span>
+</div>
 
         <div v-if="authStore.isAuthenticated" class="user-control-panel">
           
@@ -289,9 +294,18 @@ const isActive = (path) => {
 
 const loadUserCount = async () => {
   try {
-    const response = await apiClient.get('/default/users/count')
-    if (typeof response.data.count === 'number') userCount.value = response.data.count
-  } catch (err) { userCount.value = 0 }
+    // 路径由 '/default/users/count' 改为 '/Tool/user-count'
+    // 注意：apiClient 通常已经配置了 base_url/api，所以这里写 /Tool/user-count
+    const response = await apiClient.get('/Tool/user-count')
+    
+    // 检查后端返回的结构，现在是 response.data.count
+    if (response.data && typeof response.data.count === 'number') {
+      userCount.value = response.data.count
+    }
+  } catch (err) {
+    console.warn('Failed to sync user count:', err)
+    userCount.value = 0 
+  }
 }
 
 const handleNavClick = (item) => {
@@ -344,7 +358,15 @@ onUnmounted(() => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
-
+.status-terminal.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.status-terminal.clickable:hover {
+  background: var(--ink-black);
+  color: #fff;
+  border-style: solid; /* 悬浮时变实线 */
+}
 /* --- 全局变量与基础布局 --- */
 .cyber-header {
   --bg-color: #F4F1EA;
