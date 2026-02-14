@@ -20,11 +20,26 @@
         <input 
           type="range" 
           min="0.1" 
-            max="10" 
-            step="0.1"
+          max="10" 
+          step="0.1"
           v-model.number="evolutionSpeed" 
           class="cyber-range" 
           title="Adjust growth speed"
+        />
+      </div>
+
+      <div class="separator"></div>
+
+      <div class="speed-control">
+        <span class="label">REPULSION:</span>
+        <input 
+          type="range" 
+          min="-2000" 
+          max="-100" 
+          step="50"
+          v-model.number="repulsionStrength" 
+          class="cyber-range" 
+          title="Adjust node repulsion"
         />
       </div>
 
@@ -79,7 +94,7 @@
           
           <div class="action-area">
              <button class="cyber-btn full" @click="$emit('select-node', selectedNode.id)">
-               OPEN DOCUMENT &gt;&gt;
+               OPEN DOCUMENT >>
              </button>
           </div>
         </div>
@@ -117,7 +132,32 @@ const searchQuery = ref('')
 const selectedNode = ref(null)
 
 const evolutionSpeed = ref(2) 
+const repulsionStrength = ref(-450); // 排斥力响应式变量
 let evolutionTimer = null
+
+// --- 动态色彩生成器 (哈希算法) ---
+const getAutoColor = (text) => {
+  if (!text) return '#888888';
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = text.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash % 360);
+  return `hsl(${h}, 70%, 65%)`;
+};
+
+// --- 监听排斥力滑块变化 ---
+watch(repulsionStrength, (newVal) => {
+  if (graphInstance.value) {
+    graphInstance.value.d3Force('charge').strength(node => {
+      // 大节点排斥力增强以保持核心地位
+      return node.val > 15 ? newVal * 2.5 : newVal;
+    });
+    // 重启仿真以应用新物理参数
+    graphInstance.value.d3AlphaTarget(0.2).d3Restart();
+    setTimeout(() => graphInstance.value.d3AlphaTarget(0), 500);
+  }
+});
 
 // --- 辅助函数 ---
 const getCleanImageUrl = (imgData) => {
@@ -148,16 +188,13 @@ const startEvolution = () => {
   displayedNodes.value = [];
   displayedLinks.value = [];
   currentRenderCount.value = 0;
-  
   if (evolutionTimer) clearInterval(evolutionTimer);
 
   const pendingNodes = JSON.parse(JSON.stringify(rawNodes.value));
-
   pendingNodes.sort((a, b) => {
     const timeA = new Date(a.updated_at).getTime() || 0;
     const timeB = new Date(b.updated_at).getTime() || 0;
-    if (timeA !== timeB) return timeA - timeB;
-    return a.id - b.id;
+    return timeA !== timeB ? timeA - timeB : a.id - b.id;
   });
 
   const visibleNodeIds = new Set();
@@ -170,12 +207,9 @@ const startEvolution = () => {
     }
 
     const chunk = pendingNodes.splice(0, evolutionSpeed.value);
-    
     chunk.forEach(node => {
-      node.x = (Math.random() - 0.5) * 20; 
-      node.y = (Math.random() - 0.5) * 20;
-      node.vx = (Math.random() - 0.5) * 2; 
-      node.vy = (Math.random() - 0.5) * 2;
+      node.x = (Math.random() - 0.5) * 40; 
+      node.y = (Math.random() - 0.5) * 40;
       visibleNodeIds.add(String(node.id));
     });
 
@@ -187,35 +221,22 @@ const startEvolution = () => {
       const sId = String(link.source);
       const tId = String(link.target);
       const linkKey = `${sId}->${tId}`;
-
       if (visibleNodeIds.has(sId) && visibleNodeIds.has(tId) && !addedLinkKeys.has(linkKey)) {
-        newLinksToAdd.push({
-          ...link,
-          source: sId,
-          target: tId
-        });
+        newLinksToAdd.push({ ...link, source: sId, target: tId });
         addedLinkKeys.add(linkKey);
       }
     });
 
-    if (newLinksToAdd.length > 0) {
-      displayedLinks.value.push(...newLinksToAdd);
-    }
+    if (newLinksToAdd.length > 0) displayedLinks.value.push(...newLinksToAdd);
 
     if (graphInstance.value) {
-      graphInstance.value.graphData({
-        nodes: displayedNodes.value,
-        links: displayedLinks.value
-      });
+      graphInstance.value.graphData({ nodes: displayedNodes.value, links: displayedLinks.value });
       graphInstance.value.d3AlphaTarget(0.1).d3Restart();
     }
-
   }, 100);
 }
 
-const replayEvolution = () => {
-  startEvolution();
-}
+const replayEvolution = () => startEvolution();
 
 const initGraph = async () => {
   loading.value = true
@@ -238,9 +259,7 @@ const initGraph = async () => {
     });
     
     rawLinks.value = JSON.parse(JSON.stringify(cleanEdges)).map(l => ({
-        ...l,
-        source: String(l.source),
-        target: String(l.target)
+        ...l, source: String(l.source), target: String(l.target)
     }));
     
     totalNodeCount.value = nodes.length;
@@ -254,7 +273,6 @@ const initGraph = async () => {
       .width(width).height(height).backgroundColor('#080808')
       .graphData({ nodes: [], links: [] }) 
 
-      // === 渲染逻辑 (已修复文字放大问题) ===
       .nodeCanvasObject((node, ctx, globalScale) => {
         const isSelected = selectedNode.value?.id === node.id
         const isHover = node === hoverNode
@@ -265,37 +283,35 @@ const initGraph = async () => {
         ctx.globalAlpha = isDimmed ? 0.1 : 1;
         const r = node.val; 
 
-        let baseColor = '#444'; 
-        if (node.val > 15) baseColor = '#888'; 
+        // 自动取色
+        let baseColor = getAutoColor(node.type || 'Entity');
         if (isSelected || isMatch) baseColor = '#FFFFFF';
-        if (isHover && !isSelected) baseColor = '#D92323';
+        if (isHover && !isSelected) {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = baseColor;
+        }
 
         ctx.beginPath();
         ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
         ctx.fillStyle = baseColor;
         ctx.fill();
+        ctx.shadowBlur = 0;
 
         if (isSelected || isMatch) {
           ctx.beginPath();
           ctx.arc(node.x, node.y, r + 4, 0, 2 * Math.PI, false);
           ctx.strokeStyle = '#D92323';
-          // 边框粗细仍建议随比例微调，防止放大后边框像堵墙
           ctx.lineWidth = 2 / globalScale; 
           ctx.stroke();
         }
 
-        const isBigNode = r > 12; 
-        const showText = (isBigNode && globalScale > 0.6) || (globalScale > 1.2) || isHover || isSelected || isMatch;
-
+        const showText = (r > 12 && globalScale > 0.6) || globalScale > 1.2 || isHover || isSelected;
         if (showText) {
-          const label = node.label;
-          // 🔥 修复点：不再除以 globalScale。文字将随 Canvas 放大
           const fontSize = isSelected ? 16 : 12; 
           ctx.font = `${fontSize}px 'JetBrains Mono'`;
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-          ctx.fillStyle = (isSelected || isMatch) ? '#D92323' : '#cccccc';
-          // 偏移量也同步固定，不再除以比例
-          ctx.fillText(label, node.x, node.y + r + fontSize + 2);
+          ctx.fillStyle = isSelected ? '#D92323' : '#cccccc';
+          ctx.fillText(node.label, node.x, node.y + r + fontSize + 2);
         }
         ctx.globalAlpha = 1;
       })
@@ -304,22 +320,18 @@ const initGraph = async () => {
         const isHoveredLink = link === hoverLink;
         const isRelated = selectedNode.value?.id === link.source.id || selectedNode.value?.id === link.target.id || hoverNode?.id === link.source.id || hoverNode?.id === link.target.id;
 
-        let lineWidth = isStructure ? 1 : 2; 
-        if (isHoveredLink || isRelated) lineWidth = 3;
-        
-        ctx.lineWidth = lineWidth / globalScale;
+        // 连线自动取色
+        let lineColor = isStructure ? 'rgba(100, 100, 100, 0.4)' : getAutoColor(link.label);
+        if (isRelated || isHoveredLink) lineColor = '#FFFFFF';
 
-        if (isStructure) {
-            ctx.strokeStyle = isRelated ? '#aaa' : 'rgba(80, 80, 80, 0.6)'; 
-            ctx.shadowBlur = 0;
-        } else {
-            ctx.strokeStyle = '#D92323';
-            ctx.shadowColor = '#D92323';
+        ctx.lineWidth = (isHoveredLink || isRelated ? 3 : 1) / globalScale;
+        ctx.strokeStyle = lineColor;
+
+        if (!isStructure) {
+            ctx.shadowColor = lineColor;
             ctx.shadowBlur = (isHoveredLink || isRelated) ? 10 : 0; 
-        }
-
-        if (!isStructure) ctx.setLineDash([4 / globalScale, 2 / globalScale]);
-        else ctx.setLineDash([]);
+            ctx.setLineDash([4 / globalScale, 2 / globalScale]);
+        } else ctx.setLineDash([]);
 
         ctx.beginPath();
         ctx.moveTo(link.source.x, link.source.y);
@@ -327,22 +339,17 @@ const initGraph = async () => {
         ctx.stroke();
         ctx.shadowBlur = 0; 
 
-        if (!isStructure) {
-          const showLabel = globalScale > 1.2 || isHoveredLink || isRelated;
-          if (showLabel) {
+        if (!isStructure && (globalScale > 1.2 || isHoveredLink || isRelated)) {
             const midX = link.source.x + (link.target.x - link.source.x) * 0.5;
             const midY = link.source.y + (link.target.y - link.source.y) * 0.5;
-            // 🔥 修复点：连线文字同样取消 scale 除法
-            const fontSize = 10; 
-            ctx.font = `${fontSize}px 'JetBrains Mono'`;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.font = `10px 'JetBrains Mono'`;
+            ctx.textAlign = 'center';
             const label = link.label;
             const textWidth = ctx.measureText(label).width;
             ctx.fillStyle = '#080808'; 
-            ctx.fillRect(midX - textWidth/2 - 2, midY - fontSize/2 - 2, textWidth + 4, fontSize + 4);
-            ctx.fillStyle = '#D92323';
+            ctx.fillRect(midX - textWidth/2 - 2, midY - 7, textWidth + 4, 14);
+            ctx.fillStyle = lineColor;
             ctx.fillText(label, midX, midY);
-          }
         }
       })
       .linkDirectionalArrowLength(link => link.label === '包含' ? 0 : 4)
@@ -351,27 +358,32 @@ const initGraph = async () => {
       .onLinkHover(link => { hoverLink = link || null })
       .onNodeClick(node => {
         const now = Date.now();
-        if (now - lastClickTime < 300) { emit('select-node', node.id); } 
-        else { selectedNode.value = node; graphInstance.value.centerAt(node.x, node.y, 600); graphInstance.value.zoom(2.5, 600); }
+        if (now - lastClickTime < 300) emit('select-node', node.id);
+        else { 
+          selectedNode.value = node; 
+          graphInstance.value.centerAt(node.x, node.y, 600); 
+          graphInstance.value.zoom(2.5, 600); 
+        }
         lastClickTime = now;
       })
       .onBackgroundClick(() => { selectedNode.value = null })
 
-    graphInstance.value.d3Force('charge').strength(node => node.val > 15 ? -600 : -100);
+    // --- 物理引擎配置 ---
+    graphInstance.value.d3Force('charge').strength(node => 
+      node.val > 15 ? repulsionStrength.value * 2.5 : repulsionStrength.value
+    );
 
     graphInstance.value.d3Force('link').distance(link => {
-        const isStructure = link.label === '包含';
-        if (isStructure) return (link.source.val > 15 || link.target.val > 15) ? 40 : 80;
-        return 120;
+        return link.label === '包含' ? 80 : 160;
     });
 
     import('d3-force').then(d3 => {
-      graphInstance.value.d3Force('radial', d3.forceRadial(100, width / 2, height / 2).strength(0.1));
+      // 增强向心力，防止发散
+      graphInstance.value.d3Force('radial', d3.forceRadial(100, width / 2, height / 2).strength(0.08));
       graphInstance.value.d3Force('collide', d3.forceCollide(node => node.val + 8));
     })
     
-    graphInstance.value.d3VelocityDecay(0.6);
-
+    graphInstance.value.d3VelocityDecay(0.4);
     startEvolution();
 
   } catch (e) { console.error("Graph Error:", e) } finally { loading.value = false }
@@ -398,18 +410,18 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* 保持样式不变 */
+/* 样式保持原样，仅补充滑块可能需要的微调 */
 .graph-wrapper { position: relative; width: 100%; height: 100%; background: #080808; overflow: hidden; font-family: 'JetBrains Mono', monospace; color: #eee; }
-.graph-toolbar { position: absolute; top: 20px; left: 20px; display: flex; gap: 15px; align-items: center; background: rgba(0,0,0,0.9); padding: 8px 12px; border: 1px solid #333; z-index: 10; }
+.graph-toolbar { position: absolute; top: 20px; left: 20px; display: flex; gap: 15px; align-items: center; background: rgba(0,0,0,0.9); padding: 8px 12px; border: 1px solid #333; z-index: 10; flex-wrap: wrap; }
 .search-group { display: flex; align-items: center; border-bottom: 1px solid #666; }
 .icon { font-size: 12px; color: #666; margin-right: 5px; font-weight: bold; }
 .cyber-input { background: transparent; border: none; color: #fff; font-family: inherit; font-size: 12px; width: 140px; outline: none; }
 .stats { font-size: 10px; color: #444; font-weight: bold; letter-spacing: 1px; }
 .sep { color: #222; margin: 0 5px; }
 .separator { width: 1px; height: 16px; background: #333; }
-.speed-control { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #666; font-weight: bold; }
-.cyber-range { -webkit-appearance: none; width: 60px; height: 4px; background: #333; outline: none; cursor: pointer; }
-.cyber-range::-webkit-slider-thumb { -webkit-appearance: none; width: 8px; height: 8px; background: #D92323; cursor: pointer; }
+.speed-control { display: flex; align-items: center; gap: 8px; font-size: 10px; color: #666; font-weight: bold; }
+.cyber-range { -webkit-appearance: none; width: 80px; height: 4px; background: #333; outline: none; cursor: pointer; }
+.cyber-range::-webkit-slider-thumb { -webkit-appearance: none; width: 8px; height: 8px; background: #D92323; cursor: pointer; border-radius: 0; }
 .cyber-btn { background: transparent; color: #888; border: 1px solid #444; font-family: inherit; font-size: 10px; padding: 4px 10px; cursor: pointer; transition: 0.1s; }
 .cyber-btn:hover { border-color: #D92323; color: #D92323; }
 .node-detail-panel { position: absolute; top: 0; right: 0; bottom: 0; width: 450px; background: #111; border-left: 2px solid #D92323; z-index: 20; display: flex; flex-direction: column; box-shadow: -10px 0 50px rgba(0,0,0,0.9); }
