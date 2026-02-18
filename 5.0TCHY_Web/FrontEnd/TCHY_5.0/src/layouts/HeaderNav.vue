@@ -49,15 +49,15 @@
           <span class="btn-inner">{{ locale === 'zh' ? 'CN' : 'EN' }}</span>
         </button>
 
-       <div 
-  class="status-terminal clickable" 
-  v-if="userCount > 0" 
-  @click="router.push('/operators')"
-  title="VIEW ALL OPERATORS"
->
-  <span class="status-indicator">●</span>
-  <span class="status-text">OPERATORS: {{ userCount }}</span>
-</div>
+        <div 
+          class="status-terminal clickable" 
+          v-if="userCount > 0" 
+          @click="router.push('/operators')"
+          title="VIEW ALL OPERATORS"
+        >
+          <span class="status-indicator">●</span>
+          <span class="status-text">OPERATORS: {{ userCount }}</span>
+        </div>
 
         <div v-if="authStore.isAuthenticated" class="user-control-panel">
           
@@ -65,6 +65,22 @@
             <button class="tactical-btn">
               <span class="btn-icon">+</span>
               <span class="btn-label">PUBLISH // 发布</span>
+            </button>
+            <div class="btn-deco-line"></div>
+          </div>
+
+          <div class="tactical-btn-wrapper" @click="goToCreativeCenter">
+            <button class="tactical-btn gold">
+              <span class="btn-icon">▤</span>
+              <span class="btn-label">CENTER // 创造</span>
+            </button>
+            <div class="btn-deco-line"></div>
+          </div>
+
+          <div class="tactical-btn-wrapper" @click="router.push('/workspace')">
+            <button class="tactical-btn blue">
+              <span class="btn-icon">☖</span>
+              <span class="btn-label">WORKSPACE // 协作</span>
             </button>
             <div class="btn-deco-line"></div>
           </div>
@@ -95,6 +111,17 @@
                   <span class="row-label">MY PROFILE</span>
                   <span class="row-icon">-></span>
                 </div>
+                
+                <div class="menu-row" @click="router.push('/workspace'); showUserMenu = false;">
+                  <span class="row-label">WORKSPACE</span>
+                  <span class="row-icon">☖</span>
+                </div>
+
+                <div class="menu-row" @click="goToCreativeCenter">
+                  <span class="row-label">CREATIVE CENTER</span>
+                  <span class="row-icon">◈</span>
+                </div>
+
                 <div class="menu-row" @click="goToNewSettings">
                   <span class="row-label">SETTINGS</span>
                   <span class="row-icon">-></span>
@@ -152,21 +179,21 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n' 
 import { useAuthStore } from '@/utils/auth'
-import { usePublisherStore } from '@/stores/publisher' // ✅ 引入发布器 Store
+import { usePublisherStore } from '@/stores/publisher' 
 import apiClient from '@/utils/api'
 import DropdownMenu from './DropdownMenu.vue' 
 import NotificationPanel from './Widget/NotificationPanel.vue'
 import CyberMegaMenu from '@/GeneralComponents/CyberMegaMenu.vue' 
 
-// --- 初始化 ---
+// --- Initializations ---
 const authStore = useAuthStore()
-const publisherStore = usePublisherStore() // ✅ 初始化发布器 Store
+const publisherStore = usePublisherStore() 
 const router = useRouter()
 const { t, locale } = useI18n() 
 
 const BASE_URL = 'https://bianyuzhou.com'
 
-// --- 响应式状态 ---
+// --- State ---
 const userCount = ref(0)
 const localUnreadCount = ref(0) 
 const showUserMenu = ref(false)
@@ -180,12 +207,16 @@ const props = defineProps({
 })
 const emit = defineEmits(['nav-change', 'user-action'])
 
-// ✅ 新增：开启全局发布器
+// --- Actions ---
+
 const openPublisher = () => {
   publisherStore.open();
 };
 
-// --- 核心业务逻辑 ---
+const goToCreativeCenter = () => {
+  showUserMenu.value = false;
+  router.push('/creative-center');
+};
 
 const fetchLatestUserInfo = async () => {
   if (!authStore.isAuthenticated) return
@@ -294,11 +325,7 @@ const isActive = (path) => {
 
 const loadUserCount = async () => {
   try {
-    // 路径由 '/default/users/count' 改为 '/Tool/user-count'
-    // 注意：apiClient 通常已经配置了 base_url/api，所以这里写 /Tool/user-count
     const response = await apiClient.get('/Tool/user-count')
-    
-    // 检查后端返回的结构，现在是 response.data.count
     if (response.data && typeof response.data.count === 'number') {
       userCount.value = response.data.count
     }
@@ -358,6 +385,7 @@ onUnmounted(() => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
+
 .status-terminal.clickable {
   cursor: pointer;
   transition: all 0.2s ease;
@@ -365,13 +393,15 @@ onUnmounted(() => {
 .status-terminal.clickable:hover {
   background: var(--ink-black);
   color: #fff;
-  border-style: solid; /* 悬浮时变实线 */
+  border-style: solid;
 }
-/* --- 全局变量与基础布局 --- */
+
+/* --- Global Variables --- */
 .cyber-header {
   --bg-color: #F4F1EA;
   --ink-black: #111111;
   --cyber-red: #D92323;
+  --cyber-blue: #00A3FF;
   --font-mono: 'JetBrains Mono', monospace;
   --font-title: 'Anton', sans-serif;
   
@@ -427,7 +457,7 @@ onUnmounted(() => {
 .logo-main { font-family: var(--font-title); font-size: 22px; letter-spacing: 1px; }
 .logo-sub { font-size: 10px; color: #666; font-weight: 700; }
 
-/* --- 导航 --- */
+/* --- Navigation --- */
 .cyber-nav { display: flex; align-items: center; gap: 20px; }
 .nav-link-item {
   cursor: pointer; font-size: 14px; font-weight: 700; padding: 5px 0; color: #555; transition: 0.2s;
@@ -438,7 +468,7 @@ onUnmounted(() => {
 
 .nav-mega-item { height: 100%; display: flex; align-items: center; }
 
-/* --- 右侧功能区 --- */
+/* --- Right Actions --- */
 .cyber-actions { display: flex; align-items: center; gap: 16px; }
 
 .cyber-icon-btn {
@@ -457,7 +487,7 @@ onUnmounted(() => {
 }
 .status-indicator { color: #00AA00; animation: blink 2s infinite; }
 
-/* --- 用户面板 --- */
+/* --- User Panel --- */
 .user-control-panel { display: flex; align-items: center; gap: 12px; position: relative; }
 
 .user-trigger {
@@ -524,7 +554,7 @@ onUnmounted(() => {
 .pop-down-enter-active, .pop-down-leave-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .pop-down-enter-from, .pop-down-leave-to { opacity: 0; transform: translateY(-20px) scale(0.9); }
 
-/* --- 战术按钮通用样式 --- */
+/* --- Tactical Buttons --- */
 .tactical-btn-wrapper { position: relative; }
 .tactical-btn {
   height: 36px; padding: 0 16px; background: var(--ink-black); color: #fff; border: none;
@@ -533,6 +563,13 @@ onUnmounted(() => {
   clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
 }
 .tactical-btn.red { background: var(--cyber-red); }
+.tactical-btn.gold { background: #f1c40f; color: var(--ink-black); }
+.tactical-btn.gold:hover { background: #d4ac0d; box-shadow: 3px 3px 0 var(--ink-black); }
+
+/* 🔥 新增：协作按钮蓝色样式 */
+.tactical-btn.blue { background: var(--cyber-blue); }
+.tactical-btn.blue:hover { background: #0087D1; box-shadow: 3px 3px 0 var(--ink-black); }
+
 .tactical-btn:hover { transform: translate(-2px, -2px); box-shadow: 3px 3px 0 var(--ink-black); }
 .tactical-btn:active { transform: translate(0, 0); box-shadow: none; }
 .btn-deco-line {
@@ -559,6 +596,11 @@ onUnmounted(() => {
     position: fixed; top: 72px; right: 0; left: 0; width: 100vw;
     display: flex; justify-content: center;
   }
+}
+@media (max-width: 1200px) {
+  /* 在较窄屏幕隐藏文字，防止 Header 溢出 */
+  .tactical-btn.blue .btn-label, 
+  .tactical-btn.gold .btn-label { display: none; }
 }
 @media (max-width: 992px) {
   .tactical-btn .btn-label { display: none; }

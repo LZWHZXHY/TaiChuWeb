@@ -251,7 +251,7 @@ const validateForm = () => {
   if (!registerForm.username.trim()) {
     errors.username = t('Register.err_username_empty')
     isValid = false
-  } else if (registerForm.username.length < 3 || registerForm.username.length > 20) {
+  } else if (registerForm.username.length < 1 || registerForm.username.length > 20) {
     errors.username = t('Register.err_username_len')
     isValid = false
   }

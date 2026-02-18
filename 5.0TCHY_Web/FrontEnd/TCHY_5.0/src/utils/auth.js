@@ -4,7 +4,6 @@ import apiClient from '@/utils/api'
 
 export const useAuthStore = defineStore('auth', () => {
   // --- 1. 状态初始化 ---
-  // 尝试读取缓存，避免刷新空白
   const cachedUser = localStorage.getItem('user_cache')
   const user = ref(cachedUser ? JSON.parse(cachedUser) : {})
   
@@ -19,25 +18,17 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       console.log('🔄 [SWR] 正在全量同步用户状态 (资料 + 数值)...')
 
-      // ✨ 关键修改：并行请求两个接口 ✨
-      // /detail -> 获取头像、简介、社交链接
-      // /me     -> 获取金币、经验、声望
       const [detailRes, statsRes] = await Promise.all([
         apiClient.get('/profile/detail'),
         apiClient.get('/profile/me')
       ])
 
       if (detailRes.data.success && statsRes.data.success) {
-        const d = detailRes.data.data // 资料数据
-        const s = statsRes.data.data  // 数值数据 (Stats)
+        const d = detailRes.data.data
+        const s = statsRes.data.data
 
-        // 💡 数据合并逻辑
-        // 将两个接口的数据拼成一个完整的对象
         const fullUserData = {
-          ...user.value, // 保留旧字段防止覆盖
-          
-          // --- 来自 /profile/detail 的基础信息 ---
-          // 注意：后端返回的是 PascalCase (首字母大写)
+          ...user.value,
           username: d.Username,
           avatar: d.Avatar, 
           gender: d.Gender,
@@ -47,31 +38,25 @@ export const useAuthStore = defineStore('auth', () => {
           signature: d.Signature,
           birthDate: d.BirthDate,
           email: d.Email,
-
-          // --- 来自 /profile/me 的 RPG 数值 ---
           level: s.Level,
           title: s.Title,
-          coins: s.Points,       // 映射：后端的 Points -> 前端的 coins/gold
+          coins: s.Points,
           reputation: s.Reputation,
           currentExp: s.CurrentExp,
           nextLevelExp: s.NextLevelExp,
           expPercent: s.ExpPercent
         }
 
-        // 1. 更新 Pinia
         user.value = fullUserData
-        // 确保 ID 存在 (detail 接口可能没返回 ID，尽量保留原有的或从 token 解析的)
         if (d.Id) userID.value = d.Id
 
-        // 2. 更新 LocalStorage (持久化)
         localStorage.setItem('user_cache', JSON.stringify(fullUserData))
-        localStorage.setItem('user', JSON.stringify(fullUserData)) // ✅ 新增这一行
+        localStorage.setItem('user', JSON.stringify(fullUserData))
         
         console.log('✅ [SWR] 用户全量资料已更新:', fullUserData.username)
       }
     } catch (error) {
       console.warn('⚠️ [SWR] 同步失败，部分接口未响应:', error)
-      // 即使失败也不清除数据，保证离线体验
     }
   }
 
@@ -98,10 +83,7 @@ export const useAuthStore = defineStore('auth', () => {
     
     token.value = storedToken
     isAuthenticated.value = true
-    
-    // 启动时触发一次静默更新
     fetchLatestUser()
-    
     return true
   }
 
@@ -117,7 +99,6 @@ export const useAuthStore = defineStore('auth', () => {
         const authToken = response.data.token
         const userId = response.data.userId
 
-        // 先存一个最基础的壳子，让路由能跳过去
         const basicUser = {
           id: userId,
           username: response.data.username,
@@ -131,17 +112,15 @@ export const useAuthStore = defineStore('auth', () => {
         
         localStorage.setItem('auth_token', authToken)
         localStorage.setItem('user_cache', JSON.stringify(basicUser))
-        localStorage.setItem('user', JSON.stringify(basicUser)) // ✅ 新增这一行
+        localStorage.setItem('user', JSON.stringify(basicUser))
 
-        // 🚀 登录成功后，立刻去拉取详细数值！
         await fetchLatestUser()
-
         return { success: true, user: user.value }
       } else {
-        return { success: false, error: response.data.error }
+        return { success: false, error: response.data.error || '登录失败' }
       }
     } catch (error) {
-      return { success: false, error: error.response?.data?.error || '登录失败' }
+      return { success: false, error: error.response?.data?.error || '网络连接失败' }
     }
   }
 
@@ -150,9 +129,57 @@ export const useAuthStore = defineStore('auth', () => {
     clearAuthState()
   }
 
-  // 注册与验证码逻辑保持不变...
-  const sendVerificationCode = async (email) => { /* ... */ }
-  const register = async (userData) => { /* ... */ }
+  // --- 7. 发送验证码 (✨ 核心修复部分 ✨) ---
+  const sendVerificationCode = async (email) => {
+    try {
+      // 请确保后端的 URL 路径正确，这里假设是 /loginregister/send-code
+      const response = await apiClient.post('/loginregister/send-verification-code', { email })
+      
+      // 这里的逻辑必须保证在 success 为 false 时也返回对象
+      if (response.data && response.data.success) {
+        return { 
+          success: true, 
+          message: response.data.message || '验证码已发送到邮箱' 
+        }
+      } else {
+        return { 
+          success: false, 
+          error: response.data?.error || '服务器拒绝发送验证码' 
+        }
+      }
+    } catch (error) {
+      console.error('发送验证码 API 错误:', error)
+      return { 
+        success: false, 
+        error: error.response?.data?.error || '无法连接到服务器，请检查网络' 
+      }
+    }
+  }
+
+  // --- 8. 注册 (✨ 核心修复部分 ✨) ---
+  const register = async (userData) => {
+    try {
+      const response = await apiClient.post('/loginregister/register', userData)
+      
+      if (response.data && response.data.success) {
+        return { 
+          success: true, 
+          username: response.data.username || userData.username 
+        }
+      } else {
+        return { 
+          success: false, 
+          error: response.data?.error || '注册失败' 
+        }
+      }
+    } catch (error) {
+      console.error('注册 API 错误:', error)
+      return { 
+        success: false, 
+        error: error.response?.data?.error || '注册请求超时或服务器错误' 
+      }
+    }
+  }
 
   return {
     user,

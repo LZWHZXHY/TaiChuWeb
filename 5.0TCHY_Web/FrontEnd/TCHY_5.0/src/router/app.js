@@ -189,6 +189,28 @@ const routes = [
     }
   },
   {
+  // 必须放在 /workspace 后面
+  path: '/projects/:id', 
+  name: 'ProjectDetail',
+  component: () => import('@/views/ProjectDetail.vue'),
+  meta: { requiresAuth: true }
+},
+{
+  path: '/workspace',
+  name: '项目管理',
+  component: () => import('@/views/ProjectManager.vue'), 
+  meta: { 
+    requiresAuth: true, 
+    title: '协作工作台 // WORKSPACE' 
+  }
+},
+  {
+  path: '/creative-center',
+  name: 'CreativeCenter',
+  component: () => import('@/views/CreativeCenter.vue'),
+  meta: { requiresAuth: true } // 记得路由守卫
+},
+  {
     path: '/blog/:id',  // :id 是动态参数
     name: 'BlogDetail',
     component: () => import('@/BlogComponents/BlogDetailPage.vue'), 
@@ -218,7 +240,12 @@ const routes = [
     },
     props: true
   },
-
+  {
+  path: '/joint/:id',
+  name: 'JointDetail',
+  component: () => import('@/views/JointDetail.vue'), // 你的新组件路径
+  props: true
+},
   {
     path: "/profile/MEE",
     name: "my-new-profile",
