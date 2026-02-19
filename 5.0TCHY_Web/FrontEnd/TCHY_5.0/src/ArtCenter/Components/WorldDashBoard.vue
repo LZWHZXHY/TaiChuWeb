@@ -268,25 +268,32 @@ const handleNodeSubmit = async (data, done) => {
 
 const handleUpdateNode = async (formData, done) => {
   try {
-    await apiClient.put(`/Setting/${formData.id}`, {
+    // 1. 发送请求 (这里的字段名已与后端 DTO 完全对齐)
+    const res = await apiClient.put(`/Setting/${formData.id}`, {
       Name: formData.name, 
       Description: formData.description,
       Type: formData.type,
       Author: formData.author, 
-      
-      // 🔥 核心修复：必须在这里要把 parentId 传给后端
-      // 这里的 formData.parentId 来自子组件的 emit
+      author_id: formData.author_id, 
       ParentId: formData.parentId, 
-      
-      MetaData: JSON.parse(formData.metaStr)
+      MetaData: formData.metaStr ? JSON.parse(formData.metaStr) : {}
     })
     
-    await initData() // 刷新列表，这样左侧树状图也会更新位置
-    if(done) done() 
+    // 2. 检查后端返回的状态
+    // 如果是协助者，res.data.isPending 会是 true
+    if (res.data && res.data.isPending) {
+      alert(">> 系统提示：变更已进入审核队列，请联系创世神通过。");
+    } else {
+      // 如果是拥有者，直接刷新数据
+      await initData();
+      alert(">> 同步成功：数据已即时更新。");
+    }
+
+    if(done) done(); 
   } catch (e) { 
-    console.error(e)
-    alert("Save failed")
-    if(done) done() 
+    console.error("保存报错详情:", e);
+    alert("Save failed: " + (e.response?.data?.message || e.message || "未知错误"));
+    if(done) done(); 
   }
 }
 

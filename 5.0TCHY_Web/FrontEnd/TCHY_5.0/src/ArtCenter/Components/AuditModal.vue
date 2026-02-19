@@ -30,31 +30,39 @@
                   
                   <div class="diff-container">
                     <template v-if="item.type === 'UpdateNode'">
+                      <div class="diff-banner">💡 检测到属性变更请求：</div>
                       <div v-for="(val, key) in getParsedObject(item.data)" :key="key" class="diff-row">
-                        <span class="diff-label">{{ key }}:</span>
+                        <span class="diff-label">{{ formatKeyName(key) }}:</span>
+                        
                         <div class="diff-value">
-                          <template v-if="key === 'MetaData'">
-                            <pre class="json-inner">{{ JSON.stringify(val, null, 2) }}</pre>
+                          <template v-if="key === 'MetaData' || key === 'meta_data_json'">
+                            <pre class="json-inner">{{ formatJson(val) }}</pre>
                           </template>
-                          <template v-else-if="key === 'Description'">
-                            <div class="text-inner">{{ val || '(EMPTY)' }}</div>
+                          
+                          <template v-else-if="key === 'author_id' || key === 'Author_id'">
+                            <span class="id-highlight">USER_ID: {{ val }}</span>
                           </template>
+
+                          <template v-else-if="key === 'Description' || key === 'description'">
+                            <div class="text-inner">{{ val || '(EMPTY_DATA)' }}</div>
+                          </template>
+
                           <template v-else>
-                            <span>{{ val }}</span>
+                            <span :class="{ 'val-important': key === 'Name' }">{{ val }}</span>
                           </template>
                         </div>
                       </div>
                     </template>
 
                     <template v-else-if="item.type === 'CreateNode'">
+                      <div class="diff-banner">🆕 初始节点数据存档：</div>
                       <div class="diff-row">
-                        <span class="diff-label">INITIAL_DATA:</span>
-                        <pre class="json-inner">{{ JSON.stringify(item.data, null, 2) }}</pre>
+                        <pre class="json-inner">{{ formatJson(item.data) }}</pre>
                       </div>
                     </template>
 
                     <template v-else-if="item.type === 'DeleteNode'">
-                      <div class="alert-text">ATTENTION: 该操作将软删除此条目及其关联关系。</div>
+                      <div class="alert-text">⚠️ 警告: 该操作将执行数据抹除，请谨慎核实。</div>
                     </template>
                   </div>
                 </div>
@@ -90,29 +98,72 @@ const fetchAudits = async () => {
   loading.value = true
   try {
     const res = await apiClient.get(`/Audit/${props.ipId}`)
+    // 后端现在返回的是合并后的列表
     auditList.value = res.data
-  } catch (e) { console.error(e) } finally { loading.value = false }
+  } catch (e) { 
+    console.error("无法调取审核流:", e) 
+  } finally { 
+    loading.value = false 
+  }
 }
 
 const handleAudit = async (item, isApproved) => {
-  const actionText = isApproved ? "通过" : "拒绝"
-  if (!confirm(`确定要 [${actionText}] 这条请求吗？`)) return
+  const actionText = isApproved ? "核准通过" : "驳回申请"
+  if (!confirm(`确认要 [${actionText}] 这条指令吗？`)) return
+  
   try {
+    // 这里的 item.id 在 UpdateNode 类型下是 IpChangeLog 的 ID
+    // 在 CreateNode 类型下是 Settings 表里的临时 ID
     await apiClient.post('/Audit/approve', {
       TargetId: item.id, 
       Type: item.type,
       IsApproved: isApproved
     })
-    alert(`已${actionText}`)
+    alert(`指令已下达: ${actionText}`)
     fetchAudits()
-  } catch (e) { alert("操作失败") }
+  } catch (e) { 
+    alert("系统指令执行失败，请检查网络连接") 
+  }
 }
 
-const formatDate = (t) => new Date(t).toLocaleString()
-const formatType = (t) => ({ 'CreateNode': 'NEW', 'UpdateNode': 'EDIT', 'DeleteNode': 'DEL' }[t] || t)
+const formatDate = (t) => t ? new Date(t).toLocaleString() : 'N/A'
+const formatType = (t) => ({ 'CreateNode': 'NEW_NODE', 'UpdateNode': 'UPDATE_REQ', 'DeleteNode': 'PURGE' }[t] || t)
+
+// 转换键名为更易读的形式
+const formatKeyName = (key) => {
+  const map = {
+    'Name': '节点名称',
+    'name': '节点名称',
+    'Description': '详细描述',
+    'description': '详细描述',
+    'Type': '分类标签',
+    'type': '分类标签',
+    'Author': '作者署名',
+    'author': '作者署名',
+    'author_id': '作者用户ID',
+    'Author_id': '作者用户ID',
+    'ParentId': '父节点ID',
+    'MetaData': '扩展元数据'
+  }
+  return map[key] || key.toUpperCase()
+}
+
+// 格式化 JSON 显示
+const formatJson = (val) => {
+  if (!val) return '{}'
+  if (typeof val === 'string') {
+    try {
+      return JSON.stringify(JSON.parse(val), null, 2)
+    } catch {
+      return val
+    }
+  }
+  return JSON.stringify(val, null, 2)
+}
 
 // 解析数据字符串为对象
 const getParsedObject = (data) => {
+  if (!data) return {}
   if (typeof data === 'object') return data
   try { return JSON.parse(data) } catch { return {} }
 }
@@ -121,41 +172,48 @@ watch(() => props.show, (val) => { if (val) fetchAudits() })
 </script>
 
 <style scoped>
-/* 延续之前的工业风样式，新增 diff 相关样式 */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 3000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-.modal-card { width: 700px; max-width: 95vw; height: 85vh; background: #F4F1EA; border: 3px solid #111; display: flex; flex-direction: column; box-shadow: 15px 15px 0 rgba(0,0,0,0.5); }
+.modal-card { width: 750px; max-width: 95vw; height: 85vh; background: #F4F1EA; border: 3px solid #111; display: flex; flex-direction: column; box-shadow: 15px 15px 0 rgba(0,0,0,0.5); }
 .modal-header { background: #111; color: #fff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-.modal-header h3 { margin: 0; font-family: 'Anton', sans-serif; font-size: 1.2rem; }
+.modal-header h3 { margin: 0; font-family: 'Anton', sans-serif; font-size: 1.2rem; letter-spacing: 2px; }
 .close-btn { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
-.modal-body { padding: 20px; flex: 1; overflow-y: auto; background: #e5e5e5; }
+.modal-body { padding: 25px; flex: 1; overflow-y: auto; background: #e5e5e5; }
 
-.audit-item { background: #fff; border: 2px solid #111; margin-bottom: 20px; padding: 15px; border-left-width: 8px; }
-.audit-item.createnode { border-left-color: #2ecc71; }
-.audit-item.updatenode { border-left-color: #3498db; }
-.audit-item.deletenode { border-left-color: #D92323; }
+.audit-item { background: #fff; border: 2px solid #111; margin-bottom: 25px; padding: 18px; border-left-width: 10px; position: relative; }
+.audit-item.createnode { border-left-color: #2ecc71; } /* 绿色-创建 */
+.audit-item.updatenode { border-left-color: #3498db; } /* 蓝色-更新 */
+.audit-item.deletenode { border-left-color: #D92323; } /* 红色-删除 */
 
-.item-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.8rem; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+.item-header { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.75rem; font-family: 'JetBrains Mono'; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+.type-tag { color: #111; }
+.time-tag { color: #999; }
 
-/* 🔥 详情展示区样式 */
-.diff-container { background: #f9f9f9; border: 1px solid #ddd; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
-.diff-row { margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
-.diff-row:last-child { border-bottom: none; }
-.diff-label { color: #888; font-weight: bold; margin-right: 10px; display: block; margin-bottom: 4px; }
-.diff-value { color: #111; }
-.json-inner { background: #222; color: #7fdbff; padding: 10px; border-radius: 4px; overflow-x: auto; margin: 5px 0; }
-.text-inner { white-space: pre-wrap; background: #fff; border: 1px solid #eee; padding: 8px; color: #444; }
-.alert-text { color: #D92323; font-weight: bold; }
+.item-title { font-size: 1.1rem; font-weight: 900; color: #111; margin-bottom: 15px; }
 
-.item-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
-.cyber-btn { border: 2px solid #111; padding: 8px 16px; font-weight: bold; cursor: pointer; font-family: 'Anton'; }
+/* 详情展示区 */
+.diff-container { background: #fdfdfd; border: 1px solid #ccc; padding: 15px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+.diff-banner { color: #111; font-weight: bold; border-bottom: 2px solid #111; padding-bottom: 5px; margin-bottom: 12px; font-size: 0.75rem; }
+.diff-row { margin-bottom: 12px; }
+.diff-label { color: #666; font-weight: bold; margin-bottom: 4px; display: block; font-size: 0.7rem; text-transform: uppercase; }
+.diff-value { color: #111; padding-left: 10px; border-left: 2px solid #eee; }
+
+.json-inner { background: #1a1a1a; color: #a6e22e; padding: 12px; border-radius: 4px; overflow-x: auto; margin: 8px 0; font-size: 0.8rem; line-height: 1.4; }
+.text-inner { white-space: pre-wrap; background: #fff; border: 1px dashed #ccc; padding: 10px; color: #333; line-height: 1.6; }
+
+.id-highlight { background: #111; color: #fff; padding: 2px 8px; font-weight: bold; }
+.val-important { font-weight: bold; color: #D92323; font-size: 1rem; }
+.alert-text { color: #D92323; font-weight: bold; padding: 10px; background: #fff0f0; border: 1px solid #D92323; }
+
+.item-actions { display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px; }
+.cyber-btn { border: 2px solid #111; padding: 10px 22px; font-weight: bold; cursor: pointer; font-family: 'Anton'; font-size: 0.9rem; transition: 0.2s; }
 .cyber-btn.approve { background: #111; color: #fff; }
-.cyber-btn.approve:hover { background: #2ecc71; border-color: #2ecc71; }
+.cyber-btn.approve:hover { background: #2ecc71; border-color: #2ecc71; transform: translate(-2px, -2px); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
 .cyber-btn.reject { background: transparent; color: #111; }
 .cyber-btn.reject:hover { background: #fff0f0; border-color: #D92323; color: #D92323; }
 
-.loading-box, .empty-box { text-align: center; padding: 50px; color: #999; }
+.loading-box, .empty-box { text-align: center; padding: 60px; color: #999; font-family: 'JetBrains Mono'; font-weight: bold; letter-spacing: 2px; }
 .custom-scroll::-webkit-scrollbar { width: 6px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #bbb; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #111; }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

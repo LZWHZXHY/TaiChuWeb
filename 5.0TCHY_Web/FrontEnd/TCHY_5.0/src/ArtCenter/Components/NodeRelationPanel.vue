@@ -68,7 +68,8 @@ export default {
   methods: {
     async fetchRelations() {
       try {
-        const res = await apiClient.get(`/Setting/${this.currentNode.id}/relations`);
+        // 🔴 修改点：请求 graph-relations 接口！
+        const res = await apiClient.get(`/Setting/${this.currentNode.id}/graph-relations`);
         this.currentRelations = res.data.map(rel => ({ ...rel, targetId: Number(rel.targetId) }));
       } catch (e) { console.error("获取关系失败", e); }
     },
@@ -85,14 +86,13 @@ export default {
         await this.fetchRelations();
         this.newRel.type = ''; this.newRel.targetId = null;
         alert("关系添加成功！");
-      } catch (e) { alert(e.response?.data || "添加失败"); } finally { this.isSubmitting = false; }
+      } catch (e) { alert(e.response?.data?.message || "添加失败"); } finally { this.isSubmitting = false; }
     },
     async deleteRelation(relId) {
       if(!confirm("确定断开此关系吗？")) return;
       try {
         await apiClient.delete(`/Setting/relation/${relId}`);
         await this.fetchRelations();
-        alert("关系已删除。");
       } catch (e) { alert("删除失败"); }
     }
   }
