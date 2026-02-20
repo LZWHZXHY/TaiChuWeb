@@ -72,7 +72,7 @@
           <div class="tactical-btn-wrapper" @click="goToCreativeCenter">
             <button class="tactical-btn gold">
               <span class="btn-icon">▤</span>
-              <span class="btn-label">CENTER // 创造</span>
+              <span class="btn-label">创作中心</span>
             </button>
             <div class="btn-deco-line"></div>
           </div>

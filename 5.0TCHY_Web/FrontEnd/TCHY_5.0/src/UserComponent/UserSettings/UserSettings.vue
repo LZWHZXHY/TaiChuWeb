@@ -45,12 +45,12 @@ import SecuritySetting from './Settings/SecuritySetting.vue'
 import FeatureSetting from './Settings/FeatureSetting.vue'
 import OtherSetting from './Settings/OtherSetting.vue'
 import TestSetting from './Settings/TestSetting.vue'
-import ContentSetting from './Settings/ContentSetting.vue'
+
 
 
 
 const menuItems = ref([
-  '中心首页', '资料设置', '内容管理', '头像设置', '个性设置', 
+  '中心首页', '资料设置', '头像设置', '个性设置', 
   '隐私设置', '安全设置', '功能设置', '其它设置', '测试功能'
 ])
 
@@ -58,7 +58,6 @@ const componentMap = {
   '中心首页': CenterSetting,
   '资料设置': ProfileSetting,
   '头像设置': AvatarSetting,
-  '内容管理': ContentSetting, // 新增映射
   '个性设置': PersonalSetting,
   '隐私设置': PrivacySetting,
   '安全设置': SecuritySetting,
