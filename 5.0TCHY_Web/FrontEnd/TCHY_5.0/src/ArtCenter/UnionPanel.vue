@@ -8,7 +8,7 @@
         <div class="header-main">
           <div class="brand-box">
             <span class="dept">BUREAU_ARCHIVE // 档案局</span>
-            <h1 class="main-title">柴圈联合</h1>
+            <h1 class="main-title">联合区域</h1>
             <div class="sub-info">
               <span class="status-indicator"><i class="dot"></i> 系统同步中</span>
               <span class="divider">|</span>
@@ -120,6 +120,8 @@
                       <option :value="1">协作 (COLLAB)</option>
                       <option :value="2">接力 (RELAY)</option>
                       <option :value="3">竞技 (MATCH)</option>
+                      <option :value="4">同屏</option>
+
                     </select>
                   </div>
                 </div>

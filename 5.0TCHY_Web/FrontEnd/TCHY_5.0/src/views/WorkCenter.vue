@@ -22,7 +22,7 @@
               <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_01</span><span class="ch-name">寰宇画廊 // GALLERY</span></div><div class="status-light"></div>
             </div>
             <div class="cyber-channel-btn" :class="{ active: currentChannel === 'joint' }" @click="currentChannel = 'joint'">
-              <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_02</span><span class="ch-name">柴圈联合 // JOINT</span></div><div class="status-light"></div>
+              <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_02</span><span class="ch-name">联合区域 // JOINT</span></div><div class="status-light"></div>
             </div>
             <div class="cyber-channel-btn" :class="{ active: currentChannel === 'certification' }" @click="currentChannel = 'certification'">
               <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_03</span><span class="ch-name">创作认证 // CERT</span></div><div class="status-light"></div>

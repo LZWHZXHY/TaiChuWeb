@@ -1,211 +1,271 @@
-<template>
-  <div class="page-wrapper">
-    
-    <div ref="containerRef" class="MainBackground"></div>
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import apiClient from '@/utils/api';
 
-    <div class="ContentLayer">
-      <div class="scroll-content">
-        
-        <HeroCarousel />
-
-        <ArtMasonry />
-
-        <BlogShowcase />
-
-        <CyberTicker />
-
-        <VideoStream />
-
-        <CyberTicker />
-
-        
-
-        <footer class="cyber-footer">
-          <div class="footer-line"></div>
-          <p>支持太初寰宇！</p>
-          <p class="copyright">© 2026 DESIGNED BY 太初寰宇</p>
-        </footer>
-
-      </div>
-    </div>
-
-
-    
-  </div>
-</template>
-
-<script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import * as THREE from 'three';
-
-// --- 引入所有子组件 ---
+// 组件导入
 import HeroCarousel from '@/MainPushComponent/HeroCarousel.vue';
-import BlogShowcase from '@/MainPushComponent/BlogShowcase.vue';
 import CyberTicker from '@/MainPushComponent/CyberTicker.vue';  
-import VideoStream from '@/MainPushComponent/VideoStream.vue';  
-import ArtMasonry from '@/MainPushComponent/ArtMasonry.vue';   
+import PostCard from '@/MainPushComponent/cards/PostCard.vue';
+import BlogCard from '@/MainPushComponent/cards/BlogCard.vue';
+import ArtCard from '@/MainPushComponent/cards/ArtCard.vue';
 
-// --- Three.js 背景逻辑 (保持不变) ---
-const containerRef = ref(null);
-let scene, camera, renderer, particlesMesh;
-let animationId = null;
+// --- 分页与数据逻辑 ---
+const rawFeedData = ref<any[]>([]);
+const isLoading = ref(false); 
+const currentPage = ref(1);
+const pageSize = 10;
+const hasMore = ref(true); 
+const loadingTriggerRef = ref<HTMLElement | null>(null); 
+let observer: IntersectionObserver | null = null;
 
-const initThreeJS = () => {
-  scene = new THREE.Scene();
-  // 雾效：让远处的粒子隐没在黑暗中，增加深邃感
-  scene.fog = new THREE.FogExp2(0x050505, 0.05);
-
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.z = 3;
-
-  renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-  if (containerRef.value) {
-    containerRef.value.innerHTML = '';
-    containerRef.value.appendChild(renderer.domElement);
-  }
-
-  const particlesGeometry = new THREE.BufferGeometry();
-  const particlesCount = 2000;
-  const posArray = new Float32Array(particlesCount * 3);
-
-  for (let i = 0; i < particlesCount * 3; i++) {
-    posArray[i] = (Math.random() - 0.5) * 15;
-  }
-
-  particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-
-  const material = new THREE.PointsMaterial({
-    size: 0.015,
-    color: 0x00F0FF, // 赛博青
-    transparent: true,
-    opacity: 0.8,
-  });
-
-  particlesMesh = new THREE.Points(particlesGeometry, material);
-  scene.add(particlesMesh);
-
-  let mouseX = 0;
-  let mouseY = 0;
-
-  const onMouseMove = (event) => {
-    mouseX = event.clientX / window.innerWidth - 0.5;
-    mouseY = event.clientY / window.innerHeight - 0.5;
-  };
-  window.addEventListener('mousemove', onMouseMove);
-
-  const clock = new THREE.Clock();
-
-  const animate = () => {
-    animationId = requestAnimationFrame(animate);
-    const elapsedTime = clock.getElapsedTime();
-    
-    // 粒子自转 + 鼠标视差
-    particlesMesh.rotation.y = elapsedTime * 0.05;
-    particlesMesh.rotation.x += (mouseY * 0.5 - particlesMesh.rotation.x) * 0.05;
-    particlesMesh.rotation.y += (mouseX * 0.5 - particlesMesh.rotation.y * 0.05) * 0.05;
-    
-    renderer.render(scene, camera);
-  };
-
-  animate();
-
-  const onResize = () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  };
-  window.addEventListener('resize', onResize);
-
-  return () => {
-    window.removeEventListener('mousemove', onMouseMove);
-    window.removeEventListener('resize', onResize);
-    if(particlesMesh) {
-        scene.remove(particlesMesh);
-        particlesGeometry.dispose();
-        material.dispose();
+const fetchFeedData = async (isLoadMore = false) => {
+  if (isLoading.value || !hasMore.value) return;
+  try {
+    isLoading.value = true;
+    const response = await apiClient.get(`/Feed/latest?page=${currentPage.value}&limit=${pageSize}`); 
+    if (response.data && response.data.code === 200) {
+      const newItems = response.data.data.map((item: any) => ({
+        id: item.Id,
+        type: item.Type.toLowerCase(),
+        author: item.Author,
+        authorId: item.AuthorId,
+        timestamp: item.Timestamp,
+        title: item.Title,
+        content: item.Content,
+        imgUrl: item.ImgUrl
+      })); 
+      if (newItems.length < pageSize) hasMore.value = false;
+      if (isLoadMore) rawFeedData.value.push(...newItems);
+      else rawFeedData.value = newItems;
+      currentPage.value++;
     }
-    renderer.dispose();
-  };
+  } catch (error) {
+    console.error('获取动态数据失败:', error);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
-let cleanupThreeJS = null;
+const sortedFeed = computed(() => {
+  return [...rawFeedData.value].sort((a: any, b: any) => {
+    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+  });
+});
+
+const getComponentType = (type: string): any => {
+  const map: Record<string, any> = { post: PostCard, blog: BlogCard, art: ArtCard };
+  return map[type] || PostCard;
+};
+
+const formatDate = (dateString: string) => {
+  if (!dateString) return '';
+  const d = new Date(dateString);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+};
 
 onMounted(() => {
-  cleanupThreeJS = initThreeJS();
+  fetchFeedData();
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && hasMore.value && !isLoading.value) {
+      fetchFeedData(true);
+    }
+  }, { threshold: 0.1 });
+  if (loadingTriggerRef.value) observer.observe(loadingTriggerRef.value);
 });
 
 onUnmounted(() => {
-  if (cleanupThreeJS) cleanupThreeJS();
-  if (animationId) cancelAnimationFrame(animationId);
+  if (observer) observer.disconnect();
 });
 </script>
 
+<template>
+  <div class="doc-wrapper">
+    
+
+    <main class="main-content">
+      <section class="hero-section">
+        <div class="hero-inner">
+          <HeroCarousel />
+          <div class="ticker-box">
+            <CyberTicker />
+          </div>
+        </div>
+        <div class="section-divider">
+          <span class="divider-label">FILE_STREAM // 实时动态数据流</span>
+        </div>
+      </section>
+
+      <div class="feed-container">
+        <transition-group name="fade-list" tag="div" class="feed-list">
+          <div 
+            v-for="item in sortedFeed" 
+            :key="item.type + item.id" 
+            class="feed-item-wrapper"
+          >
+            <div class="item-header">
+              <span class="type-badge">{{ item.type }}</span>
+              <span class="timestamp">{{ formatDate(item.timestamp) }}</span>
+            </div>
+            
+            <div class="item-content">
+              <component :is="getComponentType(item.type)" :data="item" />
+            </div>
+          </div>
+        </transition-group>
+
+        <div ref="loadingTriggerRef" class="loading-trigger">
+          <div v-if="isLoading" class="loader">
+            <span class="dot"></span>
+            <span>SYNCHRONIZING...</span>
+          </div>
+          <p v-else-if="!hasMore" class="end-msg">--- END OF LOCAL DATA ---</p>
+        </div>
+      </div>
+    </main>
+
+    <footer class="doc-footer">
+      <div class="footer-inner">
+        <p class="footer-main">支持太初寰宇！</p>
+        <p class="footer-sub">© 2026 TAI CHU HUAN YU. ALL RIGHTS RESERVED.</p>
+      </div>
+    </footer>
+  </div>
+</template>
+
 <style scoped>
-.page-wrapper {
-  position: relative;
-  width: 100%;
+/* 核心容器：灰白色温增加纸张感 */
+.doc-wrapper {
+  background-color: #f8f9fa;
+  color: #1a1a1a;
   min-height: 100vh;
-  background-color: #050505;
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
-.MainBackground {
-  position: fixed;
+/* 导航：利用边框线条增加设计感 */
+.doc-header {
+  position: sticky;
   top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background-color: #050505;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
+  background: rgba(248, 249, 250, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 2px solid #1a1a1a;
+  z-index: 1000;
 }
 
-.ContentLayer {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  min-height: 100vh;
-  overflow-y: auto; 
-  overflow-x: hidden;
-}
-
-.scroll-content {
-  padding-top: 80px; /* 避开顶部导航 */
+.header-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 16px 24px;
   display: flex;
-  flex-direction: column;
-  gap: 20px; /* 组件间的基础间距，组件内部还有 margin */
+  justify-content: space-between;
+  align-items: center;
 }
 
-.cyber-footer {
-  text-align: center;
-  padding: 60px 20px 40px;
-  color: #444;
+.logo-text { font-size: 20px; font-weight: 800; letter-spacing: -1px; }
+.status-tag { 
+  font-family: 'JetBrains Mono', monospace; 
+  font-size: 10px; 
+  background: #1a1a1a; 
+  color: #fff; 
+  padding: 2px 6px; 
+  margin-left: 12px;
+}
+
+.nav-item { 
+  text-decoration: none; 
+  color: #666; 
+  font-weight: 600; 
+  font-size: 13px; 
+  margin-left: 24px;
+}
+.nav-item.active { color: #1a1a1a; text-decoration: underline; text-underline-offset: 4px; }
+
+.main-content {
+  width: 80%;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+/* 推广展示区 */
+.hero-section {
+  margin-bottom: 60px;
+}
+
+.hero-inner {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 8px;
+  box-shadow: 4px 4px 0px #eee; /* 这里的阴影是硬阴影，更显简约大方 */
+}
+
+.ticker-box {
+  margin-top: 8px;
+  border-top: 1px solid #eee;
+  padding: 8px 4px;
+}
+
+/* 分割线：模拟文档章节 */
+.section-divider {
+  display: flex;
+  align-items: center;
+  margin: 40px 0;
+}
+
+.divider-label {
   font-family: 'JetBrains Mono', monospace;
-  margin-top: 40px;
-}
-
-.footer-line {
-  width: 100px;
-  height: 2px;
-  background: #333;
-  margin: 0 auto 20px;
-}
-
-.copyright {
   font-size: 12px;
-  margin-top: 10px;
-  opacity: 0.5;
+  color: #999;
+  padding-right: 15px;
+  white-space: nowrap;
 }
-</style>
 
-<style>
-body {
-  margin: 0;
-  padding: 0;
-  background-color: #050505;
-  color: #fff;
+.section-divider::after {
+  content: "";
+  flex-grow: 1;
+  height: 1px;
+  background: #ddd;
 }
+
+/* 动态流列表 */
+.feed-container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.feed-item-wrapper {
+  margin-bottom: 40px;
+  background: #fff;
+  border-left: 3px solid #1a1a1a; /* 增强文档感 */
+  padding: 24px;
+  transition: transform 0.2s ease;
+}
+
+.feed-item-wrapper:hover {
+  transform: translateX(5px);
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+
+.type-badge { color: #fff; background: #1a1a1a; padding: 2px 8px; }
+.timestamp { color: #999; }
+
+/* 页脚 */
+.doc-footer {
+  border-top: 1px solid #ddd;
+  padding: 80px 0;
+  text-align: center;
+  background: #fff;
+}
+
+.footer-inner .footer-main { font-weight: 700; margin-bottom: 8px; }
+.footer-inner .footer-sub { font-size: 12px; color: #999; font-family: 'JetBrains Mono'; }
+
+/* 过渡动画 */
+.fade-list-enter-active, .fade-list-leave-active { transition: all 0.4s ease; }
+.fade-list-enter-from { opacity: 0; transform: translateY(20px); }
 </style>
