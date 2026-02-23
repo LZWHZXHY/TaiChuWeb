@@ -66,7 +66,7 @@
                 <div class="c-icon">↗</div>
               </a>
 
-              <a href="https://kook.vip/NkVRhO" target="_blank" class="comms-btn kook">
+              <a href="https://kook.vip/oAj8SQ" target="_blank" class="comms-btn kook">
                 <div class="btn-inner">
                   <span class="c-label">KOOK</span>
                   <span class="c-sub">邀请通道</span>
@@ -98,6 +98,7 @@ import { ref, computed, onMounted, onUnmounted, markRaw } from 'vue';
 // 引入子组件
 import ChannelMinecraft from '@/EnterainmentComponents/MCServerModule.vue';
 import Steam from '@/EnterainmentComponents/Steam.vue';
+import trpg from '@/EnterainmentComponents/trpg.vue';
 
 const currentTime = ref(new Date().toLocaleTimeString());
 let clockTimer = null;
@@ -116,6 +117,12 @@ const channelList = [
     icon: 'ST', 
     label: '综合游戏', 
     component: markRaw(Steam) 
+  },{
+    id:'TRPG',
+    name:'跑团区',
+    icon:'PT',
+    label:'跑团',
+    component: markRaw(trpg)
   }
 ];
 

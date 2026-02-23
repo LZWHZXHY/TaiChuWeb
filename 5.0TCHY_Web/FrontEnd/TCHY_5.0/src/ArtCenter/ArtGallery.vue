@@ -30,9 +30,7 @@
         </div>
       </div>
 
-      <button class="cyber-upload-btn" @click="showUploadModal = true">
-        <span class="icon">+</span> 上传作品
-      </button>
+     
     </div>
 
     <div class="gallery-body">

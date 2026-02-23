@@ -75,7 +75,7 @@ const formatDate = (dateString: string) => {
 .md-type { color: #00F0FF; opacity: 0.8; }
 
 .md-title {
-  color: #fff;
+  color: #000000;
   font-size: 18px;
   margin-bottom: 12px;
   font-weight: 700;
@@ -89,7 +89,7 @@ const formatDate = (dateString: string) => {
 }
 
 .md-text {
-  color: #ccc;
+  color: #000000;
   line-height: 1.7;
   font-size: 15px;
   margin: 0;

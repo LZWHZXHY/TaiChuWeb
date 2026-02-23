@@ -61,14 +61,6 @@
 
         <div v-if="authStore.isAuthenticated" class="user-control-panel">
           
-          <div class="tactical-btn-wrapper" @click="openPublisher">
-            <button class="tactical-btn">
-              <span class="btn-icon">+</span>
-              <span class="btn-label">PUBLISH // 发布</span>
-            </button>
-            <div class="btn-deco-line"></div>
-          </div>
-
           <div class="tactical-btn-wrapper" @click="goToCreativeCenter">
             <button class="tactical-btn gold">
               <span class="btn-icon">▤</span>
@@ -122,6 +114,12 @@
                   <span class="row-icon">◈</span>
                 </div>
 
+                <!-- 可选：添加通知中心菜单项 -->
+                <div class="menu-row" @click="router.push('/notifications'); showUserMenu = false;">
+                  <span class="row-label">NOTIFICATIONS</span>
+                  <span class="row-icon">📬</span>
+                </div>
+
                 <div class="menu-row" @click="goToNewSettings">
                   <span class="row-label">SETTINGS</span>
                   <span class="row-icon">-></span>
@@ -134,22 +132,16 @@
             </div>
           </transition>
 
+          <!-- 修改后的通知按钮：点击跳转到 /notifications 页面 -->
           <div class="notification-wrapper">
             <button 
-              class="cyber-icon-btn notify-trigger" 
-              :class="{ 'active': showNotifications }"
-              @click.stop="toggleNotifications"
-              title="NOTIFICATIONS"
+              class="cyber-icon-btn" 
+              @click="router.push('/notifications')"
+              title="NOTIFICATION CENTER"
             >
-              <span class="btn-inner">信</span>
+              <span class="btn-inner">📬</span>  <!-- 可替换为其他图标，如“信”字 -->
               <div v-if="localUnreadCount > 0" class="mini-badge"></div>
             </button>
-
-            <transition name="pop-down">
-              <div v-if="showNotifications" class="notification-popover" @click.stop>
-                <NotificationPanel @update-count="fetchUnreadCount" />
-              </div>
-            </transition>
           </div>
 
           <div class="tactical-btn-wrapper" @click="router.push('/suggest')">
@@ -182,8 +174,8 @@ import { useAuthStore } from '@/utils/auth'
 import { usePublisherStore } from '@/stores/publisher' 
 import apiClient from '@/utils/api'
 import DropdownMenu from './DropdownMenu.vue' 
-import NotificationPanel from './Widget/NotificationPanel.vue'
 import CyberMegaMenu from '@/GeneralComponents/CyberMegaMenu.vue' 
+// 注意：NotificationPanel 已不再使用，移除导入
 
 // --- Initializations ---
 const authStore = useAuthStore()
@@ -197,7 +189,7 @@ const BASE_URL = 'https://bianyuzhou.com'
 const userCount = ref(0)
 const localUnreadCount = ref(0) 
 const showUserMenu = ref(false)
-const showNotifications = ref(false)
+// showNotifications 已移除
 const isScrolled = ref(false)
 const avatarLoadError = ref(false)
 let unreadTimer = null 
@@ -260,28 +252,16 @@ const fetchUnreadCount = async () => {
   }
 }
 
-const toggleNotifications = () => {
-  showNotifications.value = !showNotifications.value
-  if (showNotifications.value) {
-    showUserMenu.value = false
-    fetchUnreadCount()
-  } else {
-    fetchUnreadCount()
-  }
-}
+// toggleNotifications 已移除
 
 const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value
-  if (showUserMenu.value) {
-    showNotifications.value = false
-  }
 }
 
 const closeAllMenus = (event) => {
   const target = event.target
-  if (!target.closest('.user-control-panel') && !target.closest('.notification-wrapper')) {
+  if (!target.closest('.user-control-panel')) {
     showUserMenu.value = false
-    showNotifications.value = false
   }
 }
 
@@ -532,11 +512,6 @@ onUnmounted(() => {
   100% { transform: scale(1); opacity: 1; }
 }
 
-.notification-popover {
-  position: absolute; top: 52px; right: -50px; z-index: 2000;
-  filter: drop-shadow(0 10px 30px rgba(0,0,0,0.2));
-}
-
 .cyber-dropdown-menu {
   position: absolute; top: 60px; right: 0; width: 200px;
   background: #fff; border: 2px solid var(--ink-black);
@@ -551,8 +526,6 @@ onUnmounted(() => {
 
 .scale-fade-enter-active, .scale-fade-leave-active { transition: all 0.2s; }
 .scale-fade-enter-from, .scale-fade-leave-to { opacity: 0; transform: translateY(-10px) scale(0.95); }
-.pop-down-enter-active, .pop-down-leave-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.pop-down-enter-from, .pop-down-leave-to { opacity: 0; transform: translateY(-20px) scale(0.9); }
 
 /* --- Tactical Buttons --- */
 .tactical-btn-wrapper { position: relative; }
@@ -591,14 +564,7 @@ onUnmounted(() => {
 
 @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
 
-@media (max-width: 480px) {
-  .notification-popover {
-    position: fixed; top: 72px; right: 0; left: 0; width: 100vw;
-    display: flex; justify-content: center;
-  }
-}
 @media (max-width: 1200px) {
-  /* 在较窄屏幕隐藏文字，防止 Header 溢出 */
   .tactical-btn.blue .btn-label, 
   .tactical-btn.gold .btn-label { display: none; }
 }

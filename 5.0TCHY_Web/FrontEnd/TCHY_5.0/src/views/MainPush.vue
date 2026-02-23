@@ -180,7 +180,7 @@ onUnmounted(() => {
 .nav-item.active { color: #1a1a1a; text-decoration: underline; text-underline-offset: 4px; }
 
 .main-content {
-  width: 80%;
+  width: 95%;
   margin: 0 auto;
   padding: 40px 20px;
 }
@@ -191,10 +191,11 @@ onUnmounted(() => {
 }
 
 .hero-inner {
-  background: #fff;
+  background: #ffffff;
   border: 1px solid #ddd;
   padding: 8px;
   box-shadow: 4px 4px 0px #eee; /* 这里的阴影是硬阴影，更显简约大方 */
+
 }
 
 .ticker-box {

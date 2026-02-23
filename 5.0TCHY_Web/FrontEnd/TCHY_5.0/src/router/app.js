@@ -49,14 +49,6 @@ const routes = [
       title: '用户登录',
       public: true
     }
-  },{
-    path:'/trade',
-    name:'交易站',
-    component:()=>import('@/views/TradeStation.vue'),
-    meta: { 
-      requiresAuth: true,
-      title: '交易站'
-    }
   },
   {
     path: '/register',
@@ -96,6 +88,12 @@ const routes = [
       requiresAuth:true,
       title:'交流中枢'
     }
+  },
+    {
+    path: '/notifications',
+    name: 'NotificationCenter',
+    component: () => import('@/views/NotificationCenter.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path:'/WorkCenter',
@@ -143,24 +141,8 @@ const routes = [
       title:'任务中心'
     }
   },
-  {
-    path:'/RankCenter',
-    name:'排行榜大厅',
-    component:()=>import('@/views/RankCenter.vue'),
-    meta:{
-      requiresAuth:true,
-      title:'排行榜大厅'
-    }
-  },
-  {
-    path:'/blogCreater',
-    name:'博客创作',
-    component:()=>import('@/BlogComponents/BlogCreater.vue'),
-    meta:{
-      requiresAuth:true,
-      title:'博客创作页面'
-    }
-  },
+  
+  
   {
     path:'/EntertainmentArea',
     name:'娱乐区',
@@ -204,6 +186,16 @@ const routes = [
     title: '协作工作台 // WORKSPACE' 
   }
 },
+{
+  path: '/wiki',
+  name: 'Wiki',
+  component: () => import('@/views/WikiPage.vue'),
+  meta: { 
+    title: '寰宇百科',
+    public: true          // 如果希望游客也能访问
+    // 如果需要登录，改为 requiresAuth: true
+  }
+},
   {
   path: '/creative-center',
   name: 'CreativeCenter',
@@ -213,7 +205,7 @@ const routes = [
   {
     path: '/blog/:id',  // :id 是动态参数
     name: 'BlogDetail',
-    component: () => import('@/BlogComponents/BlogDetailPage.vue'), 
+    component: () => import('@/DetailPage/BlogDetailPage.vue'), 
     meta: { 
       requiresAuth: false, // 通常博客是公开可见的
       title: '太初寰宇 // 博客详情'
@@ -223,7 +215,7 @@ const routes = [
   {
   path: '/post/:id',
   name: 'PostDetail',
-  component: () => import('@/PostComponents/PostDetailPage.vue'), // 新建一个独立的页面组件
+  component: () => import('@/DetailPage/PostDetailPage.vue'), // 新建一个独立的页面组件
   meta: { 
       requiresAuth: false,
       title: '太初网络 // 数据节点详情'
@@ -243,7 +235,7 @@ const routes = [
   {
   path: '/joint/:id',
   name: 'JointDetail',
-  component: () => import('@/views/JointDetail.vue'), // 你的新组件路径
+  component: () => import('@/DetailPage/JointDetail.vue'), // 你的新组件路径
   props: true
 },
   {

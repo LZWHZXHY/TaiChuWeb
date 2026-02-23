@@ -29,12 +29,7 @@
 
     <div class="main-bridge">
       
-      <aside class="rank-column">
-        <div class="cyber-card full-height-card">
-          <div class="card-label-strip"><span>// RANKING</span></div>
-          <div class="card-inner-pad"><ActivityRanking /></div>
-        </div>
-      </aside>
+    
 
       <aside class="left-column">
         <section class="cyber-card full-height-card">
@@ -79,21 +74,7 @@
                 <div class="bottom-spacer"></div> </div>
             </section>
 
-            <aside class="action-sidebar">
-              <div class="section-label">// ACTIONS</div>
-              <button class="cyber-btn" @click="router.push('/blogCreater')">
-                <span class="btn-icon"><i class="fas fa-edit"></i></span>
-                <div class="btn-text"><span class="main">发布博客</span><span class="sub">POST_BLOG</span></div>
-              </button>
-              <button class="cyber-btn red-mode" @click="showPostForm = true">
-                <span class="btn-icon"><i class="fas fa-paper-plane"></i></span>
-                <div class="btn-text"><span class="main">发布帖子</span><span class="sub">POST_THREAD</span></div>
-              </button>
-              <button class="cyber-btn" @click="router.push('/trade')">
-                <span class="btn-icon"><i class="fas fa-exchange-alt"></i></span>
-                <div class="btn-text"><span class="main">交易站</span><span class="sub">MARKET_PLACE</span></div>
-              </button>
-            </aside>
+           
           </div>
 
           <div v-else class="chat-module-wrapper" key="chat">
