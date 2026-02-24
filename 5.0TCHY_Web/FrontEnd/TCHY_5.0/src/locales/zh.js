@@ -21,7 +21,8 @@ export default{
     product: '太初产品',
     manage: '管理',
     missionCenter:'任务中心',
-    push_center:'推送中心'
+    push_center:'推送中心',
+    wiki:'寰宇百科'
   },
   login:{
     LoginAccount:"登录太初寰宇",

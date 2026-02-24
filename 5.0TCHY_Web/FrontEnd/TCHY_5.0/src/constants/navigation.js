@@ -43,6 +43,13 @@ export const NAV_ITEMS = [
     type: 'link',
   },
 
+  { 
+    name: 'nav.wiki', 
+    path: '/wiki', 
+    type: 'link'
+  },
+
+
   // 4. 管理后台
   { 
     name: 'nav.manage', 
