@@ -445,15 +445,56 @@ const canManageRole = (targetRole: string) => {
 const inferProjectType = (name: string) => { /* ...保持不变... */ return 'general' }
 
 const createOrg = async () => {
-  /* ...保持不变... */ 
-  // 省略代码以节省篇幅，逻辑与之前相同
-}
+  if (!newOrg.name || !newOrg.slug) return;
+  creating.value = true;
+  try {
+    const response = await apiClient.post('/organizations', {
+      Name: newOrg.name,
+      Slug: newOrg.slug
+    });
+    
+    // 成功后，将新组织加入列表并选中
+    const newOrgData = {
+      id: response.data.Id,
+      name: response.data.Name,
+      slug: response.data.Slug,
+      role: 'Owner'
+    };
+    orgList.value.push(newOrgData);
+    selectOrg(newOrgData);
+    
+    showCreateOrg.value = false;
+    newOrg.name = '';
+    newOrg.slug = '';
+  } catch (error) {
+    console.error('创建组织失败:', error);
+  } finally {
+    creating.value = false;
+  }
+};
 
 const createProject = async () => {
-  /* ...保持不变... */
-  // 省略代码以节省篇幅，逻辑与之前相同
-}
+  if (!currentOrg.value || !newProject.name) return;
+  creating.value = true;
+  try {
+    // 关键：请求路径改为 /projects，Payload 里带上所属组织 ID
+    const response = await apiClient.post('/projects', {
+      Name: newProject.name,
+      Description: newProject.description,
+      OrganizationId: currentOrg.value.id 
+    });
 
+    // 成功后刷新列表
+    await fetchProjects();
+    showCreateProject.value = false;
+    newProject.name = '';
+    newProject.description = '';
+  } catch (error) {
+    console.error('项目初始化失败:', error);
+  } finally {
+    creating.value = false;
+  }
+};
 const openInviteModal = () => {
   if (!currentOrg.value) return
   inviteSearchQuery.value = ''
@@ -463,23 +504,37 @@ const openInviteModal = () => {
 }
 
 const handleSearchInput = () => {
-  /* ...保持不变... */
-  // 使用之前提供的搜索逻辑
+  if (inviteSearchQuery.value.length < 2) {
+    userSearchResults.value = []
+    return
+  }
+  
   if (searchTimer) clearTimeout(searchTimer)
   searchTimer = setTimeout(async () => {
     try {
+      console.log('--- 发起搜索 ---', inviteSearchQuery.value)
       const res = await apiClient.get<any[]>(`/organizations/${currentOrg.value?.id}/search-users`, {
         params: { query: inviteSearchQuery.value }
       })
+      
+      console.log('--- 原始响应 ---', res.data)
+      
+      // 强制统一为小写属性，方便模板调用
       userSearchResults.value = res.data.map(u => ({
-        id: u.Id,
-        username: u.Username,
-        avatar: u.Avatar,
-        level: u.Level
+        id: u.Id || u.id,
+        username: u.Username || u.username,
+        avatar: u.Avatar || u.avatar,
+        level: u.Level || u.level
       }))
-    } catch (e) {}
+      
+      console.log('--- 处理后数据 ---', userSearchResults.value)
+    } catch (e) {
+      console.error('搜索通讯链路故障:', e)
+    }
   }, 300)
 }
+
+
 
 const selectInviteUser = (user: any) => {
   inviteSearchQuery.value = user.username
@@ -488,7 +543,36 @@ const selectInviteUser = (user: any) => {
 }
 
 const submitInvite = async () => {
-  /* ...保持不变... */
+  // 1. 安全校验：确保选中了用户并且当前在某个组织内
+  if (!currentOrg.value || !selectedInviteUser.value) return;
+
+  inviteLoading.value = true;
+  try {
+    // 2. 发送请求：把选中的用户加入当前组织
+    // 注意：这里的 URL 和 Payload 需要和你的 C# 后端接口完全对应
+    await apiClient.post(`/organizations/${currentOrg.value.id}/members`, {
+      UserId: selectedInviteUser.value.id,
+      Role: 'Member' // 默认给个基础权限，防止进来直接是 Owner
+    });
+
+    // 3. 成功后的清理工作
+    console.log(`成功邀请 ${selectedInviteUser.value.username}`);
+    
+    // 关闭弹窗
+    showInviteMember.value = false;
+    // 重置搜索框和选中状态
+    inviteSearchQuery.value = '';
+    selectedInviteUser.value = null;
+
+  } catch (error: any) {
+    console.error('发送邀请失败:', error);
+    // 提取后端报错信息或给个默认提示
+    const errorMsg = error.response?.data?.message || '邀请失败，可能该用户已在组织中。';
+    alert(errorMsg);
+  } finally {
+    // 解除按钮禁用状态
+    inviteLoading.value = false;
+  }
 }
 
 const enterProject = (id: number) => router.push(`/projects/${id}`)

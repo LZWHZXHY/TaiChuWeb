@@ -37,6 +37,7 @@
     "axios": "^1.13.2",
     "browser-image-compression": "^2.0.2",
     "dayjs": "^1.11.19",
+    "diff": "^8.0.3",
     "echarts": "^6.0.0",
     "element-plus": "^2.12.0",
     "force-graph": "^1.51.0",

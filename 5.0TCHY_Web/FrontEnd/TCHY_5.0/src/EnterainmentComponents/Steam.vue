@@ -25,7 +25,7 @@
           </div>
           <div class="meta-item">
             <span class="label">STATUS</span>
-            <span class="val warning">尚未发布</span>
+            <span class="val warning">测试版本已开放</span>
           </div>
         </div>
 
@@ -41,6 +41,22 @@
               <span class="bottom">前往商店页面查看详情</span>
             </div>
           </a>
+
+          <div class="download-matrix">
+            <div class="matrix-label">BETA_ACCESS // 外部下载渠道</div>
+            <div class="download-links">
+              <a 
+                v-for="link in game.downloads" 
+                :key="link.name" 
+                :href="link.url" 
+                target="_blank" 
+                class="dl-item"
+              >
+                <i :class="link.icon"></i>
+                <span class="dl-text">{{ link.name }}</span>
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -52,14 +68,21 @@ const game = {
   title: '不喝水就无法离开的房间',
   appId: '3654500',
   cover: 'https://image2url.com/r2/default/images/1768790181750-f6563b02-fbe4-4a51-af5b-237de4e65676.png',
-  steamUrl: 'https://store.steampowered.com/app/3654500/_/'
+  steamUrl: 'https://store.steampowered.com/app/3654500/_/',
+  // 新增下载链接数组
+  downloads: [
+    { name: '百度网盘', url: 'https://pan.baidu.com/s/1SuATwLP9bj-njNKgvhkHdw?pwd=gnbm', icon: 'fas fa-cloud-download-alt' },
+    { name: '夸克云盘', url: 'https://pan.quark.cn/s/f0f3bab6b530?pwd=PNXa', icon: 'fas fa-bolt' },
+    { name: '太初NAS', url: 'https://ug.link/TaiChuHuanYu/filemgr/share-download/?id=e30a33b8c99242dd86783c5fcfe9b3f7', icon: 'fas fa-server' }
+  ]
 };
 </script>
 
 <style scoped>
+/* 保持原有基础样式 */
 .steam-simple-layout {
   position: relative;
-  height: 100%;
+  height: 100vh;
   background: #0a0a0a;
   color: #fff;
   overflow: hidden;
@@ -69,7 +92,6 @@ const game = {
   border: 2px solid #111;
 }
 
-/* 背景模糊效果 */
 .hero-bg {
   position: absolute;
   inset: 0;
@@ -102,21 +124,13 @@ const game = {
   box-shadow: 20px 20px 0 rgba(0,0,0,0.2);
 }
 
-/* 海报部分 */
-.poster-section {
-  flex: 0 0 280px;
-}
-.glitch-img {
-  border: 4px solid #fff;
-  box-shadow: 8px 8px 0 #D92323;
-  overflow: hidden;
-}
+.poster-section { flex: 0 0 280px; }
+.glitch-img { border: 4px solid #fff; box-shadow: 8px 8px 0 #D92323; overflow: hidden; }
 .glitch-img img { width: 100%; display: block; }
 
-/* 信息部分 */
 .info-section { flex: 1; display: flex; flex-direction: column; }
 .brand-tag { font-family: 'JetBrains Mono'; font-size: 12px; color: #D92323; margin-bottom: 10px; }
-.game-name { font-family: 'Anton'; font-size: 4rem; line-height: 1; margin: 0 0 20px 0; text-transform: uppercase; }
+.game-name { font-family: 'Anton'; font-size: 3.5rem; line-height: 1.1; margin: 0 0 20px 0; text-transform: uppercase; }
 
 .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
 .meta-item { display: flex; flex-direction: column; font-family: 'JetBrains Mono'; }
@@ -124,9 +138,16 @@ const game = {
 .meta-item .val { font-size: 14px; font-weight: bold; }
 .meta-item .val.warning { color: #D92323; }
 
-.description { font-size: 15px; color: #aaa; line-height: 1.6; margin-bottom: 30px; }
+.description { font-size: 14px; color: #aaa; line-height: 1.6; margin-bottom: 30px; }
 
-/* 核心跳转按钮 */
+/* 操作栏布局调整 */
+.action-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 主按钮样式 */
 .steam-link-btn {
   display: inline-flex;
   align-items: center;
@@ -136,6 +157,7 @@ const game = {
   padding: 12px 25px;
   transition: 0.2s;
   border: 2px solid #fff;
+  align-self: flex-start;
 }
 .steam-link-btn:hover {
   background: transparent;
@@ -148,9 +170,50 @@ const game = {
 .btn-content .top { font-weight: 800; font-family: 'JetBrains Mono'; font-size: 16px; }
 .btn-content .bottom { font-size: 11px; opacity: 0.7; }
 
+/* 下载矩阵样式 */
+.download-matrix {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 15px;
+}
+.matrix-label {
+  font-family: 'JetBrains Mono';
+  font-size: 10px;
+  color: #666;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+.download-links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.dl-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ccc;
+  text-decoration: none;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', sans-serif;
+  transition: all 0.3s ease;
+}
+.dl-item i { color: #D92323; }
+.dl-item:hover {
+  background: rgba(217, 35, 35, 0.1);
+  border-color: #D92323;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
 @media (max-width: 800px) {
-  .content-wrapper { flex-direction: column; gap: 20px; align-items: center; text-align: center; }
+  .content-wrapper { flex-direction: column; gap: 20px; align-items: center; text-align: center; height: auto; overflow-y: auto; }
   .game-name { font-size: 2.5rem; }
   .meta-grid { grid-template-columns: 1fr; }
+  .steam-link-btn { align-self: center; }
+  .download-links { justify-content: center; }
+  .dl-item { width: 100%; justify-content: center; }
 }
 </style>

@@ -255,7 +255,17 @@ const routes = [
     name: "profile",
     component: () => import("@/UserComponent/Profile/NewProfile.vue"),
     meta: { requiresAuth: true, title: '用户资料' }
+  },
+  {
+  // 🚀 修改：增加动态参数 :id?
+  path: '/wiki/:id?', 
+  name: 'Wiki',
+  component: () => import('@/views/WikiPage.vue'),
+  meta: { 
+    title: '寰宇百科',
+    public: true
   }
+}
 ]
 
 const router = createRouter({

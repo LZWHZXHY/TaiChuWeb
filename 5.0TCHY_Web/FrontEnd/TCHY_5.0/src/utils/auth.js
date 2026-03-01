@@ -44,7 +44,8 @@ export const useAuthStore = defineStore('auth', () => {
           reputation: s.Reputation,
           currentExp: s.CurrentExp,
           nextLevelExp: s.NextLevelExp,
-          expPercent: s.ExpPercent
+          expPercent: s.ExpPercent,
+          RoleCodes: s.RoleCodes || []
         }
 
         user.value = fullUserData
