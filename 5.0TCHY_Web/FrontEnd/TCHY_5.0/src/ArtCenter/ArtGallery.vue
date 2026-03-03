@@ -260,8 +260,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted, computed, nextTick } from 'vue'
+import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import apiClient from '@/utils/api'
 
 // ✅ 引入通用头像组件 (用于侧边栏排行榜)
@@ -417,9 +417,59 @@ const handleImgError = (e) => { e.target.src = '/土豆.jpg' }
 const padZero = (n) => n < 10 ? `0${n}` : n
 
 onMounted(() => {
-  fetchArtworks(true)
+  // 1. 尝试读取缓存
+  const cachedData = sessionStorage.getItem('cyberGalleryCache')
+  
+  if (cachedData) {
+    try {
+      const parsed = JSON.parse(cachedData)
+      // 2. 恢复状态数据
+      waterfallColumns.value = parsed.columns
+      nextCursor.value = parsed.cursor
+      hasMore.value = parsed.hasMore
+      selectedSegment.value = parsed.segment
+      
+      // 3. 等待 DOM 渲染完成后，恢复滚动条位置
+      nextTick(() => {
+        if (mainScroll.value) {
+          mainScroll.value.scrollTop = parsed.scroll
+        }
+      })
+    } catch (e) {
+      // 解析失败则重新加载
+      fetchArtworks(true)
+    }
+    // 4. 读取完毕后销毁缓存，防止从别的页面进来时读到旧数据
+    sessionStorage.removeItem('cyberGalleryCache')
+  } else {
+    // 没有缓存，走正常首次加载流程
+    fetchArtworks(true)
+  }
+  
+  // 排行榜数据体积小且需要保证时效性，可以每次都请求
   fetchLeaderboard()
 })
+
+// 在离开页面前触发
+onBeforeRouteLeave((to, from, next) => {
+  // 如果是前往详情页 (/gallery/xxx)，则保存当前状态
+  if (to.path.startsWith('/gallery/')) {
+    const cacheData = {
+      columns: waterfallColumns.value,
+      cursor: nextCursor.value,
+      hasMore: hasMore.value,
+      segment: selectedSegment.value,
+      // 获取当前滚动容器的高度
+      scroll: mainScroll.value ? mainScroll.value.scrollTop : 0 
+    }
+    sessionStorage.setItem('cyberGalleryCache', JSON.stringify(cacheData))
+  } else {
+    // 如果是去首页或别的页面，清空缓存，保证下次进入是全新数据
+    sessionStorage.removeItem('cyberGalleryCache')
+  }
+  next()
+})
+
 </script>
 
 <style scoped>

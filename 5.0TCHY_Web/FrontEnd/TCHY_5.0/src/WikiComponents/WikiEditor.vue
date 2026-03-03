@@ -1,7 +1,11 @@
 <template>
   <div class="wiki-editor-wrapper">
     <header class="editor-header">
-      <div class="header-left"><span class="status-badge">正在编辑草稿</span></div>
+      <div class="header-left">
+        <span class="status-badge" :class="{ 'status-saved': saveStatus === '草稿已暂存' }">
+          {{ saveStatus }}
+        </span>
+      </div>
       <div class="header-actions">
         <button class="btn btn-ghost" @click="$emit('cancel')">放弃修改</button>
         <button class="btn btn-primary" @click="saveChanges">
@@ -72,9 +76,9 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { marked } from 'marked' 
-import apiClient from '@/utils/api' // 🚀 引入 API 客户端
+import apiClient from '@/utils/api'
 
 const props = defineProps({ 
   article: Object,
@@ -85,14 +89,62 @@ const props = defineProps({
 })
 const emit = defineEmits(['save', 'cancel'])
 
+// 基础响应式数据
 const localTitle = ref(props.article.title || '')
 const localContent = ref(props.article.rawMarkdown || props.article.contentHtml || '')
 const localCategoryId = ref(props.article.categoryId || 1)
 const activeTab = ref('write') 
 const textareaRef = ref(null)
-const imageInputRef = ref(null) // 🚀 图片输入框引用
+const imageInputRef = ref(null)
 
-// 拍平分类目录 (保持原有逻辑)
+// 保存状态文字
+const saveStatus = ref('正在编辑草稿')
+
+// 本地草稿的 Key，带上文章 ID 确保唯一性
+const DRAFT_KEY = computed(() => `wiki_draft_${props.article.id || 'new'}`)
+
+// --- 核心逻辑：草稿处理 ---
+
+// 1. 初始化：挂载时加载本地草稿
+onMounted(() => {
+  const savedDraft = localStorage.getItem(DRAFT_KEY.value)
+  if (savedDraft) {
+    try {
+      const { title, content, categoryId } = JSON.parse(savedDraft)
+      // 如果草稿存在，询问用户或直接恢复（这里采用直接恢复）
+      if (content || title) {
+        localTitle.value = title
+        localContent.value = content
+        localCategoryId.value = categoryId
+        saveStatus.value = '已恢复本地草稿'
+      }
+    } catch (e) {
+      console.error("解析草稿失败", e)
+    }
+  }
+})
+
+// 2. 实时保存：监听所有变动并存入 LocalStorage
+watch([localTitle, localContent, localCategoryId], () => {
+  saveStatus.value = '正在同步到本地...'
+  
+  const draftData = {
+    title: localTitle.value,
+    content: localContent.value,
+    categoryId: localCategoryId.value,
+    timestamp: Date.now()
+  }
+  
+  localStorage.setItem(DRAFT_KEY.value, JSON.stringify(draftData))
+  
+  // 模拟一个保存成功的反馈感
+  setTimeout(() => {
+    saveStatus.value = '草稿已暂存'
+  }, 500)
+}, { deep: true })
+
+// --- 原有 Wiki 逻辑 ---
+
 const flattenedCategories = computed(() => {
   const flatten = (nodes, level = 0) => {
     let list = []
@@ -115,12 +167,10 @@ const previewHtml = computed(() => {
   return localContent.value ? marked.parse(localContent.value) : '<p class="empty-tip">没有可以预览的内容...</p>'
 })
 
-// 🚀 核心逻辑：触发图片选择
 const triggerImageUpload = () => {
   imageInputRef.value.click()
 }
 
-// 🚀 核心逻辑：处理图片上传并自动插入 Markdown
 const handleImageUpload = async (event) => {
   const file = event.target.files[0]
   if (!file) return
@@ -129,16 +179,13 @@ const handleImageUpload = async (event) => {
   formData.append('file', file)
 
   try {
-    // 这里调用你后端对接 CosHelper 的接口
     const res = await apiClient.post('/Wiki/upload-image', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     
-    // 自动生成 Markdown 语法： ![文件名](图片链接)
     const imageUrl = res.data.url
     const imageMarkdown = `\n![${file.name}](${imageUrl})\n`
     
-    // 找到当前光标位置插入
     const textarea = textareaRef.value
     const start = textarea.selectionStart
     const end = textarea.selectionEnd
@@ -147,21 +194,13 @@ const handleImageUpload = async (event) => {
       localContent.value.substring(0, start) + 
       imageMarkdown + 
       localContent.value.substring(end)
-      
-    alert("图片上传成功并已自动插入光标处！")
   } catch (error) {
     console.error("图片上传失败:", error)
-    alert("图片上传失败，请检查后端接口配置")
+    alert("图片上传失败")
   } finally {
-    event.target.value = '' // 清空以防无法连续上传同名图
+    event.target.value = ''
   }
 }
-
-watch(() => props.article, (newVal) => {
-  localTitle.value = newVal.title || ''
-  localContent.value = newVal.rawMarkdown || newVal.contentHtml || ''
-  localCategoryId.value = newVal.categoryId || 1
-})
 
 const insertFormat = (prefix, suffix) => {
   const textarea = textareaRef.value;
@@ -180,19 +219,27 @@ const insertFormat = (prefix, suffix) => {
 const saveChanges = () => {
   if (!localTitle.value.trim()) { alert("标题不能为空！"); return; }
   if (!localCategoryId.value) { alert("请选择归属目录！"); return; }
+  
+  // 提交给父组件
   emit('save', { 
     title: localTitle.value, 
     content: localContent.value,
     categoryId: localCategoryId.value 
   })
+
+  // 🚀 重点：提交成功后清理本地草稿，防止下次进入加载旧数据
+  localStorage.removeItem(DRAFT_KEY.value)
 }
 </script>
 
 <style scoped>
-/* 保持你原有的样式，仅微调工具栏按钮 */
 .wiki-editor-wrapper { flex: 1; display: flex; flex-direction: column; background-color: #f8fafc; overflow-y: auto; padding: 0 24px 40px 24px; }
 .editor-header { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 16px 0; background-color: #f8fafc; }
-.status-badge { font-size: 12px; color: #fbbf24; background: #fffbeb; padding: 4px 10px; border-radius: 12px; font-weight: 600; border: 1px solid #fde68a; }
+
+/* 状态标签样式 */
+.status-badge { font-size: 12px; color: #fbbf24; background: #fffbeb; padding: 4px 10px; border-radius: 12px; font-weight: 600; border: 1px solid #fde68a; transition: all 0.3s; }
+.status-saved { color: #10b981; background: #ecfdf5; border-color: #a7f3d0; }
+
 .header-actions { display: flex; gap: 12px; }
 .btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
 .btn-ghost { background: transparent; border: 1px solid #cbd5e1; color: #475569; }
