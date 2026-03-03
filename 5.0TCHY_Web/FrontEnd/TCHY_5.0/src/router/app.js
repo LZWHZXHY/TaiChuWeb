@@ -71,13 +71,17 @@ const routes = [
     }
   },
   {
-    path:'/admin',
-    name:'管理员页面',
+    path: '/admin',
+    name: '管理员页面',
     component: () => import('@/views/Admin.vue'),
     meta: { 
       requiresAuth: true,
       title: '管理员页面',
-      minRank: 1 // 需要后端校验 rank >= 1
+      // ❌ 彻底删除旧的数字权限校验
+      // minRank: 1, 
+
+      // ✅ 新增：基于角色组的权限校验（只放行超级管理员和普通管理员，WikiAdmin进不来）
+      allowedRoles: ['SuperAdmin', 'Admin'] 
     }
   },
   {
