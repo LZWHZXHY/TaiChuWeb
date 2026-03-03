@@ -63,20 +63,40 @@ const emit = defineEmits(['edit', 'delete-article', 'wiki-link-click']);
  * 🚀 极致安全的渲染逻辑
  */
 const renderMarkdown = (rawText) => {
-  // 1. 类型守卫：如果不是字符串，立即返回空字符串，防止 replace 报错
   if (typeof rawText !== 'string' || !rawText) return '';
 
   try {
-    // 2. 预处理 Wiki 链接，不使用复杂的 Renderer 模式，直接正则替换
-    const wikiProcessed = rawText.replace(/\[\[([^\]\s][^\]]*?)\]\]/g, (match, title) => {
+    // 1. 预处理 Wiki 内部链接 [[title]]
+    let processedText = rawText.replace(/\[\[([^\]\s][^\]]*?)\]\]/g, (match, title) => {
       return `<a class="wiki-link" href="javascript:void(0)" data-wiki-title="${title}">${title}</a>`;
     });
 
-    // 3. 渲染
-    return marked.parse(wikiProcessed);
+    // 2. 配置 Marked 自定义链接渲染
+    const renderer = new marked.Renderer();
+    
+    renderer.link = (href, title, text) => {
+      // 判断是否为外部链接 (http 或 https 开头)
+      const isExternal = /^https?:\/\//.test(href);
+      
+      if (isExternal) {
+        // 外部链接：新窗口打开 + 外部图标
+        return `<a href="${href}" 
+                   class="external-link" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   title="${title || href}">
+                  ${text}<svg class="icon-external" viewBox="0 0 24 24" width="13" height="13" style="margin-left:3px; vertical-align: middle; display: inline-block;"><path fill="currentColor" d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"/></svg>
+                </a>`;
+      }
+      
+      // 内部链接（相对路径等）：原样渲染
+      return `<a href="${href}" title="${title || ''}">${text}</a>`;
+    };
+
+    return marked.parse(processedText, { renderer });
   } catch (e) {
     console.error("Markdown 渲染异常:", e);
-    return rawText; // 降级返回原文
+    return rawText;
   }
 };
 
@@ -236,6 +256,32 @@ const handleWikiLinkClick = (event) => {
 }
 :deep(.wiki-link:hover) {
   color: #1d4ed8; background-color: #eff6ff; border-bottom-style: solid;
+}
+
+/* 外部链接基础样式 */
+:deep(.external-link) {
+  color: #2563eb; /* 品牌蓝 */
+  text-decoration: none;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.2); /* 浅色的下划线 */
+  transition: all 0.2s ease;
+  padding: 0 2px;
+}
+
+/* 鼠标悬停：下划线加深，颜色变亮 */
+:deep(.external-link:hover) {
+  color: #1d4ed8;
+  background-color: rgba(37, 99, 235, 0.05); /* 淡淡的背景色 */
+  border-bottom-color: #1d4ed8;
+}
+
+/* 图标颜色跟随文字 */
+:deep(.icon-external) {
+  color: #94a3b8; /* 默认灰蓝色，不喧宾夺主 */
+  transition: color 0.2s;
+}
+
+:deep(.external-link:hover .icon-external) {
+  color: #1d4ed8;
 }
 
 /* ==========================================================
