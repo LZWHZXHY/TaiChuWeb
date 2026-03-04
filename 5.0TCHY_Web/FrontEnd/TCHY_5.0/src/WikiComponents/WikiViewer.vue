@@ -15,6 +15,12 @@
           <div class="meta-left">
             <span class="meta-item">📦 共 {{ article.blocks.length }} 段</span>
             <span class="meta-item" v-if="article.lastUpdated">📅 {{ article.lastUpdated }}</span>
+
+            <button class="meta-item btn-contributors" @click="showContributorsModal = true">
+              👥 {{ allContributors.length }} 位贡献者
+            </button>
+
+
           </div>
           <div class="meta-actions">
             <button class="edit-link" @click="$emit('edit')">编辑全文</button>
@@ -93,14 +99,85 @@
       <div class="spinner"></div>
       <p>正在同步百科数据...</p>
     </div>
+
+    <div class="modal-overlay" v-if="showContributorsModal" @click.self="showContributorsModal = false">
+      <div class="contributors-modal">
+        <div class="modal-header">
+          <h3>👥 词条贡献者 (共 {{ allContributors.length }} 人)</h3>
+          <button class="close-btn" @click="showContributorsModal = false">✕</button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="contributor-list">
+            <router-link 
+              v-for="user in allContributors" 
+              :key="user.id" 
+              :to="`/profile/${user.id}`"
+              class="contributor-card"
+            >
+              <div class="avatar-container">
+                <UserAvatar 
+                  :userId="user.id" 
+                  :allowLink="false" 
+                  :showLevel="false" 
+                />
+              </div>
+              
+              <div class="user-info">
+                <span class="name">{{ user.name }}</span>
+                <span class="id">UID: {{ user.id }}</span>
+              </div>
+            </router-link>
+          </div>
+        </div>
+
+
+
+
+      </div>
+    </div>
+
+
+
   </main>
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'; // 确保顶部引入了这两个
 import { marked } from 'marked';
+import UserAvatar from '@/GeneralComponents/UserAvatar.vue';
+
 
 const props = defineProps({ article: Object, isAdmin: Boolean });
 const emit = defineEmits(['edit', 'delete-article', 'wiki-link-click']);
+
+// 控制弹窗的显示与隐藏
+const showContributorsModal = ref(false);
+
+const allContributors = computed(() => {
+  if (!props.article || !props.article.blocks) return [];
+  
+  const uniqueUsers = new Map();
+  
+  props.article.blocks.forEach(block => {
+    // 1. 提取 Contributors 数组里的人
+    const list = block.contributors || block.Contributors || [];
+    list.forEach(user => {
+      if (!uniqueUsers.has(user.id)) {
+        uniqueUsers.set(user.id, user);
+      }
+    });
+    
+    // 2. 为了兼容旧数据，把最后编辑者也加进去
+    const lastEditorId = block.lastEditorId || block.LastEditorId;
+    const lastEditorName = block.lastEditor || block.LastEditor;
+    if (lastEditorId && lastEditorName && !uniqueUsers.has(lastEditorId)) {
+      uniqueUsers.set(lastEditorId, { id: lastEditorId, name: lastEditorName });
+    }
+  });
+  
+  return Array.from(uniqueUsers.values());
+});
 
 
 // 更加暴力的获取方法，防止解析异常
@@ -351,9 +428,6 @@ const handleWikiLinkClick = (event) => {
 /* ==========================================================
    5. 签名气泡微调
 ========================================================== */
-/* ==========================================================
-   5. 签名气泡微调
-========================================================== */
 .block-signature { 
   position: absolute; right: 10px; top: 4px; 
   opacity: 0; transform: scale(0.9); 
@@ -374,7 +448,7 @@ const handleWikiLinkClick = (event) => {
   display: flex; align-items: center; gap: 8px; font-size: 11.5px;
 }
 
-/* 🚀 新增：用户链接的样式，让它有交互反馈 */
+/* 用户链接的样式，让它有交互反馈 */
 .user-link { 
   font-weight: 700; 
   color: #64748b; 
@@ -391,7 +465,6 @@ const handleWikiLinkClick = (event) => {
 .loading-state { height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; }
 .spinner { width: 32px; height: 32px; border: 3px solid #f1f5f9; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px; }
 @keyframes spin { to { transform: rotate(360deg); } }
-
 
 /* ==========================================================
    6. 多贡献者样式与 Tooltip (气泡菜单)
@@ -474,4 +547,113 @@ const handleWikiLinkClick = (event) => {
   color: #1d4ed8;
 }
 
+/* ==========================================================
+   7. 全部贡献者弹窗与按钮样式 (网格版)
+========================================================== */
+.btn-contributors {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  font-size: 13px;
+  color: #475569;
+}
+.btn-contributors:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+}
+
+/* 弹窗遮罩层 */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 999;
+}
+
+/* 弹窗主体：为了装下更多格子，稍微加宽一点 */
+.contributors-modal {
+  background: #ffffff;
+  width: 540px; max-width: 90vw;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  animation: modal-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modal-pop {
+  0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 弹窗头部 */
+.modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex; justify-content: space-between; align-items: center;
+  background: #f8fafc;
+}
+.modal-header h3 { margin: 0; font-size: 16px; color: #0f172a; font-weight: 700; }
+.close-btn {
+  background: transparent; border: none; font-size: 20px;
+  color: #94a3b8; cursor: pointer; transition: color 0.2s; padding: 0;
+}
+.close-btn:hover { color: #ef4444; }
+
+/* 弹窗列表内容 */
+.modal-body { padding: 24px; max-height: 55vh; overflow-y: auto; }
+.modal-body::-webkit-scrollbar { width: 6px; }
+.modal-body::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+
+/* 🚀 使用 Grid 布局 */
+.contributor-list { 
+  display: grid; 
+  /* 自适应列，每个格子最小 110px，塞不满自动换行 */
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); 
+  gap: 16px; 
+}
+
+/* 🚀 卡片竖向排列，居中对齐 */
+.contributor-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px;
+  padding: 16px 12px; 
+  border: 1px solid #e2e8f0; border-radius: 12px;
+  text-decoration: none; transition: all 0.2s ease;
+  background: #ffffff;
+  text-align: center;
+}
+.contributor-card:hover {
+  border-color: #3b82f6; background: #eff6ff;
+  transform: translateY(-4px); box-shadow: 0 8px 16px rgba(37, 99, 235, 0.08);
+}
+
+/* 🚀 网格里的头像限定尺寸 */
+.avatar-container {
+  width: 56px; 
+  height: 56px; 
+  flex-shrink: 0;
+}
+
+/* 🚀 文本居中，防溢出处理 */
+.user-info { 
+  display: flex; flex-direction: column; align-items: center; gap: 6px; 
+  width: 100%; /* 必须占满宽度才能控制截断 */
+}
+.user-info .name { 
+  font-weight: 700; color: #1e293b; font-size: 13.5px; 
+  /* 名字太长时显示省略号... */
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.user-info .id { 
+  font-size: 11px; color: #64748b; font-family: monospace; 
+  background: #f1f5f9; padding: 2px 8px; border-radius: 10px;
+}
 </style>
