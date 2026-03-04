@@ -212,38 +212,32 @@ const getLatestEditor = (block) => {
 
 
 
-/**
- * 🚀 极致安全的渲染逻辑
- */
 const renderMarkdown = (rawText) => {
-  if (typeof rawText !== 'string' || !rawText) return '';
+  if (!rawText || typeof rawText !== 'string') return '';
 
   try {
-    // 1. 预处理 Wiki 内部链接 [[title]]
     let processedText = rawText.replace(/\[\[([^\]\s][^\]]*?)\]\]/g, (match, title) => {
+      if (!title) return '';
       return `<a class="wiki-link" href="javascript:void(0)" data-wiki-title="${title}">${title}</a>`;
     });
 
-    // 2. 配置 Marked 自定义链接渲染
     const renderer = new marked.Renderer();
     
-    renderer.link = (href, title, text) => {
-      // 判断是否为外部链接 (http 或 https 开头)
-      const isExternal = /^https?:\/\//.test(href);
+    // ✨ 关键修复：改用对象解构获取参数
+    renderer.link = ({ href, title, text }) => {
+      const safeHref = href || '#';
+      const isExternal = /^https?:\/\//.test(safeHref);
       
       if (isExternal) {
-        // 外部链接：新窗口打开 + 外部图标
-        return `<a href="${href}" 
+        return `<a href="${safeHref}" 
                    class="external-link" 
                    target="_blank" 
                    rel="noopener noreferrer" 
-                   title="${title || href}">
+                   title="${title || text || '外部链接'}">
                   ${text}<svg class="icon-external" viewBox="0 0 24 24" width="13" height="13" style="margin-left:3px; vertical-align: middle; display: inline-block;"><path fill="currentColor" d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"/></svg>
                 </a>`;
       }
-      
-      // 内部链接（相对路径等）：原样渲染
-      return `<a href="${href}" title="${title || ''}">${text}</a>`;
+      return `<a href="${safeHref}" title="${title || ''}">${text}</a>`;
     };
 
     return marked.parse(processedText, { renderer });
@@ -252,6 +246,9 @@ const renderMarkdown = (rawText) => {
     return rawText;
   }
 };
+
+
+
 
 const handleWikiLinkClick = (event) => {
   const target = event.target;
