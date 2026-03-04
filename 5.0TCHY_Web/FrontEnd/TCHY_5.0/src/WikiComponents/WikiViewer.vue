@@ -13,6 +13,18 @@
         <h1 class="title">{{ article.title || '无标题' }}</h1>
         <div class="metadata">
           <div class="meta-left">
+
+            <router-link 
+              v-if="article.creator" 
+              :to="`/profile/${article.creator.id}`" 
+              class="meta-item creator-link"
+              title="词条初创者"
+            >
+              👑 {{ article.creator.name }} 建立
+            </router-link>
+
+
+
             <span class="meta-item">📦 共 {{ article.blocks.length }} 段</span>
             <span class="meta-item" v-if="article.lastUpdated">📅 {{ article.lastUpdated }}</span>
 
@@ -656,4 +668,24 @@ const handleWikiLinkClick = (event) => {
   font-size: 11px; color: #64748b; font-family: monospace; 
   background: #f1f5f9; padding: 2px 8px; border-radius: 10px;
 }
+
+/* ==========================================================
+   8. 创建者专属样式
+========================================================== */
+.creator-link {
+  color: #d97706; /* 尊贵的暗金色 */
+  font-weight: 600;
+  text-decoration: none;
+  background: #fef3c7;
+  padding: 2px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.creator-link:hover {
+  background: #fde68a;
+  color: #b45309;
+  transform: translateY(-1px);
+}
+
 </style>
