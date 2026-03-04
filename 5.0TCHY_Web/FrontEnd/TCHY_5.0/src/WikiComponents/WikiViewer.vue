@@ -31,24 +31,67 @@
         >
           <div class="block-text markdown-body" v-html="renderMarkdown(block.content || block.Content)"></div>
           
+
+
+
+
           <div class="block-signature">
-  <div class="sig-content">
-    <router-link 
-                :to="`/profile/${block.lastEditorId || block.LastEditorId}`" 
-                class="user-link"
-              >
-                👤 {{ block.lastEditor || block.LastEditor || '系统' }}
-              </router-link>
-    <span class="time">{{ block.updatedAt || block.UpdatedAt || '刚刚' }}</span>
-  </div>
-</div>
+            <div class="sig-content">
+
+
+             
+              
+              <template v-if="getContributors(block).length > 0">
+                <div class="contributors-group">
+                  <router-link 
+                    :to="`/profile/${getLatestEditor(block).id}`" 
+                    class="user-link primary-editor"
+                  >
+                    👤 {{ getLatestEditor(block).name }}
+                  </router-link>
+                  
+                  <span v-if="getContributors(block).length > 1" class="co-editors-badge">
+                    等 {{ getContributors(block).length }} 人贡献
+                    
+                    <div class="contributors-tooltip">
+                      <div class="tooltip-title">区块贡献者：</div>
+                      <router-link 
+                        v-for="(user, idx) in getContributors(block)" 
+                        :key="user.id + '-' + idx"
+                        :to="`/profile/${user.id}`"
+                        class="tooltip-user-link"
+                      >
+                        {{ user.name }}
+                      </router-link>
+                    </div>
+                  </span>
+                </div>
+              </template>
+
+              <template v-else>
+                <router-link 
+                  :to="`/profile/${block.lastEditorId || block.LastEditorId}`" 
+                  class="user-link"
+                >
+                  👤 {{ block.lastEditor || block.LastEditor || '系统' }}
+                </router-link>
+              </template>
+
+              <span class="time">{{ block.updatedAt || block.UpdatedAt || '刚刚' }}</span>
+            </div>
+          </div>
+
+
+
+
+
         </div>
       </div>
     </div>
 
     <div v-else class="loading-state">
       <div class="spinner"></div>
-      <p>正在同步星际数据...</p>
+      <p>正在同步百科数据...</p>
     </div>
   </main>
 </template>
@@ -58,6 +101,27 @@ import { marked } from 'marked';
 
 const props = defineProps({ article: Object, isAdmin: Boolean });
 const emit = defineEmits(['edit', 'delete-article', 'wiki-link-click']);
+
+
+// 更加暴力的获取方法，防止解析异常
+const getContributors = (block) => {
+  const list = block.Contributors || block.contributors;
+  // 强制确保它是一个数组
+  if (Array.isArray(list)) return list;
+  return [];
+};
+const getLatestEditor = (block) => {
+  const list = getContributors(block);
+  if (list.length > 0) {
+    return list[list.length - 1]; 
+  }
+  return null;
+};
+
+
+
+
+
 
 /**
  * 🚀 极致安全的渲染逻辑
@@ -327,4 +391,87 @@ const handleWikiLinkClick = (event) => {
 .loading-state { height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; }
 .spinner { width: 32px; height: 32px; border: 3px solid #f1f5f9; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+
+/* ==========================================================
+   6. 多贡献者样式与 Tooltip (气泡菜单)
+========================================================== */
+.contributors-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.co-editors-badge {
+  color: #64748b;
+  font-size: 11px;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 10px;
+  cursor: help;
+  position: relative;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.co-editors-badge:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* 隐藏在徽章里的完整名单（默认透明度为0且不可点击） */
+.contributors-tooltip {
+  position: absolute;
+  bottom: 120%; /* 显示在徽章上方 */
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+  
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 20;
+}
+
+/* 鼠标悬停时显示名单 */
+.co-editors-badge:hover .contributors-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.tooltip-title {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  border-bottom: 1px dashed #e2e8f0;
+  padding-bottom: 4px;
+}
+
+.tooltip-user-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.tooltip-user-link:hover {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
 </style>

@@ -177,15 +177,15 @@ const fetchArticle = async (id) => {
 
     // 2. 数据标准化映射
     const blocks = (data.blocks || []).map((b, index) => ({
-  id: b.Id || b.id || `b-${index}`,
-  content: String(b.Content || b.content || ""), 
-  lastEditor: b.LastEditor || b.lastEditor || "系统",
-
-  // 🚀 核心修复：把后端传来的 ID 接住并传给子组件
-  lastEditorId: b.LastEditorId || b.lastEditorId || 0, 
-
-  updatedAt: b.UpdatedAt || b.updatedAt || ""
-}));
+      id: b.Id || b.id || `b-${index}`,
+      content: String(b.Content || b.content || ""), 
+      lastEditor: b.LastEditor || b.lastEditor || "系统",
+      lastEditorId: b.LastEditorId || b.lastEditorId || 0, 
+      updatedAt: b.UpdatedAt || b.updatedAt || "",
+      
+      // 🚀 终极修复：把后端传来的贡献者数组安全地接住！
+      contributors: b.Contributors || b.contributors || []
+    }));
 
     // 3. 准备数据对象
     currentArticle.value = {
@@ -194,11 +194,11 @@ const fetchArticle = async (id) => {
       blocks: blocks
     };
 
-    // 4. 🚀 第一步：先结束加载态，让阅读器挂载
+    // 4. 第一步：先结束加载态，让阅读器挂载
     await nextTick();
     viewStatus.value = 'viewing';
 
-    // 5. 🚀 第二步：在阅读器 DOM 稳定后再生成目录，避开渲染冲突
+    // 5. 第二步：在阅读器 DOM 稳定后再生成目录，避开渲染冲突
     await nextTick();
     const fullMarkdown = blocks.map(b => b.content).join('\n\n');
     generateToc(fullMarkdown);
