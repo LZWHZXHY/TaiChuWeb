@@ -237,6 +237,16 @@ const routes = [
     props: true
   },
   {
+    path: '/album/:id', // 👈 专门处理画册的路径
+    name: 'AlbumDetail',
+    component: () => import('@/ArtCenter/Components/AlbumDetailPage.vue'), // 稍后创建这个组件
+    meta: { 
+      requiresAuth: false,
+      title: '画册档案 - 太初寰宇'
+    },
+    props: true // 允许将 :id 作为 props 传入组件
+  },
+  {
   path: '/joint/:id',
   name: 'JointDetail',
   component: () => import('@/DetailPage/JointDetail.vue'), // 你的新组件路径

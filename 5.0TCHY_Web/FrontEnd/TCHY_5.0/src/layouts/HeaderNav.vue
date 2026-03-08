@@ -95,6 +95,49 @@
             <div v-if="localUnreadCount > 0" class="alert-tag">!</div>
           </div>
 
+
+          <div class="music-wrapper">
+
+
+
+         <button 
+  class="cyber-music-widget" 
+  :class="{ 'is-active': showMusicPanel }"
+  @click.stop="toggleMusicPanel"
+  title="AUDIO SYSTEM"
+>
+  <div class="mini-visualizer">
+    <div v-for="n in 4" :key="n" class="vis-bar" :class="{ 'animating': musicStore.isPlaying }"></div>
+  </div>
+  <span class="btn-label">AUDIO_SYS</span>
+  
+  <div class="mode-tag" :class="musicStore.isGlobalMode ? 'tag-global' : 'tag-local'">
+    {{ musicStore.isGlobalMode ? 'SYNC' : 'PVT' }}
+  </div>
+</button>
+
+          <transition name="panel-slide">
+            <div v-show="showMusicPanel" class="global-music-panel" @click.stop>
+              <div class="panel-header">
+                <span class="title">>> DEEP_SPACE_RADIO_LINK</span>
+                <button class="close-btn" @click="showMusicPanel = false">[X]</button>
+              </div>
+              
+              <div class="panel-content">
+                <GlobalMusicPlayer />
+              </div>
+
+              <div class="panel-footer">
+                <span class="status-code">STATUS: {{ musicStore.isGlobalMode ? 'ENCRYPTED_SYNC' : 'LOCAL_ONLY' }}</span>
+              </div>
+            </div>
+          </transition>
+        </div>
+
+
+
+
+
           <transition name="scale-fade">
             <div v-if="showUserMenu" class="cyber-dropdown-menu">
               <div class="menu-header">// USER_ACTIONS</div>
@@ -177,6 +220,34 @@ import DropdownMenu from './DropdownMenu.vue'
 import CyberMegaMenu from '@/GeneralComponents/CyberMegaMenu.vue' 
 // 注意：NotificationPanel 已不再使用，移除导入
 
+
+import GlobalMusicPlayer from './GlobalMusicPlayer.vue' // 路径根据你实际建的位置调整
+import { useMusicStore } from '@/stores/music'
+
+const musicStore = useMusicStore()
+
+
+
+
+const showMusicPanel = ref(false)
+
+
+const toggleMusicPanel = () => {
+  showMusicPanel.value = !showMusicPanel.value
+  if (showMusicPanel.value) showUserMenu.value = false // 展开音乐时关闭用户菜单
+}
+
+
+
+const toggleUserMenu = () => {
+  showUserMenu.value = !showUserMenu.value
+  if (showUserMenu.value) showMusicPanel.value = false // 展开用户菜单时关闭音乐
+}
+
+
+
+
+
 // --- Initializations ---
 const authStore = useAuthStore()
 const publisherStore = usePublisherStore() 
@@ -252,18 +323,19 @@ const fetchUnreadCount = async () => {
   }
 }
 
-// toggleNotifications 已移除
 
-const toggleUserMenu = () => {
-  showUserMenu.value = !showUserMenu.value
-}
 
+// --- 修改原有的 closeAllMenus ---
 const closeAllMenus = (event) => {
   const target = event.target
-  if (!target.closest('.user-control-panel')) {
+  // 确保点击用户面板和音乐面板以外的地方才关闭它们
+  if (!target.closest('.user-control-panel') && !target.closest('.music-wrapper')) {
     showUserMenu.value = false
+    showMusicPanel.value = false
   }
 }
+
+
 
 const toggleLang = () => {
   const newLang = locale.value === 'zh' ? 'en' : 'zh'
@@ -577,4 +649,163 @@ onUnmounted(() => {
   .cyber-nav, .status-terminal, .id-label, .id-name, .logo-sub { display: none; }
   .header-decoration-line { height: 2px; }
 }
+
+
+
+/* ====== AUDIO SYSTEM WIDGET ====== */
+.music-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cyber-music-widget {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 10px;
+  border: 2px solid var(--ink-black);
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--ink-black);
+  transition: all 0.2s;
+}
+
+.cyber-music-widget:hover, .cyber-music-widget.is-active {
+  background: var(--ink-black);
+  color: #fff;
+}
+
+.mini-visualizer {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.vis-bar {
+  width: 3px;
+  background: var(--cyber-blue);
+  height: 3px;
+  transition: height 0.1s;
+}
+
+/* 简单的 CSS 频谱跳动动画 */
+.vis-bar.animating {
+  animation: bar-jump 0.5s infinite alternate ease-in-out;
+}
+.vis-bar:nth-child(1) { animation-delay: 0.0s; }
+.vis-bar:nth-child(2) { animation-delay: 0.2s; }
+.vis-bar:nth-child(3) { animation-delay: 0.1s; }
+.vis-bar:nth-child(4) { animation-delay: 0.3s; }
+
+@keyframes bar-jump {
+  0% { height: 3px; }
+  100% { height: 12px; }
+}
+
+.btn-label {
+  font-size: 12px;
+}
+
+.mode-tag {
+  font-size: 8px;
+  padding: 1px 4px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  line-height: 1;
+}
+.tag-global { color: #f1c40f; border-color: #f1c40f; }
+.tag-local { color: var(--cyber-blue); border-color: var(--cyber-blue); }
+
+/* ====== GLOBAL MUSIC PANEL ====== */
+.global-music-panel {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  width: 300px;
+  background: var(--bg-color);
+  border: 2px solid var(--ink-black);
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.2);
+  z-index: 1002;
+  padding: 12px;
+  color: var(--ink-black);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--ink-black);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.panel-header .title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cyber-red);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--ink-black);
+}
+.close-btn:hover { color: var(--cyber-red); }
+
+.panel-content {
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mock-player {
+  border: 1px dashed var(--ink-black);
+  padding: 10px;
+  background: rgba(0,0,0,0.02);
+}
+
+.track-info {
+  font-size: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mock-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.panel-footer {
+  margin-top: 12px;
+  border-top: 1px dotted var(--ink-black);
+  padding-top: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  text-align: right;
+  color: #666;
+}
+
+/* 面板动画 */
+.panel-slide-enter-active, .panel-slide-leave-active {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.panel-slide-enter-from, .panel-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+}
+
+
+
+
 </style>

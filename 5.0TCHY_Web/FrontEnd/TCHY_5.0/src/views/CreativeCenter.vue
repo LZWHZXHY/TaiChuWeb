@@ -33,6 +33,14 @@
           <span class="icon">◈</span> 稿件管理 // ARCHIVE
         </div>
 
+        <div 
+          class="nav-item"
+          :class="{ active: currentView === 'my-collections' }"
+          @click="currentView = 'my-collections'"
+        >
+          <span class="icon">★</span> 星标档案 // COLLECTIONS
+        </div>
+
         <div class="nav-item disabled">
           <span class="icon">📊</span> 数据分析 (W.I.P)
         </div>
@@ -48,6 +56,7 @@
         <PublishCenter v-if="currentView === 'publish'" />
         <MyJoints v-else-if="currentView === 'my-joints'" />
         <SubmissionsManager v-else-if="currentView === 'submissions'" />
+        <MyCollections v-else-if="currentView === 'my-collections'" />
         
         <div v-else class="wip-placeholder">
           <p>[ SYSTEM_RESTRICTED: 模块开发中 ]</p>
@@ -61,9 +70,10 @@
 import { ref } from 'vue'
 import MyJoints from '@/CreateCenterComponents/MyJoints.vue'
 import SubmissionsManager from '@/CreateCenterComponents/SubmissionsManager.vue'
-import PublishCenter from '@/CreateCenterComponents/PublishCenter.vue' // ✅ 引入发布中心
+import PublishCenter from '@/CreateCenterComponents/PublishCenter.vue'
+// ✅ 新增：引入收藏组件
+import MyCollections from '@/CreateCenterComponents/MyCollections.vue'
 
-// 可以默认打开发布中心，或者稿件管理
 const currentView = ref('publish')
 </script>
 
@@ -89,7 +99,6 @@ const currentView = ref('publish')
 .nav-item.active { background: #D92323; color: #fff; }
 .nav-item.disabled { opacity: 0.3; cursor: not-allowed; }
 
-/* ✅ 给发布按钮一个特殊样式，凸显其重要性 */
 .publish-btn { border-left: 4px solid transparent; }
 .publish-btn:hover { border-left-color: #D92323; background: #1a1a1a; }
 .publish-btn.active { border-left-color: #fff; }

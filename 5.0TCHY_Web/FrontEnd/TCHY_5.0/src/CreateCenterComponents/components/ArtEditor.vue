@@ -41,6 +41,21 @@
     </div>
 
     <div class="form-group">
+      <label><span class="label-decor"></span>归档画册 <span class="dim-text">// TARGET_ALBUM</span></label>
+      <div class="album-selector-group">
+        <select v-model="formData.folderId" class="cyber-select">
+          <option :value="null">-- 独立发布 (STANDALONE) --</option>
+          <option v-for="folder in myAlbums" :key="folder.id || folder.Id" :value="folder.id || folder.Id">
+            📁 {{ folder.title || folder.Title }}
+          </option>
+        </select>
+        <button type="button" class="cyber-btn-mini outline" @click="handleCreateAlbum">
+          + NEW_ALBUM
+        </button>
+      </div>
+    </div>
+
+    <div class="form-group">
       <label><span class="label-decor"></span>特征标签 <span class="dim-text">// TAGS</span></label>
       <CyberTagInput v-model="formData.tags" :max-tags="5" />
     </div>
@@ -56,15 +71,57 @@
 </template>
 
 <script setup>
-import { ref, reactive, onBeforeUnmount } from 'vue'
+import { ref, reactive, onBeforeUnmount, onMounted } from 'vue'
 import apiClient from '@/utils/api'
-// 🚀 引入刚刚写好的标签组件 (请根据你的实际路径调整)
 import CyberTagInput from '@/GeneralComponents/CyberTagInput.vue' 
 
 const isSubmitting = ref(false)
 const selectedFile = ref(null)
 const previewUrl = ref(null)
-const formData = reactive({ title: '', author: '', desc: '', tags: '' })
+
+// ✅ 添加了 folderId 字段
+const formData = reactive({ title: '', author: '', desc: '', tags: '', folderId: null })
+
+// ✅ 新增：画册数据与相关方法
+const myAlbums = ref([])
+
+const fetchMyAlbums = async () => {
+  try {
+    // category=0(Drawing), type=0(Album - 作者自己的合集)
+    const res = await apiClient.get('/Folder/my-list?category=0&type=0')
+    if (res.data.success) {
+      myAlbums.value = res.data.data
+    }
+  } catch (e) {
+    console.error("无法加载画册列表", e)
+  }
+}
+
+const handleCreateAlbum = async () => {
+  const newAlbumName = prompt('>> SYSTEM: 请输入新画册名称 (ENTER_ALBUM_NAME):')
+  if (!newAlbumName || !newAlbumName.trim()) return
+
+  try {
+    const res = await apiClient.post('/Folder/create', {
+      title: newAlbumName.trim(),
+      category: 0, // 0: Drawing
+      folderType: 0 // 0: Album
+    })
+    
+    if (res.data.success) {
+      await fetchMyAlbums() // 刷新列表
+      // 兼容后端返回字段的大小写问题
+      formData.folderId = res.data.data.id || res.data.data.Id
+    }
+  } catch (e) {
+    alert('>> ERROR: 画册创建失败')
+  }
+}
+
+// 页面加载时自动拉取现有画册
+onMounted(() => {
+  fetchMyAlbums()
+})
 
 const handleFileUpload = (event) => {
   const file = event.target.files[0]
@@ -112,11 +169,11 @@ const handleSubmit = async () => {
 
   isSubmitting.value = true
   try {
+    // 第一步：上传画作本体
     const payload = new FormData()
     payload.append('Title', finalTitle)
     
     if (finalAuthor) payload.append('AuthorName', finalAuthor)
-    // 💡 这里的 tags 已经是干净的 "tagA,tagB" 字符串了，直接传！
     if (formData.tags) payload.append('Tags', formData.tags)
     if (formData.desc) payload.append('Desc', formData.desc)
     payload.append('Image', selectedFile.value) 
@@ -128,12 +185,30 @@ const handleSubmit = async () => {
     })
 
     if (response.data && response.data.success) {
-      alert(`ART 序列发布成功！\n系统提示: ${response.data.message || '画作已成功上传'}`)
+      // 获取新画作的 ID (兼容大小写)
+      const newDrawingId = response.data.data?.id || response.data.data?.Id;
+
+      // ✅ 第二步：如果用户选择了画册，则调用注入画册接口 (链式调用)
+      if (formData.folderId && newDrawingId) {
+        try {
+          await apiClient.post('/Folder/add-item', {
+            folderId: formData.folderId,
+            targetId: newDrawingId
+          });
+        } catch (folderErr) {
+          console.error("画作已上传，但归档至画册失败", folderErr);
+          // 这里不打断整体成功提示，仅在控制台记录
+        }
+      }
+
+      alert(`ART 序列发布成功！\n系统提示: 画作已成功上传${formData.folderId ? '并归档至画册' : ''}`)
       
+      // 清空所有状态
       formData.title = ''
       formData.author = ''
       formData.desc = ''
-      formData.tags = '' // 清空这里，组件内的标签块也会自动清空
+      formData.tags = '' 
+      formData.folderId = null // ✅ 重置画册选择
       removeFile()
     } else {
       alert(`发射失败: ${response.data?.message || '未知错误'}`)
@@ -195,4 +270,57 @@ const handleSubmit = async () => {
 
 @keyframes glitch { 0% { opacity: 1; transform: translateX(0); } 25% { opacity: 0.8; transform: translateX(-1px); } 50% { opacity: 0.9; transform: translateX(1px); } 100% { opacity: 1; transform: translateX(0); } }
 .glitch-text { display: inline-block; animation: glitch 0.3s infinite; }
+
+/* ✅ 新增：归档画册选择器样式 */
+.album-selector-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.cyber-select {
+  flex: 1;
+  padding: 14px 16px;
+  border: 1px solid var(--border-dim);
+  background: #fdfdfd;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  color: #111;
+  outline: none;
+  cursor: pointer;
+  border-left: 4px solid var(--border-dim);
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--bg-dark) 50%), linear-gradient(135deg, var(--bg-dark) 50%, transparent 50%);
+  background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.cyber-select:focus, .cyber-select:hover {
+  border-color: var(--bg-dark);
+  background-color: #fff;
+  border-left-color: var(--theme-color);
+  box-shadow: 4px 4px 0 rgba(var(--theme-color-rgb), 0.15);
+}
+
+.cyber-btn-mini.outline {
+  background: transparent;
+  border: 2px solid var(--bg-dark);
+  color: var(--bg-dark);
+  padding: 0 15px;
+  height: 48px;
+  font-family: 'Anton', sans-serif;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  flex-shrink: 0;
+}
+
+.cyber-btn-mini.outline:hover {
+  background: var(--bg-dark);
+  color: #fff;
+  box-shadow: 4px 4px 0 rgba(var(--theme-color-rgb), 0.3);
+}
 </style>

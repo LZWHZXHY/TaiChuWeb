@@ -26,6 +26,16 @@
           :class="{ active: selectedSegment === 3, hoverable: true }"
           @click="handleSegmentClick(3)"
         >
+
+          <div
+          class="button-segment"
+          :class="{ active: selectedSegment === 4, hoverable: true }"
+          @click="handleSegmentClick(4)"
+        >
+          <span class="seg-icon">📁</span> ALBUMS
+        </div>
+
+
           <span class="seg-icon">■</span> STATIC
         </div>
       </div>
@@ -54,18 +64,41 @@
                 :key="colIndex" 
                 class="waterfall-column"
               >
+
+
+
+
                 <div 
                     v-for="img in col" 
-                    :key="img.id" 
+                    :key="img.id || img.Id" 
                     class="cyber-art-card" 
-                    :class="{ 'is-champion': isTopOne(img) }" 
+                    :class="{ 
+                      'is-champion': isTopOne(img),
+                      'is-album': isAlbum(img) 
+                    }" 
                     @click="goToDetail(img)"
                   >
+                  
+                  <div 
+  v-if="isAlbum(img) && (img.itemCount || img.ItemCount) > 1" 
+  class="album-stack stack-1"
+></div>
+
+<div 
+  v-if="isAlbum(img) && (img.itemCount || img.ItemCount) > 2" 
+  class="album-stack stack-2"
+></div>
+
                   <div class="card-frame">
-                    <div v-if="isTopOne(img)" class="champion-badge">榜主大人</div>
+                    <div v-if="isAlbum(img)" class="album-tab">
+                      ARCHIVE_NODE // {{ img.itemCount || img.ItemCount || 0 }} ITEMS
+                    </div>
+
+                    <div v-if="isTopOne(img) && !isAlbum(img)" class="champion-badge">榜主大人</div>
+                    
                     <div class="img-box">
                       <img 
-                        :src="upgradeUrlToHttps(img.imageUrl || img.imageUrlFull || img.url)" 
+                        :src="upgradeUrlToHttps(img.coverImageUrl || img.CoverImageUrl || img.imageUrl || img.imageUrlFull || img.url)" 
                         @error="handleImgError" 
                         loading="lazy" 
                       />
@@ -73,7 +106,7 @@
                     </div>
                     
                     <div class="card-info">
-                      <h3 class="art-title" :title="img.title">{{ img.title }}</h3>
+                      <h3 class="art-title" :title="img.title || img.Title">{{ img.title || img.Title }}</h3>
                       
                       <div class="art-meta-row">
                         <span class="author" :title="img.AuthorName || img.authorName">
@@ -82,33 +115,41 @@
                         </span>
 
                         <div class="stats-group">
-                          <span class="stat-item likes">
+                          <span class="stat-item likes" v-if="!isAlbum(img)">
                             ♥ {{ img.likes || 0 }}
                           </span>
-                          <span class="stat-item comments">
+                          <span class="stat-item folder-items" v-if="isAlbum(img)">
+                            📁 {{ img.itemCount || img.ItemCount || 0 }}
+                          </span>
+                          <span class="stat-item comments" v-if="!isAlbum(img)">
                             💬 {{ img.commentCount || img.CommentCount || 0 }}
                           </span>
                         </div>
                       </div>
 
                       <div class="card-tags" v-if="img.tags">
-  <span 
-    v-for="tag in img.tags.split(',').filter(t => t.trim())" 
-    :key="tag" 
-    class="mini-tag"
-  >
-    <span class="tag-hash">#</span>{{ tag }}
-  </span>
-</div>
-
+                        <span 
+                          v-for="tag in img.tags.split(',').filter(t => t.trim())" 
+                          :key="tag" 
+                          class="mini-tag"
+                        >
+                          <span class="tag-hash">#</span>{{ tag }}
+                        </span>
+                      </div>
                     </div>
-
-
-
-
-                    </div>
+                  </div>
                   <div class="corner-dec"></div>
                 </div>
+
+
+
+
+
+
+
+
+
+
               </div>
             </div>
 
@@ -288,6 +329,13 @@ const uploadForm = reactive({ title: '', desc: '', authorName: '', file: null, p
 
 const totalCount = computed(() => waterfallColumns.value.reduce((acc, col) => acc + col.length, 0))
 
+// ✅ 判断当前卡片是否为画册
+const isAlbum = (img) => {
+  // 只要是频道4，或者带有文件夹标记，它就是画册
+  return selectedSegment.value === 4 || img.isFolder === true || img.FolderType === 0;
+}
+
+
 // --- 方法 ---
 
 const isTopOne = (img) => {
@@ -317,44 +365,92 @@ const upgradeUrlToHttps = (url) => {
 }
 
 // 核心跳转逻辑
+// ✅ 核心跳转逻辑 (支持画册分支)
 const goToDetail = (img) => {
-  router.push(`/gallery/${img.id}`)
+  if (isAlbum(img)) {
+    router.push(`/album/${img.id || img.Id}`); // 跳转到画册专属页面
+  } else {
+    router.push(`/gallery/${img.id || img.Id}`); // 跳转到单图详情
+  }
 }
 
+// ✅ 获取列表数据 (支持将画册混合进单图流)
 const fetchArtworks = async (isRefresh = false) => {
   if (loading.value) return;
   if (!isRefresh && !hasMore.value) return;
 
   loading.value = true;
   try {
-    const params = { 
-      pageSize: 20, 
-      sort: 'new', 
-      cursor: isRefresh ? null : nextCursor.value, 
-      type: selectedSegment.value 
-    };
+    let res;
+    let items = [];
+    let newCursor = null;
+    let more = false;
     
-    const res = await apiClient.get('/Drawing/list', { params });
-    
-    if (res.data.success) {
-      const { items, nextCursor: newCursor, hasMore: more } = res.data.data;
-      if (isRefresh) waterfallColumns.value = [[], [], [], []];
+    // 1. 如果是专属的画册 Tab (4)
+    if (selectedSegment.value === 4) {
+      res = await apiClient.get('/Folder/all-list', { params: { category: 0, type: 0 } });
+      if (res.data.success) {
+        // 强制打上 isFolder 标记，确保渲染为文件夹造型
+        items = res.data.data.map(a => ({ ...a, isFolder: true })); 
+      }
+    } 
+    // 2. 其他单图频道 (包含 DYNAMIC, ALL_TYPE, STATIC)
+    else {
+      const params = { 
+        pageSize: 20, 
+        sort: 'new', 
+        cursor: isRefresh ? null : nextCursor.value, 
+        type: selectedSegment.value 
+      };
+      res = await apiClient.get('/Drawing/list', { params });
+      
+      if (res.data.success) {
+        // 兼容单图列表的数据结构
+        items = res.data.data.items || res.data.data;
+        newCursor = res.data.data.nextCursor || null;
+        more = res.data.data.hasMore ?? false;
+      }
 
-      items.forEach((item) => {
-        let shortestIdx = 0;
-        let minLen = waterfallColumns.value[0].length;
-        for (let i = 1; i < 4; i++) {
-          if (waterfallColumns.value[i].length < minLen) {
-            minLen = waterfallColumns.value[i].length;
-            shortestIdx = i;
+      // 🚀 核心黑科技：如果是 "全部(ALL_TYPE)" 频道，把画册也拉取过来混合！
+      if (selectedSegment.value === 2 && isRefresh) {
+        try {
+          // 拉取画册数据
+          const albumRes = await apiClient.get('/Folder/all-list', { params: { category: 0, type: 0 } });
+          
+          if (albumRes.data.success && albumRes.data.data) {
+            const albums = albumRes.data.data.map(a => ({ 
+              ...a, 
+              isFolder: true, // 打上画册标记触发专属 CSS
+              uploadAt: a.createdAt || new Date().toISOString() // 统一时间字段用于混合排序
+            }));
+            
+            // 将画册数组和单图数组合并，并按照时间降序重新排列
+            items = [...albums, ...items].sort((a, b) => new Date(b.uploadAt) - new Date(a.uploadAt));
           }
+        } catch (mixError) {
+          console.warn(">> SYSTEM: 画册数据混合失败，降级显示纯画作流", mixError);
         }
-        waterfallColumns.value[shortestIdx].push(item);
-      });
-
-      nextCursor.value = newCursor;
-      hasMore.value = more;
+      }
     }
+    
+    // 3. 执行瀑布流高度计算与分配
+    if (isRefresh) waterfallColumns.value = [[], [], [], []];
+
+    items.forEach((item) => {
+      let shortestIdx = 0;
+      let minLen = waterfallColumns.value[0].length;
+      for (let i = 1; i < 4; i++) {
+        if (waterfallColumns.value[i].length < minLen) {
+          minLen = waterfallColumns.value[i].length;
+          shortestIdx = i;
+        }
+      }
+      waterfallColumns.value[shortestIdx].push(item);
+    });
+
+    nextCursor.value = newCursor;
+    hasMore.value = more;
+    
   } finally {
     loading.value = false;
   }
@@ -584,7 +680,9 @@ onBeforeRouteLeave((to, from, next) => {
 .segment-button-group:has(.button-segment.hoverable:hover:not(.active)) .button-segment.active { flex-grow: 1; width: 10%; background-color: #333; color: #ccc; }
 .button-segment.active.hoverable:hover { flex-grow: 6; width: 40%; background-color: var(--red); color: var(--white); }
 .cyber-art-card { width: 100%; position: relative; cursor: pointer; transition: 0.2s; }
-.card-frame { border: 2px solid var(--black); background: var(--white); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); padding: 8px; }
+.card-frame { border: 2px solid var(--black); background: var(--white); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); padding: 8px; position: relative;
+  z-index: 5; /* 👈 本体层级设为 5 */
+  background: var(--white); /* 👈 必须有背景色，否则会透过去看到叠层 */}
 .cyber-art-card:hover .card-frame { transform: translate(-3px, -3px); box-shadow: 6px 6px 0 var(--red); border-color: var(--black); }
 .corner-dec { position: absolute; bottom: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 0 15px 15px; border-color: transparent transparent var(--black) transparent; pointer-events: none; }
 .img-box { width: 100%; background: #000; position: relative; overflow: hidden; border-bottom: 2px solid var(--black); margin-bottom: 8px; }
@@ -798,4 +896,56 @@ onBeforeRouteLeave((to, from, next) => {
   color: var(--black);
   border-left-color: var(--black);
 }
+
+
+
+
+/* -------------- ✅ 画册专属叠层样式 -------------- */
+.cyber-art-card.is-album {
+  margin-top: 15px; /* 给顶部的标签留出空间 */
+}
+
+/* 底座卡片 */
+.album-stack {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--black);
+  z-index: 1; /* 👈 叠层层级设为 1 */
+  pointer-events: none; /* 👈 允许鼠标穿透点击到图片 */
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* 第一层和第二层偏移和旋转 */
+.stack-1 { top: -6px; left: 4px; transform: rotate(2deg); background: #d0d0d0;}
+.stack-2 { top: -12px; left: 8px; transform: rotate(4deg); opacity: 0.8; background: #c0c0c0;}
+
+/* 悬停时：扇形展开特效 */
+.cyber-art-card.is-album:hover .stack-1 { transform: rotate(5deg) translate(4px, -4px); box-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
+.cyber-art-card.is-album:hover .stack-2 { transform: rotate(10deg) translate(8px, -8px); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
+
+/* 左上角：文件夹凸起标签 */
+.album-tab {
+  position: absolute;
+  top: -24px;
+  left: -2px;
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: bold;
+  padding: 4px 15px 4px 10px;
+  border: 2px solid var(--black);
+  border-bottom: none;
+  /* 赛博风斜切角 */
+  clip-path: polygon(0 0, 85% 0, 100% 100%, 0 100%);
+  z-index: 10;
+}
+
+/* 覆盖悬停效果，让整个文件夹像被提起 */
+.cyber-art-card.is-album:hover .card-frame {
+  transform: translate(-5px, -5px);
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.2);
+}
+
 </style>

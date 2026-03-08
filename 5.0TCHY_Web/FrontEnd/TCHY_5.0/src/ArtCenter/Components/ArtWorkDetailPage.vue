@@ -42,13 +42,24 @@
             <div class="interaction-console">
               <div class="console-header">>> USER_INTERACTION_PROTOCOL</div>
               
-              <div class="like-btn-wrapper">
-                <UniversalLikeBtn 
+              <div class="action-control-group">
+                <div class="like-btn-wrapper">
+                  <UniversalLikeBtn 
+                    v-if="artwork && artwork.id"
+                    targetType="Drawing" 
+                    :targetId="artwork.id" 
+                    :initialCount="artwork.likes || 0" 
+                  />
+                </div>
+
+                <button 
                   v-if="artwork && artwork.id"
-                  targetType="Drawing" 
-                  :targetId="artwork.id" 
-                  :initialCount="artwork.likes || 0" 
-                />
+                  class="cyber-action-btn star-trigger" 
+                  @click="showArchiveModal = true"
+                >
+                  <span class="btn-icon">★</span>
+                  <span class="btn-text">STAR_ASSET [{{ artwork.favoriteCount || artwork.starCount || 0 }}]</span>
+                </button>
               </div>
             </div>
 
@@ -92,16 +103,25 @@
           </div>
         </section>
 
-        <div class="cyber-terminal-mini" v-if="artwork">
+       <div class="cyber-terminal-mini" v-if="artwork">
           <div class="terminal-header">> ASSET_METRICS.log</div>
           <div class="metric"><span class="lab">VIEWS:</span> {{ artwork?.views || artwork?.viewCount || 0 }}</div>
           <div class="metric"><span class="lab">LIKES:</span> {{ artwork?.likes || artwork?.likeCount || 0 }}</div>
+          <div class="metric"><span class="lab">STARS:</span> {{ artwork?.favoriteCount || artwork?.starCount || 0 }}</div>
           <div class="metric"><span class="lab">LINK:</span> <span class="green">ENCRYPTED</span></div>
         </div>
       </aside>
     </div>
 
     <Teleport to="body">
+      <ArchiveModal 
+        v-if="artwork && artwork.id"
+        v-model="showArchiveModal" 
+        :target-id="artwork.id" 
+        :category="0" 
+        @success="handleArchiveSuccess"
+      />
+
       <Transition name="fade">
         <div v-if="isLightboxOpen" class="lightbox-overlay" @click="closeLightbox">
           <div class="lightbox-hud-top">
@@ -139,16 +159,32 @@ import { ref, onMounted, computed, reactive, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import apiClient from '@/utils/api';
 
-// ✅ 引入两大通用组件
+// ✅ 引入三大通用组件
 import UniversalComments from '@/GeneralComponents/UniversalComments.vue'; 
 import UniversalLikeBtn from '@/GeneralComponents/UniversalLikeBtn.vue';
 import UserAvatar from '@/GeneralComponents/UserAvatar.vue'; 
+import ArchiveModal from '@/GeneralComponents/ArchiveModal.vue'; // ✅ 新增星标收藏组件
 
 const route = useRoute();
 const router = useRouter();
 const artwork = ref(null);
 const loading = ref(true);
 const shareStatus = ref('READY');
+
+// --- 收藏弹窗状态 ---
+const showArchiveModal = ref(false);
+// 找到这行代码：
+const handleArchiveSuccess = () => {
+  console.log(">> SYSTEM: Asset archived successfully.");
+  
+  // ✅ 加上这段：手动让本地数据 +1，实现瞬间反馈的快感
+  if (artwork.value) {
+    // 兼容可能没有这个字段的情况，默认为0再+1
+    artwork.value.favoriteCount = (artwork.value.favoriteCount || 0) + 1;
+    // 如果你还需要给用户一个高调的提示：
+    alert("SYSTEM: 已成功加入星标库！");
+  }
+};
 
 // --- Lightbox 状态 ---
 const isLightboxOpen = ref(false);
@@ -292,6 +328,54 @@ onUnmounted(() => {
 
 .interaction-console { padding: 0 40px 30px; }
 .console-header { font-family: 'JetBrains Mono'; font-size: 0.75rem; color: #999; margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 5px; width: fit-content; }
+
+/* ✅ 修改点：交互控制组与星标按钮样式 */
+.action-control-group {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.cyber-action-btn {
+  background: transparent;
+  border: 2px solid var(--black);
+  color: var(--black);
+  padding: 8px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+  height: 40px;
+}
+
+.cyber-action-btn:hover {
+  background: var(--black);
+  color: #fff;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--red);
+}
+
+.star-trigger .btn-icon {
+  font-size: 1.2rem;
+  color: var(--black);
+  transition: all 0.2s ease;
+}
+
+.star-trigger:hover .btn-icon {
+  color: #FFD700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+  transform: scale(1.1);
+}
+
+.star-trigger:hover {
+  border-color: #FFD700;
+  box-shadow: 6px 6px 0 rgba(255, 215, 0, 0.3);
+}
 
 /* 评论区样式 */
 .comment-zone { padding: 0 40px 60px; background: #fafafa; border-top: 2px solid #eee; flex: 1; }
