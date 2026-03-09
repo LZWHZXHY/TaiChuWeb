@@ -5,8 +5,8 @@
     <div class="art-container">
       <header class="sys-header">
         <div class="header-left">
-          <div class="logo-box"><span class="icon">■</span> TAICHU_ART</div>
-          <div class="sys-status"><span class="pulse-dot"></span> VISUAL_ARCHIVE_ONLINE</div>
+          <div class="logo-box"><span class="icon">■</span> >> 太初艺术数据中心</div>
+          <div class="sys-status"><span class="pulse-dot"></span> 在线视觉档案...</div>
         </div>
         <div class="header-right">
           <div class="time-display">{{ currentTime }}</div>
@@ -39,22 +39,22 @@
           </nav>
 
           <div class="monitor-panel">
-            <div class="panel-label"><span class="icon">▼</span> MY_RESOURCES // 数据统计</div>
+            <div class="panel-label"><span class="icon">▼</span> 数据统计</div>
             <div class="stat-grid">
               <div class="stat-cell" @click="currentChannel = 'gallery'">
-                <div class="stat-label">ARTWORKS</div><div class="stat-val">{{ artAmount }}</div><div class="stat-bar"><div class="fill" style="width: 60%"></div></div>
+                <div class="stat-label">艺术作品</div><div class="stat-val">{{ artAmount }}</div><div class="stat-bar"><div class="fill" style="width: 60%"></div></div>
               </div>
               <div class="stat-cell" @click="currentChannel = 'joint'">
-                <div class="stat-label">JOINTS</div><div class="stat-val">{{ JointAmount }}</div><div class="stat-bar"><div class="fill" style="width: 30%"></div></div>
+                <div class="stat-label">联合企划</div><div class="stat-val">{{ JointAmount }}</div><div class="stat-bar"><div class="fill" style="width: 30%"></div></div>
               </div>
               <div class="stat-cell" @click="currentChannel = 'battlefield'">
-                <div class="stat-label">OC_DATA</div><div class="stat-val">{{ OCAmount }}</div><div class="stat-bar"><div class="fill" style="width: 80%"></div></div>
+                <div class="stat-label">OC数据</div><div class="stat-val">{{ OCAmount }}</div><div class="stat-bar"><div class="fill" style="width: 80%"></div></div>
               </div>
               <div class="stat-cell" @click="currentChannel = 'society'">
-                <div class="stat-label">GROUPS</div><div class="stat-val">{{ SocietyAmount }}</div><div class="stat-bar"><div class="fill" style="width: 40%"></div></div>
+                <div class="stat-label">社团</div><div class="stat-val">{{ SocietyAmount }}</div><div class="stat-bar"><div class="fill" style="width: 40%"></div></div>
               </div>
               <div class="stat-cell" @click="currentChannel = 'world'">
-                <div class="stat-label">WORLDS</div><div class="stat-val">{{ WorldAmount }}</div><div class="stat-bar"><div class="fill" style="width: 50%"></div></div>
+                <div class="stat-label">世界观</div><div class="stat-val">{{ WorldAmount }}</div><div class="stat-bar"><div class="fill" style="width: 50%"></div></div>
               </div>
             </div>
           </div>

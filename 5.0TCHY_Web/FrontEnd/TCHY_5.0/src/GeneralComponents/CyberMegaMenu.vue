@@ -2,7 +2,7 @@
   <div class="mega-menu-trigger" @mouseenter="isOpen = true" @mouseleave="isOpen = false">
     <div class="trigger-label" :class="{ 'active': isOpen }">
       <span class="icon-prefix">◈</span>
-      <span class="text">COMMUNITY // 社区</span>
+      <span class="text">社区</span>
       <div class="active-indicator"></div>
     </div>
 
@@ -67,8 +67,8 @@ const menuItems = [
     path: '/WorkCenter', // 指向原来的作品大厅
     icon: '🎨',
     code: 'SEC-03',
-    title: 'VISUALS / 视界',
-    desc: '光学传感器与艺术数据库'
+    title: 'VISUALS / 作品',
+    desc: '光学传感与艺术数据库'
   }
 ];
 </script>

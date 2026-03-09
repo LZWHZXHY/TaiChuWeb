@@ -8,7 +8,7 @@
     
     <div class="blog-content">
       <div class="blog-top-row">
-        <span class="blog-tag">#{{ (blog.Tags && blog.Tags[0]) || 'CORE_DATA' }}</span>
+        <span class="blog-tag">#{{ (blog.Tags && blog.Tags[0]) || '核心数据' }}</span>
         <div class="blog-accent" v-if="blog.isTop">ARCHIVE_TOP</div>
       </div>
       <p class="blog-title">{{ blog.Title }}</p>

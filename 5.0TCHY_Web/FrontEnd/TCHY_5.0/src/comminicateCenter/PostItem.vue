@@ -40,10 +40,10 @@
 
       <div class="entry-actions">
         <span class="action-item">
-          <i class="far fa-comment-alt"></i> REPLIES: {{ post.comment_count ?? 0 }}
+          <i class="far fa-comment-alt"></i> 回复: {{ post.comment_count ?? 0 }}
         </span>
         <span class="action-item">
-          <i class="far fa-eye"></i> VISITS: {{ post.view_count ?? 0 }}
+          <i class="far fa-eye"></i> 浏览: {{ post.view_count ?? 0 }}
         </span>
       </div>
     </div>
