@@ -17,7 +17,7 @@
 
     <div class="tactical-controls">
       <button class="cyber-btn" @click="handleTogglePlay">
-        {{ musicStore.isPlaying ? '[ PAUSE ]' : '[ PLAY ]' }}
+        {{ musicStore.isPlaying ? '[ 暂停 ]' : '[ 播放 ]' }}
       </button>
       
       <button 
@@ -25,7 +25,7 @@
         :class="{ 'sync-active': musicStore.isGlobalMode }"
         @click="musicStore.toggleMode"
       >
-        {{ musicStore.isGlobalMode ? '< SYNC_ON >' : '< PVT_ONLY >' }}
+        {{ musicStore.isGlobalMode ? '< 同步 >' : '< 私人 >' }}
       </button>
 
       <input 
@@ -177,7 +177,7 @@ onUnmounted(() => {
   width: 100%;
   height: 60px;
   background: var(--ink-black, #111);
-  border: 1px solid #333;
+  border: 0px solid #333;
   overflow: hidden;
 }
 
@@ -191,19 +191,19 @@ canvas {
   position: absolute;
   top: 4px;
   left: 6px;
-  font-size: 10px;
-  color: #fff;
+  font-size: 15px;
+  color: #00eeff;
   font-family: 'JetBrains Mono', monospace;
-  text-shadow: 1px 1px 0 #000;
+  text-shadow: 1px 1px 0 #ff0000;
   pointer-events: none;
 }
 
 .indicator {
-  color: #666;
+  color: #000000;
   margin-right: 4px;
 }
 .indicator.active {
-  color: #00FF00;
+  color: #ff0000;
   animation: blink 1s infinite;
 }
 
@@ -220,9 +220,11 @@ canvas {
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   font-weight: bold;
+  border-radius: 4px;
   padding: 4px 8px;
   cursor: pointer;
   transition: 0.2s;
+  width: 30%;
 }
 .cyber-btn:hover {
   background: var(--ink-black, #111);

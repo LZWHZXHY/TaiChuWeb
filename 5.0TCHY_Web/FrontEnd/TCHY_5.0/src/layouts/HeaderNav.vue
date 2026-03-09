@@ -56,7 +56,7 @@
           title="VIEW ALL OPERATORS"
         >
           <span class="status-indicator">●</span>
-          <span class="status-text">OPERATORS: {{ userCount }}</span>
+          <span class="status-text">链接用户: {{ userCount }}</span>
         </div>
 
         <div v-if="authStore.isAuthenticated" class="user-control-panel">
@@ -72,7 +72,7 @@
           <div class="tactical-btn-wrapper" @click="router.push('/workspace')">
             <button class="tactical-btn blue">
               <span class="btn-icon">☖</span>
-              <span class="btn-label">WORKSPACE // 协作</span>
+              <span class="btn-label">多人协作</span>
             </button>
             <div class="btn-deco-line"></div>
           </div>
@@ -109,7 +109,7 @@
   <div class="mini-visualizer">
     <div v-for="n in 4" :key="n" class="vis-bar" :class="{ 'animating': musicStore.isPlaying }"></div>
   </div>
-  <span class="btn-label">AUDIO_SYS</span>
+  <span class="btn-label">音乐播放器</span>
   
   <div class="mode-tag" :class="musicStore.isGlobalMode ? 'tag-global' : 'tag-local'">
     {{ musicStore.isGlobalMode ? 'SYNC' : 'PVT' }}
@@ -119,7 +119,7 @@
           <transition name="panel-slide">
             <div v-show="showMusicPanel" class="global-music-panel" @click.stop>
               <div class="panel-header">
-                <span class="title">>> DEEP_SPACE_RADIO_LINK</span>
+                <span class="title">>> 播 放 模 块</span>
                 <button class="close-btn" @click="showMusicPanel = false">[X]</button>
               </div>
               
@@ -140,36 +140,36 @@
 
           <transition name="scale-fade">
             <div v-if="showUserMenu" class="cyber-dropdown-menu">
-              <div class="menu-header">// USER_ACTIONS</div>
+              <div class="menu-header">// 用户菜单 // Menu</div>
               <div class="menu-list">
                 <div class="menu-row" @click="goToNewProfile">
-                  <span class="row-label">MY PROFILE</span>
+                  <span class="row-label">> 我的主页</span>
                   <span class="row-icon">-></span>
                 </div>
                 
                 <div class="menu-row" @click="router.push('/workspace'); showUserMenu = false;">
-                  <span class="row-label">WORKSPACE</span>
+                  <span class="row-label">> 多人协作</span>
                   <span class="row-icon">☖</span>
                 </div>
 
                 <div class="menu-row" @click="goToCreativeCenter">
-                  <span class="row-label">CREATIVE CENTER</span>
+                  <span class="row-label">> 创作中心</span>
                   <span class="row-icon">◈</span>
                 </div>
 
                 <!-- 可选：添加通知中心菜单项 -->
                 <div class="menu-row" @click="router.push('/notifications'); showUserMenu = false;">
-                  <span class="row-label">NOTIFICATIONS</span>
+                  <span class="row-label">> 通知中心</span>
                   <span class="row-icon">📬</span>
                 </div>
 
                 <div class="menu-row" @click="goToNewSettings">
-                  <span class="row-label">SETTINGS</span>
+                  <span class="row-label">> 全局设置</span>
                   <span class="row-icon">-></span>
                 </div>
                 <div class="menu-divider">----------------</div>
                 <div class="menu-row logout" @click="handleLogout">
-                  <span class="row-label">>> LOGOUT</span>
+                  <span class="row-label">>> 注销</span>
                 </div>
               </div>
             </div>

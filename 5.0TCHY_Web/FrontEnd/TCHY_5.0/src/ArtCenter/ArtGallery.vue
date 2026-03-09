@@ -12,14 +12,14 @@
           :class="{ active: selectedSegment === 1, hoverable: true }"
           @click="handleSegmentClick(1)"
         >
-          <span class="seg-icon">⚡</span> DYNAMIC
+          <span class="seg-icon">⚡</span> 动态
         </div>
         <div
           class="button-segment"
           :class="{ active: selectedSegment === 2, hoverable: true }"
           @click="handleSegmentClick(2)"
         >
-          <span class="seg-icon">∞</span> ALL_TYPE
+          <span class="seg-icon">∞</span> 全部
         </div>
         <div
           class="button-segment"
@@ -32,11 +32,11 @@
           :class="{ active: selectedSegment === 4, hoverable: true }"
           @click="handleSegmentClick(4)"
         >
-          <span class="seg-icon">📁</span> ALBUMS
+          <span class="seg-icon">📁</span> 画册
         </div>
 
 
-          <span class="seg-icon">■</span> STATIC
+          <span class="seg-icon">■</span> 画作
         </div>
       </div>
 
@@ -172,7 +172,7 @@
       <aside class="gallery-sidebar custom-scroll">
         <div class="cyber-panel">
           <div class="panel-header">
-            <span class="deco">#</span> HASH_TAGS
+            <span class="deco">#</span> 标签 // Tag Matrix
           </div>
           <div class="tag-matrix">
             <span class="cyber-tag">#太初设定集</span>
@@ -186,7 +186,7 @@
 
         <div class="cyber-panel leaderboard-panel">
           <div class="panel-header">
-            <span class="deco">🏆</span> HIGH_SCORES
+            <span class="deco">🏆</span> 排行榜 // HIGH_SCORES
           </div>
           <div class="rank-list">
             <div v-for="(user, idx) in leaderboard" :key="user.UploaderId" class="rank-item">
@@ -203,7 +203,7 @@
 
               <div class="rank-info">
                 <div class="r-name" :title="user.name">{{ user.name || 'UNKNOWN' }}</div>
-                <div class="r-score">LIKES: <span class="val">{{ user.TotalLikes }}</span></div>
+                <div class="r-score">♥: <span class="val">{{ user.TotalLikes }}</span></div>
               </div>
             </div>
             
@@ -737,7 +737,7 @@ onBeforeRouteLeave((to, from, next) => {
 .rank-avatar { width: 35px; height: 35px; flex-shrink: 0; position: relative; }
 .rank-info { flex: 1; overflow: hidden; }
 .r-name { font-weight: bold; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.r-score { font-size: 0.7rem; color: #666; }
+.r-score { font-size: 0.7rem; color: #cd0202; }
 .r-score .val { font-weight: bold; color: var(--black); }
 
 .list-footer { text-align: center; padding: 20px; font-size: 0.8rem; color: #888; font-weight: bold; }

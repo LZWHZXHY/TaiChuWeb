@@ -33,7 +33,7 @@
 
       <aside class="left-column">
         <section class="cyber-card full-height-card">
-          <div class="card-label-strip"><span>// BLOG_ARCHIVES</span></div>
+          <div class="card-label-strip"><span>>> 博客档案</span></div>
           <div class="blog-min-list custom-scroll">
             <div v-if="blogLoading" class="status-text">[ LOADING... ]</div>
            <BlogItem 
@@ -64,7 +64,7 @@
           <div v-if="currentModule === 'post'" class="mid-content-split" key="post">
             <section class="posts-container cyber-card">
               <div class="flow-header">
-                <span class="header-title"><span class="icon">■</span> COMMUNITY_POSTS</span>
+                <span class="header-title"><span class="icon">■</span> >> 动态帖子</span>
                 <div class="mini-banner">公告: 太初宇宙 5.0 开发中...</div>
               </div>
               
@@ -93,7 +93,7 @@
 
         <div class="cyber-card news-panel">
           <div class="card-label-strip">
-            <div class="label-left"><i class="fas fa-terminal"></i> <span>// SYSTEM_LOGS</span></div>
+            <div class="label-left"><i class="fas fa-terminal"></i> <span>>> 系统日志</span></div>
             <div class="live-status"><span class="blink-dot"></span> LIVE</div>
           </div>
           <div class="news-list custom-scroll">
