@@ -137,10 +137,18 @@ const updateVolume = () => {
   }
 }
 
-// 播放结束时的处理
+
+// GlobalMusicPlayer.vue 中的 handleEnded 修正
 const handleEnded = () => {
-  musicStore.isPlaying = false
-  // 这里未来可以加逻辑：如果是个人模式，自动播放下一首
+  console.log(">> [AUDIO_SYS] 当前曲目物理结束");
+  
+  // ⚡ 核心修复：只有在个人模式(PVT)下才设为 false
+  // 在全局模式(SYNC)下，我们要保持 isPlaying 为 true，直到下一首信号接管
+  if (!musicStore.isGlobalMode) {
+    musicStore.isPlaying = false;
+  } else {
+    console.log(">> [AUDIO_SYS] 正在等待电台指挥部下达切歌指令...");
+  }
 }
 
 // ⚡ 核心新增：组件挂载时，把音频节点交给 Store，启动 SignalR 电台连接！

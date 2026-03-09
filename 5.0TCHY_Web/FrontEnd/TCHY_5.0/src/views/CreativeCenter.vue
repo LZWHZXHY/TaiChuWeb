@@ -41,6 +41,14 @@
           <span class="icon">★</span> 星标档案 // COLLECTIONS
         </div>
 
+        <div 
+          class="nav-item"
+          :class="{ active: currentView === 'radio-upload' }"
+          @click="currentView = 'radio-upload'"
+        >
+          <span class="icon">📡</span> 深空电台 // RADIO_SYS
+        </div>
+
         <div class="nav-item disabled">
           <span class="icon">📊</span> 数据分析 (W.I.P)
         </div>
@@ -58,6 +66,8 @@
         <SubmissionsManager v-else-if="currentView === 'submissions'" />
         <MyCollections v-else-if="currentView === 'my-collections'" />
         
+        <RadioUploader v-else-if="currentView === 'radio-upload'" />
+        
         <div v-else class="wip-placeholder">
           <p>[ SYSTEM_RESTRICTED: 模块开发中 ]</p>
         </div>
@@ -71,8 +81,11 @@ import { ref } from 'vue'
 import MyJoints from '@/CreateCenterComponents/MyJoints.vue'
 import SubmissionsManager from '@/CreateCenterComponents/SubmissionsManager.vue'
 import PublishCenter from '@/CreateCenterComponents/PublishCenter.vue'
-// ✅ 新增：引入收藏组件
 import MyCollections from '@/CreateCenterComponents/MyCollections.vue'
+
+// ⚡ 新增：引入深空电台上传组件
+// ⚠️ 注意：请确保你把 RadioUploader.vue 放到了 CreateCenterComponents 文件夹下！
+import RadioUploader from '@/CreateCenterComponents/components/RadioUploader.vue'
 
 const currentView = ref('publish')
 </script>
