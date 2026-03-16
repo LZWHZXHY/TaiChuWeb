@@ -247,11 +247,22 @@ const routes = [
     props: true // 允许将 :id 作为 props 传入组件
   },
   {
-  path: '/joint/:id',
-  name: 'JointDetail',
-  component: () => import('@/DetailPage/JointDetail.vue'), // 你的新组件路径
+  path: '/activity/:id',
+  name: 'ActivityDetail',
+  component: () => import('@/DetailPage/ActivityDetail.vue'), // 你的新组件路径
   props: true
 },
+{
+    path: '/activity-play/:id',
+    name: 'ActivityPlay',
+    // 确保这里的路径对应你创建 TRPGPlayPage.vue 的实际位置
+    component: () => import('@/EnterainmentComponents/TRPG/TRPGPlayPage.vue'), 
+    props: true,
+    meta: { 
+      requiresAuth: true, // 建议开启，因为游玩必须是登录用户
+      hideHeader: true    // 可选：如果你希望游玩时全屏，不显示网站顶栏
+    }
+  },
   {
     path: "/profile/MEE",
     name: "my-new-profile",

@@ -107,19 +107,10 @@
           </div>
         </div>
 
-        <div class="cyber-card online-panel">
-          <div class="card-header-simple">
-            <span class="header-label">ONLINE</span>
-            <div class="online-badge"><span class="pulse-green"></span> {{ onlineStore.onlineCount }}</div>
-          </div>
-          <div class="online-list custom-scroll">
-            <div class="user-grid">
-               <div v-for="u in onlineStore.onlineUsersList" :key="u.userId" class="online-avatar" :title="u.userName">
-  <UserAvatar :user-id="u.userId" :show-level="false" />
-</div>
-            </div>
-          </div>
-        </div>
+
+
+
+
       </aside>
     </div>
 
@@ -163,7 +154,7 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import apiClient from '@/utils/api';
-import { useOnlineStore } from '@/stores/online';
+
 import UserAvatar from '@/GeneralComponents/UserAvatar.vue'; // ✨ 引入头像组件
 // 组件引入
 import PostItem from '@/comminicateCenter/PostItem.vue';
@@ -177,7 +168,7 @@ import ChatRoom from '@/ChatRoom/ChatRoom.vue';
 const router = useRouter(); 
 const currentTime = ref(new Date().toLocaleTimeString());
 let clockTimer = null;
-const onlineStore = useOnlineStore();
+
 
 const BASE_URL = window.location.hostname === 'localhost' ? 'https://localhost:44359' : 'https://bianyuzhou.com';
 

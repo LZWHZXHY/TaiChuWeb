@@ -78,7 +78,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import MyJoints from '@/CreateCenterComponents/MyJoints.vue'
+import MyJoints from '@/CreateCenterComponents/MyActivity.vue'
 import SubmissionsManager from '@/CreateCenterComponents/SubmissionsManager.vue'
 import PublishCenter from '@/CreateCenterComponents/PublishCenter.vue'
 import MyCollections from '@/CreateCenterComponents/MyCollections.vue'

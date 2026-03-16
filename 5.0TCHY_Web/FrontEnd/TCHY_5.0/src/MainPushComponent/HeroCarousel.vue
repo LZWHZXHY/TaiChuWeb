@@ -62,13 +62,12 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
-import { useRouter } from 'vue-router'; // 引入路由
+import { useRouter } from 'vue-router';
 import * as THREE from 'three';
 import gsap from 'gsap'; 
 
-const router = useRouter(); // 初始化路由
+const router = useRouter();
 
-// --- 数据源 (已添加 URL) ---
 const slides = [
   {
     tag: '热门强推！',
@@ -85,7 +84,8 @@ const slides = [
     desc: '国内QQ最大的火柴人频道',
     image: 'https://groupprocover.gtimg.cn/55970351642777069?imageView2/1/w/750/h/388&t=1767508176417',
     url: 'https://pd.qq.com/s/g719558f5?b=9', 
-  },{
+  },
+  {
     tag: '宣传',
     title: '太初寰宇B站官方账号',
     shortTitle: '视频频道',
@@ -102,29 +102,22 @@ const INTERVAL = 10000;
 
 let timer = null;
 let progressTimer = null;
+let resizeObserver = null; // 新增：用于精准监听容器大小变化
 
-// --- 跳转逻辑 (新增) ---
 const handleExplore = () => {
   const targetUrl = slides[currentIndex.value].url;
-  
   if (!targetUrl) return;
-
-  // 判断是外部链接还是内部路由
   if (targetUrl.startsWith('http')) {
-    window.open(targetUrl, '_blank'); // 新窗口打开外部链接
+    window.open(targetUrl, '_blank');
   } else {
-    router.push(targetUrl).catch(err => {
-      console.warn('Router navigation failed:', err);
-    }); // 站内跳转
+    router.push(targetUrl).catch(err => console.warn('Router navigation failed:', err));
   }
 };
 
-// --- Three.js 核心变量 ---
 let scene, camera, renderer, material, mesh;
 let textures = [];
 let isAnimating = false;
 
-// --- 1. Vertex Shader ---
 const vertexShader = `
   varying vec2 vUv;
   void main() {
@@ -133,7 +126,6 @@ const vertexShader = `
   }
 `;
 
-// --- 2. Fragment Shader ---
 const fragmentShader = `
   uniform float uProgress;
   uniform float uIntensity;
@@ -159,13 +151,13 @@ const fragmentShader = `
   }
 `;
 
-// --- 初始化 Three.js ---
 const initVisualEffect = () => {
   if (!visualContainer.value) return;
   const width = visualContainer.value.clientWidth;
   const height = visualContainer.value.clientHeight;
 
   scene = new THREE.Scene();
+  // 调整相机参数以防止图片被拉伸
   camera = new THREE.OrthographicCamera(width / -2, width / 2, height / 2, height / -2, 1, 1000);
   camera.position.z = 1;
 
@@ -181,8 +173,8 @@ const initVisualEffect = () => {
     loader.load(slide.image, (tex) => {
       tex.minFilter = THREE.LinearFilter;
       tex.magFilter = THREE.LinearFilter;
-      tex.wrapS = THREE.ClampToEdgeWrapping;
-      tex.wrapT = THREE.ClampToEdgeWrapping;
+      // 避免图片变形的关键设置
+      tex.matrixAutoUpdate = false;
       
       textures[index] = tex;
       loadedCount++;
@@ -215,7 +207,6 @@ const setupMesh = (initialTexture) => {
 
   mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
-  
   animateWebGL();
 };
 
@@ -224,7 +215,6 @@ const animateWebGL = () => {
   renderer.render(scene, camera);
 };
 
-// --- 动画切换逻辑 ---
 const runTransition = (nextIdx) => {
   if (isAnimating || !material || !textures[nextIdx]) return;
   isAnimating = true;
@@ -245,7 +235,6 @@ const runTransition = (nextIdx) => {
   });
 };
 
-// --- 轮播控制逻辑 ---
 const nextSlide = () => {
   const nextIdx = (currentIndex.value + 1) % slides.length;
   runTransition(nextIdx);
@@ -270,6 +259,7 @@ const resetProgress = () => {
   }, 50);
 };
 
+// 专业的重绘逻辑
 const onResize = () => {
   if (!visualContainer.value || !renderer || !camera) return;
   const width = visualContainer.value.clientWidth;
@@ -292,7 +282,14 @@ const onResize = () => {
 onMounted(async () => {
   await nextTick();
   initVisualEffect();
-  window.addEventListener('resize', onResize);
+  
+  // 核心修复：使用 ResizeObserver 代替 window resize，精准监听当前容器大小
+  resizeObserver = new ResizeObserver(() => {
+    onResize();
+  });
+  if (visualContainer.value) {
+    resizeObserver.observe(visualContainer.value);
+  }
   
   resetProgress();
   timer = setInterval(nextSlide, INTERVAL);
@@ -301,7 +298,7 @@ onMounted(async () => {
 onUnmounted(() => {
   clearInterval(timer);
   clearInterval(progressTimer);
-  window.removeEventListener('resize', onResize);
+  resizeObserver?.disconnect(); // 清理观察者
   if (renderer) renderer.dispose();
   if (material) material.dispose();
   if (scene) scene.clear();
@@ -313,18 +310,13 @@ onUnmounted(() => {
 
 .hero-wrapper {
   position: relative;
+  /* 核心修复：移除死板的宽高和margin，完全融入父级容器 */
   width: 100%;
-  max-width: 1400px;
-  margin: 40px auto;
-  height: 600px;
-  background: rgba(20, 20, 20, 0.4);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
+  height: 100%;
+  background: rgba(20, 20, 20, 0.9); /* 加深背景，提升质感 */
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
   font-family: 'JetBrains Mono', sans-serif;
   color: #fff;
 }
@@ -332,9 +324,11 @@ onUnmounted(() => {
 .hero-stage {
   flex: 1;
   display: grid;
-  grid-template-columns: 45% 55%;
-  padding: 50px;
+  grid-template-columns: 1fr 1fr; /* 平分空间，避免挤压 */
+  gap: 20px;
+  padding: 30px; /* 减小内边距，给内容留出呼吸空间 */
   overflow: hidden;
+  min-height: 0; /* 防止内容撑破 flex 子项 */
 }
 
 .text-content {
@@ -351,7 +345,8 @@ onUnmounted(() => {
   height: 100%;
   border-radius: 12px;
   overflow: hidden;
-  clip-path: polygon(10% 0, 100% 0, 100% 90%, 90% 100%, 0 100%, 0 10%);
+  /* 如果容器太窄，这个 clip-path 会变得很奇怪，所以稍微调弱一点 */
+  clip-path: polygon(5% 0, 100% 0, 100% 95%, 95% 100%, 0 100%, 0 5%);
 }
 
 .glow-effect {
@@ -362,41 +357,68 @@ onUnmounted(() => {
   z-index: 2;
 }
 
-.meta-tag { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-.tag-box { background: rgba(0, 240, 255, 0.1); color: #00F0FF; padding: 4px 10px; font-size: 12px; font-weight: bold; border: 1px solid rgba(0, 240, 255, 0.3); }
-.tag-line { height: 1px; width: 50px; background: #00F0FF; }
-.main-title { font-family: 'Anton', sans-serif; font-size: 5rem; line-height: 1; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; background: linear-gradient(to right, #fff, #aaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.accent-dot { color: #00F0FF; -webkit-text-fill-color: #00F0FF; }
-.description { font-size: 1rem; color: #bbb; line-height: 1.6; max-width: 90%; margin-bottom: 40px; border-left: 2px solid #333; padding-left: 20px; }
-.action-area { display: flex; gap: 20px; }
+.meta-tag { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+.tag-box { background: rgba(0, 240, 255, 0.1); color: #00F0FF; padding: 4px 10px; font-size: 11px; font-weight: bold; border: 1px solid rgba(0, 240, 255, 0.3); }
+.tag-line { height: 1px; width: 30px; background: #00F0FF; }
 
-.cyber-btn { padding: 12px 30px; font-family: 'JetBrains Mono', monospace; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; text-transform: uppercase; }
+/* 核心修复：流式排印，自动缩放字体 */
+.main-title { 
+  font-family: 'Anton', sans-serif; 
+  font-size: clamp(2rem, 3.5vw, 4rem); 
+  line-height: 1.1; 
+  margin-bottom: 15px; 
+  text-transform: uppercase; 
+  letter-spacing: 2px; 
+  background: linear-gradient(to right, #fff, #aaa); 
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent; 
+}
+.accent-dot { color: #00F0FF; -webkit-text-fill-color: #00F0FF; }
+
+/* 减小字号和下边距 */
+.description { 
+  font-size: 0.9rem; 
+  color: #bbb; 
+  line-height: 1.5; 
+  max-width: 95%; 
+  margin-bottom: 25px; 
+  border-left: 2px solid #333; 
+  padding-left: 15px; 
+}
+
+.action-area { display: flex; gap: 15px; }
+
+.cyber-btn { padding: 10px 20px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s; border: none; text-transform: uppercase; }
 .cyber-btn.primary { background: #fff; color: #000; clip-path: polygon(0 0, 100% 0, 100% 80%, 90% 100%, 0 100%); }
 .cyber-btn.primary:hover { background: #00F0FF; box-shadow: 0 0 20px rgba(0, 240, 255, 0.4); }
 .cyber-btn.secondary { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); }
 .cyber-btn.secondary:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
 
-.controls-bar { height: 100px; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+/* 控制栏压缩高度，防止撑满 */
+.controls-bar { height: 70px; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); display: flex; flex-direction: column; }
 .progress-track { width: 100%; height: 2px; background: rgba(255,255,255,0.1); }
 .progress-fill { height: 100%; background: #00F0FF; box-shadow: 0 0 10px #00F0FF; }
-.thumb-list { flex: 1; display: flex; align-items: center; padding: 0 50px; gap: 20px; }
-.thumb-item { display: flex; align-items: center; gap: 15px; cursor: pointer; opacity: 0.5; transition: 0.3s; padding: 10px; border-radius: 8px; }
+.thumb-list { flex: 1; display: flex; align-items: center; padding: 0 20px; gap: 15px; overflow-x: auto; }
+
+/* 隐藏滚动条 */
+.thumb-list::-webkit-scrollbar { display: none; }
+.thumb-list { -ms-overflow-style: none; scrollbar-width: none; }
+
+.thumb-item { display: flex; align-items: center; gap: 10px; cursor: pointer; opacity: 0.5; transition: 0.3s; padding: 6px 10px; border-radius: 8px; min-width: max-content; }
 .thumb-item:hover { opacity: 0.8; background: rgba(255,255,255,0.05); }
 .thumb-item.active { opacity: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(0, 240, 255, 0.3); }
-.thumb-cover { width: 60px; height: 40px; border-radius: 4px; overflow: hidden; }
+.thumb-cover { width: 45px; height: 30px; border-radius: 4px; overflow: hidden; }
 .thumb-cover img { width: 100%; height: 100%; object-fit: cover; }
 .thumb-info { display: flex; flex-direction: column; }
-.thumb-idx { font-size: 10px; color: #00F0FF; }
-.thumb-text { font-weight: bold; font-size: 14px; }
+.thumb-idx { font-size: 9px; color: #00F0FF; }
+.thumb-text { font-weight: bold; font-size: 12px; }
 
 @media (max-width: 900px) {
-  .hero-wrapper { height: auto; margin: 20px; }
-  .hero-stage { grid-template-columns: 1fr; gap: 30px; padding: 30px; }
-  .main-title { font-size: 3rem; }
-  .visual-content { height: 300px; }
+  .hero-stage { grid-template-columns: 1fr; padding: 20px; }
+  .visual-content { height: 200px; } /* 移动端限制高度 */
 }
 
-.slide-up-enter-active, .slide-up-leave-active { transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1); }
-.slide-up-enter-from { opacity: 0; transform: translateY(30px); }
-.slide-up-leave-to { opacity: 0; transform: translateY(-30px); }
+.slide-up-enter-active, .slide-up-leave-active { transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1); }
+.slide-up-enter-from { opacity: 0; transform: translateY(20px); }
+.slide-up-leave-to { opacity: 0; transform: translateY(-20px); }
 </style>

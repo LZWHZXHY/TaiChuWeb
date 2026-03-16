@@ -33,13 +33,7 @@
             class="nav-mega-item"
           />
 
-          <DropdownMenu
-            v-else-if="item.type === 'dropdown'"
-            :items="item.children"
-            :trigger-text="$t(item.name)" 
-            @item-click="handleNavClick"
-            class="nav-dropdown-cyber"
-          />
+         
         </template>
       </nav>
 
@@ -169,7 +163,7 @@
                 </div>
                 <div class="menu-divider">----------------</div>
                 <div class="menu-row logout" @click="handleLogout">
-                  <span class="row-label">>> 注销</span>
+                  <span class="row-label">>> 登出</span>
                 </div>
               </div>
             </div>

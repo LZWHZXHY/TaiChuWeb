@@ -123,7 +123,7 @@ const fetchList = async (isRefresh = true) => {
       page: page.value, 
       pageSize: pageSize.value 
     }
-    const resp = await apiClient.get('ChaiLianHe/list', { params })
+    const resp = await apiClient.get('Activity/list', { params })
     
     if (resp.data?.data) {
       const now = Date.now()
@@ -146,7 +146,7 @@ const fetchList = async (isRefresh = true) => {
   }
 }
 
-const viewDetail = (it) => router.push(`/joint/${it.id}`)
+const viewDetail = (it) => router.push(`/activity/${it.id}`)
 const padZero = (n) => n < 10 ? `0${n}` : n
 const typeLabelEn = (t) => ({ 1: 'COLLAB', 2: 'RELAY', 3: 'MATCH', 4: 'SYNC' }[t] || 'FILE')
 const shortDate = (d) => d ? d.substring(0, 10).replace(/-/g, '.') : ''

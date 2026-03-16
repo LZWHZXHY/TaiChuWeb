@@ -1,40 +1,60 @@
 <template>
-  <div class="mega-menu-trigger" @mouseenter="isOpen = true" @mouseleave="isOpen = false">
+  <div class="mega-menu-trigger" @mouseenter="isOpen = true" @mouseleave="mouseleaveHandler">
     <div class="trigger-label" :class="{ 'active': isOpen }">
+      <span class="bracket">[</span>
       <span class="icon-prefix">◈</span>
-      <span class="text">社区</span>
-      <div class="active-indicator"></div>
+      <span class="text">社区枢纽</span>
+      <span class="bracket">]</span>
     </div>
 
     <Transition name="hologram-fade">
       <div v-show="isOpen" class="mega-panel-wrapper">
-        <div class="panel-decoration-top"></div>
-        
-        <div class="mega-grid">
-          <router-link 
-            v-for="(item, index) in menuItems" 
-            :key="index"
-            :to="item.path"
-            class="tactical-card"
-            @click="isOpen = false"
-          >
-            <div class="card-bg-scanline"></div>
-            <div class="card-inner">
-              <div class="card-icon">{{ item.icon }}</div>
-              <div class="card-text-group">
-                <div class="card-code">{{ item.code }}</div>
-                <div class="card-title">{{ item.title }}</div>
-                <div class="card-desc">{{ item.desc }}</div>
-              </div>
-              <div class="card-arrow">>>></div>
-            </div>
-            <div class="corner-top-left"></div>
-            <div class="corner-bottom-right"></div>
-          </router-link>
+        <div class="panel-header">
+          <div class="header-tag">NODE_01</div>
+          <div class="header-status">LIVE_SIGNAL</div>
+          <div class="header-line"></div>
         </div>
 
-        <div class="panel-decoration-bottom">
-          <span class="deco-text">SYSTEM_READY // WAITING_FOR_INPUT</span>
+        <div class="section-container">
+          <div class="section-label">// 核心交互</div>
+          <div class="compact-grid">
+            <router-link 
+              v-for="item in primaryItems" 
+              :key="item.path"
+              :to="item.path" 
+              class="tactical-item"
+              @click="isOpen = false"
+            >
+              <div class="item-icon">{{ item.icon }}</div>
+              <div class="item-body">
+                <div class="item-title">{{ $t(item.name) }}</div>
+                <div class="item-desc">{{ item.desc }}</div>
+              </div>
+              <div class="corner-mark"></div>
+            </router-link>
+          </div>
+        </div>
+
+        <div class="secondary-container">
+          <div class="section-label">// 职能终端</div>
+          <div class="horizontal-links">
+            <router-link 
+              v-for="item in secondaryItems" 
+              :key="item.path"
+              :to="item.path" 
+              class="mini-link"
+              @click="isOpen = false"
+            >
+              <span class="marker">></span>
+              <span class="label">{{ $t(item.name) }}</span>
+              <span class="tag" v-if="item.tag">{{ item.tag }}</span>
+            </router-link>
+          </div>
+        </div>
+
+        <div class="panel-footer">
+          <span class="footer-code">REF:HUB_v2.0.4</span>
+          <div class="footer-dots"><span></span><span></span><span></span></div>
         </div>
       </div>
     </Transition>
@@ -46,161 +66,142 @@ import { ref } from 'vue';
 
 const isOpen = ref(false);
 
-// 🛠️ 在这里配置你的菜单项，改这里就像改配置表一样简单
-// 🛠️ 在这里配置你的菜单项
-const menuItems = [
-  {
-    path: '/DataCenter', // 暂时指向原来的交流中枢
-    icon: '⚡',
-    code: 'SEC-01',
-    title: 'NEXUS / 广场',
-    desc: '实时信号流与碎片化信息'
-  },
-  {
-    path: '/DataCenter', // 暂时也指向原来的交流中枢 (以后改成 /columns)
-    icon: '📝',
-    code: 'SEC-02',
-    title: 'ARCHIVES / 专栏',
-    desc: '深度解析与长文归档库'
-  },
-  {
-    path: '/WorkCenter', // 指向原来的作品大厅
-    icon: '🎨',
-    code: 'SEC-03',
-    title: 'VISUALS / 作品',
-    desc: '光学传感与艺术数据库'
-  }
+const mouseleaveHandler = () => {
+  isOpen.value = false;
+};
+
+const primaryItems = [
+  { name: 'nav.data_center', path: '/DataCenter', icon: '⚡', desc: '实时信号流' },
+  { name: 'nav.work_center', path: '/WorkCenter', icon: '🎨', desc: '艺术数据库' },
+  { name: 'nav.push_center', path: '/MainPush', icon: '📡', desc: '情报与动态' },
+  { name: 'nav.missionCenter', path: '/MissionCenter', icon: '🎯', desc: '系统任务' },
+  { name: 'nav.entertainment', path: '/EntertainmentArea', icon: '🎮', desc: '娱乐协议' }
+];
+
+const secondaryItems = [
+  { name: 'nav.RankCenter', path: '/RankCenter', tag: 'TOP' },
+  { name: 'nav.resourse', path: '/Resource', tag: 'DATA' }
 ];
 </script>
 
 <style scoped>
-/* --- 变量定义 --- */
 .mega-menu-trigger {
   --red: #D92323;
-  --black: #050505;
-  --dark-gray: #151515;
-  --light-gray: #888;
-  --white: #F4F1EA;
+  --ink: #111;
+  --bg: #F4F1EA;
   --font-mono: 'JetBrains Mono', monospace;
-  
   position: relative;
   height: 100%;
   display: flex;
   align-items: center;
 }
 
-/* --- 1. 触发器样式 --- */
+/* --- 触发器 --- */
 .trigger-label {
-  padding: 0 20px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-weight: bold;
-  color: var(--light-gray);
-  position: relative;
-  transition: 0.3s;
+  padding: 0 12px; height: 100%; display: flex; align-items: center; gap: 6px;
+  cursor: pointer; font-family: var(--font-mono); font-weight: 700; color: #555;
 }
+.trigger-label.active { color: var(--ink); }
+.bracket { color: var(--red); opacity: 0; transition: 0.2s; }
+.trigger-label.active .bracket { opacity: 1; }
 
-.trigger-label:hover, .trigger-label.active {
-  color: var(--white);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.icon-prefix { font-size: 0.8rem; color: var(--red); }
-
-/* 底部激活条 */
-.active-indicator {
-  position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
-  background: var(--red);
-  transform: scaleX(0); transition: transform 0.3s;
-}
-.trigger-label.active .active-indicator { transform: scaleX(1); }
-
-/* --- 2. 面板容器样式 --- */
+/* --- 紧凑型面板 --- */
 .mega-panel-wrapper {
-  position: absolute;
-  top: 100%; /* 紧贴导航栏底部 */
-  left: 50%;
-  transform: translateX(-50%); /* 水平居中 */
-  width: 650px; /* 面板宽度 */
-  background: rgba(10, 10, 10, 0.95);
-  border: 1px solid #333;
-  border-top: 3px solid var(--red); /* 顶部红线 */
-  backdrop-filter: blur(15px); /* 磨砂玻璃 */
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  position: absolute; 
+  top: calc(100% + 4px); 
+  left: 0; 
+  width: 420px; /* 大幅度压缩宽度，消除空白 */
+  background: #fff;
+  border: 1px solid var(--ink);
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+  padding: 16px;
   z-index: 2000;
-  padding: 25px;
 }
 
-/* --- 3. 网格与卡片样式 --- */
-.mega-grid {
+/* 头部装饰简化 */
+.panel-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-family: var(--font-mono); font-size: 9px; }
+.header-tag { background: var(--ink); color: #fff; padding: 1px 4px; }
+.header-status { color: var(--red); font-weight: bold; }
+.header-line { flex: 1; height: 1px; background: #eee; }
+
+.section-label { font-family: var(--font-mono); font-size: 9px; color: #ccc; margin-bottom: 8px; letter-spacing: 1px; }
+
+/* --- 核心交互：紧凑网格 --- */
+.compact-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
-.tactical-card {
-  position: relative;
-  background: var(--dark-gray);
-  border: 1px solid #333;
-  padding: 20px 15px;
+.tactical-item {
   text-decoration: none;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  background: var(--bg);
+  padding: 10px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  transition: 0.2s;
+  position: relative;
 }
 
-/* 卡片悬停特效 */
-.tactical-card:hover {
-  background: var(--white);
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(217, 35, 35, 0.15);
-  border-color: var(--white);
+/* 最后一个元素（娱乐区）占满，保持对称 */
+.tactical-item:last-child {
+  grid-column: span 2;
 }
 
-/* 内部文字颜色反转 */
-.tactical-card:hover .card-title,
-.tactical-card:hover .card-code,
-.tactical-card:hover .card-arrow { color: var(--black); }
-.tactical-card:hover .card-desc { color: #333; }
-
-/* 内容布局 */
-.card-icon { font-size: 2.2rem; margin-bottom: 12px; }
-.card-code { font-family: var(--font-mono); font-size: 0.6rem; color: var(--red); margin-bottom: 4px; letter-spacing: 1px; }
-.card-title { font-family: 'Anton', sans-serif; font-size: 1.1rem; color: var(--white); letter-spacing: 0.5px; margin-bottom: 6px; }
-.card-desc { font-family: var(--font-mono); font-size: 0.7rem; color: #666; line-height: 1.4; }
-.card-arrow { margin-top: 15px; font-family: var(--font-mono); font-size: 0.8rem; color: #444; font-weight: bold; opacity: 0; transform: translateX(-10px); transition: 0.3s; }
-.tactical-card:hover .card-arrow { opacity: 1; transform: translateX(0); }
-
-/* 扫描线背景 */
-.card-bg-scanline {
-  position: absolute; inset: 0;
-  background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.2) 50%);
-  background-size: 100% 4px;
-  pointer-events: none; opacity: 0.3;
+.tactical-item:hover {
+  background: #fff;
+  border-color: var(--ink);
+  transform: translateX(2px);
 }
 
-/* 装饰角标 */
-.corner-top-left { position: absolute; top: 0; left: 0; width: 10px; height: 10px; border-top: 2px solid var(--red); border-left: 2px solid var(--red); transition: 0.3s; }
-.corner-bottom-right { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-bottom: 2px solid var(--red); border-right: 2px solid var(--red); transition: 0.3s; }
-.tactical-card:hover .corner-top-left, .tactical-card:hover .corner-bottom-right { width: 100%; height: 100%; opacity: 0.1; }
+.item-icon { font-size: 1.1rem; }
+.item-title { font-family: var(--font-mono); font-weight: 700; color: var(--ink); font-size: 12px; }
+.item-desc { font-size: 10px; color: #999; margin-top: 1px; }
+
+/* 右上角装饰点 */
+.corner-mark { position: absolute; top: 4px; right: 4px; width: 3px; height: 3px; background: var(--ink); opacity: 0.2; }
+.tactical-item:hover .corner-mark { background: var(--red); opacity: 1; }
+
+/* --- 职能终端：横向排列 --- */
+.horizontal-links {
+  display: flex;
+  gap: 12px;
+  background: #fafafa;
+  padding: 8px;
+}
+
+.mini-link {
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mini-link:hover { color: var(--red); }
+.mini-link .marker { color: var(--red); font-weight: bold; }
+.mini-link .tag { font-size: 8px; background: #eee; padding: 0 3px; border-radius: 2px; }
 
 /* --- 底部装饰 --- */
-.panel-decoration-bottom {
-  margin-top: 20px;
-  border-top: 1px dashed #333;
-  padding-top: 5px;
-  text-align: right;
+.panel-footer {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-.deco-text { font-family: var(--font-mono); font-size: 0.6rem; color: #444; }
+
+.footer-code { font-family: var(--font-mono); font-size: 8px; color: #ddd; }
+.footer-dots { display: flex; gap: 3px; }
+.footer-dots span { width: 3px; height: 3px; background: #eee; border-radius: 50%; }
 
 /* --- 动画 --- */
-.hologram-fade-enter-active, .hologram-fade-leave-active { transition: all 0.25s ease-out; }
-.hologram-fade-enter-from, .hologram-fade-leave-to { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(0.98); }
+.hologram-fade-enter-active, .hologram-fade-leave-active { transition: 0.2s ease-out; }
+.hologram-fade-enter-from, .hologram-fade-leave-to { opacity: 0; transform: translateY(-4px); }
 </style>

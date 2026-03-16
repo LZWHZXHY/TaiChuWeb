@@ -18,42 +18,45 @@
         <aside class="art-sidebar custom-scroll">
           <div class="sidebar-header">//频道选择</div>
           <nav class="channel-nav">
-            <div class="cyber-channel-btn" :class="{ active: currentChannel === 'gallery' }" @click="currentChannel = 'gallery'">
+            <div class="cyber-channel-btn" :class="{ active: currentChannel === 'gallery' }" @click="switchChannel('gallery')">
               <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_01</span><span class="ch-name">寰宇画廊 // GALLERY</span></div><div class="status-light"></div>
             </div>
-            <div class="cyber-channel-btn" :class="{ active: currentChannel === 'joint' }" @click="currentChannel = 'joint'">
+            <div class="cyber-channel-btn" :class="{ active: currentChannel === 'joint' }" @click="switchChannel('joint')">
               <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_02</span><span class="ch-name">联合企划 // JOINT</span></div><div class="status-light"></div>
             </div>
-            <div class="cyber-channel-btn" :class="{ active: currentChannel === 'certification' }" @click="currentChannel = 'certification'">
+            <div class="cyber-channel-btn" :class="{ active: currentChannel === 'certification' }" @click="switchChannel('certification')">
               <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_03</span><span class="ch-name">创作认证 // CERT</span></div><div class="status-light"></div>
             </div>
-            <div class="cyber-channel-btn" :class="{ active: currentChannel === 'battlefield' }" @click="currentChannel = 'battlefield'">
+            <div class="cyber-channel-btn" :class="{ active: currentChannel === 'battlefield' }" @click="switchChannel('battlefield')">
               <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_04</span><span class="ch-name">太初约战 // BATTLE</span></div><div class="status-light"></div>
             </div>
-            <div class="cyber-channel-btn" :class="{ active: currentChannel === 'society' }" @click="currentChannel = 'society'">
+            <div class="cyber-channel-btn" :class="{ active: currentChannel === 'society' }" @click="switchChannel('society')">
               <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_05</span><span class="ch-name">柴圈社团 // SOCIETY</span></div><div class="status-light"></div>
             </div>
-            <div class="cyber-channel-btn" :class="{ active: currentChannel === 'world' }" @click="currentChannel = 'world'">
+            <div class="cyber-channel-btn" :class="{ active: currentChannel === 'world' }" @click="switchChannel('world')">
               <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_06</span><span class="ch-name">世界观收录 // WORLD</span></div><div class="status-light"></div>
+            </div>
+             <div class="cyber-channel-btn" :class="{ active: currentChannel === 'ocList' }" @click="switchChannel('ocList')">
+              <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_07</span><span class="ch-name">OC数据库</span></div><div class="status-light"></div>
             </div>
           </nav>
 
           <div class="monitor-panel">
             <div class="panel-label"><span class="icon">▼</span> 数据统计</div>
             <div class="stat-grid">
-              <div class="stat-cell" @click="currentChannel = 'gallery'">
+              <div class="stat-cell" @click="switchChannel('gallery')">
                 <div class="stat-label">艺术作品</div><div class="stat-val">{{ artAmount }}</div><div class="stat-bar"><div class="fill" style="width: 60%"></div></div>
               </div>
-              <div class="stat-cell" @click="currentChannel = 'joint'">
+              <div class="stat-cell" @click="switchChannel('joint')">
                 <div class="stat-label">联合企划</div><div class="stat-val">{{ JointAmount }}</div><div class="stat-bar"><div class="fill" style="width: 30%"></div></div>
               </div>
-              <div class="stat-cell" @click="currentChannel = 'battlefield'">
+              <div class="stat-cell" @click="switchChannel('battlefield')">
                 <div class="stat-label">OC数据</div><div class="stat-val">{{ OCAmount }}</div><div class="stat-bar"><div class="fill" style="width: 80%"></div></div>
               </div>
-              <div class="stat-cell" @click="currentChannel = 'society'">
+              <div class="stat-cell" @click="switchChannel('society')">
                 <div class="stat-label">社团</div><div class="stat-val">{{ SocietyAmount }}</div><div class="stat-bar"><div class="fill" style="width: 40%"></div></div>
               </div>
-              <div class="stat-cell" @click="currentChannel = 'world'">
+              <div class="stat-cell" @click="switchChannel('world')">
                 <div class="stat-label">世界观</div><div class="stat-val">{{ WorldAmount }}</div><div class="stat-bar"><div class="fill" style="width: 50%"></div></div>
               </div>
             </div>
@@ -73,6 +76,7 @@
                 <SocietyPanel v-else-if="currentChannel === 'society'" />
                 <CertificationPanel v-else-if="currentChannel === 'certification'" />
                 <WorldIpList v-else-if="currentChannel === 'world'" />
+                <OcList v-else-if="currentChannel === 'ocList'" />
               </Transition>
             </div>
           </div>
@@ -83,24 +87,56 @@
   </div>
 </template>
 
+
+
+
+
+
+
+
+
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'; 
+import { ref, onMounted, onUnmounted, watch } from 'vue'; 
+import { useRoute, useRouter } from 'vue-router'; // 🔥 引入路由钩子
 import apiClient from '@/utils/api'; 
 import ArtGallery from '@/ArtCenter/ArtGallery.vue'; 
-import JointBoard from '@/ArtCenter/UnionPanel.vue' 
-import SocietyPanel from '@/ArtCenter/SocietyPanel.vue' 
-import Battlefield from '@/ArtCenter/Battlefield.vue' 
-import CertificationPanel from '@/ArtCenter/CertificationPanel.vue' 
-import WorldIpList from '@/ArtCenter/WorldIpList.vue' 
+import JointBoard from '@/ArtCenter/UnionPanel.vue';
+import SocietyPanel from '@/ArtCenter/SocietyPanel.vue';
+import Battlefield from '@/ArtCenter/Battlefield.vue';
+import CertificationPanel from '@/ArtCenter/CertificationPanel.vue';
+import WorldIpList from '@/ArtCenter/WorldIpList.vue';
+import OcList from '@/ArtCenter/OcList.vue';
+
+const route = useRoute();
+const router = useRouter();
 
 const currentTime = ref(new Date().toLocaleTimeString());
 let clockTimer = null;
-const currentChannel = ref('gallery');
+
+// 🔥 1. 初始化时优先读取 URL 参数
+const currentChannel = ref(route.query.tab || 'gallery');
+
 const artAmount = ref(0);
 const OCAmount = ref(0);
 const JointAmount = ref(0);
 const SocietyAmount = ref(0);
 const WorldAmount = ref(0);
+
+// 🔥 2. 切换频道的方法，同时更新 URL
+const switchChannel = (channelName) => {
+  currentChannel.value = channelName;
+  router.replace({ query: { ...route.query, tab: channelName } });
+};
+
+// 🔥 3. 监听 URL 变化（如果是通过外部链接跳转过来的，保证页面响应）
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && newTab !== currentChannel.value) {
+      currentChannel.value = newTab;
+    }
+  }
+);
 
 const fetchTotalCount = async () => {
   try {
@@ -120,7 +156,12 @@ const fetchTotalCount = async () => {
 };
 
 const refreshGlobalStats = () => { fetchTotalCount(); }
-onMounted(() => { fetchTotalCount(); clockTimer = setInterval(() => { currentTime.value = new Date().toLocaleTimeString(); }, 1000); });
+
+onMounted(() => { 
+  fetchTotalCount(); 
+  clockTimer = setInterval(() => { currentTime.value = new Date().toLocaleTimeString(); }, 1000); 
+});
+
 onUnmounted(() => clearInterval(clockTimer));
 </script>
 
