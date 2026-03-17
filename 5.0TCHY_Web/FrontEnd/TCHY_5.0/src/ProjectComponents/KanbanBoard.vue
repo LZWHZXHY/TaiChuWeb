@@ -26,8 +26,8 @@
               </div>
             </div>
             <div class="col-ops">
-              <button class="op-btn check" @click="toggleColumnDone(column)" :class="{ active: column.isCompleted }">✓</button>
-              <button v-if="column.tasks.length === 0" class="op-btn del" @click="deleteColumn(column.id)">×</button>
+              <button class="op-btn check" @click="toggleColumnDone(column)" :class="{ active: column.isCompleted }" title="标记此列完成">✓</button>
+              <button v-if="column.tasks.length === 0" class="op-btn del" @click="deleteColumn(column.id)" title="删除此列">×</button>
             </div>
           </div>
 
@@ -43,80 +43,187 @@
             >
               <div class="card-badges">
                 <span class="badge-priority" :class="task.priority">{{ task.priority }}</span>
-                <span class="badge-tag" :style="{ color: getCategoryColor(task.categoryId) }">
+                <span class="badge-tag" :style="{ backgroundColor: getCategoryColor(task.categoryId) + '15', color: getCategoryColor(task.categoryId) }">
                   {{ getCategoryName(task.categoryId) }}
                 </span>
               </div>
               <div class="card-title">{{ task.title }}</div>
+              
               <div class="card-meta">
                 <div class="assignee-row">
-                  <div class="mini-av" v-for="id in task.assigneeIds" :key="id">
-                    <UniversalAvatar :user-id="id" :show-level="false" :allow-link="false" />
+                  <div class="mini-av-wrapper" v-for="(id, index) in task.assigneeIds" :key="id" :style="{ zIndex: 10 - Number(index) }">
+                    <UniversalAvatar :user-id="id" :show-level="false" :allow-link="false" class="mini-av" />
                   </div>
                   <span v-if="!task.assigneeIds?.length" class="no-assignee">待认领</span>
                 </div>
                 <div v-if="task.dueDate" class="date-badge" :class="{ 'overdue': isOverdue(task.dueDate) }">
-                  <span class="clock-icon">🕒</span> {{ formatDateShort(task.dueDate) }}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  {{ formatDateShort(task.dueDate) }}
                 </div>
               </div>
             </div>
-            <button class="ghost-btn" @click="quickAddTask(column.name)">+ 添加</button>
+            <button class="ghost-btn" @click="quickAddTask(column.name)">
+              <span class="plus-icon">+</span> 新增任务
+            </button>
           </div>
         </div>
 
         <div class="add-col-placeholder">
-          <button v-if="!isAddingColumn" class="btn-add-col" @click="isAddingColumn = true">+ 新增阶段</button>
+          <button v-if="!isAddingColumn" class="btn-add-col" @click="isAddingColumn = true">
+            <span class="plus-icon">+</span> 新建阶段
+          </button>
           <div v-else class="new-col-input-box">
-            <input v-model="newColumnName" placeholder="输入阶段名..." v-focus @keyup.enter="submitNewColumn" />
-            <div class="row">
-              <button class="btn-xs primary" @click="submitNewColumn">确认</button>
-              <button class="btn-xs" @click="isAddingColumn = false">取消</button>
+            <input v-model="newColumnName" class="modern-input" placeholder="输入阶段名称..." v-focus @keyup.enter="submitNewColumn" />
+            <div class="row-actions">
+              <button class="btn-sm primary" @click="submitNewColumn">保存</button>
+              <button class="btn-sm" @click="isAddingColumn = false">取消</button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div v-if="showCreateTask" class="modal-backdrop" @click.self="showCreateTask = false">
-      <div class="modal-panel small">
-        <div class="modal-header"><h3>发布新指令</h3><button class="close-icon" @click="showCreateTask = false">×</button></div>
-        <div class="modal-body">
-          <div class="form-group"><label>任务标题</label><input v-model="newTask.title" class="linear-input" autofocus /></div>
-          <div class="form-row">
-            <div class="form-group"><label>分类</label><select v-model="newTask.categoryId" class="linear-select"><option v-for="c in categories" :key="c.id" :value="c.id">{{c.name}}</option></select></div>
-            <div class="form-group"><label>优先级</label><select v-model="newTask.priority" class="linear-select"><option value="P0">P0 - Urgent</option><option value="P1">P1 - High</option><option value="P2">P2 - Normal</option></select></div>
+    <transition name="modal-fade">
+      <div v-if="showCreateTask" class="modal-backdrop" @click.self="showCreateTask = false">
+        <div class="modal-panel small">
+          <div class="modal-header">
+            <h3>发布新指令</h3>
+            <button class="close-icon" @click="showCreateTask = false">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
           </div>
-          <div class="form-group"><label>截止日期</label><input type="date" v-model="newTask.dueDate" class="linear-input" /></div>
-          <div class="form-group"><label>指派给</label><div class="user-grid"><div v-for="m in members" :key="m.userId" class="user-chip" :class="{active: newTask.assigneeIds.includes(m.userId)}" @click="toggleAssigneeInNewTask(m.userId)">{{m.username}}</div></div></div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>任务标题</label>
+              <input v-model="newTask.title" class="modern-input" placeholder="输入核心任务目标..." autofocus />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>分类</label>
+                <div class="select-wrapper">
+                  <select v-model="newTask.categoryId" class="modern-input">
+                    <option v-for="c in categories" :key="c.id" :value="c.id">{{c.name}}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>优先级</label>
+                <div class="select-wrapper">
+                  <select v-model="newTask.priority" class="modern-input">
+                    <option value="P0">P0 - 紧急 (Urgent)</option>
+                    <option value="P1">P1 - 高 (High)</option>
+                    <option value="P2">P2 - 普通 (Normal)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>截止日期</label>
+              <input type="date" v-model="newTask.dueDate" class="modern-input" />
+            </div>
+            <div class="form-group">
+              <label>指派给</label>
+              <div class="user-grid">
+                <div 
+                  v-for="m in members" 
+                  :key="m.userId" 
+                  class="user-chip" 
+                  :class="{active: newTask.assigneeIds.includes(m.userId)}" 
+                  @click="toggleAssigneeInNewTask(m.userId)"
+                >
+                  {{m.username}}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-ghost" @click="showCreateTask = false">取消</button>
+            <button class="btn-primary" @click="submitCreateTask" :disabled="isSaving || !newTask.title">
+              {{ isSaving ? '发布中...' : '发布任务' }}
+            </button>
+          </div>
         </div>
-        <div class="modal-footer"><button class="btn-ghost" @click="showCreateTask = false">取消</button><button class="btn-primary" @click="submitCreateTask" :disabled="isSaving">发布</button></div>
       </div>
-    </div>
+    </transition>
 
-    <div v-if="isDetailOpen" class="modal-backdrop" @click.self="closeDetail">
-      <div class="modal-panel large">
-        <div class="modal-header no-border"><span class="task-id-badge">TASK-{{ editingTask.id }}</span><button class="close-icon" @click="closeDetail">×</button></div>
-        <div class="detail-layout">
-          <div class="detail-main">
-            <input v-model="editingTask.title" class="detail-title-input" />
-            <div class="detail-block"><label class="block-label">描述说明</label><textarea v-model="editingTask.description" class="detail-textarea" rows="10"></textarea></div>
-            <div class="detail-block"><label class="block-label">执行干员</label><div class="user-grid"><div v-for="m in members" :key="m.userId" class="user-chip with-av" :class="{active: editingTask.assigneeIds?.includes(m.userId)}" @click="toggleAssignee(m.userId)"><div class="chip-av"><UniversalAvatar :user-id="m.userId" :show-level="false" /></div><span>{{m.username}}</span></div></div></div>
+    <transition name="modal-fade">
+      <div v-if="isDetailOpen" class="modal-backdrop" @click.self="closeDetail">
+        <div class="modal-panel large">
+          <div class="modal-header no-border">
+            <span class="task-id-badge">TASK-{{ editingTask.id }}</span>
+            <button class="close-icon" @click="closeDetail">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
           </div>
-          <div class="detail-side">
-            <div class="prop-item"><label>状态</label><select v-model="editingTask.status" class="linear-select"><option v-for="c in columns" :key="c.id" :value="c.name">{{c.name}}</option></select></div>
-            <div class="prop-item"><label>分类</label><select v-model="editingTask.categoryId" class="linear-select"><option v-for="c in categories" :key="c.id" :value="c.id">{{c.name}}</option></select></div>
-            <div class="prop-item"><label>优先级</label><div class="priority-tabs"><button v-for="p in ['P0','P1','P2']" :key="p" :class="{active: editingTask.priority === p}" @click="editingTask.priority = p">{{p}}</button></div></div>
-            <div class="prop-item"><label>截止日期</label><input type="date" v-model="editingTask.dueDateFormatted" class="linear-input" /></div>
-            <div class="side-footer"><button class="btn-primary full" @click="saveTaskChanges" :disabled="isSaving">保存更改</button><button class="btn-danger full" @click="deleteTask">删除任务</button></div>
+          <div class="detail-layout">
+            <div class="detail-main">
+              <input v-model="editingTask.title" class="detail-title-input" placeholder="输入任务标题..." />
+              <div class="detail-block">
+                <label class="block-label">描述说明</label>
+                <textarea v-model="editingTask.description" class="modern-textarea" rows="10" placeholder="添加更详细的任务描述、验收标准..."></textarea>
+              </div>
+              <div class="detail-block">
+                <label class="block-label">执行干员</label>
+                <div class="user-grid">
+                  <div 
+                    v-for="m in members" 
+                    :key="m.userId" 
+                    class="user-chip with-av" 
+                    :class="{active: editingTask.assigneeIds?.includes(m.userId)}" 
+                    @click="toggleAssignee(m.userId)"
+                  >
+                    <div class="chip-av-wrapper">
+                      <UniversalAvatar :user-id="m.userId" :show-level="false" class="chip-av" />
+                    </div>
+                    <span>{{m.username}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="detail-side">
+              <div class="prop-item">
+                <label>所属阶段 (Status)</label>
+                <div class="select-wrapper">
+                  <select v-model="editingTask.status" class="modern-input">
+                    <option v-for="c in columns" :key="c.id" :value="c.name">{{c.name}}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="prop-item">
+                <label>分类 (Category)</label>
+                <div class="select-wrapper">
+                  <select v-model="editingTask.categoryId" class="modern-input">
+                    <option v-for="c in categories" :key="c.id" :value="c.id">{{c.name}}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="prop-item">
+                <label>优先级 (Priority)</label>
+                <div class="priority-tabs">
+                  <button v-for="p in ['P0','P1','P2']" :key="p" :class="{active: editingTask.priority === p}" @click="editingTask.priority = p">{{p}}</button>
+                </div>
+              </div>
+              <div class="prop-item">
+                <label>截止日期 (Due Date)</label>
+                <input type="date" v-model="editingTask.dueDateFormatted" class="modern-input" />
+              </div>
+              <div class="side-footer">
+                <button class="btn-primary full" @click="saveTaskChanges" :disabled="isSaving">
+                  {{ isSaving ? '保存中...' : '保存更改' }}
+                </button>
+                <button class="btn-danger full" @click="deleteTask">删除此任务</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted} from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import apiClient from '@/utils/api'
 import UniversalAvatar from '@/GeneralComponents/UserAvatar.vue'
 
@@ -176,7 +283,6 @@ const projectProgress = computed(() => {
 })
 
 // 监听进度变化，通知父组件 Header
-import { watch } from 'vue'
 watch(projectProgress, (val) => {
   emit('update-progress', { percentage: val, count: tasksCount.value })
 }, { immediate: true })
@@ -231,7 +337,6 @@ const saveTaskChanges = async () => {
   } catch(e) { alert('同步失败') } finally { isSaving.value = false }
 }
 
-// 通用逻辑 (保持不变，只是引用改成 props.members)
 const toggleAssignee = (uid: number) => { 
   if(!editingTask.assigneeIds) editingTask.assigneeIds = []
   const idx = editingTask.assigneeIds.indexOf(uid); idx > -1 ? editingTask.assigneeIds.splice(idx,1) : editingTask.assigneeIds.push(uid) 
@@ -248,94 +353,208 @@ const onDragStart = (e: any, t: any) => { draggedTask.value = t }
 const editColumn = (col: any) => { editingColId.value = col.id; tempColName.value = col.name }
 const saveColumnName = async (col: any) => { await apiClient.put(`/columns/${col.id}`, { Name: tempColName.value, IsCompleted: col.isCompleted }); await fetchColumns(); editingColId.value = null }
 const toggleColumnDone = async (col: any) => { col.isCompleted = !col.isCompleted; await apiClient.put(`/columns/${col.id}`, { IsCompleted: col.isCompleted, Name: col.name }) }
-const deleteColumn = async (id: number) => { if(confirm('删除列？')) { await apiClient.delete(`/columns/${id}`); fetchColumns() } }
-const submitNewColumn = async () => { await apiClient.post('/columns', { ProjectId: props.projectId, Name: newColumnName.value }); newColumnName.value = ''; isAddingColumn.value = false; await fetchColumns() }
+const deleteColumn = async (id: number) => { if(confirm('确定要删除这个阶段吗？')) { await apiClient.delete(`/columns/${id}`); fetchColumns() } }
+const submitNewColumn = async () => { if(!newColumnName.value) return; await apiClient.post('/columns', { ProjectId: props.projectId, Name: newColumnName.value }); newColumnName.value = ''; isAddingColumn.value = false; await fetchColumns() }
 const openTaskDetail = (t: any) => { 
   Object.assign(editingTask, JSON.parse(JSON.stringify(t))); 
   editingTask.dueDateFormatted = t.dueDate ? t.dueDate.split('T')[0] : ''
   isDetailOpen.value = true 
 }
 const closeDetail = () => isDetailOpen.value = false
-const deleteTask = async () => { if (confirm('删除任务？')) { await apiClient.delete(`/tasks/${editingTask.id}`); await fetchTasks(); isDetailOpen.value = false } }
+const deleteTask = async () => { if (confirm('确认删除此任务？该操作无法恢复。')) { await apiClient.delete(`/tasks/${editingTask.id}`); await fetchTasks(); isDetailOpen.value = false } }
 
 // 格式化工具
 const getCategoryColor = (id: number) => categories.value.find(c => c.id === id)?.color || '#999'
 const getCategoryName = (id: number) => categories.value.find(c => c.id === id)?.name || 'General'
-const formatDateShort = (d: string) => { if(!d)return''; const da=new Date(d); return `${da.getMonth()+1}/${da.getDate()}` }
+const formatDateShort = (d: string) => { if(!d)return''; const da=new Date(d); return `${da.getMonth()+1}月${da.getDate()}日` }
 const isOverdue = (d: string) => { if(!d)return false; return new Date(d) < new Date() && new Date(d).toDateString() !== new Date().toDateString() }
 const vFocus = { mounted: (el: any) => el.focus() }
 
-// 🔥 暴露给父组件调用
 defineExpose({ openCreateModal })
 
 onMounted(() => { fetchColumns(); fetchTasks() })
 </script>
 
 <style scoped>
-/* 复制之前 ProjectDetail.vue 中关于 .board-canvas 及以下的所有样式 */
-/* 注意：这里需要把 .board-canvas 的 flex: 1 属性保留，但它现在是组件的根元素之一 */
-.board-wrapper { flex: 1; overflow-x: hidden; display: flex; height: 100%; }
-.board-canvas { flex: 1; overflow-x: auto; padding: 24px; }
-.board-track { display: flex; height: 100%; align-items: flex-start; gap: 12px; }
-.board-col { width: 272px; min-width: 272px; max-height: 100%; background: #EBECF0; border-radius: 3px; display: flex; flex-direction: column; }
-.board-col.col-done { background: #E3FCEF; }
-.col-header { padding: 10px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; }
-.col-label .count { font-weight: 400; color: #5E6C84; margin-left: 6px; }
-.col-rename-input { width: 100%; padding: 4px; border: 2px solid #0052CC; border-radius: 3px; }
-.col-ops .op-btn { border: none; background: transparent; color: #6B778C; cursor: pointer; padding: 4px; }
-.col-ops .check.active { color: #36B37E; }
-.task-container { padding: 0 8px 8px 8px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; }
-.task-card { background: #fff; border-radius: 3px; box-shadow: 0 1px 2px rgba(9,30,66,0.25); padding: 8px; cursor: pointer; transition: 0.1s; }
-.task-card:hover { background: #FAFBFC; }
-.card-dimmed { opacity: 0.6; }
-.card-badges { display: flex; gap: 4px; margin-bottom: 6px; }
-.badge-priority { font-size: 10px; font-weight: 700; padding: 2px 4px; border-radius: 2px; color: #fff; }
-.badge-priority.P0 { background: #BF2600; } .badge-priority.P1 { background: #FF991F; } .badge-priority.P2 { background: #0052CC; }
-.badge-tag { font-size: 10px; font-weight: 600; }
-.card-title { font-size: 14px; color: #172B4D; margin-bottom: 8px; line-height: 1.4; }
-.card-meta { display: flex; justify-content: space-between; align-items: center; }
-.assignee-row { display: flex; }
-.mini-av { width: 20px; height: 20px; border-radius: 50%; overflow: hidden; margin-right: 4px; }
-.no-assignee { font-size: 11px; color: #97A0AF; }
-.date-badge { font-size: 11px; color: #6B778C; display: flex; align-items: center; gap: 4px; padding: 2px 4px; border-radius: 3px; }
-.date-badge.overdue { color: #DE350B; background: #FFEBE6; font-weight: 600; }
-.ghost-btn { width: 100%; text-align: left; padding: 8px; color: #5E6C84; background: transparent; border: none; cursor: pointer; border-radius: 3px; }
-.ghost-btn:hover { background: rgba(9,30,66,0.08); }
-.add-col-placeholder { min-width: 272px; }
-.btn-add-col { width: 100%; height: 48px; border: 2px dashed #DFE1E6; background: transparent; color: #6B778C; cursor: pointer; }
-.new-col-input-box { background: #fff; padding: 8px; box-shadow: 0 1px 2px rgba(9,30,66,0.25); }
-.new-col-input-box input { width: 100%; margin-bottom: 8px; padding: 4px; border: 2px solid #0052CC; }
-.btn-xs { padding: 4px 8px; font-size: 12px; border: none; border-radius: 2px; margin-right: 4px; cursor: pointer; }
-.btn-xs.primary { background: #0052CC; color: #fff; }
+/* ================= 核心变量 (Design Tokens) ================= */
+.board-wrapper {
+  --primary: #0052CC;
+  --primary-hover: #0043A6;
+  --success: #36B37E;
+  --danger: #DE350B;
+  --danger-bg: #FFEBE6;
+  
+  --bg-main: #FFFFFF;
+  --bg-track: #F4F5F7;
+  --bg-col: #EBECF0;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FAFBFC;
+  
+  --text-main: #172B4D;
+  --text-muted: #5E6C84;
+  --text-inverse: #FFFFFF;
+  
+  --border-light: #DFE1E6;
+  --border-focus: #4C9AFF;
+  
+  --shadow-sm: 0 1px 2px rgba(9, 30, 66, 0.05);
+  --shadow-md: 0 4px 8px -2px rgba(9, 30, 66, 0.08), 0 0 1px rgba(9, 30, 66, 0.31);
+  --shadow-lg: 0 8px 16px -4px rgba(9, 30, 66, 0.08), 0 0 1px rgba(9, 30, 66, 0.31);
+  --shadow-modal: 0 16px 32px -8px rgba(9, 30, 66, 0.12), 0 0 1px rgba(9, 30, 66, 0.31);
 
-/* 模态框通用样式 */
-.modal-backdrop { position: fixed; inset: 0; background: rgba(9,30,66,0.54); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-.modal-panel { background: #fff; border-radius: 3px; display: flex; flex-direction: column; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
-.modal-panel.small { width: 400px; }
-.modal-panel.large { width: 900px; height: 80vh; }
-.modal-header { padding: 16px 24px; border-bottom: 1px solid #DFE1E6; display: flex; justify-content: space-between; align-items: center; }
-.modal-header.no-border { border-bottom: none; }
-.modal-body { padding: 24px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-.modal-footer { padding: 16px 24px; border-top: 1px solid #DFE1E6; display: flex; justify-content: flex-end; gap: 8px; }
-.form-group { margin-bottom: 16px; }
-.form-row { display: flex; gap: 16px; }
+  flex: 1; 
+  overflow: hidden; 
+  display: flex; 
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text-main);
+  background-color: var(--bg-main);
+}
+
+/* ================= 滚动条美化 ================= */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #C1C7D0; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #A5ADBA; }
+
+/* ================= 画布与轨道 ================= */
+.board-canvas { flex: 1; overflow-x: auto; overflow-y: hidden; padding: 24px; display: flex; }
+.board-track { display: inline-flex; height: 100%; align-items: flex-start; gap: 16px; padding-bottom: 12px; }
+
+/* ================= 列 (Column) ================= */
+.board-col { width: 280px; min-width: 280px; max-height: 100%; background: var(--bg-track); border-radius: 8px; display: flex; flex-direction: column; transition: background 0.3s; }
+.board-col.col-done { background: #E3FCEF; }
+
+.col-header { padding: 14px 16px 10px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; }
+.col-title-area { flex: 1; cursor: pointer; border-radius: 4px; padding: 2px 4px; margin-left: -4px; transition: background 0.2s; }
+.col-title-area:hover { background: rgba(9, 30, 66, 0.08); }
+.col-label { display: flex; align-items: center; }
+.col-label .name { color: var(--text-main); font-size: 14px; }
+.col-label .count { font-weight: 500; color: var(--text-muted); margin-left: 8px; background: var(--border-light); padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+
+.col-rename-input { width: 100%; padding: 6px; border: 2px solid var(--border-focus); border-radius: 4px; font-family: inherit; font-size: 14px; font-weight: 600; outline: none; background: #fff; }
+
+.col-ops { display: flex; gap: 4px; margin-left: 8px; }
+.col-ops .op-btn { width: 24px; height: 24px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: 0.2s; }
+.col-ops .op-btn:hover { background: rgba(9, 30, 66, 0.08); color: var(--text-main); }
+.col-ops .check.active { color: var(--success); }
+.col-ops .del:hover { color: var(--danger); background: var(--danger-bg); }
+
+/* ================= 任务卡片 ================= */
+.task-container { padding: 0 12px 12px 12px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.task-card { background: var(--bg-card); border-radius: 8px; box-shadow: var(--shadow-sm); padding: 14px; cursor: pointer; border: 1px solid var(--border-light); transition: all 0.2s ease; position: relative; }
+.task-card:hover { background: var(--bg-card-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: #B3D4FF; }
+.card-dimmed { opacity: 0.6; filter: grayscale(50%); }
+
+.card-badges { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.badge-priority { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; }
+.badge-priority.P0 { background: var(--danger-bg); color: var(--danger); } 
+.badge-priority.P1 { background: #FFFAE6; color: #FF8B00; } 
+.badge-priority.P2 { background: #DEEBFF; color: #0052CC; }
+.badge-tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 12px; }
+
+.card-title { font-size: 14px; font-weight: 500; color: var(--text-main); margin-bottom: 14px; line-height: 1.5; word-wrap: break-word; }
+
+.card-meta { display: flex; justify-content: space-between; align-items: center; }
+.assignee-row { display: flex; align-items: center; }
+.mini-av-wrapper { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; margin-right: -8px; background: #fff; position: relative; }
+.mini-av { width: 100%; height: 100%; }
+.mini-av :deep(*) { width: 100% !important; height: 100% !important; border-radius: 50% !important; }
+.no-assignee { font-size: 12px; color: var(--text-muted); font-style: italic; }
+
+.date-badge { font-size: 11px; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; background: var(--bg-track); padding: 4px 8px; border-radius: 4px; }
+.date-badge.overdue { color: var(--danger); background: var(--danger-bg); font-weight: 600; }
+
+.ghost-btn { width: 100%; text-align: left; padding: 10px 12px; color: var(--text-muted); font-weight: 500; background: transparent; border: none; cursor: pointer; border-radius: 6px; transition: background 0.2s; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.ghost-btn:hover { background: rgba(9,30,66,0.08); color: var(--text-main); }
+.plus-icon { font-size: 16px; font-weight: 300; }
+
+/* ================= 添加列占位 ================= */
+.add-col-placeholder { min-width: 280px; width: 280px; }
+.btn-add-col { width: 100%; height: 48px; border: none; background: rgba(9, 30, 66, 0.04); color: var(--text-muted); cursor: pointer; border-radius: 8px; font-weight: 500; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;}
+.btn-add-col:hover { background: rgba(9, 30, 66, 0.08); color: var(--text-main); }
+.new-col-input-box { background: var(--bg-card); padding: 12px; border-radius: 8px; box-shadow: var(--shadow-md); border: 1px solid var(--border-light); }
+.row-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+/* ================= 通用按钮与输入框 ================= */
+.modern-input, .modern-textarea, .linear-select { width: 100%; padding: 10px 12px; border: 2px solid var(--border-light); border-radius: 6px; font-size: 14px; color: var(--text-main); transition: 0.2s; background: #FAFBFC; font-family: inherit; box-sizing: border-box; }
+.modern-input:focus, .modern-textarea:focus, .linear-select:focus { background: #fff; border-color: var(--border-focus); outline: none; box-shadow: 0 0 0 3px rgba(76, 154, 255, 0.2); }
+.modern-textarea { resize: vertical; line-height: 1.6; }
+
+.btn-sm { padding: 6px 12px; font-size: 13px; font-weight: 500; border: none; border-radius: 4px; cursor: pointer; transition: 0.2s; background: transparent; color: var(--text-main); }
+.btn-sm:hover { background: rgba(9, 30, 66, 0.08); }
+.btn-sm.primary { background: var(--primary); color: #fff; }
+.btn-sm.primary:hover { background: var(--primary-hover); }
+
+.btn-primary { background: var(--primary); color: var(--text-inverse); border: none; border-radius: 6px; padding: 10px 20px; font-weight: 500; font-size: 14px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+.btn-primary:not(:disabled):hover { background: var(--primary-hover); box-shadow: var(--shadow-sm); }
+.btn-ghost { background: transparent; border: none; color: var(--text-muted); font-weight: 500; cursor: pointer; padding: 10px 20px; font-size: 14px; border-radius: 6px; transition: 0.2s; }
+.btn-ghost:hover { background: var(--bg-track); color: var(--text-main); }
+.btn-danger { border: none; background: var(--danger-bg); color: var(--danger); padding: 10px; border-radius: 6px; font-weight: 500; cursor: pointer; transition: 0.2s; }
+.btn-danger:hover { background: #FFBDAD; }
+
+button:disabled { cursor: not-allowed; opacity: 0.6; }
+
+/* ================= 模态框通用体系 ================= */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(9,30,66,0.54); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+.modal-panel { background: var(--bg-card); border-radius: 8px; display: flex; flex-direction: column; box-shadow: var(--shadow-modal); max-width: 95vw; }
+.modal-panel.small { width: 480px; }
+.modal-panel.large { width: 960px; height: 85vh; }
+
+.modal-header { padding: 20px 28px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
+.modal-header.no-border { border-bottom: none; padding-bottom: 10px; }
+.modal-header h3 { margin: 0; font-size: 18px; font-weight: 600; color: var(--text-main); }
+.task-id-badge { font-size: 13px; font-weight: 600; color: var(--text-muted); background: var(--bg-track); padding: 4px 10px; border-radius: 4px; letter-spacing: 0.5px; }
+
+.close-icon { background: none; border: none; cursor: pointer; color: var(--text-muted); border-radius: 4px; padding: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+.close-icon:hover { background: var(--bg-track); color: var(--text-main); }
+
+.modal-body { padding: 28px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.modal-footer { padding: 16px 28px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 12px; background: #FAFBFC; border-radius: 0 0 8px 8px; }
+
+/* 表单布局 */
+.form-group { margin-bottom: 20px; }
+.form-row { display: flex; gap: 20px; }
 .form-row .form-group { flex: 1; }
-label { display: block; font-size: 12px; font-weight: 600; color: #6B778C; margin-bottom: 4px; }
-.linear-input, .linear-select, .detail-textarea { width: 100%; padding: 8px; border: 2px solid #DFE1E6; border-radius: 3px; font-size: 14px; transition: 0.2s; background: #FAFBFC; }
-.linear-input:focus, .linear-select:focus, .detail-textarea:focus { background: #fff; border-color: #0052CC; outline: none; }
-.detail-textarea { font-family: monospace; line-height: 1.5; resize: none; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+
+.select-wrapper { position: relative; }
+.select-wrapper::after { content: "▼"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text-muted); pointer-events: none; }
+.select-wrapper select { appearance: none; cursor: pointer; }
+
+/* 详情编辑专区 */
 .detail-layout { display: flex; flex: 1; overflow: hidden; }
-.detail-main { flex: 3; padding: 24px 32px; overflow-y: auto; }
-.detail-side { flex: 1; padding: 24px; background: #FAFBFC; border-left: 1px solid #EBECF0; display: flex; flex-direction: column; gap: 20px; }
-.detail-title-input { font-size: 24px; font-weight: 600; border: none; width: 100%; outline: none; margin-bottom: 24px; }
-.user-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-.user-chip { padding: 4px 10px; background: #F4F5F7; border-radius: 100px; font-size: 12px; cursor: pointer; border: 1px solid transparent; }
-.user-chip.active { background: #DEEBFF; color: #0052CC; border-color: #0052CC; }
-.user-chip.with-av { display: flex; gap: 6px; align-items: center; padding-left: 4px; }
-.chip-av { width: 16px; height: 16px; }
-.priority-tabs { display: flex; background: #EBECF0; padding: 2px; border-radius: 3px; }
-.priority-tabs button { flex: 1; border: none; background: transparent; padding: 6px; cursor: pointer; font-size: 12px; font-weight: 600; color: #6B778C; border-radius: 2px; }
-.priority-tabs button.active { background: #fff; color: #0052CC; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-.btn-primary.full { width: 100%; margin-top: 20px; }
-.btn-danger.full { width: 100%; border: 1px solid #FFEBE6; background: #FFEBE6; color: #DE350B; padding: 8px; border-radius: 3px; cursor: pointer; margin-top: auto; }
+.detail-main { flex: 2.5; padding: 10px 32px 32px 32px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px;}
+.detail-side { flex: 1; padding: 24px; background: #FAFBFC; border-left: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 20px; overflow-y: auto;}
+
+.detail-title-input { font-size: 26px; font-weight: 600; color: var(--text-main); border: none; width: 100%; outline: none; padding: 0; background: transparent; }
+.detail-title-input::placeholder { color: #A5ADBA; }
+
+.detail-block { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.block-label { font-size: 15px; font-weight: 600; color: var(--text-main); }
+
+.prop-item { display: flex; flex-direction: column; gap: 8px; }
+.prop-item label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
+
+/* 用户选择芯片 */
+.user-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.user-chip { padding: 6px 14px; background: var(--bg-track); color: var(--text-main); border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+.user-chip:hover { background: #EBECF0; }
+.user-chip.active { background: #DEEBFF; color: var(--primary); border-color: var(--border-focus); }
+.user-chip.with-av { display: flex; gap: 8px; align-items: center; padding: 4px 14px 4px 4px; }
+.chip-av-wrapper { width: 24px; height: 24px; border-radius: 50%; overflow: hidden; }
+.chip-av :deep(*) { width: 100% !important; height: 100% !important; border-radius: 50% !important; }
+
+/* 优先级切换器 */
+.priority-tabs { display: flex; background: var(--border-light); padding: 3px; border-radius: 6px; }
+.priority-tabs button { flex: 1; border: none; background: transparent; padding: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-muted); border-radius: 4px; transition: 0.2s; }
+.priority-tabs button:hover { color: var(--text-main); }
+.priority-tabs button.active { background: var(--bg-card); color: var(--text-main); box-shadow: var(--shadow-sm); }
+
+.side-footer { margin-top: auto; display: flex; flex-direction: column; gap: 12px; padding-top: 24px; }
+.full { width: 100%; margin: 0; }
+
+/* Vue 动画过渡 */
+.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; transform: translateY(10px) scale(0.98); }
 </style>

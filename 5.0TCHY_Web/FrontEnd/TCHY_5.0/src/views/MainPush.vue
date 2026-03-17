@@ -342,7 +342,7 @@ onMounted(() => {
 .menu-item-btn:hover { background: #000; color: #fff; }
 .ticker-constrain { width: 100%; overflow: hidden; margin-top: 20px; }
 
-/* --- 门户核心布局 (Hub Layout) --- */
+
 .portal-body-layout {
   display: grid;
   grid-template-columns: 1fr 340px; 

@@ -549,28 +549,23 @@ const submitInvite = async () => {
   inviteLoading.value = true;
   try {
     // 2. 发送请求：把选中的用户加入当前组织
-    // 注意：这里的 URL 和 Payload 需要和你的 C# 后端接口完全对应
+    // 【修改这里】使用 selectedInviteUser.value.username 作为 TargetUsername 传给后端
     await apiClient.post(`/organizations/${currentOrg.value.id}/members`, {
-      UserId: selectedInviteUser.value.id,
-      Role: 'Member' // 默认给个基础权限，防止进来直接是 Owner
+      TargetUsername: selectedInviteUser.value.username 
     });
 
     // 3. 成功后的清理工作
     console.log(`成功邀请 ${selectedInviteUser.value.username}`);
     
-    // 关闭弹窗
     showInviteMember.value = false;
-    // 重置搜索框和选中状态
     inviteSearchQuery.value = '';
     selectedInviteUser.value = null;
 
   } catch (error: any) {
     console.error('发送邀请失败:', error);
-    // 提取后端报错信息或给个默认提示
     const errorMsg = error.response?.data?.message || '邀请失败，可能该用户已在组织中。';
     alert(errorMsg);
   } finally {
-    // 解除按钮禁用状态
     inviteLoading.value = false;
   }
 }
