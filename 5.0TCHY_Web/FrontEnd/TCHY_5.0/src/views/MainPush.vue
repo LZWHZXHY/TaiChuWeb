@@ -35,17 +35,12 @@ const handleUpdateCount = (count: number) => {
 
 // --- 状态管理 ---
 const rawFeedData = ref<FeedItem[]>([]);
-const trendingActivities = ref<ActivityItem[]>([]); // 接收真实活动的响应式变量
+const trendingActivities = ref<ActivityItem[]>([]); // 共创企划数据
+const activeFeedbacks = ref<any[]>([]); // 真实的反馈列队数据
+const sideActivities = ref<any[]>([]); // 真实的官方日历活动数据
 const isLoading = ref(true); 
 
-// --- 模拟：官方社区活动 (侧边栏显示) ---
-const sideActivities = ref([
-  { id: 1, title: '【征稿】赛博朋克 2026 视觉艺术大赛', status: '进行中', date: '03.15 - 04.30' },
-  { id: 2, title: '寰宇OS v2.0 开发者线上圆桌会议', status: '即将开始', date: '03.20 20:00' },
-  { id: 3, title: '柴圈联动：火柴人设定大赏', status: '火热评选中', date: '03.01 - 03.25' }
-]);
-
-// --- 数据获取 (获取精华数据) ---
+// --- 1. 获取精华数据 (门户左侧内容) ---
 const fetchPortalData = async () => {
   try {
     isLoading.value = true;
@@ -63,7 +58,6 @@ const fetchPortalData = async () => {
         title: item.Title,
         content: item.Content,
         imgUrl: item.ImgUrl,
-        // 👇 优化：后端已接通，去掉随机数，改用更安全的 0 兜底
         stats: item.Stats || { views: 0, likes: 0, comments: 0 }
       }));
     }
@@ -74,10 +68,9 @@ const fetchPortalData = async () => {
   }
 };
 
-// --- 数据获取 (获取真实共创企划活动，仅展示进行中) ---
+// --- 2. 获取真实共创企划活动 ---
 const fetchActivities = async () => {
   try {
-    // 稍微多拉取一些数据，以便我们在前端过滤后还能凑够 6 个
     const { data: res } = await apiClient.get(`/Activity/list`, {
       params: { page: 1, pageSize: 20 } 
     });
@@ -85,21 +78,87 @@ const fetchActivities = async () => {
     if (res && res.data) {
       const now = new Date().getTime();
       
-      // 1. 过滤出“进行中”的活动：当前时间 >= 开始时间，且 <= 结束时间
       const activeProjects = res.data.filter((item: ActivityItem) => {
         if (!item.startdate || !item.enddate) return false;
-        
         const startDate = new Date(item.startdate).getTime();
         const endDate = new Date(item.enddate).getTime();
-        
         return now >= startDate && now <= endDate;
       });
 
-      // 2. 截取前 6 个，保证前端 UI 的 3列x2行 网格依然美观
       trendingActivities.value = activeProjects.slice(0, 6);
     }
   } catch (error) {
-    console.error('SERVER_ERROR // 活动数据加载失败:', error);
+    console.error('SERVER_ERROR // 企划数据加载失败:', error);
+  }
+};
+
+// --- 3. 获取侧边栏真实反馈动态 ---
+const fetchActiveFeedbacks = async () => {
+  try {
+    const { data: res } = await apiClient.get(`/FeedBack/active-widget`);
+    if (res && res.success) {
+      activeFeedbacks.value = res.data;
+    }
+  } catch (error) {
+    console.error('SERVER_ERROR // 节点反馈列队加载失败:', error);
+  }
+};
+
+// --- 4. 获取侧边栏真实官方日历活动 ---
+const fetchSideActivities = async () => {
+  try {
+    const now = new Date();
+    // 假设你的接口路由就是 /events，需要按当月查询
+    const { data: res } = await apiClient.get(`/events`, {
+      params: { 
+        year: now.getFullYear(), 
+        month: now.getMonth() + 1 
+      }
+    });
+
+    // 兼容 C# 直接返回的数组格式
+    const rawList = Array.isArray(res) ? res : (res?.data || []);
+
+    sideActivities.value = rawList.slice(0, 4).map((item: any) => {
+      // 🔥 核心修复：兼容后端的大驼峰(PascalCase)和小驼峰(camelCase)命名
+      const eDate = item.Date || item.date;
+      const eTime = item.Time || item.time;
+      const eId = item.Id || item.id;
+      const eTitle = item.Title || item.title;
+      const eType = item.Type || item.type;
+      const eColor = item.Color || item.color;
+
+      // 解析后端日期 (yyyy-MM-dd) 和时间 (hh:mm)
+      const eventDateTime = new Date(`${eDate}T${eTime}`);
+      
+      let statusText = '即将开始';
+      let isActive = false;
+      
+      // 时间推演逻辑：
+      if (eventDateTime.getTime() < now.getTime()) {
+        statusText = '已结束';
+      } else if (eventDateTime.getTime() - now.getTime() < 86400000 * 2) { 
+        // 距离开始不足48小时，视作“进行中”状态
+        statusText = '进行中';
+        isActive = true;
+      }
+
+      // 格式化日期显示为 MM.DD HH:mm
+      const dateParts = eDate.split('-');
+      const formattedDate = `${dateParts[1]}.${dateParts[2]} ${eTime}`;
+
+      return {
+        id: eId,
+        title: eTitle,
+        status: statusText,
+        type: eType?.toUpperCase() || 'EVENT', 
+        color: eColor,
+        date: formattedDate,
+        isActive: isActive
+      };
+    });
+  } catch (error) {
+    console.error('SERVER_ERROR // 官方日历活动加载失败:', error);
   }
 };
 
@@ -122,6 +181,8 @@ const navigateTo = (path: string) => {
 onMounted(() => {
   fetchPortalData();
   fetchActivities();
+  fetchActiveFeedbacks(); 
+  fetchSideActivities(); 
 });
 </script>
 
@@ -142,7 +203,7 @@ onMounted(() => {
             <span class="mono-label">SYSTEM_NOTICE // 系统公告</span>
           </div>
           <div class="announcement-content">
-            <h3 class="announcement-title">太初寰宇 // 2026 创作者激励计划  (这个是AI生成的模板，假的)</h3>
+            <h3 class="announcement-title">太初寰宇 // 2026 创作者激励计划</h3>
             <p class="announcement-desc">
               正在同步神经连接协议... 当前节点状态：在线。我们欢迎所有能够定义新世界边界的艺术家。
             </p>
@@ -255,14 +316,24 @@ onMounted(() => {
 
           <div class="sidebar-widget events-widget">
             <h5 class="widget-title">OFFICIAL_EVENTS // 官方活动</h5>
-            <ul class="event-list">
+            
+            <ul class="event-list" v-if="sideActivities.length > 0">
               <li v-for="event in sideActivities" :key="event.id" class="event-item">
-                <div class="event-status" :class="{ 'active': event.status === '进行中' }">{{ event.status }}</div>
+                <div class="event-status" 
+                     :class="{ 'active': event.isActive }"
+                     :style="event.isActive ? { backgroundColor: event.color || '#000', color: '#fff' } : {}">
+                  [{{ event.type }}] {{ event.status }}
+                </div>
                 <h6 class="event-title">{{ event.title }}</h6>
                 <span class="event-date">{{ event.date }}</span>
               </li>
             </ul>
-            <button class="full-width-btn" @click="navigateTo('/events')">全部活动历程</button>
+            
+            <div v-else style="padding: 20px 0; text-align: center; color: #999; font-family: 'JetBrains Mono'; font-size: 12px;">
+              > 当月暂无同步行程...
+            </div>
+            
+            <button class="full-width-btn" @click="navigateTo('/events')" style="margin-top: 15px;">全部活动历程</button>
           </div>
 
           <div class="sidebar-widget">
@@ -273,6 +344,24 @@ onMounted(() => {
               <span class="tag-item"># 赛博主义插画</span>
               <span class="tag-item"># 火柴人设定</span>
               <span class="tag-item"># 灵脉空间</span>
+            </div>
+          </div>
+
+          <div class="sidebar-widget feedback-widget">
+            <h5 class="widget-title">SYSTEM_FEEDBACK // 节点反馈列队</h5>
+            
+            <ul class="feedback-list" v-if="activeFeedbacks.length > 0">
+              <li v-for="item in activeFeedbacks" :key="item.id" class="feedback-item" :class="`border-${item.type}`">
+                <div class="feedback-meta">
+                  <span class="feedback-id">{{ item.id }}</span>
+                  <span class="feedback-status" :class="item.type">[{{ item.status }}]</span>
+                </div>
+                <p class="feedback-text">{{ item.text }}</p>
+              </li>
+            </ul>
+
+            <div v-else style="padding: 20px 0; text-align: center; color: #999; font-family: 'JetBrains Mono'; font-size: 12px;">
+              > 暂无正在处理的节点异常...
             </div>
           </div>
 
@@ -312,7 +401,7 @@ onMounted(() => {
 }
 
 .main-content {
-  max-width: 1300px;
+  max-width: 65%;
   margin: 0 auto;
   padding: 40px 20px;
   box-sizing: border-box; 
@@ -371,7 +460,7 @@ onMounted(() => {
 /* --- 板块 B: 用户企划布局 (Project Grid) --- */
 .project-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 企划展示为 3 列 */
+  grid-template-columns: repeat(3, 1fr); 
   gap: 20px;
 }
 
@@ -397,11 +486,11 @@ onMounted(() => {
 .widget-title { font-family: 'JetBrains Mono'; font-size: 13px; border-left: 3px solid #000; padding-left: 10px; margin-bottom: 20px; }
 
 /* 官方活动列表 */
-.event-list { list-style: none; padding: 0; margin: 0 0 20px 0; display: flex; flex-direction: column; gap: 16px; }
+.event-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 16px; }
 .event-item { border-bottom: 1px dashed #eee; padding-bottom: 16px; }
 .event-item:last-child { border-bottom: none; padding-bottom: 0; }
-.event-status { display: inline-block; font-family: 'JetBrains Mono'; font-size: 10px; padding: 2px 6px; background: #eee; color: #666; margin-bottom: 8px; }
-.event-status.active { background: #000; color: #fff; }
+.event-status { display: inline-block; font-family: 'JetBrains Mono'; font-size: 10px; padding: 3px 6px; background: #eee; color: #666; margin-bottom: 8px; border-radius: 2px; }
+.event-status.active { font-weight: bold; }
 .event-title { font-size: 14px; font-weight: 700; margin: 0 0 6px 0; line-height: 1.4; color: #1a1a1a; }
 .event-date { font-family: 'JetBrains Mono'; font-size: 11px; color: #999; }
 .full-width-btn { width: 100%; background: #f8f9fa; border: 1px solid #ddd; padding: 10px; font-family: 'JetBrains Mono'; font-size: 12px; cursor: pointer; transition: 0.2s; }
@@ -433,14 +522,67 @@ onMounted(() => {
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
+/* --- 节点反馈处理小组件 (Feedback Widget) 样式 --- */
+.feedback-widget {
+  background: #fff;
+}
+.feedback-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.feedback-item {
+  background: #f8f9fa;
+  padding: 12px;
+  border-left: 3px solid #ccc; 
+  transition: all 0.2s ease;
+}
+.feedback-item:hover {
+  background: #f0f2f5;
+  transform: translateX(4px);
+}
+.feedback-item.border-processing { border-left-color: #0047ff; }
+.feedback-item.border-investigating { border-left-color: #ff4757; }
+.feedback-item.border-pending { border-left-color: #a4b0be; }
+
+.feedback-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+}
+.feedback-id {
+  color: #666;
+}
+.feedback-status.processing { color: #0047ff; }
+.feedback-status.investigating { color: #ff4757; }
+.feedback-status.pending { color: #a4b0be; }
+
+.feedback-text {
+  font-size: 12px;
+  color: #1a1a1a;
+  margin: 0;
+  line-height: 1.4;
+  font-family: 'Inter', -apple-system, sans-serif;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 最多显示两行，溢出省略 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* --- 响应式 --- */
 @media (max-width: 1100px) {
   .portal-hero-section { grid-template-columns: 1fr; height: auto; }
   .portal-body-layout { grid-template-columns: 1fr; }
   .intel-grid, .art-grid { grid-template-columns: 1fr; } 
-  .project-grid { grid-template-columns: repeat(2, 1fr); } /* 企划在中屏下变 2 列 */
+  .project-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 768px) {
-  .project-grid { grid-template-columns: 1fr; } /* 企划在手机端变 1 列 */
+  .project-grid { grid-template-columns: 1fr; }
 }
 </style>

@@ -12,6 +12,9 @@
             <button class="view-tab" :class="{ active: currentView === 'board' }" @click="currentView = 'board'">
               <span class="icon">⊞</span> Board
             </button>
+            <button class="view-tab" :class="{ active: currentView === 'timeline' }" @click="currentView = 'timeline'">
+              <span class="icon">◤</span> Timeline
+            </button>
             <button class="view-tab" :class="{ active: currentView === 'reports' }" @click="currentView = 'reports'">
               <span class="icon">📄</span> Reports
             </button>
@@ -38,10 +41,10 @@
         <button v-if="currentView === 'board'" class="btn-primary" @click="triggerCreateTask">
           <span>+ 新建任务</span>
         </button>
-        <button v-else class="btn-primary" @click="triggerWriteReport">
+        <button v-else-if="currentView === 'reports'" class="btn-primary" @click="triggerWriteReport">
           <span>+ 撰写汇报</span>
         </button>
-      </div>
+        </div>
     </header>
 
     <div class="main-content">
@@ -51,6 +54,11 @@
         :project-id="projectId" 
         :members="projectMembers"
         @update-progress="updateStats"
+      />
+      
+      <ProjectTimeline 
+        v-if="currentView === 'timeline'" 
+        :project-id="projectId" 
       />
       
       <ReportDashboard 
@@ -112,6 +120,7 @@ import apiClient from '@/utils/api'
 import UniversalAvatar from '@/GeneralComponents/UserAvatar.vue'
 import KanbanBoard from '@/ProjectComponents/KanbanBoard.vue'
 import ReportDashboard from '@/ProjectComponents/ReportDashboard.vue'
+import ProjectTimeline from '@/ProjectComponents/ProjectTimeline.vue'
 
 const route = useRoute()
 const router = useRouter()
