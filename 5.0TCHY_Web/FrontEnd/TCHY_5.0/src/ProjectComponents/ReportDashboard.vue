@@ -329,15 +329,16 @@ const formatExactTime = (dateString: string) => {
 // --- 核心 API 请求逻辑 ---
 const fetchCycles = async () => {
   try {
-    const res = await apiClient.get('/Reports/cycles');
+    // 🔥 核心修改 1：加上 projectId，只获取当前项目的周期
+    const res = await apiClient.get(`/Reports/project/${props.projectId}/cycles`);
     
     reportCycles.value = res.data.map((c: any) => ({
-      id: c.Id,
-      name: c.Name,
-      startDate: c.StartDate,
-      endDate: c.EndDate,
-      type: c.Type,
-      isLocked: c.IsLocked
+      id: c.Id || c.id,
+      name: c.Name || c.name,
+      startDate: c.StartDate || c.start_date, // 兼容大小写
+      endDate: c.EndDate || c.end_date,
+      type: c.Type || c.type,
+      isLocked: c.IsLocked || c.is_Locked
     }));
 
     if (reportCycles.value.length > 0) {
@@ -438,7 +439,9 @@ const saveCycle = async () => {
       start_date: editingCycle.startDate || new Date().toISOString(),
       end_date: editingCycle.endDate || new Date().toISOString(),
     };
-    await apiClient.post('/Reports/cycles', payload);
+    // 🔥 核心修改 2：加上 projectId，把新建的周期绑定到当前项目
+    await apiClient.post(`/Reports/project/${props.projectId}/cycles`, payload);
+    
     editingCycle.name = ''; 
     editingCycle.startDate = ''; 
     editingCycle.endDate = '';
