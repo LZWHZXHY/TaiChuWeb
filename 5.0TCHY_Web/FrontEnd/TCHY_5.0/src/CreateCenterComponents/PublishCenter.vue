@@ -26,7 +26,7 @@
     <div class="form-workspace">
       <div class="workspace-header">
         <span class="indicator"></span>
-        CURRENT_MODULE: {{ currentType.toUpperCase() }}_EDITOR
+        CURRENT_MODULE: {{ currentType.toUpperCase() }}_EDITOR 建议暂时不要用markdown，正常写就行，前端渲染有点问题
       </div>
 
       <PostEditor v-if="currentType === 'post'" />

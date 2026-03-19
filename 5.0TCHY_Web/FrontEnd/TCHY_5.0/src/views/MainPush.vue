@@ -467,10 +467,10 @@ onMounted(() => {
 /* --- 板块 C: 视觉档案网格 (Art Grid) --- */
 .art-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 🔥 从 2列 改为 3列，格子会自动变小 */
-  gap: 16px; /* 🔥 稍微缩小间距，视觉上更紧凑 */
+  grid-template-columns: repeat(2, 1fr); /* 🔥 从 2列 改为 3列，格子会自动变小 */
+  gap: 14px; /* 🔥 稍微缩小间距，视觉上更紧凑 */
 }
-.art-card-wrapper { background: #fff; border: 1px solid #eee; transition: transform 0.3s; position: relative; }
+.art-card-wrapper { background: #ffffff; border: 1px solid #eee; transition: transform 0.3s; position: relative; }
 .art-card-wrapper:hover { transform: translateY(-4px); border-color: #000; box-shadow: 4px 4px 0 #000; }
 .art-mini-stats { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 8px; font-family: 'JetBrains Mono'; font-size: 10px; border-radius: 4px; display: flex; gap: 10px; pointer-events: none; }
 

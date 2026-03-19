@@ -579,7 +579,7 @@ onUnmounted(() => {
 }
 
 .cyber-dropdown-menu {
-  position: absolute; top: 60px; right: 0; width: 200px;
+  position: absolute; top: 60px; right: 40%; width: 200px;
   background: #fff; border: 2px solid var(--ink-black);
   box-shadow: 6px 6px 0 rgba(0,0,0,0.2); z-index: 1001;
 }
