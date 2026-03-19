@@ -1,5 +1,5 @@
 <template>
-  <router-link :to="`/art/${data.id}`" class="md-link">
+  <router-link :to="`/gallery/${data.id}`" class="md-link">
     <div class="md-art-container">
       
       <div class="md-file-header">
@@ -12,7 +12,7 @@
 
       <div class="md-image-wrapper">
         <img 
-          :src="data.imgUrl || 'https://via.placeholder.com/800x400/111/333?text=MISSING_ASSET'" 
+          :src="data.imgUrl" 
           alt="Art Cover" 
           class="md-raw-img" 
         />
