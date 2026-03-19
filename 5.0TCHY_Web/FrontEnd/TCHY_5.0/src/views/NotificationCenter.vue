@@ -259,37 +259,51 @@ const selectNotification = (item) => {
 // 检查是否具备跳转条件
 const canJump = (item) => {
   if (!item || !item.targetId || item.targetId === "0") return false;
-  return [1, 2, 3].includes(item.category);
+  return [1, 2, 3, 5, 6].includes(item.category);
 }
 
 // 执行跳转到原地址
 const goToSource = (item) => {
   if (!canJump(item)) return;
 
-  // 跳转时自动标记为已读
+  // 跳转前自动标记为已读，提升用户体验
   if (!item.isRead) {
     markSelectedAsRead();
   }
 
   let routePath = '';
+  
+  // 确保 targetId 是纯数字字符串（过滤掉可能存在的冗余前缀）
+  const cleanId = String(item.targetId).replace('post-', '').replace('blog-', '').replace('draw-', '');
 
-  // 根据通知分类，拼装目标路由。这里需要与你的 Vue Router 实际配置对应
-  switch (item.category) {
+  // 这里的 category 必须和后端的 byte 值完全对应
+  // 1: 帖子 (Post), 2: 画廊 (Drawing), 3: 博客 (Blog)
+  const category = Number(item.category);
+
+  switch (category) {
     case 1: // 帖子
-      routePath = `/post/${String(item.targetId).replace('post-', '')}`; 
+      routePath = `/post/${cleanId}`; 
       break;
-    case 2: // 画廊
-      routePath = `/gallery/${item.targetId}`;
+      
+    case 2: // 画廊/作品
+      routePath = `/gallery/${cleanId}`; 
       break;
+      
     case 3: // 博客
-      routePath = `/blog/${item.targetId}`;
+      routePath = `/blog/${cleanId}`; 
       break;
+
+   case 5: // 活动
+      routePath = `/activity/${cleanId}`;
+      break;
+      
     default:
-      console.warn('未知的 Category，无法跳转');
+      console.warn('[SYSTEM] 未定义的分类标识，无法匹配路由轴:', category);
       return;
   }
 
   if (routePath) {
+    console.log(`[ROUTING] 正在调取原宗节点: ${routePath}`);
     router.push(routePath);
   }
 }

@@ -116,7 +116,7 @@
             <h3 class="block-title">04_通讯交互记录 // COMMS_LOG</h3>
             <div class="comms-container" :class="{ 'comms-locked': data.verify !== 1 }">
               <UniversalComments 
-                targetType="PROJECT" 
+                targetType="JOINT" 
                 :targetId="data.id"
                 theme="minimal-light" 
                 :readOnly="data.verify !== 1"
