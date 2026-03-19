@@ -66,7 +66,7 @@ import OC_Battle_Logs from '@/ArtCenter/BattleComponents/OC_Battle_Logs.vue'
 
 const tabs = [
   { key: 'intro', label: 'BRIEFING' },
-  { key: 'upload', label: 'UPLOAD' },
+  // { key: 'upload', label: 'UPLOAD' },
   { key: 'roster', label: 'ROSTER' },
   { key: 'records', label: 'LOGS' }
 ]

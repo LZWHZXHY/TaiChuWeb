@@ -163,8 +163,8 @@ const fetchSideActivities = async () => {
 };
 
 // --- 数据分发计算属性 ---
-const latestIntel = computed(() => rawFeedData.value.filter(item => item.type === 'blog').slice(0, 2));
-const trendingArts = computed(() => rawFeedData.value.filter(item => item.type === 'art').slice(0, 4));
+const latestIntel = computed(() => rawFeedData.value.filter(item => item.type === 'blog').slice(0, 6));
+const trendingArts = computed(() => rawFeedData.value.filter(item => item.type === 'art').slice(0, 6));
 const hotPosts = computed(() => rawFeedData.value.filter(item => item.type === 'post').slice(0, 5));
 
 const formatDate = (ds: string) => {
@@ -232,7 +232,7 @@ onMounted(() => {
             </header>
             
             <div class="intel-grid">
-              <div v-if="isLoading" class="skeleton-card" v-for="i in 2" :key="'intel-sk-'+i"></div>
+              <div v-if="isLoading" class="skeleton-card" v-for="i in 6" :key="'intel-sk-'+i"></div>
               <article v-else v-for="item in latestIntel" :key="item.id" class="intel-card-wrapper">
                 <BlogCard :data="item" />
               </article>
@@ -269,7 +269,7 @@ onMounted(() => {
             </header>
             
             <div class="art-grid">
-              <div v-if="isLoading" class="skeleton-card" v-for="i in 4" :key="'art-sk-'+i"></div>
+              <div v-if="isLoading" class="skeleton-card" v-for="i in 6" :key="'art-sk-'+i"></div>
               <article v-else v-for="item in trendingArts" :key="item.id" class="art-card-wrapper">
                 <ArtCard :data="item" />
                 <div class="art-mini-stats">
@@ -465,7 +465,11 @@ onMounted(() => {
 }
 
 /* --- 板块 C: 视觉档案网格 (Art Grid) --- */
-.art-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.art-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 🔥 从 2列 改为 3列，格子会自动变小 */
+  gap: 16px; /* 🔥 稍微缩小间距，视觉上更紧凑 */
+}
 .art-card-wrapper { background: #fff; border: 1px solid #eee; transition: transform 0.3s; position: relative; }
 .art-card-wrapper:hover { transform: translateY(-4px); border-color: #000; box-shadow: 4px 4px 0 #000; }
 .art-mini-stats { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 8px; font-family: 'JetBrains Mono'; font-size: 10px; border-radius: 4px; display: flex; gap: 10px; pointer-events: none; }
