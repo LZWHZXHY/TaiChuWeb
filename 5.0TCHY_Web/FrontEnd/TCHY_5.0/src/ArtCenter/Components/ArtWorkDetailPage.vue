@@ -1,49 +1,39 @@
 <template>
-  <div class="cyber-artwork-page">
-    <div class="grid-bg moving-grid"></div>
-
-    <header class="page-header">
-      <div class="nav-back" @click="handleBack">
-        <span class="arrow"> &lt; </span> RETURN_TO_GALLERY
+  <div class="modern-artwork-page custom-scroll">
+    
+    <nav class="modern-nav-bar">
+      <div class="nav-container">
+        <button class="back-btn" @click="handleBack">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          返回画廊
+        </button>
+        <span class="nav-title" v-if="artwork">VISUAL ASSET // {{ route.params.id }}</span>
       </div>
-      <div class="header-title">ASSET_VIEWER // NODE_ID: {{ route.params.id }}</div>
-    </header>
+    </nav>
 
-    <div class="page-main-bridge">
-      <main class="artwork-primary">
-        <div v-if="loading" class="loading-state">
-          <div class="glitch-text">SYNCING_VISUAL_DATA...</div>
-        </div>
-        
-        <div v-else-if="artwork" class="artwork-display-container custom-scroll">
-          <div class="image-viewport" @click="openLightbox">
-            <div class="viewport-deco-tl"></div>
-            <div class="viewport-deco-br"></div>
-            
-            <img :src="fixAvatarUrl(artwork.urlFull || artwork.url)" class="main-img" />
-            
+    <div v-if="loading" class="status-screen">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">正在同步高质量视觉数据...</div>
+    </div>
+
+    <div v-else-if="artwork" class="page-layout-grid">
+      
+      <main class="main-content-column">
+        <article class="modern-card artwork-showcase">
+          
+          <div class="image-viewport zoomable" @click="openLightbox">
+            <img :src="fixAvatarUrl(artwork.urlFull || artwork.url)" class="main-img" @error="handleImgError" alt="Artwork" />
             <div class="hover-overlay">
-              <span class="scan-icon">✛</span>
-              <span class="scan-text">CLICK_TO_ANALYZE // 点击全屏解析</span>
-            </div>
-
-            <div class="viewport-hud">
-              <span class="hud-text">RESOLUTION: HIGH_RES</span>
-              <span class="hud-text">RENDER_STABLE: 100%</span>
+              <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+              <span class="overlay-text">点击全屏解析细节</span>
             </div>
           </div>
           
           <div class="content-body">
-            <div class="artwork-info-block">
-              <h1 class="asset-title">{{ artwork.title || 'UNTITLED_ASSET' }}</h1>
-              <p class="asset-desc">{{ artwork.desc || artwork.description || '暂无描述数据...' }}</p>
-            </div>
-
-            <div class="interaction-console">
-              <div class="console-header">>> USER_INTERACTION_PROTOCOL</div>
-              
-              <div class="action-control-group">
-                <div class="like-btn-wrapper">
+            
+            <div class="action-bar">
+              <div class="action-group-left">
+                <div class="action-item">
                   <UniversalLikeBtn 
                     v-if="artwork && artwork.id"
                     targetType="Drawing" 
@@ -51,69 +41,95 @@
                     :initialCount="artwork.likes || 0" 
                   />
                 </div>
-
                 <button 
                   v-if="artwork && artwork.id"
-                  class="cyber-action-btn star-trigger" 
+                  class="modern-action-btn star-btn" 
                   @click="showArchiveModal = true"
                 >
                   <span class="btn-icon">★</span>
-                  <span class="btn-text">STAR_ASSET [{{ artwork.favoriteCount || artwork.starCount || 0 }}]</span>
+                  <span class="btn-text">收藏 [{{ artwork.favoriteCount || artwork.starCount || 0 }}]</span>
+                </button>
+              </div>
+              <div class="action-group-right">
+                <button class="modern-action-btn share-btn" @click="handleShare" :class="{ 'success-state': shareStatus === 'COPIED!' }">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                  {{ shareStatus === 'READY' ? '分享' : '已复制' }}
                 </button>
               </div>
             </div>
 
-            <div class="comment-zone">
-              <div class="zone-deco-line"></div>
-              
-              <UniversalComments 
-                v-if="artwork && artwork.id" 
-                targetType="Drawing" 
-                :targetId="artwork.id" 
-              />
+            <div class="artwork-info-block">
+              <h1 class="asset-title">{{ artwork.title || '无题作品' }}</h1>
+              <p class="asset-desc">{{ artwork.desc || artwork.description || '创造者暂未留下相关描述...' }}</p>
             </div>
+
           </div>
-        </div>
+        </article>
+
+        <section class="comments-section">
+          <h3 class="section-title">参与鉴赏</h3>
+          <div class="modern-card comments-card">
+            <UniversalComments 
+              v-if="artwork && artwork.id" 
+              targetType="Drawing" 
+              :targetId="artwork.id" 
+            />
+          </div>
+        </section>
       </main>
 
-      <aside class="post-sidebar">
-        <section class="author-identity-card" v-if="artwork">
-          <div class="id-header">
-            <span class="id-label">CREATOR_ID</span>
-            <span class="id-serial">#{{ artwork.uploaderId?.toString().padStart(4, '0') || '0000' }}</span>
+      <aside class="sidebar-column">
+        
+        <section class="modern-card sidebar-widget author-identity">
+          <div class="widget-header">
+            <span class="widget-label">CREATOR PROFILE</span>
+            <span class="widget-id">UID: #{{ artwork.uploaderId?.toString().padStart(4, '0') || '0000' }}</span>
           </div>
-          <div class="id-main">
-            <div class="avatar-container">
+          <div class="identity-main">
+            <div class="avatar-large">
               <UserAvatar 
                 :user-id="artwork.uploaderId" 
                 :passed-avatar="artwork.userAvatar"
                 :show-level="true"
               />
             </div>
-            <div class="name-zone">
-              <div class="username">@{{ artwork.userName || 'UNKNOWN' }}</div>
-              <div class="user-status"><span class="dot"></span> CREATOR_ONLINE</div>
+            <div class="identity-info">
+              <div class="username hover-link" @click="router.push(`/profile/${artwork.uploaderId}`)">
+                @{{ artwork.userName || '未知艺术家' }}
+              </div>
+              <div class="user-status"><span class="status-dot"></span> 艺术家在线</div>
             </div>
           </div>
-          <div class="id-actions">
-            <button class="id-btn follow">FOLLOW_CREATOR</button>
-            <button class="id-btn share" @click="handleShare">
-                {{ shareStatus === 'READY' ? 'SHARE_ASSET' : 'LINK_COPIED!' }}
-            </button>
+          <div class="action-grid">
+            <button class="modern-btn primary full-width">关注创造者</button>
           </div>
         </section>
 
-       <div class="cyber-terminal-mini" v-if="artwork">
-          <div class="terminal-header">> ASSET_METRICS.log</div>
-          <div class="metric"><span class="lab">VIEWS:</span> {{ artwork?.views || artwork?.viewCount || 0 }}</div>
-          <div class="metric"><span class="lab">LIKES:</span> {{ artwork?.likes || artwork?.likeCount || 0 }}</div>
-          <div class="metric"><span class="lab">STARS:</span> {{ artwork?.favoriteCount || artwork?.starCount || 0 }}</div>
-          <div class="metric"><span class="lab">LINK:</span> <span class="green">ENCRYPTED</span></div>
-        </div>
+        <section class="modern-card sidebar-widget metrics-board">
+          <div class="widget-header">
+            <span class="widget-label">ASSET METRICS</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <span class="m-val">{{ artwork?.views || artwork?.viewCount || 0 }}</span>
+              <span class="m-lab">浏览量</span>
+            </div>
+            <div class="metric-box">
+              <span class="m-val">{{ artwork?.likes || artwork?.likeCount || 0 }}</span>
+              <span class="m-lab">获赞数</span>
+            </div>
+            <div class="metric-box full-span">
+              <span class="m-val">{{ artwork?.favoriteCount || artwork?.starCount || 0 }}</span>
+              <span class="m-lab">总收藏</span>
+            </div>
+          </div>
+        </section>
       </aside>
+
     </div>
 
     <Teleport to="body">
+      
       <ArchiveModal 
         v-if="artwork && artwork.id"
         v-model="showArchiveModal" 
@@ -123,30 +139,29 @@
       />
 
       <Transition name="fade">
-        <div v-if="isLightboxOpen" class="lightbox-overlay" @click="closeLightbox">
-          <div class="lightbox-hud-top">
-            <span class="hud-tag">:: VISUAL_ANALYSIS_MODE ::</span>
-            <span class="hud-tag">[ ESC ] TO EXIT</span>
+        <div v-if="isLightboxOpen" class="sleek-lightbox-overlay" @click="closeLightbox">
+          
+          <div class="lightbox-top-bar">
+            <span class="hud-tag">HIGH RESOLUTION VIEWER</span>
+            <button class="icon-close-btn" @click.stop="closeLightbox">
+              <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
           </div>
 
-          <div 
-            class="lightbox-img-wrapper" 
-            :class="{ 'is-zoomed': isZoomed }"
-            @click.stop="toggleZoom"
-            @mousemove="handleMouseMove"
-          >
+          <div class="lightbox-img-wrapper">
             <img 
               :src="fixAvatarUrl(artwork.urlFull || artwork.url)" 
               class="lightbox-img" 
-              :style="zoomStyle"
+              alt="High Res Artwork"
+              @click.stop
             />
           </div>
 
-          <div class="lightbox-hud-bottom">
-            <span>ZOOM_LEVEL: {{ isZoomed ? '250%' : 'FIT_SCREEN' }}</span>
-            <span v-if="!isZoomed" class="blink">>> CLICK TO ZOOM</span>
-            <span v-else class="blink">>> MOVE MOUSE TO PAN</span>
+          <div class="lightbox-bottom-bar">
+            <span class="zoom-status">RESOLUTION: ORIGINAL</span>
+            <span class="hint-text">>> 单击空白处关闭</span>
           </div>
+          
         </div>
       </Transition>
     </Teleport>
@@ -155,15 +170,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, reactive, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import apiClient from '@/utils/api';
 
-// ✅ 引入三大通用组件
 import UniversalComments from '@/GeneralComponents/UniversalComments.vue'; 
 import UniversalLikeBtn from '@/GeneralComponents/UniversalLikeBtn.vue';
 import UserAvatar from '@/GeneralComponents/UserAvatar.vue'; 
-import ArchiveModal from '@/GeneralComponents/ArchiveModal.vue'; // ✅ 新增星标收藏组件
+import ArchiveModal from '@/GeneralComponents/ArchiveModal.vue'; 
 
 const route = useRoute();
 const router = useRouter();
@@ -171,25 +185,15 @@ const artwork = ref(null);
 const loading = ref(true);
 const shareStatus = ref('READY');
 
-// --- 收藏弹窗状态 ---
 const showArchiveModal = ref(false);
-// 找到这行代码：
 const handleArchiveSuccess = () => {
-  console.log(">> SYSTEM: Asset archived successfully.");
-  
-  // ✅ 加上这段：手动让本地数据 +1，实现瞬间反馈的快感
   if (artwork.value) {
-    // 兼容可能没有这个字段的情况，默认为0再+1
     artwork.value.favoriteCount = (artwork.value.favoriteCount || 0) + 1;
-    // 如果你还需要给用户一个高调的提示：
-    alert("SYSTEM: 已成功加入星标库！");
   }
 };
 
-// --- Lightbox 状态 ---
+// --- 精简后的 Lightbox 状态 ---
 const isLightboxOpen = ref(false);
-const isZoomed = ref(false);
-const mousePos = reactive({ x: 0, y: 0 }); 
 
 const BASE_URL = window.location.hostname === 'localhost' ? 'https://localhost:44359' : 'https://bianyuzhou.com';
 
@@ -216,7 +220,6 @@ const fetchArtwork = async () => {
   finally { loading.value = false; }
 };
 
-// --- Lightbox 逻辑 ---
 const openLightbox = () => {
   isLightboxOpen.value = true;
   document.body.style.overflow = 'hidden'; 
@@ -225,7 +228,6 @@ const openLightbox = () => {
 
 const closeLightbox = () => {
   isLightboxOpen.value = false;
-  isZoomed.value = false;
   document.body.style.overflow = ''; 
   window.removeEventListener('keydown', handleKeydown);
 };
@@ -234,24 +236,6 @@ const handleKeydown = (e) => {
   if (e.key === 'Escape') closeLightbox();
 };
 
-const toggleZoom = () => {
-  isZoomed.value = !isZoomed.value;
-};
-
-const handleMouseMove = (e) => {
-  if (!isZoomed.value) return;
-  mousePos.x = (e.clientX / window.innerWidth) * 100;
-  mousePos.y = (e.clientY / window.innerHeight) * 100;
-};
-
-const zoomStyle = computed(() => {
-  if (!isZoomed.value) return {};
-  return {
-    transformOrigin: `${mousePos.x}% ${mousePos.y}%`
-  };
-});
-
-// --- 分享逻辑 ---
 const handleShare = async () => {
   try {
     await navigator.clipboard.writeText(window.location.href);
@@ -268,163 +252,198 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 保持原有赛博风格样式 */
-.cyber-artwork-page {
-  --red: #D92323; --black: #111111; --off-white: #F4F1EA;
-  width: 100%; height: 100vh; background: var(--off-white);
-  display: flex; flex-direction: column; overflow: hidden; position: relative;
+.modern-artwork-page {
+  --bg-color: #f3f4f6; 
+  --card-bg: #ffffff;
+  --text-main: #111827;
+  --text-muted: #6b7280;
+  --border-color: #e5e7eb;
+  --accent-color: #3b82f6; 
+  --star-color: #f59e0b; 
+  
+  background-color: var(--bg-color);
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text-main);
 }
 
-.page-main-bridge {
-  flex: 1; display: flex; gap: 30px; padding: 30px;
-  max-width: 1600px; margin: 0 auto; width: 100%; box-sizing: border-box; overflow: hidden;
+.modern-nav-bar {
+  position: sticky; top: 0; z-index: 100;
+  height: 60px; background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color);
+}
+.nav-container {
+  max-width: 1400px; margin: 0 auto; height: 100%;
+  display: flex; align-items: center; padding: 0 20px; gap: 20px;
+}
+.back-btn {
+  background: transparent; border: none; color: var(--text-muted);
+  font-size: 0.95rem; font-weight: 600; cursor: pointer; 
+  display: flex; align-items: center; gap: 6px; padding: 0; transition: color 0.2s;
+}
+.back-btn:hover { color: var(--text-main); }
+.nav-title { color: var(--text-muted); font-size: 0.85rem; font-family: 'JetBrains Mono', monospace; border-left: 1px solid var(--border-color); padding-left: 20px; }
+
+.page-layout-grid {
+  max-width: 1400px; margin: 40px auto; padding: 0 20px;
+  display: grid; grid-template-columns: 1fr 340px; gap: 30px; align-items: start;
+}
+.main-content-column { display: flex; flex-direction: column; gap: 30px; min-width: 0; }
+.sidebar-column { display: flex; flex-direction: column; gap: 20px; position: sticky; top: 80px; }
+
+.modern-card {
+  background: var(--card-bg); border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border-color); overflow: hidden;
 }
 
-.artwork-primary {
-  flex: 1; background: var(--black); 
-  border: 2px solid var(--black); position: relative; overflow: hidden;
-  display: flex; flex-direction: column; min-width: 0;
-}
+.artwork-showcase { display: flex; flex-direction: column; }
 
-.artwork-display-container {
-  flex: 1; overflow-y: auto; display: flex; flex-direction: column;
-}
-
-/* --- 主视口 --- */
 .image-viewport {
-  position: relative; padding: 40px; display: flex; justify-content: center; align-items: center;
-  min-height: 60vh; background: radial-gradient(circle, #222 0%, #000 100%);
-  border-bottom: 4px solid var(--red);
-  flex-shrink: 0;
-  cursor: zoom-in; overflow: hidden;
+  position: relative; 
+  background: #e5e7eb; 
+  background-image: repeating-linear-gradient(45deg, #f3f4f6 25%, transparent 25%, transparent 75%, #f3f4f6 75%, #f3f4f6), repeating-linear-gradient(45deg, #f3f4f6 25%, #e5e7eb 25%, #e5e7eb 75%, #f3f4f6 75%, #f3f4f6);
+  background-position: 0 0, 10px 10px; background-size: 20px 20px;
+  display: flex; justify-content: center; align-items: center;
+  min-height: 50vh; max-height: 75vh;
+  cursor: zoom-in; overflow: hidden; border-bottom: 1px solid var(--border-color);
+}
+.main-img { 
+  max-width: 100%; max-height: 75vh; object-fit: contain; 
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .hover-overlay {
-  position: absolute; inset: 0; background: rgba(217, 35, 35, 0.1);
+  position: absolute; inset: 0; background: rgba(0, 0, 0, 0.3);
   display: flex; flex-direction: column; justify-content: center; align-items: center;
-  opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 10;
+  opacity: 0; transition: opacity 0.3s; pointer-events: none; color: #fff;
 }
 .image-viewport:hover .hover-overlay { opacity: 1; }
-.scan-icon { font-size: 3rem; color: var(--red); text-shadow: 0 0 10px var(--red); margin-bottom: 10px; }
-.scan-text { font-family: 'JetBrains Mono'; color: #fff; background: var(--black); padding: 5px 10px; font-size: 0.8rem; }
-
-.main-img { 
-  max-width: 100%; max-height: 80vh; object-fit: contain; 
-  box-shadow: 0 0 30px rgba(0,0,0,0.8); border: 1px solid #333; 
-  transition: transform 0.3s;
-}
 .image-viewport:hover .main-img { transform: scale(1.02); }
+.overlay-text { margin-top: 12px; font-weight: 600; letter-spacing: 1px; font-size: 0.95rem; }
 
-.viewport-hud {
-  position: absolute; bottom: 10px; right: 10px; display: flex; gap: 15px; z-index: 11;
+.content-body { display: flex; flex-direction: column; }
+
+.action-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 32px; border-bottom: 1px solid var(--border-color);
+  background: #f9fafb;
 }
-.hud-text { font-family: 'JetBrains Mono'; font-size: 0.7rem; color: #666; }
+.action-group-left, .action-group-right { display: flex; align-items: center; gap: 12px; }
 
-/* --- 交互与内容 --- */
-.content-body { background: #fff; flex: 1; display: flex; flex-direction: column; }
-.artwork-info-block { padding: 30px 40px; color: #000; }
-.asset-title { font-family: 'Anton'; font-size: 2.5rem; margin: 0 0 10px 0; letter-spacing: 1px; line-height: 1.1; }
-.asset-desc { font-family: 'JetBrains Mono'; color: #555; line-height: 1.6; font-size: 1rem; max-width: 800px; }
+.modern-action-btn {
+  background: var(--card-bg); border: 1px solid var(--border-color);
+  color: var(--text-main); padding: 8px 16px; border-radius: 8px;
+  font-weight: 600; font-size: 0.9rem; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.modern-action-btn:hover { background: #f3f4f6; border-color: #d1d5db; transform: translateY(-1px); }
 
-.interaction-console { padding: 0 40px 30px; }
-.console-header { font-family: 'JetBrains Mono'; font-size: 0.75rem; color: #999; margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 5px; width: fit-content; }
+.star-btn .btn-icon { font-size: 1.1rem; color: #9ca3af; transition: color 0.2s; }
+.star-btn:hover .btn-icon { color: var(--star-color); }
+.star-btn:hover { border-color: var(--star-color); color: var(--star-color); }
+.share-btn.success-state { color: #10b981; border-color: #10b981; background: #ecfdf5; }
 
-/* ✅ 修改点：交互控制组与星标按钮样式 */
-.action-control-group {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+.artwork-info-block { padding: 32px; }
+.asset-title { font-size: 2rem; font-weight: 800; margin: 0 0 16px 0; color: var(--text-main); line-height: 1.3; }
+.asset-desc { font-size: 1.05rem; line-height: 1.7; color: var(--text-muted); white-space: pre-wrap; }
+
+.comments-section { display: flex; flex-direction: column; gap: 16px; }
+.section-title { font-size: 1.2rem; font-weight: 700; color: var(--text-main); padding-left: 8px; }
+.comments-card { padding: 24px; }
+
+.sidebar-widget { padding: 24px; }
+.widget-header { border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+.widget-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; }
+.widget-id { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #9ca3af; }
+
+.identity-main { display: flex; gap: 16px; align-items: center; margin-bottom: 24px; }
+.avatar-large { width: 64px; height: 64px; border-radius: 50%; }
+.username { font-weight: 800; font-size: 1.15rem; color: var(--text-main); cursor: pointer; transition: color 0.2s; }
+.username.hover-link:hover { color: var(--accent-color); }
+.user-status { font-size: 0.8rem; color: #10b981; display: flex; align-items: center; gap: 6px; margin-top: 4px; font-weight: 500; }
+.status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); animation: pulse 2s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+.modern-btn { padding: 10px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center; border: 1px solid transparent; }
+.modern-btn.primary { background: var(--text-main); color: #fff; }
+.modern-btn.primary:hover { background: #374151; }
+.full-width { width: 100%; }
+
+.metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.metric-box { background: #f9fafb; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px 12px; text-align: center; display: flex; flex-direction: column; gap: 6px; }
+.metric-box.full-span { grid-column: span 2; }
+.m-val { font-size: 1.5rem; font-weight: 800; color: var(--text-main); font-family: 'JetBrains Mono', monospace; }
+.m-lab { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+
+.sleek-lightbox-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(15px);
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  cursor: zoom-out;
 }
 
-.cyber-action-btn {
-  background: transparent;
-  border: 2px solid var(--black);
-  color: var(--black);
-  padding: 8px 20px;
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: bold;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-  box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
-  height: 40px;
+.lightbox-top-bar {
+  position: absolute; top: 0; left: 0; right: 0; padding: 20px 30px;
+  display: flex; justify-content: space-between; align-items: center; z-index: 10000;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent); pointer-events: none;
+}
+.lightbox-bottom-bar {
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 30px;
+  display: flex; justify-content: space-between; align-items: center; z-index: 10000;
+  background: linear-gradient(to top, rgba(0,0,0,0.6), transparent); pointer-events: none;
 }
 
-.cyber-action-btn:hover {
-  background: var(--black);
-  color: #fff;
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 var(--red);
+.hud-tag, .zoom-status, .hint-text {
+  color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; letter-spacing: 1px; opacity: 0.8;
+}
+.hint-text { opacity: 0.6; }
+
+.icon-close-btn {
+  background: rgba(255,255,255,0.1); border: none; color: #fff; border-radius: 50%;
+  width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; pointer-events: auto; transition: all 0.2s;
+}
+.icon-close-btn:hover { background: rgba(255,255,255,0.25); transform: scale(1.1); }
+
+.lightbox-img-wrapper {
+  width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;
+}
+.lightbox-img {
+  max-width: 95vw; max-height: 85vh; object-fit: contain;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); border-radius: 4px;
 }
 
-.star-trigger .btn-icon {
-  font-size: 1.2rem;
-  color: var(--black);
-  transition: all 0.2s ease;
-}
-
-.star-trigger:hover .btn-icon {
-  color: #FFD700;
-  text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
-  transform: scale(1.1);
-}
-
-.star-trigger:hover {
-  border-color: #FFD700;
-  box-shadow: 6px 6px 0 rgba(255, 215, 0, 0.3);
-}
-
-/* 评论区样式 */
-.comment-zone { padding: 0 40px 60px; background: #fafafa; border-top: 2px solid #eee; flex: 1; }
-.zone-deco-line { width: 40px; height: 4px; background: var(--black); margin-bottom: 20px; }
-
-/* 侧边栏 */
-.post-sidebar { width: 350px; display: flex; flex-direction: column; gap: 20px; }
-.author-identity-card { background: var(--black); color: #fff; padding: 20px; border: 1px solid #444; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%); }
-.id-header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; font-family: 'JetBrains Mono'; font-size: 0.7rem; }
-.id-label { color: var(--red); font-weight: bold; }
-.id-main { display: flex; gap: 15px; align-items: center; }
-.avatar-container { width: 65px; height: 65px; flex-shrink: 0; position: relative; }
-.name-zone { flex: 1; }
-.username { font-weight: 900; font-size: 1.1rem; color: #fff; }
-.user-status { font-family: 'JetBrains Mono'; font-size: 0.6rem; color: #0f0; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
-.dot { width: 6px; height: 6px; background: #0f0; border-radius: 50%; animation: pulse 1s infinite; }
-.id-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-.id-btn { border: 1px solid #444; background: transparent; color: #fff; padding: 8px; font-family: 'JetBrains Mono'; font-size: 0.7rem; cursor: pointer; transition: 0.2s; }
-.id-btn.follow { background: var(--red); border-color: var(--red); font-weight: bold; }
-.id-btn:hover { background: #fff; color: #000; }
-.cyber-terminal-mini { background: var(--black); color: #0f0; padding: 20px; font-family: 'JetBrains Mono'; border-radius: 4px; font-size: 0.8rem; border-left: 4px solid var(--red); }
-.terminal-header { border-bottom: 1px dashed #333; margin-bottom: 15px; color: #fff; opacity: 0.7; }
-.metric { margin-bottom: 8px; display: flex; justify-content: space-between; }
-.metric .lab { color: #666; }
-.green { color: #0f0; }
-
-/* --- Lightbox Styles --- */
-.lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: zoom-out; }
-.lightbox-img-wrapper { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; transition: transform 0.2s; cursor: zoom-in; }
-.lightbox-img { max-width: 95vw; max-height: 90vh; object-fit: contain; transition: transform 0.1s linear; box-shadow: 0 0 50px rgba(217, 35, 35, 0.2); }
-.lightbox-img-wrapper.is-zoomed { cursor: move; }
-.lightbox-img-wrapper.is-zoomed .lightbox-img { max-width: none; max-height: none; width: 100vw; transform: scale(2.5); }
-.lightbox-hud-top, .lightbox-hud-bottom { position: absolute; left: 0; right: 0; padding: 20px; display: flex; justify-content: space-between; pointer-events: none; font-family: 'JetBrains Mono'; color: #fff; text-shadow: 0 0 5px #fff; font-size: 0.8rem; z-index: 10000; }
-.lightbox-hud-top { top: 0; border-bottom: 1px solid rgba(255,255,255,0.1); background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
-.lightbox-hud-bottom { bottom: 0; border-top: 1px solid rgba(255,255,255,0.1); background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
-.blink { animation: pulse 1s infinite; }
-
-.grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
-.page-header { height: 60px; background: var(--black); color: #fff; display: flex; align-items: center; padding: 0 40px; gap: 30px; border-bottom: 4px solid var(--red); flex-shrink: 0; }
-.nav-back { cursor: pointer; font-family: 'JetBrains Mono'; font-weight: bold; }
-.nav-back:hover { color: var(--red); }
-.header-title { font-family: 'JetBrains Mono'; opacity: 0.7; font-size: 0.9rem; }
-.loading-state { flex: 1; display: flex; align-items: center; justify-content: center; background: #000; color: #fff; }
-.glitch-text { font-family: 'JetBrains Mono'; animation: pulse 0.2s infinite; }
-.custom-scroll::-webkit-scrollbar { width: 6px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #333; }
-
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-@keyframes pulse { 50% { opacity: 0.5; } }
+.status-screen { height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); }
+.loading-spinner { width: 40px; height: 40px; border: 3px solid var(--border-color); border-top-color: var(--accent-color); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+.loading-text { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 1024px) {
+  .page-layout-grid { grid-template-columns: 1fr; margin-top: 20px; }
+  .sidebar-column { position: relative; top: 0; }
+}
+@media (max-width: 768px) {
+  .modern-artwork-page { background: var(--card-bg); }
+  .page-layout-grid { padding: 0; margin: 0; gap: 0; }
+  .modern-card { border-radius: 0; border-left: none; border-right: none; box-shadow: none; border-top: none; }
+  .artwork-info-block, .action-bar { padding-left: 20px; padding-right: 20px; }
+  .sidebar-widget { padding: 20px; border-bottom: 8px solid var(--bg-color); }
+  .image-viewport { min-height: 40vh; }
+  .action-bar { flex-direction: column; align-items: stretch; gap: 16px; }
+  .action-group-right { justify-content: flex-end; }
+}
+
+.custom-scroll::-webkit-scrollbar { width: 6px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+.custom-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+
+
+
 </style>
