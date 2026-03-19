@@ -45,7 +45,10 @@
             v-for="item in items"
             :key="item.id"
             class="cyber-menu-item"
-            :class="{ active: active === item.id }"
+            :class="{ 
+              active: active === item.id, 
+              'has-task': item.hasTask // ⚡ 动态绑定红点样式
+            }"
             @click="handleChange(item.id)"
             :aria-current="active === item.id ? 'page' : false"
           >
@@ -88,20 +91,22 @@ const collapsed = ref(false)
 const loading = ref(false)
 let refreshTimer = null
 
-const items = [
-  { id: 'review', label: '审核中心', icon: '🗂️'},
-  { id: 'users', label: '用户管理', icon: '👤'},
-  { id: 'notifications', label: '通知系统', icon: '🔔' },
-  { id: 'reports', label: '举报处理', icon: '🚩', },
-  { id: 'settings', label: '系统设置', icon: '⚙️'},
-  { id: 'updates', label: '更新日志', icon: '📝'},
-  { id: 'rules', label: '社区规则', icon: '📜' },
-  { id: 'feedback', label: '意见箱', icon: '📫' },
-  { id: 'calendar', label:'日历',icon:''},
-  { id: 'music', label:'音乐电台审核', icon:''}
-]
+// ⚡ 菜单项配置，增加了 hasTask 属性用于控制红点显示
+const items = ref([
+  { id: 'review', label: '内容审核', icon: '🗂️', hasTask: false },
+  { id: 'video', label: '视频审核', icon: '🎬', hasTask: true }, // 示例：默认开启红点
+  { id: 'users', label: '用户管理', icon: '👤', hasTask: false },
+  { id: 'notifications', label: '通知系统', icon: '🔔', hasTask: false },
+  { id: 'reports', label: '举报处理', icon: '🚩', hasTask: true }, // 示例：默认开启红点
+  { id: 'music', label: '音乐电台审核', icon: '📻', hasTask: false },
+  { id: 'settings', label: '系统设置', icon: '⚙️', hasTask: false },
+  { id: 'updates', label: '更新日志', icon: '📝', hasTask: false },
+  { id: 'rules', label: '社区规则', icon: '📜', hasTask: false },
+  { id: 'feedback', label: '意见箱', icon: '📫', hasTask: false },
+  { id: 'calendar', label: '日历', icon: '📅', hasTask: false }
+])
 
-const activeItem = computed(() => items.find(i => i.id === props.active))
+const activeItem = computed(() => items.value.find(i => i.id === props.active))
 
 function handleChange(id) {
   emit('change', id)
@@ -302,6 +307,25 @@ function handleRefresh() {
 .cyber-menu-item.active .item-indicator { transform: scaleY(1); background: var(--red); }
 .cyber-menu-item.active .item-id-tag { opacity: 0.8; color: var(--red); }
 
+/* ⚡ 待处理任务的红点提示样式 */
+.cyber-menu-item.has-task::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 6px;
+  height: 6px;
+  background: var(--red);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--red);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 .sidebar-collapsed .cyber-menu-item { justify-content: center; padding: 0; }
 .sidebar-collapsed .item-id-tag { display: none; }
 
@@ -357,6 +381,5 @@ function handleRefresh() {
 @media (max-width: 1024px) {
   .admin-main-bridge { padding: 10px; gap: 10px; }
   .sidebar-deck { position: fixed; left: -300px; height: 80vh; z-index: 200; }
-  /* 这里可以添加更复杂的移动端逻辑，或保持简单的样式调整 */
 }
 </style>

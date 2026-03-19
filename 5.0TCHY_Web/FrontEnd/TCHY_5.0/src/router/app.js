@@ -99,6 +99,24 @@ const routes = [
     component: () => import('@/views/NotificationCenter.vue'),
     meta: { requiresAuth: true }
   },
+  // 🔥 【新增】影音频段 (视频主页)
+  {
+    path: '/media', // 你可以改成 '/video' 
+    name: 'MediaMatrix',
+    component: () => import('@/views/VideoHub.vue'), // ⚠️ 确保路径和你实际存放组件的路径一致
+    meta: { 
+      requiresAuth: false, // 如果你想要求必须登录才能看视频，就改成 true
+      title: '影音频段 - 太初寰宇',
+      public: true 
+    }
+  },
+  {
+    path: '/media/:id',
+    name: 'MediaDetail',
+    component: () => import('@/VideoHubComponents/VideoDetailPage.vue'), // 新建这个组件
+    meta: { requiresAuth: false, title: '影像解密中...' },
+    props: true 
+  },
   {
     path:'/WorkCenter',
     name:'艺术大厅',

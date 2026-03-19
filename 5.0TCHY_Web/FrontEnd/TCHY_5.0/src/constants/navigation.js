@@ -30,6 +30,7 @@ export const NAV_ITEMS = [
       { name: 'nav.data_center', path: '/DataCenter', mode: 'TERMINAL' }, // 交流中枢
       { name: 'nav.work_center', path: '/WorkCenter', mode: 'GALLERY' }, // 作品大厅
       { name: 'nav.entertainment', path: '/EntertainmentArea'},
+      { name: 'nav.media', path: '/media' },
       { name: 'nav.missionCenter', path:'/MissionCenter'},
       { name: 'nav.resourse', path:'/Resource'},
       { name: 'nav.RankCenter', path:'/RankCenter'}

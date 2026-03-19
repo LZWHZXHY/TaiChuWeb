@@ -70,10 +70,13 @@ const mouseleaveHandler = () => {
   isOpen.value = false;
 };
 
+// 替换你的 <script setup> 中的 primaryItems 数组：
 const primaryItems = [
   { name: 'nav.data_center', path: '/DataCenter', icon: '⚡', desc: '实时信号流' },
   { name: 'nav.work_center', path: '/WorkCenter', icon: '🎨', desc: '艺术数据库' },
   { name: 'nav.push_center', path: '/MainPush', icon: '📡', desc: '情报与动态' },
+  // 🔥 新增：影音频段
+  { name: 'nav.media', path: '/media', icon: '🎬', desc: '视觉档案库' }, 
   { name: 'nav.missionCenter', path: '/MissionCenter', icon: '🎯', desc: '系统任务' },
   { name: 'nav.entertainment', path: '/EntertainmentArea', icon: '🎮', desc: '娱乐协议' }
 ];

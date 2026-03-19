@@ -72,7 +72,7 @@ import RulesPanel from '@/adminComponents/RulesPanel.vue'
 import FeedBackPanel from '@/adminComponents/FeedBackPanel.vue'
 import CalendarPanel from '@/adminComponents/CalendarPanel.vue'
 import MusicPanel from '@/adminComponents/MusicPanel.vue'
-
+import VideoReviewManager from '@/adminComponents/VideoReviewManager.vue'
 
 
 
@@ -90,7 +90,8 @@ const map = {
   rules: RulesPanel,
   feedback: FeedBackPanel,
   calendar: CalendarPanel,
-  music:MusicPanel
+  music:MusicPanel,
+  video:VideoReviewManager
 }
 
 const currentComponent = computed(() => map[activeTab.value] || ReviewSocieties)

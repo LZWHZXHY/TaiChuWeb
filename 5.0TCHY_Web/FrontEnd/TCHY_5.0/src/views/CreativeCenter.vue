@@ -46,8 +46,17 @@
           :class="{ active: currentView === 'radio-upload' }"
           @click="currentView = 'radio-upload'"
         >
-          <span class="icon">📡</span> 深空电台 // RADIO_SYS
+          <span class="icon">📡</span> 深空电台 // 不要使用！有BUG
         </div>
+
+        <div 
+          class="nav-item"
+          :class="{ active: currentView === 'video-upload' }"
+          @click="currentView = 'video-upload'"
+        >
+          <span class="icon">🎬</span> 影像归档 // VIDEO_ARCHIVE
+        </div>
+
 
         <div class="nav-item disabled">
           <span class="icon">📊</span> 数据分析 (W.I.P)
@@ -65,7 +74,7 @@
         <MyJoints v-else-if="currentView === 'my-joints'" />
         <SubmissionsManager v-else-if="currentView === 'submissions'" />
         <MyCollections v-else-if="currentView === 'my-collections'" />
-        
+        <VideoUploader v-else-if="currentView === 'video-upload'" />
         <RadioUploader v-else-if="currentView === 'radio-upload'" />
         
         <div v-else class="wip-placeholder">
@@ -82,6 +91,7 @@ import MyJoints from '@/CreateCenterComponents/MyActivity.vue'
 import SubmissionsManager from '@/CreateCenterComponents/SubmissionsManager.vue'
 import PublishCenter from '@/CreateCenterComponents/PublishCenter.vue'
 import MyCollections from '@/CreateCenterComponents/MyCollections.vue'
+import VideoUploader from '@/CreateCenterComponents/VideoUploader.vue'
 
 // ⚡ 新增：引入深空电台上传组件
 // ⚠️ 注意：请确保你把 RadioUploader.vue 放到了 CreateCenterComponents 文件夹下！
