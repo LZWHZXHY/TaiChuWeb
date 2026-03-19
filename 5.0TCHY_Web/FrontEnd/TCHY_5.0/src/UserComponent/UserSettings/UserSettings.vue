@@ -7,9 +7,7 @@
     <div class="main-box container">
       
       <div class="left-box container">
-        <Transition name="fade-slide" mode="out-in">
-          <component :is="currentComponent" />
-        </Transition>
+        <component :is="currentComponent" />
       </div>
 
       <div class="right-box container">
@@ -36,6 +34,7 @@
 </template>
 
 <script setup>
+// 你的 Script 保持不变
 import { ref, shallowRef } from 'vue'
 import CenterSetting from './Settings/CenterSetting.vue'
 import ProfileSetting from './Settings/ProfileSetting.vue'
@@ -46,6 +45,9 @@ import SecuritySetting from './Settings/SecuritySetting.vue'
 import FeatureSetting from './Settings/FeatureSetting.vue'
 import OtherSetting from './Settings/OtherSetting.vue'
 import TestSetting from './Settings/TestSetting.vue'
+
+
+
 
 const menuItems = ref([
   '中心首页', '资料设置', '头像设置', '个性设置', 
@@ -79,6 +81,7 @@ const switchMenu = (itemName) => {
   box-sizing: border-box;
 }
 
+/* 移除原来 container 的黑边框，保持布局属性 */
 .container {
   background: transparent;
   box-sizing: border-box; 
@@ -92,31 +95,32 @@ const switchMenu = (itemName) => {
   width: 100vw;
   height: 100vh;
   z-index: 0;
-  background-color: #F4F1EA; 
+  background-color: #F4F1EA; /* 用户指定主色调 */
 }
 
 /* ================= 主布局容器 ================= */
 .New-Profile.container {
   display: flex;
   justify-content: center; 
-  align-items: center;     
+  align-items: flex-start;
   width: 100vw;
   min-height: 100vh;      
   position: relative;
+  padding-top: 60px; 
   z-index: 2;
-  padding-top: 5%;
 }
 
 .main-box.container {
   width: 1200px; 
   max-width: 95%;
-  height: 80vh; 
+  height: 80vh; /* 视口高度的80% */
   display: flex;
+  /* 菜单(right-box) 在左，Content(left-box) 在右 */
   flex-direction: row-reverse; 
   gap: 40px; 
 }
 
-/* ================= 侧边栏 ================= */
+/* ================= 侧边栏 (原 Right Box) ================= */
 .right-box.container {
   width: 240px; 
   height: auto;
@@ -176,19 +180,17 @@ const switchMenu = (itemName) => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); 
 }
 
-/* ================= 内容区域 ================= */
+/* ================= 内容区域 (核心修改点) ================= */
 .left-box.container {
   flex: 1; 
-  height: 100%; 
+  height: 100%; /* 继承父容器 80vh 的高度 */
   background: #FFFDF8; 
   border-radius: 24px; 
   box-shadow: 0 4px 20px rgba(0,0,0,0.02); 
+  
+  /* --- 关键修复：开启内部滚动 --- */
   overflow-y: auto;  
   overflow-x: hidden; 
-  
-  /* ---------------------------- */
-  /* 核心修复：为滚动条永久预留空间，杜绝宽度跳动 */
-  scrollbar-gutter: stable; 
   /* ---------------------------- */
   
   padding: 0; 
@@ -196,38 +198,31 @@ const switchMenu = (itemName) => {
   scroll-behavior: smooth;
 }
 
-/* ================= 自定义精致滚动条 ================= */
+/* ================= 自定义精致滚动条 (工业美学) ================= */
+/* 滚动条整体宽度 */
 .left-box.container::-webkit-scrollbar {
   width: 6px;
-  background: transparent; /* 滚动条无内容时轨道透明 */
 }
+
+/* 滚动条轨道 */
 .left-box.container::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* 滚动条滑块 (默认浅色，呼应背景) */
 .left-box.container::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.05);
   border-radius: 10px;
 }
+
+/* 鼠标悬停在卡片上时滑块变深，起到提示作用 */
 .left-box.container:hover::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.1);
 }
+
+/* 手动抓取滚动条时变深 */
 .left-box.container::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
 }
 
-/* ================= 组件切换动画 ================= */
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateY(10px); 
-}
-
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-10px); 
-}
 </style>

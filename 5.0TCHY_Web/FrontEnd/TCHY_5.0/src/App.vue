@@ -28,9 +28,6 @@
         @close="publisherStore.close" 
       />
     </div>
-    <router-view />
-
-    <AIAssistantWidget v-if="isAIEnabled" />
   </div>
 </template>
 
@@ -43,9 +40,6 @@ import MobileWarning from './views/MobileWarning.vue'
 // ✅ 引入发布器组件与全局状态
 import UniversalPublisherModal from '@/Publisher/UniversalPublisherModal.vue'
 import { usePublisherStore } from '@/stores/publisher'
-
-import AIAssistantWidget from '@/UserComponent/UserSettings/Settings/AIAssistantWidget.vue';
-import { isAIEnabled } from '@/stores/aiState';
 
 // 初始化发布状态仓库
 const publisherStore = usePublisherStore()
