@@ -179,7 +179,7 @@ onUnmounted(() => clearInterval(clockTimer));
 .moving-grid { animation: gridScroll 60s linear infinite; }
 @keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-40px); } }
 
-.art-container { width: 100%; max-width: 1800px; height: 92vh; background: var(--white); border: 4px solid var(--black); box-shadow: 20px 20px 0 rgba(0,0,0,0.2); z-index: 1; display: flex; flex-direction: column; margin: 0 auto; }
+.art-container { width: 90%;  height: 92vh; background: var(--white); border: 4px solid var(--black); box-shadow: 20px 20px 0 rgba(0,0,0,0.2); z-index: 1; display: flex; flex-direction: column; margin: 0 auto; }
 .sys-header { height: 60px; background: var(--black); color: var(--white); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 2px solid var(--red); flex-shrink: 0; }
 .header-left { display: flex; align-items: center; gap: 20px; }
 .logo-box { font-family: var(--heading); font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }

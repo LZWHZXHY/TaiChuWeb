@@ -1,302 +1,110 @@
 <template>
-  <div class="gallery-industrial">
-    <div class="gallery-control-bar">
-      <div class="header-title-block">
-        <h2 class="giant-text">艺术画廊</h2>
-        <span class="sub-text">VISUAL_DB // 视觉库</span>
+  <div class="gallery-root">
+    <header class="gallery-app-bar">
+      <div class="app-bar-inner">
+        <div class="brand">
+         
+          <div class="texts">
+            <h1>艺术画廊</h1>
+            <span class="meta">ARCHIVE_SYSTEM // 2.1.2_OPTIMIZED</span>
+          </div>
+        </div>
+
+        <nav class="segment-pills">
+          <button 
+            v-for="seg in segments" :key="seg.id"
+            class="pill-btn"
+            :class="{ active: selectedSegment === seg.id }"
+            @click="handleSegmentClick(seg.id)"
+          >
+            <span class="p-icon">{{ seg.icon }}</span>
+            <span class="p-label">{{ seg.label }}</span>
+          </button>
+        </nav>
       </div>
+    </header>
 
-      <div class="segment-button-group cyber-group">
-        <div
-          class="button-segment"
-          :class="{ active: selectedSegment === 1, hoverable: true }"
-          @click="handleSegmentClick(1)"
-        >
-          <span class="seg-icon">⚡</span> 动态
-        </div>
-        <div
-          class="button-segment"
-          :class="{ active: selectedSegment === 2, hoverable: true }"
-          @click="handleSegmentClick(2)"
-        >
-          <span class="seg-icon">∞</span> 全部
-        </div>
-        <div
-          class="button-segment"
-          :class="{ active: selectedSegment === 3, hoverable: true }"
-          @click="handleSegmentClick(3)"
-        >
-
-          <div
-          class="button-segment"
-          :class="{ active: selectedSegment === 4, hoverable: true }"
-          @click="handleSegmentClick(4)"
-        >
-          <span class="seg-icon">📁</span> 画册
+    <div class="main-layout">
+      <main class="content-stream custom-scroll" ref="mainScroll" @scroll="handleScroll">
+        <div v-if="loading && totalCount === 0" class="init-loader">
+          <div class="md-linear-loader"></div>
+          <p>正在读取神经数据流...</p>
         </div>
 
-
-          <span class="seg-icon">■</span> 画作
-        </div>
-      </div>
-
-     
-    </div>
-
-    <div class="gallery-body">
-      <main class="gallery-main">
-        <div 
-          id="gallery-scroller"
-          class="gallery-scroll-container custom-scroll" 
-          ref="mainScroll" 
-          @scroll="handleScroll"
-        >
-          <div class="gallery-content-wrapper">
-            
-            <div v-if="loading && totalCount === 0" class="loading-state">
-              <div class="spinner"></div>
-              <span>[ DOWNLOADING_NEURAL_DATA... ]</span>
-            </div>
-
-            <div v-else class="gallery-waterfall">
-              <div 
-                v-for="(col, colIndex) in waterfallColumns" 
-                :key="colIndex" 
-                class="waterfall-column"
-              >
-
-
-
-
-                <div 
-                    v-for="img in col" 
-                    :key="img.id || img.Id" 
-                    class="cyber-art-card" 
-                    :class="{ 
-                      'is-champion': isTopOne(img),
-                      'is-album': isAlbum(img) 
-                    }" 
-                    @click="goToDetail(img)"
-                  >
-                  
-                  <div 
-  v-if="isAlbum(img) && (img.itemCount || img.ItemCount) > 1" 
-  class="album-stack stack-1"
-></div>
-
-<div 
-  v-if="isAlbum(img) && (img.itemCount || img.ItemCount) > 2" 
-  class="album-stack stack-2"
-></div>
-
-                  <div class="card-frame">
-                    <div v-if="isAlbum(img)" class="album-tab">
-                      ARCHIVE_NODE // {{ img.itemCount || img.ItemCount || 0 }} ITEMS
-                    </div>
-
-                    <div v-if="isTopOne(img) && !isAlbum(img)" class="champion-badge">榜主大人</div>
-                    
-                    <div class="img-box">
-                      <img 
-                        :src="upgradeUrlToHttps(img.coverImageUrl || img.CoverImageUrl || img.imageUrl || img.imageUrlFull || img.url)" 
-                        @error="handleImgError" 
-                        loading="lazy" 
-                      />
-                      <div class="scan-line"></div>
-                    </div>
-                    
-                    <div class="card-info">
-                      <h3 class="art-title" :title="img.title || img.Title">{{ img.title || img.Title }}</h3>
-                      
-                      <div class="art-meta-row">
-                        <span class="author" :title="img.AuthorName || img.authorName">
-                          <span class="prefix">BY</span> 
-                          {{ img.AuthorName || img.authorName || 'UNKNOWN' }}
-                        </span>
-
-                        <div class="stats-group">
-                          <span class="stat-item likes" v-if="!isAlbum(img)">
-                            ♥ {{ img.likes || 0 }}
-                          </span>
-                          <span class="stat-item folder-items" v-if="isAlbum(img)">
-                            📁 {{ img.itemCount || img.ItemCount || 0 }}
-                          </span>
-                          <span class="stat-item comments" v-if="!isAlbum(img)">
-                            💬 {{ img.commentCount || img.CommentCount || 0 }}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div class="card-tags" v-if="img.tags">
-                        <span 
-                          v-for="tag in img.tags.split(',').filter(t => t.trim())" 
-                          :key="tag" 
-                          class="mini-tag"
-                        >
-                          <span class="tag-hash">#</span>{{ tag }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="corner-dec"></div>
+        <div v-else class="waterfall-grid">
+          <div v-for="(col, colIdx) in waterfallColumns" :key="colIdx" class="waterfall-col">
+            <div 
+              v-for="img in col" 
+              :key="img.id || img.Id" 
+              class="art-card-node"
+              :class="{ 'is-folder': isAlbum(img) }"
+              @click="goToDetail(img)"
+            >
+              <div class="media-container">
+                <img 
+                  :src="upgradeUrlToHttps(img.coverImageUrl || img.imageUrl || img.url)" 
+                  loading="lazy" 
+                  decoding="async"
+                />
+                
+                <div v-if="isAlbum(img)" class="folder-hint">
+                  <span>📁 {{ img.itemCount || 0 }}</span>
                 </div>
 
+                <div class="overlay-info">
+                  <div class="stats">
+                    <span class="stat-pill">♥ {{ img.likes || 0 }}</span>
+                    <span v-if="!isAlbum(img)" class="stat-pill">💬 {{ img.commentCount || 0 }}</span>
+                  </div>
+                </div>
+              </div>
 
-
-
-
-
-
-
-
-
+              <div class="text-content">
+                <h3 class="title" :title="img.title || img.Title">{{ img.title || img.Title || 'Untitled' }}</h3>
+                <span class="author">@{{ img.AuthorName || img.authorName || 'Anonymous' }}</span>
               </div>
             </div>
-
-            <div class="list-footer">
-              <div v-if="loading && totalCount > 0" class="loading-text">
-                <span class="blink">>> SYNCING_DATA_STREAM...</span>
-              </div>
-              <div v-if="!hasMore && totalCount > 0" class="end-marker">
-                // END_OF_ARCHIVE //
-              </div>
-              <div v-if="!loading && totalCount === 0" class="empty-state">
-                [ NO_DATA_FOUND ]
-              </div>
-            </div>
-            
           </div>
+        </div>
+
+        <div class="stream-footer">
+          <div v-if="loading && totalCount > 0" class="loading-inline">STREAMING...</div>
+          <div v-if="!hasMore && totalCount > 0" class="end-marker">END_OF_DATA_STREAM</div>
         </div>
       </main>
 
-      <aside class="gallery-sidebar custom-scroll">
-        <div class="cyber-panel">
-          <div class="panel-header">
-            <span class="deco">#</span> 标签 // Tag Matrix
-          </div>
-          <div class="tag-matrix">
-            <span class="cyber-tag">#太初设定集</span>
-            <span class="cyber-tag">#二创插画</span>
-            <span class="cyber-tag">#火柴人</span>
-            <span class="cyber-tag">#概念设计</span>
-            <span class="cyber-tag red-mode">#赛博朋克</span>
-            <span class="cyber-tag">#壁纸</span>
-          </div>
-        </div>
-
-        <div class="cyber-panel leaderboard-panel">
-          <div class="panel-header">
-            <span class="deco">🏆</span> 排行榜 // HIGH_SCORES
-          </div>
-          <div class="rank-list">
-            <div v-for="(user, idx) in leaderboard" :key="user.UploaderId" class="rank-item">
-              <div class="rank-idx" :class="'top-' + (idx + 1)">{{ padZero(idx + 1) }}</div>
+      <aside class="sidebar-info">
+        <div class="side-widget rank-widget">
+          <div class="widget-header">🏆 贡献排行 / TOP_15</div>
+          <div class="rank-list custom-scroll">
+            <div v-for="(user, idx) in leaderboard" :key="user.UploaderId" class="rank-item-compact">
+              <div class="num" :class="{ 'gold': idx < 3 }">{{ idx + 1 }}</div>
               
-              <div class="rank-avatar">
+              <div class="avatar-holder">
                 <UserAvatar 
                   :user-id="user.UploaderId" 
-                  :size="35" 
-                  :show-level="false" 
-                  :passed-avatar="user.Avatar" 
+                  :passed-avatar="user.Avatar"
+                  :size="32"
+                  :show-level="false"
                 />
               </div>
 
-              <div class="rank-info">
-                <div class="r-name" :title="user.name">{{ user.name || 'UNKNOWN' }}</div>
-                <div class="r-score">♥: <span class="val">{{ user.TotalLikes }}</span></div>
+              <div class="info">
+                <div class="u-name" :title="user.name">{{ user.name }}</div>
+                <div class="u-meta">{{ user.TotalLikes }} LIKES</div>
               </div>
             </div>
-            
-            <div v-if="leaderboard.length === 0" class="empty-rank">
-              [ WAITING_FOR_PLAYERS... ]
-            </div>
+          </div>
+        </div>
+
+        <div class="side-widget tags-widget">
+          <div class="widget-header"># 热门矩阵</div>
+          <div class="tag-chips">
+            <span v-for="t in ['赛博朋克','插画','二创','UI','概念']" :key="t" class="m-chip">#{{ t }}</span>
           </div>
         </div>
       </aside>
     </div>
-
-    <Teleport to="body">
-      <Transition name="glitch-fade">
-        <div v-if="showUploadModal" class="cyber-modal-overlay" @click.self="showUploadModal = false">
-          <div class="cyber-modal-window upload-mode">
-            <div class="modal-header">
-              <div class="header-left">
-                <span class="status-light blink"></span>
-                <span class="title">DATA_INJECTION // 投稿终端</span>
-              </div>
-              <button class="close-btn" @click="showUploadModal = false">
-                退出 [ESC]
-              </button>
-            </div>
-
-            <div class="modal-body custom-scroll">
-              <div class="upload-section">
-                <div 
-                  class="upload-zone" 
-                  @click="triggerFileSelect" 
-                  :class="{ 'has-file': uploadForm.previewUrl, 'is-dragover': isDragOver }"
-                  @dragover.prevent="isDragOver = true"
-                  @dragleave.prevent="isDragOver = false"
-                  @drop.prevent="handleDrop"
-                >
-                  <input type="file" ref="fileInput" accept="image/*" @change="handleFileChange" style="display:none" />
-                  
-                  <div v-if="uploadForm.previewUrl" class="preview-wrap">
-                    <img :src="uploadForm.previewUrl" />
-                    <div class="reupload-overlay">
-                      <span class="btn-replace">REPLACE_SOURCE</span>
-                    </div>
-                    <div class="file-meta">
-                      FILE: {{ uploadForm.file?.name || 'UNKNOWN' }}
-                    </div>
-                  </div>
-
-                  <div v-else class="placeholder">
-                    <div class="scan-grid"></div>
-                    <div class="center-content">
-                      <div class="icon-frame"><span class="plus">+</span></div>
-                      <div class="text-group">
-                        <p class="main-tip">DRAG & DROP or CLICK</p>
-                        <span class="sub-tip">SUPPORT: JPG / PNG / WEBP / GIF(MAX 20MB)</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-section">
-                <div class="cyber-input-group">
-                  <div class="label-chip">TITLE / 标题 (必填)</div>
-                  <input type="text" v-model="uploadForm.title" placeholder="请输入作品标题..." class="cyber-input" maxlength="50" />
-                  <div class="input-line"></div>
-                </div>
-                <div class="cyber-input-group">
-                  <div class="label-chip">DESCRIPTION / 描述 (必填)</div>
-                  <textarea v-model="uploadForm.desc" placeholder="输入作品背后的故事或设定..." rows="3" class="cyber-input textarea"></textarea>
-                  <div class="input-line"></div>
-                </div>
-                <div class="cyber-input-group">
-                  <div class="label-chip">AUTHOR / 署名 (必填)</div>
-                  <input type="text" v-model="uploadForm.authorName" placeholder="默认使用当前用户名" class="cyber-input" />
-                  <div class="input-line"></div>
-                </div>
-              </div>
-
-              <div class="modal-footer">
-                <div class="status-display">
-                  STATUS: <span :class="isUploading ? 'busy' : 'ready'">{{ isUploading ? 'UPLOADING...' : 'READY' }}</span>
-                </div>
-                <button class="execute-btn" @click="submitArtwork" :disabled="isUploading">
-                  <span class="btn-deco">>>></span>
-                  <span class="btn-text">{{ isUploading ? 'TRANSMITTING...' : 'INITIATE_UPLOAD' }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
-
   </div>
 </template>
 
@@ -304,648 +112,317 @@
 import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import apiClient from '@/utils/api'
-
-// ✅ 引入通用头像组件 (用于侧边栏排行榜)
-import UserAvatar from '@/GeneralComponents/UserAvatar.vue'; 
+import UserAvatar from '@/GeneralComponents/UserAvatar.vue'
 
 const router = useRouter()
-const emit = defineEmits(['refresh-stats'])
 
-// --- 状态定义 ---
+const segments = [
+  { id: 1, label: '动态', icon: '⚡' },
+  { id: 2, label: '全部', icon: '∞' },
+  { id: 4, label: '画册', icon: '📁' },
+  { id: 3, label: '单图', icon: '■' }
+]
+
 const selectedSegment = ref(2)
-const waterfallColumns = ref([[], [], [], []]) 
+const waterfallColumns = ref([[], [], [], [], []]) // 标准 5 列
 const loading = ref(false)
 const nextCursor = ref(null)
 const hasMore = ref(true)
-const mainScroll = ref(null) 
+const mainScroll = ref(null)
 const leaderboard = ref([])
 
-// 弹窗相关
-const showUploadModal = ref(false)
-const isUploading = ref(false)
-const isDragOver = ref(false) 
-const fileInput = ref(null)
-const uploadForm = reactive({ title: '', desc: '', authorName: '', file: null, previewUrl: '' })
-
 const totalCount = computed(() => waterfallColumns.value.reduce((acc, col) => acc + col.length, 0))
+const isAlbum = (img) => selectedSegment.value === 4 || img.isFolder || img.FolderType === 0
 
-// ✅ 判断当前卡片是否为画册
-const isAlbum = (img) => {
-  // 只要是频道4，或者带有文件夹标记，它就是画册
-  return selectedSegment.value === 4 || img.isFolder === true || img.FolderType === 0;
+// --- 逻辑方法 ---
+
+const handleSegmentClick = (id) => {
+  if (selectedSegment.value === id) return
+  selectedSegment.value = id
+  refreshGallery()
 }
 
-
-// --- 方法 ---
-
-const isTopOne = (img) => {
-  if (!leaderboard.value || leaderboard.value.length === 0) return false;
-  return leaderboard.value[0].UploaderId === img.uploaderId;
-}
-
-const handleSegmentClick = (segment) => {
-  if (selectedSegment.value === segment) return
-  selectedSegment.value = segment
-  
-  waterfallColumns.value = [[], [], [], []]
+const refreshGallery = () => {
+  waterfallColumns.value = [[], [], [], [], []]
   nextCursor.value = null
   hasMore.value = true
-  
-  if (mainScroll.value) {
-    mainScroll.value.scrollTop = 0
-  }
-  
+  if (mainScroll.value) mainScroll.value.scrollTop = 0
   fetchArtworks(true)
 }
 
-const upgradeUrlToHttps = (url) => {
-  if (!url) return ''
-  if (url.startsWith('/')) return url
-  return url.replace('http://', 'https://')
-}
-
-// 核心跳转逻辑
-// ✅ 核心跳转逻辑 (支持画册分支)
-const goToDetail = (img) => {
-  if (isAlbum(img)) {
-    router.push(`/album/${img.id || img.Id}`); // 跳转到画册专属页面
-  } else {
-    router.push(`/gallery/${img.id || img.Id}`); // 跳转到单图详情
-  }
-}
-
-// ✅ 获取列表数据 (支持将画册混合进单图流)
 const fetchArtworks = async (isRefresh = false) => {
-  if (loading.value) return;
-  if (!isRefresh && !hasMore.value) return;
-
-  loading.value = true;
+  if (loading.value || (!isRefresh && !hasMore.value)) return
+  loading.value = true
+  
   try {
-    let res;
-    let items = [];
-    let newCursor = null;
-    let more = false;
+    let items = []
+    let cursor = null
+    let more = false
+
+    const endpoint = selectedSegment.value === 4 ? '/Folder/all-list' : '/Drawing/list'
+    const params = selectedSegment.value === 4 
+      ? { category: 0, type: 0 } 
+      : { pageSize: 25, cursor: isRefresh ? null : nextCursor.value, type: selectedSegment.value }
+
+    const res = await apiClient.get(endpoint, { params })
     
-    // 1. 如果是专属的画册 Tab (4)
-    if (selectedSegment.value === 4) {
-      res = await apiClient.get('/Folder/all-list', { params: { category: 0, type: 0 } });
-      if (res.data.success) {
-        // 强制打上 isFolder 标记，确保渲染为文件夹造型
-        items = res.data.data.map(a => ({ ...a, isFolder: true })); 
-      }
-    } 
-    // 2. 其他单图频道 (包含 DYNAMIC, ALL_TYPE, STATIC)
-    else {
-      const params = { 
-        pageSize: 20, 
-        sort: 'new', 
-        cursor: isRefresh ? null : nextCursor.value, 
-        type: selectedSegment.value 
-      };
-      res = await apiClient.get('/Drawing/list', { params });
-      
-      if (res.data.success) {
-        // 兼容单图列表的数据结构
-        items = res.data.data.items || res.data.data;
-        newCursor = res.data.data.nextCursor || null;
-        more = res.data.data.hasMore ?? false;
+    if (res.data.success) {
+      if (selectedSegment.value === 4) {
+        items = res.data.data.map(a => ({ ...a, isFolder: true }))
+      } else {
+        items = res.data.data.items || res.data.data
+        cursor = res.data.data.nextCursor
+        more = res.data.data.hasMore ?? false
       }
 
-      // 🚀 核心黑科技：如果是 "全部(ALL_TYPE)" 频道，把画册也拉取过来混合！
+      // 混合逻辑
       if (selectedSegment.value === 2 && isRefresh) {
-        try {
-          // 拉取画册数据
-          const albumRes = await apiClient.get('/Folder/all-list', { params: { category: 0, type: 0 } });
-          
-          if (albumRes.data.success && albumRes.data.data) {
-            const albums = albumRes.data.data.map(a => ({ 
-              ...a, 
-              isFolder: true, // 打上画册标记触发专属 CSS
-              uploadAt: a.createdAt || new Date().toISOString() // 统一时间字段用于混合排序
-            }));
-            
-            // 将画册数组和单图数组合并，并按照时间降序重新排列
-            items = [...albums, ...items].sort((a, b) => new Date(b.uploadAt) - new Date(a.uploadAt));
-          }
-        } catch (mixError) {
-          console.warn(">> SYSTEM: 画册数据混合失败，降级显示纯画作流", mixError);
+        const albRes = await apiClient.get('/Folder/all-list', { params: { category: 0, type: 0 } })
+        if (albRes.data.success) {
+          const albums = albRes.data.data.map(a => ({ ...a, isFolder: true, uploadAt: a.createdAt }))
+          items = [...albums, ...items].sort((a, b) => new Date(b.uploadAt || b.createdAt) - new Date(a.uploadAt || a.createdAt))
         }
       }
+
+      if (isRefresh) waterfallColumns.value = [[], [], [], [], []]
+
+      // 🚀 核心优化：分帧注入 (Staggered Injection)
+      // 解决 GIF 模式下的瞬间掉帧问题
+      let i = 0
+      const inject = () => {
+        if (i >= items.length) {
+          loading.value = false
+          return
+        }
+        // 每次注入 2 个，留出主线程解码 GIF
+        for (let j = 0; j < 2 && i < items.length; j++) {
+          const item = items[i]
+          const lens = waterfallColumns.value.map(c => c.length)
+          const minIdx = lens.indexOf(Math.min(...lens))
+          waterfallColumns.value[minIdx].push(item)
+          i++
+        }
+        requestAnimationFrame(inject)
+      }
+      inject()
+      
+      nextCursor.value = cursor
+      hasMore.value = more
     }
-    
-    // 3. 执行瀑布流高度计算与分配
-    if (isRefresh) waterfallColumns.value = [[], [], [], []];
-
-    items.forEach((item) => {
-      let shortestIdx = 0;
-      let minLen = waterfallColumns.value[0].length;
-      for (let i = 1; i < 4; i++) {
-        if (waterfallColumns.value[i].length < minLen) {
-          minLen = waterfallColumns.value[i].length;
-          shortestIdx = i;
-        }
-      }
-      waterfallColumns.value[shortestIdx].push(item);
-    });
-
-    nextCursor.value = newCursor;
-    hasMore.value = more;
-    
-  } finally {
-    loading.value = false;
+  } catch (e) { 
+    console.error(e) 
+    loading.value = false 
   }
-};
+}
 
 const handleScroll = (e) => {
   const { scrollTop, scrollHeight, clientHeight } = e.target
-  if (scrollTop + clientHeight >= scrollHeight - 150) {
-    fetchArtworks(false)
-  }
+  if (scrollTop + clientHeight >= scrollHeight - 350) fetchArtworks(false)
 }
 
 const fetchLeaderboard = async () => {
-  try {
-    const res = await apiClient.get('/Drawing/leaderboard?limit=15')
-    if (res.data.success) leaderboard.value = res.data.data
-  } catch (error) {}
+  const res = await apiClient.get('/Drawing/leaderboard?limit=15')
+  if (res.data.success) leaderboard.value = res.data.data
 }
 
-// 上传相关
-const triggerFileSelect = () => { fileInput.value.click() }
-const handleFileChange = (e) => { processFile(e.target.files[0]) }
-const handleDrop = (e) => { isDragOver.value = false; processFile(e.dataTransfer.files[0]) }
-const processFile = (file) => {
-  if (!file) return
-  if (!file.type.startsWith('image/')) return alert("INVALID_FILE_TYPE")
-  if (file.size > 20 * 1024 * 1024) return alert("FILE_TOO_LARGE (MAX 20MB)")
-  uploadForm.file = file
-  uploadForm.previewUrl = URL.createObjectURL(file)
+const goToDetail = (img) => {
+  const path = isAlbum(img) ? `/album/${img.id || img.Id}` : `/gallery/${img.id || img.Id}`
+  router.push(path)
 }
 
-const submitArtwork = async () => {
-  if (!uploadForm.file) return alert("No File Selected")
-  if (!uploadForm.title.trim()) return alert("Title Required")
-  isUploading.value = true
-  try {
-    const formData = new FormData()
-    formData.append('Image', uploadForm.file)
-    formData.append('Title', uploadForm.title)
-    if (uploadForm.desc) formData.append('Desc', uploadForm.desc)
-    if (uploadForm.authorName) formData.append('AuthorName', uploadForm.authorName)
-    
-    const res = await apiClient.post('/Drawing/upload', formData, { 
-      headers: { 'Content-Type': 'multipart/form-data' } 
-    })
-    
-    if (res.data.success) {
-      showUploadModal.value = false
-      uploadForm.title = ''; uploadForm.desc = ''; uploadForm.file = null; uploadForm.previewUrl = ''; uploadForm.authorName = ''
-      fetchArtworks(true)
-      fetchLeaderboard() 
-      emit('refresh-stats')
-    } else { 
-      alert(res.data.message) 
-    }
-  } catch (e) { alert("Upload Error") } finally { isUploading.value = false }
-}
-
-const handleImgError = (e) => { e.target.src = '/土豆.jpg' }
+const upgradeUrlToHttps = (url) => url ? url.replace('http://', 'https://') : '/placeholder.jpg'
 const padZero = (n) => n < 10 ? `0${n}` : n
 
+// --- 🌟 核心：定位恢复与快照逻辑 🌟 ---
+
 onMounted(() => {
-  // 1. 尝试读取缓存
-  const cachedData = sessionStorage.getItem('cyberGalleryCache')
-  
-  if (cachedData) {
+  const cached = sessionStorage.getItem('cyberGalleryCache')
+  if (cached) {
     try {
-      const parsed = JSON.parse(cachedData)
-      // 2. 恢复状态数据
-      waterfallColumns.value = parsed.columns
-      nextCursor.value = parsed.cursor
-      hasMore.value = parsed.hasMore
-      selectedSegment.value = parsed.segment
-      
-      // 3. 等待 DOM 渲染完成后，恢复滚动条位置
+      const p = JSON.parse(cached)
+      waterfallColumns.value = p.columns
+      nextCursor.value = p.cursor
+      hasMore.value = p.hasMore
+      selectedSegment.value = p.segment
       nextTick(() => {
-        if (mainScroll.value) {
-          mainScroll.value.scrollTop = parsed.scroll
-        }
+        if (mainScroll.value) mainScroll.value.scrollTop = p.scroll
       })
-    } catch (e) {
-      // 解析失败则重新加载
-      fetchArtworks(true)
-    }
-    // 4. 读取完毕后销毁缓存，防止从别的页面进来时读到旧数据
+    } catch (e) { fetchArtworks(true) }
     sessionStorage.removeItem('cyberGalleryCache')
   } else {
-    // 没有缓存，走正常首次加载流程
     fetchArtworks(true)
   }
-  
-  // 排行榜数据体积小且需要保证时效性，可以每次都请求
   fetchLeaderboard()
 })
 
-// 在离开页面前触发
 onBeforeRouteLeave((to, from, next) => {
-  // 如果是前往详情页 (/gallery/xxx)，则保存当前状态
-  if (to.path.startsWith('/gallery/')) {
-    const cacheData = {
+  if (to.path.includes('/gallery/') || to.path.includes('/album/')) {
+    const data = {
       columns: waterfallColumns.value,
       cursor: nextCursor.value,
       hasMore: hasMore.value,
       segment: selectedSegment.value,
-      // 获取当前滚动容器的高度
-      scroll: mainScroll.value ? mainScroll.value.scrollTop : 0 
+      scroll: mainScroll.value ? mainScroll.value.scrollTop : 0
     }
-    sessionStorage.setItem('cyberGalleryCache', JSON.stringify(cacheData))
+    sessionStorage.setItem('cyberGalleryCache', JSON.stringify(data))
   } else {
-    // 如果是去首页或别的页面，清空缓存，保证下次进入是全新数据
     sessionStorage.removeItem('cyberGalleryCache')
   }
   next()
 })
-
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
+/* --- MD3 DENSE DESIGN SYSTEM --- */
+.gallery-root {
+  --md-surface: #f7f7f9;
+  --md-on-surface: #1a1c1e;
+  --md-primary: #005fb0;
+  --md-outline: #c4c7cf;
+  --md-card: #ffffff;
 
-/* --- 核心变量 --- */
-.gallery-industrial {
-  --red: #D92323; 
-  --black: #111111; 
-  --white: #F4F1EA;
-  --gray: #E0DDD5; 
-  --mono: 'JetBrains Mono', monospace; 
-  --heading: 'Anton', sans-serif;
-  
-  height: 100%; 
-  flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background: var(--md-surface);
   overflow: hidden;
+  box-sizing: border-box;
 }
 
-/* 1. 控制条 (固定不滚动) */
-.gallery-control-bar {
-  flex-shrink: 0; 
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 10px 20px;
-  background: var(--white);
-  border-bottom: 2px solid var(--black);
-  gap: 20px; 
-  z-index: 10;
-}
-
-.gallery-body {
-  flex: 1; 
-  display: flex; 
-  gap: 20px;
-  padding: 20px;
-  
-  overflow: hidden; 
-  min-height: 0; 
-  position: relative;
-  
-  height: 100%; 
-}
-
-/* 2.1 Main：左侧列表容器 */
-.gallery-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; 
-  min-width: 0;
-  min-height: 0; 
-}
-
-/* 滚动容器 */
-.gallery-scroll-container {
-  flex: 1;
-  overflow-y: auto; 
-  overflow-x: hidden;
-  min-height: 0; 
-}
-
-/* 内容包装器 */
-.gallery-content-wrapper {
-  padding-bottom: 40px; 
-}
-
-.gallery-waterfall {
-  display: flex; gap: 15px; align-items: flex-start;
-}
-.waterfall-column {
-  flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 0;
-}
-
-.gallery-sidebar {
-  width: 260px;
+/* --- 1. 应用栏 --- */
+.gallery-app-bar {
+  height: 56px;
+  background: #fff;
+  border-bottom: 1px solid var(--md-outline);
+  z-index: 100;
   flex-shrink: 0;
+}
+.app-bar-inner {
+  max-width: 1800px;
+  margin: 0 auto;
+  height: 100%;
+  padding: 0 20px;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-  
-  height: 100%; 
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-bottom: 60px; 
-  
-  box-sizing: border-box; 
-}
-
-.gallery-sidebar::-webkit-scrollbar {
-  width: 4px;
-}
-.gallery-sidebar::-webkit-scrollbar-thumb {
-  background: var(--black);
-}
-
-/* --- 样式 --- */
-.header-title-block .giant-text { font-family: var(--heading); font-size: 2rem; margin: 0; line-height: 1; }
-.header-title-block .sub-text { font-size: 0.7rem; color: #666; font-weight: bold; }
-.cyber-upload-btn { background: var(--black); color: var(--white); border: none; padding: 10px 20px; font-family: var(--heading); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
-.cyber-upload-btn:hover { background: var(--red); transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--black); }
-.cyber-upload-btn .icon { color: var(--red); font-size: 1.2rem; }
-.cyber-upload-btn:hover .icon { color: var(--white); }
-.cyber-group { display: flex; align-items: center; gap: 0; height: 45px; flex: 1; max-width: 600px; border: 2px solid var(--black); background-color: var(--white); padding: 2px; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
-.button-segment { display: flex; align-items: center; justify-content: center; height: 100%; font-family: var(--heading); font-size: 1.1rem; color: var(--black); cursor: pointer; flex-grow: 1; width: 10%; white-space: nowrap; overflow: hidden; border-right: 1px solid var(--black); transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1), flex-grow 0.5s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.2s, color 0.2s; }
-.button-segment:last-child { border-right: none; }
-.seg-icon { margin-right: 8px; font-size: 0.9em; color: var(--red); }
-.button-segment.hoverable:hover { background-color: var(--gray); flex-grow: 4; width: 30%; }
-.button-segment.active { background-color: var(--black); color: var(--white); flex-grow: 3; width: 25%; }
-.button-segment.active .seg-icon { color: var(--white); }
-.segment-button-group:has(.button-segment.hoverable:hover:not(.active)) .button-segment.active { flex-grow: 1; width: 10%; background-color: #333; color: #ccc; }
-.button-segment.active.hoverable:hover { flex-grow: 6; width: 40%; background-color: var(--red); color: var(--white); }
-.cyber-art-card { width: 100%; position: relative; cursor: pointer; transition: 0.2s; }
-.card-frame { border: 2px solid var(--black); background: var(--white); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); padding: 8px; position: relative;
-  z-index: 5; /* 👈 本体层级设为 5 */
-  background: var(--white); /* 👈 必须有背景色，否则会透过去看到叠层 */}
-.cyber-art-card:hover .card-frame { transform: translate(-3px, -3px); box-shadow: 6px 6px 0 var(--red); border-color: var(--black); }
-.corner-dec { position: absolute; bottom: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 0 15px 15px; border-color: transparent transparent var(--black) transparent; pointer-events: none; }
-.img-box { width: 100%; background: #000; position: relative; overflow: hidden; border-bottom: 2px solid var(--black); margin-bottom: 8px; }
-.img-box img { width: 100%; display: block; height: auto; transition: 0.3s; }
-.cyber-art-card:hover img { filter: contrast(1.1); }
-.scan-line { position: absolute; top:0; left:0; width:100%; height:2px; background:rgba(255,255,255,0.3); animation: scan 3s linear infinite; display: none; }
-.cyber-art-card:hover .scan-line { display: block; }
-
-/* ✅ 卡片信息样式更新 */
-.card-info { padding: 10px 8px; }
-.art-title { 
-  font-family: var(--heading); font-size: 1.1rem; margin: 0 0 8px 0; 
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-  text-transform: uppercase; color: var(--black);
-}
-.art-meta-row { 
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 0.75rem; font-family: var(--mono); color: #666; 
-}
-.author {
-  font-weight: bold; max-width: 55%; white-space: nowrap; 
-  overflow: hidden; text-overflow: ellipsis; display: flex; align-items: baseline; gap: 4px;
-}
-.author .prefix { font-size: 0.6rem; color: #999; font-weight: normal; }
-.stats-group { display: flex; gap: 10px; }
-.stat-item { display: flex; align-items: center; gap: 4px; font-weight: bold; transition: transform 0.2s; }
-.likes { color: var(--red); }
-.comments { color: #555; }
-.cyber-art-card:hover .author { color: var(--black); }
-.cyber-art-card:hover .stats-group { transform: translateX(-2px); }
-
-/* 侧边栏通用组件样式 */
-.cyber-panel { border: 2px solid var(--black); background: var(--white); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
-.panel-header { background: var(--black); color: var(--white); padding: 8px 10px; font-weight: bold; font-size: 0.9rem; border-bottom: 2px solid var(--black); }
-.deco { color: var(--red); margin-right: 5px; }
-.tag-matrix { padding: 15px; display: flex; flex-wrap: wrap; gap: 8px; }
-.cyber-tag { background: var(--white); border: 1px solid var(--black); padding: 4px 8px; font-size: 0.75rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
-.cyber-tag:hover { background: var(--black); color: var(--white); }
-.cyber-tag.red-mode { border-color: var(--red); color: var(--red); }
-.cyber-tag.red-mode:hover { background: var(--red); color: var(--white); }
-.rank-list { padding: 10px; }
-
-/* ✅ 排行榜样式修正 */
-.rank-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed #ccc; }
-.rank-item:last-child { border-bottom: none; }
-.rank-idx { font-family: var(--heading); font-size: 1.2rem; width: 30px; text-align: center; color: #ccc; }
-.top-1 { color: var(--red); font-size: 1.5rem; text-shadow: 2px 2px 0 #000; }
-.top-2 { color: var(--black); }
-.top-3 { color: #666; }
-
-/* ✅ 头像与名字样式 */
-.rank-avatar { width: 35px; height: 35px; flex-shrink: 0; position: relative; }
-.rank-info { flex: 1; overflow: hidden; }
-.r-name { font-weight: bold; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.r-score { font-size: 0.7rem; color: #cd0202; }
-.r-score .val { font-weight: bold; color: var(--black); }
-
-.list-footer { text-align: center; padding: 20px; font-size: 0.8rem; color: #888; font-weight: bold; }
-.blink { animation: blink 1s infinite; }
-
-/* Upload Modal Styles ... (保持不变) */
-.cyber-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-.cyber-modal-window.upload-mode { width: 550px; max-width: 95vw; background: #f4f4f4; border: 4px solid var(--black); box-shadow: 15px 15px 0 rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; font-family: var(--mono); }
-.modal-header { background:#000; color: var(--white); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--red); flex-shrink: 0; }
-.header-left { display: flex; align-items: center; gap: 10px; }
-.status-light { width: 10px; height: 10px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 5px #00ff00; }
-.title { font-family: var(--heading); font-size: 1.2rem; letter-spacing: 1px; }
-.close-btn { background: transparent; border: 1px solid #666; color: #aaa; padding: 4px 10px; cursor: pointer; font-size: 0.75rem; font-family: var(--mono); transition: 0.2s; }
-.close-btn:hover { border-color: var(--red); color: var(--red); }
-.modal-body { padding: 30px; overflow-y: auto; flex: 1; }
-.upload-section { margin-bottom: 30px; }
-.upload-zone { height: 220px; border: 2px dashed #999; background: #676767; position: relative; cursor: pointer; transition: all 0.3s; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-.upload-zone:hover, .upload-zone.is-dragover { border-color: var(--black); background: #373737; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
-.upload-zone.has-file { border-style: solid; border-color: var(--black); padding: 0; background: #000; }
-.scan-grid { position: absolute; inset: 0; background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc); background-size: 20px 20px; opacity: 0.1; pointer-events: none; }
-.center-content { text-align: center; position: relative; z-index: 2; }
-.icon-frame { width: 60px; height: 60px; border: 2px solid var(--black); display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; background: #fff; }
-.plus { font-size: 40px; font-weight: 300; line-height: 1; color: var(--black); }
-.main-tip { font-weight: bold; font-size: 1rem; color: var(--black); margin: 0 0 5px; }
-.sub-tip { font-size: 0.7rem; color: #666; background: #fff; padding: 2px 5px; border: 1px solid #ccc; }
-.preview-wrap { width: 100%; height: 100%; position: relative; }
-.preview-wrap img { width: 100%; height: 100%; object-fit: contain; }
-.reupload-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; opacity: 0; transition: 0.2s; }
-.preview-wrap:hover .reupload-overlay { opacity: 1; }
-.btn-replace { color: var(--white); border: 2px solid var(--white); padding: 8px 16px; font-weight: bold; background: rgba(0,0,0,0.5); }
-.file-meta { position: absolute; bottom: 0; left: 0; right: 0; background: var(--black); color: var(--white); font-size: 0.7rem; padding: 4px 10px; text-align: right; }
-.form-section { display: flex; flex-direction: column; gap: 25px; }
-.cyber-input-group { position: relative; }
-.label-chip { position: absolute; top: -10px; left: 10px; background:#333; color: var(--white); font-size: 0.75rem; font-weight: bold; padding: 2px 8px; z-index: 2; letter-spacing: 0.5px; }
-.cyber-input { width: 100%; background: #fff; border: 2px solid #ccc; border-bottom: 4px solid var(--black); padding: 15px 15px 10px; font-family: var(--mono); font-size: 1rem; color: var(--black); outline: none; transition: all 0.3s; }
-.cyber-input.textarea { resize: vertical; min-height: 80px; }
-.cyber-input:focus { border-color: var(--black); background: #fffef0; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); color:#000}
-.input-line { position: absolute; bottom: -4px; left: 0; height: 4px; width: 0; background: var(--red); transition: width 0.3s; }
-.cyber-input:focus + .input-line { width: 100%; }
-.modal-footer { margin-top: 30px; display: flex; justify-content: space-between; align-items: center; border-top: 2px dashed #ccc; padding-top: 20px; }
-.status-display { font-size: 0.8rem; font-weight: bold; color: #666; }
-.status-display .busy { color: var(--red); animation: blink 1s infinite; }
-.status-display .ready { color: #27c93f; }
-.execute-btn { background:#333; color: var(--white); border: none; padding: 12px 30px; font-family: var(--heading); font-size: 1.2rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 4px 4px 0 #999; }
-.execute-btn:hover { background:#000; transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--black); }
-.execute-btn:disabled { background: #ccc; color: #888; cursor: not-allowed; box-shadow: none; transform: none; }
-
-/* 动画 */
-@keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-.glitch-fade-enter-active, .glitch-fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
-.glitch-fade-enter-from { opacity: 0; transform: scale(0.95); }
-.glitch-fade-leave-to { opacity: 0; transform: scale(1.05); }
-
-/* 滚动条 */
-.custom-scroll::-webkit-scrollbar { width: 6px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: var(--black); border-radius: 0; }
-.custom-scroll::-webkit-scrollbar-track { background: #eee; }
-
-/* 响应式 */
-@media (max-width: 1200px) {
-  .gallery-sidebar { display: none; }
-}
-
-/* --- 榜单第一名高级特效 --- */
-.is-champion .card-frame {
-  border: 2px solid var(--red) !important;
-  animation: champion-pulse 2s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.champion-badge {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  background: var(--red);
-  color: #fff;
-  font-family: var(--heading);
-  font-size: 0.7rem;
-  padding: 2px 8px;
-  z-index: 5;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 15% 100%);
-}
-
-.is-champion .card-frame::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: conic-gradient(
-    transparent, 
-    transparent, 
-    transparent, 
-    var(--red)
-  );
-  animation: champion-rotate 4s linear infinite;
-  z-index: -1;
-  opacity: 0.3;
-}
-
-.is-champion:hover .card-frame {
-  transform: translate(-5px, -5px) scale(1.02) !important;
-  box-shadow: 10px 10px 0 var(--black), 15px 15px 30px rgba(217, 35, 35, 0.4) !important;
-}
-
-@keyframes champion-pulse {
-  0% { box-shadow: 4px 4px 0 var(--black), 0 0 5px rgba(217, 35, 35, 0.2); }
-  100% { box-shadow: 4px 4px 0 var(--black), 0 0 20px rgba(217, 35, 35, 0.6); }
-}
-
-@keyframes champion-rotate { 100% { transform: rotate(1turn); } }
-
-.is-champion .scan-line {
-  background: rgba(217, 35, 35, 0.4);
-  height: 3px;
-  display: block; 
-  box-shadow: 0 0 10px var(--red);
-}
-
-/* ✅ 新增：卡片标签容器 */
-.card-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 10px;
-  overflow: hidden;
-  max-height: 48px; /* 限制高度防止撑破卡片 */
-}
-
-/* ✅ 新增：微型标签样式 */
-.mini-tag {
-  font-family: var(--mono);
-  font-size: 0.65rem;
-  font-weight: bold;
-  background: var(--black);
-  color: var(--white);
-  padding: 1px 6px;
-  border-radius: 0; /* 工业风不需要圆角 */
-  display: inline-flex;
   align-items: center;
-  border-left: 2px solid var(--red); /* 侧边的红色战术条 */
+  justify-content: space-between;
+}
+.brand h1 { font-size: 1rem; font-weight: 800; margin: 0; letter-spacing: -0.3px; }
+.logo { background: #000; color: #fff; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; margin-right: 12px; }
+.texts { display: flex; flex-direction: column; }
+.meta { font-size: 0.6rem; color: #888; font-family: monospace; font-weight: bold; }
+
+.segment-pills { display: flex; gap: 4px; background: #eff1f4; padding: 4px; border-radius: 10px; }
+.pill-btn { border: none; background: transparent; padding: 4px 16px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.8rem; color: #444; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+.pill-btn.active { background: #fff; color: var(--md-primary); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+
+/* --- 2. 布局：Grid 严格控制主区不溢出 --- */
+.main-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  max-width: 1800px;
+  width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+/* --- 瀑布流主区 (性能核心) --- */
+.content-stream {
+  padding: 16px;
+  overflow-y: auto;
+  overflow-x: hidden; /* 彻底禁止横滚 */
+}
+.waterfall-grid { display: flex; gap: 12px; }
+.waterfall-col { flex: 1; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+.art-card-node {
+  background: var(--md-card);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--md-outline);
+  transition: transform 0.2s;
+  cursor: pointer;
+  
+  /* 🚀 性能黑科技：隔离卡片，防止 GIF 渲染影响全局 */
+  contain: layout paint;
+  content-visibility: auto;
+  contain-intrinsic-size: 100px 300px;
+}
+.art-card-node:hover { border-color: var(--md-primary); transform: translateY(-2px); }
+
+.media-container { position: relative; width: 100%; background: #f0f0f0; min-height: 80px; }
+.media-container img { width: 100%; display: block; object-fit: cover; }
+
+.overlay-info {
+  position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.3), transparent);
+  display: flex; align-items: flex-end; padding: 8px; opacity: 0; transition: 0.2s;
+}
+.art-card-node:hover .overlay-info { opacity: 1; }
+.stat-pill { background: rgba(255,255,255,0.9); color: #000; padding: 1px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; margin-right: 6px; }
+
+.text-content { padding: 8px 10px; }
+.text-content .title { font-size: 0.8rem; font-weight: 700; margin: 0 0 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.text-content .author { font-size: 0.65rem; color: #666; font-weight: 600; }
+
+/* --- 3. 侧边栏：彻底修复遮挡问题 --- */
+.sidebar-info {
+  padding: 16px 16px 16px 0;
+  display: flex; flex-direction: column; gap: 16px;
+  overflow: hidden;
+}
+.side-widget { background: #fff; border: 1px solid var(--md-outline); border-radius: 16px; padding: 12px; }
+.widget-header { font-size: 0.7rem; font-weight: 900; color: #888; margin-bottom: 12px; text-transform: uppercase; }
+
+.rank-list { max-height: 520px; overflow-x: hidden; padding-right: 4px; }
+
+.rank-item-compact {
+  display: grid;
+  /* 🚀 关键：数字列 40px，头像列 48px，确保铭牌向左溢出也不会盖住数字 */
+  grid-template-columns: 20px 30px 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px ; /* 增加上下 Padding 保护铭牌垂直空间 */
+  border-radius: 8px;
+  margin-bottom: 2px;
   transition: 0.2s;
 }
+.rank-item-compact:hover { background: #f0f3f8; }
 
-.mini-tag .tag-hash {
-  color: var(--red);
-  margin-right: 2px;
+.num { font-weight: 900; font-family: 'JetBrains Mono', monospace; color: #000000; font-size: 0.9rem; text-align: center; position: relative; z-index: 10; }
+.num.gold { color: var(--md-primary); font-size: 1.1rem; }
+
+.avatar-holder {
+  position: relative;
+  /* 🚀 关键：顶部留白 18px，让 UserAvatar 的 Badge 不会撞车 */
+  margin-top: 18px; 
+  display: flex;
+  justify-content: center;
 }
 
-/* 悬停效果：卡片变红时，标签反色 */
-.cyber-art-card:hover .mini-tag {
-  background: var(--white);
-  color: var(--black);
-  border-left-color: var(--black);
+/* 🚀 缩放排行榜内的铭牌，更精致 */
+.avatar-holder :deep(.title-badge) {
+  font-size: 9px;
+  padding: 1px 6px;
+  top: -11px;
+  max-width: 75px; 
 }
 
+.u-name { font-weight: 800; font-size: 0.8rem; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.u-meta { font-size: 0.6rem; font-weight: 700; color: var(--md-primary); opacity: 0.7; }
 
+.tag-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.m-chip { background: #eff1f4; padding: 4px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 700; color: #555; cursor: pointer; }
 
+/* 辅助样式 */
+.custom-scroll::-webkit-scrollbar { width: 3px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: #d1d4d9; border-radius: 10px; }
+.md-linear-loader { width: 100%; height: 2px; background: #eee; overflow: hidden; position: relative; }
+.md-linear-loader::after { content: ""; position: absolute; left: 0; top: 0; height: 100%; width: 50%; background: var(--md-primary); animation: move 1s infinite linear; }
+@keyframes move { 0% { left: -50%; } 100% { left: 100%; } }
 
-/* -------------- ✅ 画册专属叠层样式 -------------- */
-.cyber-art-card.is-album {
-  margin-top: 15px; /* 给顶部的标签留出空间 */
+@media (max-width: 1300px) {
+  .main-layout { grid-template-columns: 1fr; }
+  .sidebar-info { display: none; }
 }
-
-/* 底座卡片 */
-.album-stack {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border: 2px solid var(--black);
-  z-index: 1; /* 👈 叠层层级设为 1 */
-  pointer-events: none; /* 👈 允许鼠标穿透点击到图片 */
-  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-/* 第一层和第二层偏移和旋转 */
-.stack-1 { top: -6px; left: 4px; transform: rotate(2deg); background: #d0d0d0;}
-.stack-2 { top: -12px; left: 8px; transform: rotate(4deg); opacity: 0.8; background: #c0c0c0;}
-
-/* 悬停时：扇形展开特效 */
-.cyber-art-card.is-album:hover .stack-1 { transform: rotate(5deg) translate(4px, -4px); box-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
-.cyber-art-card.is-album:hover .stack-2 { transform: rotate(10deg) translate(8px, -8px); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
-
-/* 左上角：文件夹凸起标签 */
-.album-tab {
-  position: absolute;
-  top: -24px;
-  left: -2px;
-  background: var(--black);
-  color: var(--white);
-  font-family: var(--mono);
-  font-size: 0.65rem;
-  font-weight: bold;
-  padding: 4px 15px 4px 10px;
-  border: 2px solid var(--black);
-  border-bottom: none;
-  /* 赛博风斜切角 */
-  clip-path: polygon(0 0, 85% 0, 100% 100%, 0 100%);
-  z-index: 10;
-}
-
-/* 覆盖悬停效果，让整个文件夹像被提起 */
-.cyber-art-card.is-album:hover .card-frame {
-  transform: translate(-5px, -5px);
-  box-shadow: 8px 8px 0 rgba(0,0,0,0.2);
-}
-
 </style>

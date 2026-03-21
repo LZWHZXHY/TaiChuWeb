@@ -96,6 +96,7 @@ const items = ref([
   { id: 'review', label: '内容审核', icon: '🗂️', hasTask: false },
   { id: 'video', label: '视频审核', icon: '🎬', hasTask: true }, // 示例：默认开启红点
   { id: 'users', label: '用户管理', icon: '👤', hasTask: false },
+  { id: 'title', label: '头衔', icon: '', hasTask: false },
   { id: 'notifications', label: '通知系统', icon: '🔔', hasTask: false },
   { id: 'reports', label: '举报处理', icon: '🚩', hasTask: true }, // 示例：默认开启红点
   { id: 'music', label: '音乐电台审核', icon: '📻', hasTask: false },

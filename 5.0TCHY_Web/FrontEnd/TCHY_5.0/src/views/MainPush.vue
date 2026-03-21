@@ -14,6 +14,119 @@ import OnlineNodesWidget from '@/GeneralComponents/OnlineNodesWidget.vue';
 
 const router = useRouter();
 
+// ==========================================
+// --- 签到系统核心逻辑 (真实 API 接入) ---
+// ==========================================
+const isCheckedIn = ref(false); // 今日签到状态
+const checkInStreak = ref(0); // 连续签到天数
+const checkedDays = ref<number[]>([]); // 真实本月已签到的日期数组
+const retroCardsCount = ref(0); // 补签卡数量
+
+const today = computed(() => {
+  const now = new Date();
+  const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+  return {
+    day: now.getDate().toString().padStart(2, '0'),
+    rawDay: now.getDate(), // 原始数字格式，方便做大小比较
+    month: now.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+    year: now.getFullYear().toString(),
+    weekday: days[now.getDay()]
+  };
+});
+
+// 计算月历网格数据
+const calendarDays = computed(() => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const todayDate = now.getDate(); 
+  
+  const firstDay = new Date(year, month, 1).getDay();
+  const totalDays = new Date(year, month + 1, 0).getDate();
+
+  const days = [];
+  for (let i = 0; i < firstDay; i++) {
+    days.push({ day: null, isToday: false, isChecked: false });
+  }
+  for (let i = 1; i <= totalDays; i++) {
+    const isToday = i === todayDate;
+    const isChecked = checkedDays.value.includes(i);
+    days.push({ day: i, isToday, isChecked });
+  }
+  return days;
+});
+
+// 1. 从后端获取当前签到状态
+const fetchCheckInStatus = async () => {
+  try {
+    const now = new Date();
+    const { data: res } = await apiClient.get('/UserCheckIn/status', {
+      params: { year: now.getFullYear(), month: now.getMonth() + 1 }
+    });
+
+    if (res && res.code === 200) {
+      isCheckedIn.value = res.data.isCheckedIn;
+      checkedDays.value = res.data.checkedDays; // 覆盖为后端返回的真实签到数组
+      checkInStreak.value = res.data.streak;
+      retroCardsCount.value = res.data.retroCardsCount; // 同步补签卡数量
+    }
+  } catch (error) {
+    console.error('获取签到状态失败:', error);
+  }
+};
+
+// 2. 执行常规每日签到
+const handleCheckIn = async () => {
+  if (isCheckedIn.value) return;
+  
+  try {
+    const { data: res } = await apiClient.post('/UserCheckIn/checkin');
+    if (res && res.code === 200) {
+      alert(`${res.message}\n获得经验: ${res.rewardedExp}, 金币: ${res.rewardedCoins}`);
+      await fetchCheckInStatus(); // 签到成功后刷新状态
+    } else {
+      alert(res.message || '签到失败');
+    }
+  } catch (error: any) {
+    alert(error.response?.data?.message || '服务器异常，签到失败');
+  }
+};
+
+// 3. 点击日历格子执行补签
+const handleDayClick = async (item: any) => {
+  if (!item.day) return; // 空白格
+  if (item.isChecked) return; // 已经签过到了
+  if (item.day >= today.value.rawDay) return; // 今天和未来不能用补签卡补签
+
+  if (retroCardsCount.value <= 0) {
+    alert('补签卡余额不足，无法修复此时空节点！');
+    return;
+  }
+
+  // 确认补签
+  const confirmMsg = `是否消耗 1 张补签卡，修复 ${today.value.year}年${today.value.month}月${item.day}日 的签到记录？`;
+  if (confirm(confirmMsg)) {
+    try {
+      const now = new Date();
+      // 格式化目标日期为 YYYY-MM-DD
+      const targetDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(item.day).padStart(2, '0')}`;
+      
+      const { data: res } = await apiClient.post('/UserCheckIn/retroactive', { targetDate });
+
+      if (res && res.code === 200) {
+        alert(`${res.message}\n获得经验: ${res.rewardedExp}, 金币: ${res.rewardedCoins}`);
+        await fetchCheckInStatus(); // 补签成功后刷新状态和连签天数
+      } else {
+        alert(res.message || '补签失败');
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.message || '服务器异常，补签失败');
+    }
+  }
+};
+// ==========================================
+
+
 // --- 类型定义 ---
 interface FeedItem {
   id: string | number;
@@ -108,7 +221,6 @@ const fetchActiveFeedbacks = async () => {
 const fetchSideActivities = async () => {
   try {
     const now = new Date();
-    // 假设你的接口路由就是 /events，需要按当月查询
     const { data: res } = await apiClient.get(`/events`, {
       params: { 
         year: now.getFullYear(), 
@@ -116,11 +228,9 @@ const fetchSideActivities = async () => {
       }
     });
 
-    // 兼容 C# 直接返回的数组格式
     const rawList = Array.isArray(res) ? res : (res?.data || []);
 
     sideActivities.value = rawList.slice(0, 4).map((item: any) => {
-      // 🔥 核心修复：兼容后端的大驼峰(PascalCase)和小驼峰(camelCase)命名
       const eDate = item.Date || item.date;
       const eTime = item.Time || item.time;
       const eId = item.Id || item.id;
@@ -128,22 +238,18 @@ const fetchSideActivities = async () => {
       const eType = item.Type || item.type;
       const eColor = item.Color || item.color;
 
-      // 解析后端日期 (yyyy-MM-dd) 和时间 (hh:mm)
       const eventDateTime = new Date(`${eDate}T${eTime}`);
       
       let statusText = '即将开始';
       let isActive = false;
       
-      // 时间推演逻辑：
       if (eventDateTime.getTime() < now.getTime()) {
         statusText = '已结束';
       } else if (eventDateTime.getTime() - now.getTime() < 86400000 * 2) { 
-        // 距离开始不足48小时，视作“进行中”状态
         statusText = '进行中';
         isActive = true;
       }
 
-      // 格式化日期显示为 MM.DD HH:mm
       const dateParts = eDate.split('-');
       const formattedDate = `${dateParts[1]}.${dateParts[2]} ${eTime}`;
 
@@ -162,7 +268,6 @@ const fetchSideActivities = async () => {
   }
 };
 
-// --- 数据分发计算属性 ---
 const latestIntel = computed(() => rawFeedData.value.filter(item => item.type === 'blog').slice(0, 6));
 const trendingArts = computed(() => rawFeedData.value.filter(item => item.type === 'art').slice(0, 6));
 const hotPosts = computed(() => rawFeedData.value.filter(item => item.type === 'post').slice(0, 5));
@@ -173,7 +278,6 @@ const formatDate = (ds: string) => {
   return `${d.getFullYear()}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getDate().toString().padStart(2, '0')}`;
 };
 
-// 跳转到专属页面
 const navigateTo = (path: string) => {
   router.push(path);
 };
@@ -183,6 +287,7 @@ onMounted(() => {
   fetchActivities();
   fetchActiveFeedbacks(); 
   fetchSideActivities(); 
+  fetchCheckInStatus(); // 🔥 组件挂载时获取真实签到状态
 });
 </script>
 
@@ -197,25 +302,77 @@ onMounted(() => {
           <HeroCarousel class="carousel-instance" />
         </div>
         
-        <aside class="hero-side-panel">
-          <div class="panel-header">
-            <span class="status-dot"></span>
-            <span class="mono-label">SYSTEM_NOTICE // 系统公告</span>
-          </div>
-          <div class="announcement-content">
-            <h3 class="announcement-title">太初寰宇 // 2026 创作者激励计划</h3>
-            <p class="announcement-desc">
-              正在同步神经连接协议... 当前节点状态：在线。我们欢迎所有能够定义新世界边界的艺术家。
-            </p>
-            <div class="shortcut-menu">
-              <button class="menu-item-btn"><span>✦</span> 发起投稿</button>
-              <button class="menu-item-btn"><span>⚙</span> 节点设置</button>
+        <aside class="hero-side-panel calendar-mode">
+          <div class="calendar-card">
+            <div class="calendar-rings">
+              <span></span><span></span><span></span>
+            </div>
+            
+            <div class="calendar-inner">
+              <div class="cal-header">
+                <span class="cal-year">{{ today.year }}</span>
+                <span class="cal-month">{{ today.month }}</span>
+              </div>
+              
+              <div class="cal-body monthly-grid">
+                <div class="cal-weekdays">
+                  <span v-for="d in ['S','M','T','W','T','F','S']" :key="d">{{ d }}</span>
+                </div>
+                
+                <div class="cal-days">
+                  <div 
+                    v-for="(item, index) in calendarDays" 
+                    :key="index"
+                    class="day-cell"
+                    :class="{ 
+                      'empty': !item.day, 
+                      'is-today': item.isToday, 
+                      'is-checked': item.isChecked,
+                      'can-retro': item.day && !item.isChecked && item.day < today.rawDay && retroCardsCount > 0
+                    }"
+                    @click="handleDayClick(item)"
+                  >
+                    <span v-if="item.day">{{ item.day }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="cal-footer">
+                <div class="streak-info">
+                  <span class="label">STREAK</span>
+                  <span class="value">{{ checkInStreak }}</span>
+                  
+                  <span class="label" style="margin-left: 12px;">RETRO CARDS</span>
+                  <span class="value" :style="{ color: retroCardsCount > 0 ? '#ff4757' : '#999' }">{{ retroCardsCount }}</span>
+                </div>
+                <button 
+                  class="checkin-btn" 
+                  :class="{ 'checked': isCheckedIn }"
+                  @click="handleCheckIn"
+                >
+                  <span v-if="!isCheckedIn">INITIALIZE_SYNC // 签到</span>
+                  <span v-else>SYNC_COMPLETED // 已同步</span>
+                </button>
+              </div>
             </div>
           </div>
+
+          <div class="node-status-bar">
+            <div class="status-item">
+              <span class="label">NODE_STATUS:</span>
+              <span class="value active">ENCRYPTED</span>
+            </div>
+            <div class="status-item">
+              <span class="label">REWARD:</span>
+              <span class="value">+20 Coins</span>
+            </div>
+          </div>
+
           <div class="ticker-constrain">
             <CyberTicker />
           </div>
         </aside>
+
       </section>
 
       <div class="portal-body-layout">
@@ -420,28 +577,189 @@ onMounted(() => {
 .hero-main-container { background: #fff; border: 1px solid #ddd; overflow: hidden; min-width: 0; height: 100%; }
 .carousel-instance { width: 100% !important; height: 100% !important; }
 
-.hero-side-panel { display: flex; flex-direction: column; background: #fff; border: 1px solid #ddd; padding: 30px; box-shadow: 6px 6px 0px #eee; min-width: 0; height: 100%; box-sizing: border-box; }
-.panel-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-.status-dot { width: 8px; height: 8px; background: #0047ff; border-radius: 50%; box-shadow: 0 0 8px #0047ff; }
-.mono-label { font-family: 'JetBrains Mono'; font-size: 11px; color: #999; }
-.announcement-title { font-size: 22px; font-weight: 800; margin-bottom: 15px; }
-.announcement-desc { font-size: 14px; color: #666; line-height: 1.6; flex-grow: 1; }
-.shortcut-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.menu-item-btn { background: #f8f9fa; border: 1px solid #eee; padding: 12px; font-family: 'JetBrains Mono'; font-size: 12px; cursor: pointer; text-align: left; transition: 0.2s; }
-.menu-item-btn:hover { background: #000; color: #fff; }
-.ticker-constrain { width: 100%; overflow: hidden; margin-top: 20px; }
+.hero-side-panel { 
+  display: flex; 
+  flex-direction: column; 
+  background: #fff; 
+  border: 1px solid #ddd; 
+  padding: 20px; 
+  box-shadow: 6px 6px 0px #eee; 
+  min-width: 0; 
+  height: 100%; 
+  box-sizing: border-box; 
+  min-height: 500px;
+}
+.calendar-card {
+  width: 100%;
+  background: #f8f9fa;
+  border: 1px solid #000;
+  position: relative;
+  margin-top: 5px;
+}
 
+/* 模拟日历铁环 */
+.calendar-rings {
+  position: absolute;
+  top: -12px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  padding: 0 40px;
+}
+.calendar-rings span {
+  width: 8px;
+  height: 24px;
+  background: #333;
+  border-radius: 4px;
+  border: 1px solid #000;
+}
 
-.portal-body-layout {
+/* --- 月历系统核心布局 --- */
+.calendar-inner {
+  padding: 16px; 
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* 内部元素死死保持 16px 的距离 */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cal-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #000;
+  padding-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  font-size: 14px;
+}
+.monthly-grid {
+  width: 50%;
+}
+
+.cal-weekdays {
   display: grid;
-  grid-template-columns: 1fr 340px; 
-  gap: 60px;
-  min-width: 0;
+  grid-template-columns: repeat(7, 1fr);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: #999;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px; 
+  justify-items: center; /* 确保格子在列里居中 */
+}
+
+.day-cell {
+  width: 100%; 
+  max-width: 28px; 
+  height: 28px;    
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+  box-sizing: border-box; 
+}
+
+/* 常规日期 */
+.day-cell:not(.empty) { border: 1px solid #eee; background: #fff; color: #666; }
+/* 今天（未签到） */
+.day-cell.is-today { border-color: #0047ff; color: #0047ff; font-weight: 800; background: #f0f4ff; }
+/* 已签到 */
+.day-cell.is-checked { background: #000; border-color: #000; color: #fff; }
+/* 今天且已签到 */
+.day-cell.is-today.is-checked { background: #088908; border-color: #0047ff; color: #fff; }
+
+.day-cell.is-checked::after {
+  content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 4px; background: rgba(255,255,255,0.5);
+}
+
+/* 🔥 新增：如果当前用户有补签卡，过去的漏签格子显示为红色虚线，支持点击补签 */
+.day-cell.can-retro {
+  cursor: pointer;
+  border: 1px dashed #ff4757;
+  color: #ff4757;
+  background: #fff0f0;
+}
+.day-cell.can-retro:hover {
+  background: #ff4757;
+  color: #fff;
+  border: 1px solid #ff4757;
+}
+
+/* --- 底部签到按钮 --- */
+.cal-footer {
+  width: 100%;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.streak-info {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.checkin-btn {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  background: #000;
+  color: #fff;
+  border: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+}
+
+.checkin-btn:hover:not(.checked) { background: #0047ff; transform: translateY(-2px); }
+.checkin-btn.checked { background: #eee; color: #999; cursor: default; }
+
+/* 状态栏 & Ticker */
+.node-status-bar {
+  display: flex; 
+  justify-content: space-between; 
+  margin-top: 20px; /* 固定向上的间距 */
+  padding: 10px; 
+  border: 1px dashed #ddd;
+}
+.status-item { display: flex; flex-direction: column; }
+.status-item .label { font-size: 9px; color: #999; font-family: 'JetBrains Mono', monospace; }
+.status-item .value { font-size: 11px; font-weight: 700; }
+.status-item .value.active { color: #00b894; }
+.ticker-constrain { 
+  width: 100%; 
+  overflow: hidden; 
+  margin-top: auto; 
+}
+/* --- 主体下半部分布局 --- */
+.portal-body-layout {
+  display: grid; grid-template-columns: 1fr 340px; gap: 60px; min-width: 0;
 }
 .hub-main-column { min-width: 0; display: flex; flex-direction: column; gap: 60px; }
 .hub-side-column { min-width: 0; display: flex; flex-direction: column; gap: 30px; }
 
-/* --- 通用板块标题 (Block Header) --- */
+/* 通用板块标题 (Block Header) */
 .block-header {
   display: flex; justify-content: space-between; align-items: flex-end;
   border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 24px;
@@ -449,137 +767,84 @@ onMounted(() => {
 .header-left { display: flex; align-items: center; gap: 10px; }
 .block-icon { font-size: 20px; color: #0047ff; font-weight: bold;}
 .block-title { font-family: 'JetBrains Mono', sans-serif; font-size: 18px; font-weight: 800; margin: 0; }
-.view-more-btn { background: none; border: none; font-family: 'JetBrains Mono'; font-size: 12px; font-weight: 700; color: #666; cursor: pointer; padding: 0; transition: color 0.2s; }
+.view-more-btn { background: none; border: none; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: #666; cursor: pointer; padding: 0; transition: color 0.2s; }
 .view-more-btn:hover { color: #0047ff; }
 
-/* --- 板块 A: 情报网格 (Intel Grid) --- */
+/* 各类网格 */
 .intel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
 .intel-card-wrapper { background: #fff; border: 1px solid #eee; padding: 0; transition: transform 0.3s; }
 .intel-card-wrapper:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
 
-/* --- 板块 B: 用户企划布局 (Project Grid) --- */
-.project-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); 
-  gap: 20px;
-}
+.project-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 
-/* --- 板块 C: 视觉档案网格 (Art Grid) --- */
-.art-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 🔥 从 2列 改为 3列，格子会自动变小 */
-  gap: 14px; /* 🔥 稍微缩小间距，视觉上更紧凑 */
-}
+.art-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
 .art-card-wrapper { background: #ffffff; border: 1px solid #eee; transition: transform 0.3s; position: relative; }
 .art-card-wrapper:hover { transform: translateY(-4px); border-color: #000; box-shadow: 4px 4px 0 #000; }
-.art-mini-stats { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 8px; font-family: 'JetBrains Mono'; font-size: 10px; border-radius: 4px; display: flex; gap: 10px; pointer-events: none; }
+.art-mini-stats { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 4px 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; border-radius: 4px; display: flex; gap: 10px; pointer-events: none; }
 
-/* --- 板块 D: 帖子列表 (Post List) --- */
 .post-list { display: flex; flex-direction: column; gap: 16px; }
 .post-item-wrapper { background: #fff; border: 1px solid #eee; border-left: 4px solid #ddd; padding: 20px; transition: all 0.2s; display: flex; flex-direction: column; gap: 12px; }
 .post-item-wrapper:hover { border-left-color: #0047ff; background: #fafafa; }
-.post-meta { display: flex; justify-content: space-between; font-family: 'JetBrains Mono'; font-size: 12px; }
+.post-meta { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
 .author-handle { font-weight: 700; color: #1a1a1a; }
 .timestamp { color: #999; }
 .post-body { margin-top: -10px; }
-.post-stats { display: flex; gap: 10px; font-family: 'JetBrains Mono'; font-size: 11px; }
+.post-stats { display: flex; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 .stat-pill { background: #f0f0f0; padding: 4px 8px; border-radius: 4px; color: #555; }
 
-/* --- 侧边栏样式 (Sidebar) --- */
+/* 侧边栏 Widget */
 .sidebar-widget { background: #fff; padding: 24px; border: 1px solid #eee; width: 100%; box-sizing: border-box; }
-.widget-title { font-family: 'JetBrains Mono'; font-size: 13px; border-left: 3px solid #000; padding-left: 10px; margin-bottom: 20px; }
+.widget-title { font-family: 'JetBrains Mono', monospace; font-size: 13px; border-left: 3px solid #000; padding-left: 10px; margin-bottom: 20px; }
 
-/* 官方活动列表 */
 .event-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 16px; }
 .event-item { border-bottom: 1px dashed #eee; padding-bottom: 16px; }
 .event-item:last-child { border-bottom: none; padding-bottom: 0; }
-.event-status { display: inline-block; font-family: 'JetBrains Mono'; font-size: 10px; padding: 3px 6px; background: #eee; color: #666; margin-bottom: 8px; border-radius: 2px; }
+.event-status { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 3px 6px; background: #eee; color: #666; margin-bottom: 8px; border-radius: 2px; }
 .event-status.active { font-weight: bold; }
 .event-title { font-size: 14px; font-weight: 700; margin: 0 0 6px 0; line-height: 1.4; color: #1a1a1a; }
-.event-date { font-family: 'JetBrains Mono'; font-size: 11px; color: #999; }
-.full-width-btn { width: 100%; background: #f8f9fa; border: 1px solid #ddd; padding: 10px; font-family: 'JetBrains Mono'; font-size: 12px; cursor: pointer; transition: 0.2s; }
+.event-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #999; }
+.full-width-btn { width: 100%; background: #f8f9fa; border: 1px solid #ddd; padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; cursor: pointer; transition: 0.2s; }
 .full-width-btn:hover { background: #000; color: #fff; border-color: #000; }
 
-/* 标签云 */
 .tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
 .tag-item { background: #f0f2f5; padding: 6px 12px; font-size: 12px; color: #444; cursor: pointer; transition: 0.2s; }
 .tag-item:hover { background: #000; color: #fff; }
 
-/* 终端 */
-.sticky-terminal { background: #1a1a1a; color: #00ff41; padding: 20px; font-family: 'JetBrains Mono'; font-size: 11px; }
+.sticky-terminal { background: #1a1a1a; color: #00ff41; padding: 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 .terminal-header { border-bottom: 1px solid #333; padding-bottom: 8px; margin-bottom: 12px; color: #888; }
 .term-line { margin: 4px 0; }
 .pulse-line { animation: blink 1s infinite; }
 
-/* --- 骨架屏与加载条 --- */
-.global-loader-line { position: fixed; top: 0; left: 0; height: 2px; background: #000; width: 100%; z-index: 9999; }
-.skeleton-card { background: #eee; animation: pulse 1.5s infinite; }
-.intel-grid .skeleton-card { height: 200px; }
-.art-grid .skeleton-card { height: 200px; }
-.skeleton-list-item { height: 80px; background: #eee; margin-bottom: 16px; animation: pulse 1.5s infinite; }
-
-/* --- Footer --- */
-.doc-footer { border-top: 1px solid #ddd; padding: 60px 0; text-align: center; background: #fff; width: 100%; margin-top: 60px; }
-.footer-main { font-weight: 700; margin-bottom: 8px; }
-.footer-sub { font-size: 12px; color: #999; font-family: 'JetBrains Mono'; }
-
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-
-/* --- 节点反馈处理小组件 (Feedback Widget) 样式 --- */
-.feedback-widget {
-  background: #fff;
-}
-.feedback-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.feedback-item {
-  background: #f8f9fa;
-  padding: 12px;
-  border-left: 3px solid #ccc; 
-  transition: all 0.2s ease;
-}
-.feedback-item:hover {
-  background: #f0f2f5;
-  transform: translateX(4px);
-}
+.feedback-widget { background: #fff; }
+.feedback-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.feedback-item { background: #f8f9fa; padding: 12px; border-left: 3px solid #ccc; transition: all 0.2s ease; }
+.feedback-item:hover { background: #f0f2f5; transform: translateX(4px); }
 .feedback-item.border-processing { border-left-color: #0047ff; }
 .feedback-item.border-investigating { border-left-color: #ff4757; }
 .feedback-item.border-pending { border-left-color: #a4b0be; }
 
-.feedback-meta {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-}
-.feedback-id {
-  color: #666;
-}
+.feedback-meta { display: flex; justify-content: space-between; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; }
+.feedback-id { color: #666; }
 .feedback-status.processing { color: #0047ff; }
 .feedback-status.investigating { color: #ff4757; }
 .feedback-status.pending { color: #a4b0be; }
+.feedback-text { font-size: 12px; color: #1a1a1a; margin: 0; line-height: 1.4; font-family: 'Inter', -apple-system, sans-serif; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-.feedback-text {
-  font-size: 12px;
-  color: #1a1a1a;
-  margin: 0;
-  line-height: 1.4;
-  font-family: 'Inter', -apple-system, sans-serif;
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* 最多显示两行，溢出省略 */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+/* 骨架屏与加载条 */
+.global-loader-line { position: fixed; top: 0; left: 0; height: 2px; background: #000; width: 100%; z-index: 9999; }
+.skeleton-card { background: #eee; animation: pulse 1.5s infinite; }
+.intel-grid .skeleton-card, .art-grid .skeleton-card { height: 200px; }
+.skeleton-list-item { height: 80px; background: #eee; margin-bottom: 16px; animation: pulse 1.5s infinite; }
 
-/* --- 响应式 --- */
+/* Footer */
+.doc-footer { border-top: 1px solid #ddd; padding: 60px 0; text-align: center; background: #fff; width: 100%; margin-top: 60px; }
+.footer-main { font-weight: 700; margin-bottom: 8px; }
+.footer-sub { font-size: 12px; color: #999; font-family: 'JetBrains Mono', monospace; }
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+/* 响应式 */
 @media (max-width: 1100px) {
   .portal-hero-section { grid-template-columns: 1fr; height: auto; }
   .portal-body-layout { grid-template-columns: 1fr; }

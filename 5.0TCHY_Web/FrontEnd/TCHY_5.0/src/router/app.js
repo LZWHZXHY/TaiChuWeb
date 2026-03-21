@@ -175,15 +175,6 @@ const routes = [
     }
   },
   {
-    path:'/ExperimentalArea',
-    name:'实验区',
-    component: () => import('@/views/ExperimentalArea.vue'),
-    meta: { 
-      requiresAuth: true,
-      title: '实验区'
-    }
-  },
-  {
     path:'/suggest',
     name:'意见箱',
     component: () => import('@/feedbackComponents/FeedbackBox.vue'),

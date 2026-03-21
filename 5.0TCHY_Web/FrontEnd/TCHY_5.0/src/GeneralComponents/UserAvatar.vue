@@ -4,6 +4,14 @@
     :class="{ 'is-clickable': allowLink }"
     @click.stop="handleToProfile"
   >
+    <div 
+      class="title-badge" 
+      v-if="currentTitle" 
+      :class="`bg-rarity-${currentRarity}`"
+    >
+      {{ currentTitle }}
+    </div>
+
     <div class="avatar-frame">
       <img 
         :src="finalAvatarUrl" 
@@ -28,10 +36,10 @@ import apiClient from '@/utils/api'
 
 const props = defineProps({
   userId: { type: [String, Number], default: null },
-  // ✨ 新增：允许父组件直接传入已经拿到的头像 URL
   passedAvatar: { type: String, default: null },
-  // ✨ 新增：允许父组件直接传入等级
   passedLevel: { type: [Number, String], default: null },
+  passedTitle: { type: String, default: null },
+  passedTitleRarity: { type: [Number, String], default: null },
   allowLink: { type: Boolean, default: true },
   showLevel: { type: Boolean, default: true }
 })
@@ -39,7 +47,7 @@ const props = defineProps({
 const router = useRouter()
 const authStore = useAuthStore()
 const remoteData = ref({}) 
-const loading = ref(true) // 用于控制加载状态
+const loading = ref(true) 
 const BASE_URL = 'https://bianyuzhou.com' 
 
 const isMe = computed(() => {
@@ -47,20 +55,18 @@ const isMe = computed(() => {
   return String(props.userId) === String(authStore.userID)
 })
 
-// ✨ 优化：数据源选择逻辑
 const userData = computed(() => {
-  // 1. 如果是自己，优先用 Store
   if (isMe.value) return authStore.user || {}
   
-  // 2. 如果父组件传了 passedAvatar，直接封装成对象使用，不再读 remoteData
   if (props.passedAvatar) {
     return {
       avatar: props.passedAvatar,
-      level: props.passedLevel
+      level: props.passedLevel,
+      title: props.passedTitle,
+      titleRarity: props.passedTitleRarity
     }
   }
 
-  // 3. 否则使用异步获取的远程数据
   return remoteData.value
 })
 
@@ -75,8 +81,15 @@ const finalAvatarUrl = computed(() => {
 })
 
 const currentLevel = computed(() => {
-  // 优先显示传入的等级，否则显示数据源里的等级
   return props.passedLevel ?? (userData.value.level || userData.value.Level || 0)
+})
+
+const currentTitle = computed(() => {
+  return props.passedTitle ?? (userData.value.title || userData.value.Title || '')
+})
+
+const currentRarity = computed(() => {
+  return props.passedTitleRarity ?? (userData.value.titleRarity || userData.value.TitleRarity || 1)
 })
 
 const handleImgError = (e) => { e.target.src = '/土豆.jpg' }
@@ -87,10 +100,9 @@ const handleToProfile = () => {
 }
 
 const fetchAvatarData = async () => {
-  // ✨ 核心优化：如果有预传数据，或者是带缓存的自己，直接退出，不发 API
+  // 即使有缓存也建议后台静默刷新，确保头衔变更能实时看到
   if (props.passedAvatar || (isMe.value && authStore.user?.avatar)) {
     loading.value = false
-    return 
   }
 
   try {
@@ -100,7 +112,9 @@ const fetchAvatarData = async () => {
       const d = res.data.data
       const dataMap = {
         avatar: d.Avatar || d.avatar,
-        level: d.Level || d.level
+        level: d.Level || d.level,
+        title: d.Title || d.title,
+        titleRarity: d.TitleRarity || d.titleRarity || 1
       }
       if (isMe.value) {
         authStore.user = { ...authStore.user, ...dataMap }
@@ -109,7 +123,7 @@ const fetchAvatarData = async () => {
       }
     }
   } catch (e) {
-    console.warn("Avatar load failed for:", props.userId)
+    console.warn("Avatar load failed:", props.userId)
   } finally {
     loading.value = false
   }
@@ -126,14 +140,75 @@ watch(() => props.userId, () => {
 </script>
 
 <style scoped>
-/* 样式部分保持不变... */
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-.avatar-wrapper { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500;700;900&display=swap');
+
+.avatar-wrapper { 
+  position: relative; 
+  width: 100%; 
+  height: 100%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  flex-shrink: 0; 
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); 
+  /* 增加顶部间距，防止头衔铭牌在紧凑布局下被裁切 */
+  margin-top: 12px; 
+}
+
 .avatar-wrapper.is-clickable { cursor: pointer; }
 .avatar-wrapper.is-clickable:hover { transform: scale(1.05); z-index: 10; }
+
 .avatar-frame { width: 100%; height: 100%; border-radius: 4px; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.15); overflow: hidden; background: #f0f0f0; transform: translateZ(0); }
 .big-avatar { width: 100%; height: 100%; object-fit: cover; display: block; }
+
 .level-pill { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: #fff; padding: 1px 8px; border-radius: 4px; border: 2px solid #fff; display: flex; align-items: baseline; gap: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 2; white-space: nowrap; }
 .lv-txt { font-size: 10px; opacity: 0.8; font-family: 'Share Tech Mono', monospace; }
 .lv-num { font-size: 12px; font-weight: bold; font-family: 'Share Tech Mono', monospace; color: #e67e22; }
+
+/* --- 🌟 头衔悬浮铭牌样式 🌟 --- */
+.title-badge {
+  position: absolute;
+  top: -12px; 
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  font-family: 'Noto Sans SC', sans-serif;
+  white-space: nowrap;
+  z-index: 3;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.5px;
+}
+
+/* 稀有度颜色方案 */
+.bg-rarity-1 { background-color: #7f8c8d; }
+.bg-rarity-2 { background-color: #2ecc71; border-color: #a8e6cf; }
+.bg-rarity-3 { background-color: #3498db; border-color: #bbdefb; box-shadow: 0 0 8px rgba(52,152,219,0.5); }
+.bg-rarity-4 { background-color: #9b59b6; border-color: #e1bee7; box-shadow: 0 0 10px rgba(155,89,182,0.6); }
+.bg-rarity-5 { background-color: #f39c12; border-color: #ffe0b2; box-shadow: 0 0 12px rgba(243,156,18,0.8); }
+
+.bg-rarity-6 {
+  background: linear-gradient(90deg, #d4af37, #ff8c00, #d4af37);
+  background-size: 200% auto;
+  border-color: #fff;
+  animation: badge-shine 2s linear infinite;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+}
+
+.bg-rarity-7 {
+  background: linear-gradient(90deg, #8b0000, #ff1a1a, #8b0000);
+  background-size: 200% auto;
+  border-color: #ffcccc;
+  animation: badge-shine 2s linear infinite;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+}
+
+@keyframes badge-shine {
+  to { background-position: 200% center; }
+}
 </style>

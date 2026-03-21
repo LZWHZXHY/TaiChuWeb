@@ -37,13 +37,6 @@ export const NAV_ITEMS = [
     ]
   },
 
-  // 3. 实验区
-  {
-    name: 'nav.ExperimentalArea', 
-    path: '/ExperimentalArea',
-    type: 'link',
-  },
-
   { 
     name: 'nav.wiki', 
     path: '/wiki', 

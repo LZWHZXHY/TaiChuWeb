@@ -3,7 +3,7 @@
     <div class="bg-deco">LV.{{ displayStats.level }}</div>
 
     <div class="header-group">
-      <div class="title-row">
+      <div class="title-row" :class="`rarity-${displayStats.titleRarity}`">
         <span class="deco-label">TITLE //</span>
         <span class="main-title">{{ displayStats.title || '无名之辈' }}</span>
       </div>
@@ -84,12 +84,13 @@ const rawStats = computed(() => {
   return remoteData.value
 })
 
-// 3. 数据映射 (兼容大小写)
+// 3. 数据映射 (兼容大小写，加入 titleRarity)
 const displayStats = computed(() => {
   const s = rawStats.value
   return {
     level: s.Level || s.level || 1,
     title: s.Title || s.title || 'Loading...',
+    titleRarity: s.TitleRarity || s.titleRarity || s.rarity || 1, // 🌟 获取稀有度，默认给1
     reputation: s.Reputation || s.reputation || 0,
     coins: s.Coins || s.coins || 0, 
     currentExp: s.CurrentExp || s.currentExp || 0,
@@ -115,14 +116,16 @@ const formatNumberWithComma = (num) => {
 }
 
 // 6. 获取数据逻辑
+// 6. 获取数据逻辑
 const fetchUserStats = async () => {
-  // 如果是看自己且 Store 有数据，直接结束
+  // 如果是看自己且 Store 有数据，先取消 loading 状态（防止页面闪烁）
+  // 但是 ！！不要 return！！ 依然去后台拉取最新数据覆盖缓存
   if (isMe.value && authStore.user?.level) {
     loading.value = false
-    return
+  } else {
+    loading.value = true
   }
 
-  loading.value = true
   try {
     const url = isMe.value ? '/profile/detail' : `/profile/get-id/${props.userId}`
     const res = await apiClient.get(url)
@@ -132,6 +135,7 @@ const fetchUserStats = async () => {
       const statsMap = {
         level: d.Level,
         title: d.Title,
+        titleRarity: d.TitleRarity, // 🌟 接收后端的稀有度
         coins: d.Coins || d.Points,
         reputation: d.Reputation,
         currentExp: d.CurrentExp,
@@ -139,13 +143,17 @@ const fetchUserStats = async () => {
       }
       
       if (isMe.value) {
+        // 更新 store，合并最新数据（包含刚加的 titleRarity）
         authStore.user = { ...authStore.user, ...statsMap }
       } else {
         remoteData.value = statsMap
       }
     }
-  } catch (e) { console.error(e) } 
-  finally { loading.value = false }
+  } catch (e) { 
+    console.error(e) 
+  } finally { 
+    loading.value = false 
+  }
 }
 
 onMounted(fetchUserStats)
@@ -263,8 +271,73 @@ watch(() => props.userId, () => {
   font-weight: 900;
   color: #1a1a1a;
   line-height: 1.2;
+  transition: all 0.3s;
 }
 
+/* --- 🌟 7大稀有度特效区 🌟 --- */
+
+/* 1 - 普通 (Common) 灰 */
+.rarity-1 .main-title { color: #7f8c8d; }
+
+/* 2 - 优秀 (Uncommon) 绿 */
+.rarity-2 .main-title { color: #2ecc71; text-shadow: 0 0 5px rgba(46, 204, 113, 0.4); }
+
+/* 3 - 稀有 (Rare) 蓝 */
+.rarity-3 .main-title { color: #3498db; text-shadow: 0 0 8px rgba(52, 152, 219, 0.6); }
+
+/* 4 - 史诗 (Epic) 紫 */
+.rarity-4 .main-title { color: #9b59b6; text-shadow: 0 0 10px rgba(155, 89, 182, 0.8); }
+
+/* 5 - 传说 (Legendary) 橙色发光 */
+.rarity-5 .main-title { color: #f39c12; text-shadow: 0 0 8px #f39c12, 0 0 15px rgba(243, 156, 18, 0.6); }
+
+/* 6 - 神话 (Mythic) 金色流光渐变 */
+.rarity-6 .main-title {
+  background: linear-gradient(90deg, #ffd700, #ff8c00, #ffffff, #ffd700);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: mythic-shine 3s linear infinite;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.7)); 
+}
+@keyframes mythic-shine {
+  to { background-position: 200% center; }
+}
+
+/* 7 - 不朽 (Immortal) 顶级猩红流光 + 狂暴呼吸灯 */
+/* 7 - 不朽 (Immortal) 高定刀锋红 (纯净、锐利、高级感) */
+.rarity-7 .main-title {
+  /* 干净利落的高对比度渐变：深红底色 + 极白刀锋高光 */
+  background: linear-gradient(
+    110deg,
+    #b30000 0%,
+    #ff1a1a 30%,
+    #ffffff 45%, /* 锐利的极白高光 */
+    #ff1a1a 60%,
+    #b30000 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  
+  /* 顺滑的扫光动画，使用 ease-in-out 模拟光线滑过的真实物理加减速 */
+  animation: razor-shine 3s ease-in-out infinite;
+  
+  /* 极细的描边，增加字体的立体切割感，彻底抛弃糊成一团的阴影 */
+  -webkit-text-stroke: 0.5px rgba(255, 0, 0, 0.4);
+  
+  /* 稍微拉开一点字距，显得更有气场 */
+  letter-spacing: 1px;
+}
+
+@keyframes razor-shine {
+  0% { background-position: -150% center; }
+  100% { background-position: 150% center; }
+}
+
+/* --- 原有样式继续 --- */
 .level-row {
   display: flex;
   align-items: center;

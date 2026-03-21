@@ -74,6 +74,28 @@
           </div>
 
           <div class="form-group full">
+            <label>
+              获得头衔 // SELECT_TITLE 
+              <span class="title-count">{{ titleOptions.length }} 已解锁</span>
+            </label>
+            <div class="title-selector-container">
+              <div 
+                v-for="title in titleOptions" 
+                :key="title" 
+                class="title-chip"
+                :class="{ active: formData.title === title }"
+                @click="formData.title = title"
+              >
+                <span class="chip-deco">#</span>
+                {{ title }}
+              </div>
+              <div v-if="titleOptions.length === 0" class="empty-titles">
+                暂无可用头衔...
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group full">
             <label>个性签名 // SIGNATURE</label>
             <input v-model="formData.personalSignature" type="text" class="standard-input" placeholder="一句话介绍自己..." maxlength="200" />
           </div>
@@ -143,17 +165,21 @@ const isSaving = ref(false);
 const showExtra = ref(false); 
 const jsonError = ref('');
 
-// 表单数据结构 (与后端 DTO 对齐)
+// 可选头衔列表
+const titleOptions = ref([]);
+
+// 表单数据结构
 const formData = reactive({
   name: '', 
   gender: '', 
-  location: '', // 对应后端 Region
+  location: '', 
   birthday: '',
   bio: '',
-  personalSignature: '', // 对应后端 Signature
+  personalSignature: '', 
   interests: '',
-  extraContent: '', // 对应后端 ExtraConfig
-  links: [] // 对应后端 SocialLinks
+  extraContent: '', 
+  links: [],
+  title: '' // 存储当前选中的头衔
 });
 
 // JSON 校验
@@ -177,31 +203,30 @@ const initData = async () => {
   try {
     loading.value = true;
     
-    // 调用详情接口
     const res = await apiClient.get('/profile/detail');
 
     if (res.data && res.data.success) {
       const data = res.data.data;
       
-      // 映射基础字段
       formData.name = data.Username || '未知用户'; 
       formData.bio = data.Bio || '';
       formData.gender = data.Gender || ''; 
-      formData.location = data.Region || ''; // Region -> location
-      formData.personalSignature = data.Signature || ''; // Signature -> personalSignature
+      formData.location = data.Region || ''; 
+      formData.personalSignature = data.Signature || ''; 
       formData.interests = data.Interests || '';
+      formData.title = data.Title || ''; // 映射当前头衔
       
-      // 映射高级配置 (后端可能叫 ExtraConfig，DTO 叫 ExtraContent，这里做兼容)
+      // 假设后端返回一个 AvailableTitles 数组，如果后端没返回，这里提供默认 Mock
+      titleOptions.value = data.AvailableTitles || ['初级开发者', '代码探险家', '夜之城居民', '高级架构师'];
+
       formData.extraContent = data.ExtraConfig || data.ExtraContent || ''; 
 
-      // 处理日期格式 (yyyy-MM-dd)
       if (data.BirthDate) {
         formData.birthday = data.BirthDate.split('T')[0];
       } else {
         formData.birthday = '';
       }
 
-      // 处理社交链接 (SocialLinks -> links)
       if (data.SocialLinks && Array.isArray(data.SocialLinks)) {
         formData.links = data.SocialLinks.map(link => ({
           title: link.Name, 
@@ -226,7 +251,6 @@ const removeLink = (index) => { formData.links.splice(index, 1); };
 const handleSave = async () => {
   if (isSaving.value) return;
   
-  // 校验 JSON
   if (!validateJson()) {
     showExtra.value = true; 
     return;
@@ -235,21 +259,17 @@ const handleSave = async () => {
   isSaving.value = true;
 
   try {
-    // 构造 Payload (必须与后端 UpdateProfileDto 属性名一致)
     const payload = {
       bio: formData.bio,
       gender: formData.gender,
-      region: formData.location,            // 前端 location -> DTO Region
-      personalSignature: formData.personalSignature, // DTO PersonalSignature
+      region: formData.location,
+      personalSignature: formData.personalSignature,
       interests: formData.interests,
-      extraContent: formData.extraContent,  // DTO ExtraContent
-      
-      // 日期处理：空字符串转 null
+      extraContent: formData.extraContent,
+      title: formData.title, // 👈 保存选中的头衔
       birthDate: formData.birthday ? formData.birthday : null,
-      
-      // 社交链接转换
       socialLinks: formData.links
-        .filter(l => l.title && l.url) // 过滤掉空行
+        .filter(l => l.title && l.url)
         .map(l => ({
           name: l.title,
           url: l.url
@@ -279,7 +299,6 @@ onMounted(() => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;700;900&display=swap');
 
-/* 布局调整：防止内容溢出 */
 .profile-setting-wrapper {
   width: 100%; height: 100%;
   display: flex;
@@ -302,7 +321,6 @@ onMounted(() => {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* 禁用输入框 */
 .standard-input.disabled {
     background: #f4f4f4; color: #aaa; cursor: not-allowed; border-color: #eee;
 }
@@ -321,7 +339,6 @@ onMounted(() => {
 .deco-icon { font-size: 16px; color: #d35400; }
 .panel-header.small { justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.1); padding-bottom: 8px; }
 
-/* Bio */
 .bio-wrapper { flex: 1; display: flex; flex-direction: column; min-height: 150px; }
 .textarea-container {
   flex: 1; position: relative; background: #fff; border-radius: 12px;
@@ -337,7 +354,6 @@ textarea {
 .char-counter { position: absolute; bottom: 12px; right: 16px; font-size: 11px; font-family: 'Roboto Mono'; color: #999; }
 .corner-deco { position: absolute; width: 10px; height: 10px; border-right: 2px solid #d35400; border-bottom: 2px solid #d35400; bottom: 6px; right: 6px; opacity: 0.5; }
 
-/* Links */
 .links-wrapper { flex: 1.5; display: flex; flex-direction: column; overflow: hidden; }
 .add-btn-mini { background: #000; color: #fff; border: none; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: transform 0.2s; }
 .add-btn-mini:hover { transform: scale(1.1); }
@@ -367,7 +383,6 @@ textarea {
     height: 100%; overflow-y: auto; padding-right: 10px; 
     display: flex; flex-direction: column;
 }
-/* 隐藏滚动条但保留功能 */
 .scroll-container::-webkit-scrollbar { width: 6px; }
 .scroll-container::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
 
@@ -382,6 +397,42 @@ textarea {
 
 label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 700; color: #666; margin-bottom: 8px; }
 .tag-badge { background: #000; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+.title-count { font-size: 10px; color: #d35400; font-family: 'Roboto Mono'; }
+
+/* 头衔选择器样式 */
+.title-selector-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  background: #fdfdfd;
+  border: 1px solid #eee;
+  border-radius: 12px;
+}
+.title-chip {
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.chip-deco { color: #ccc; font-family: 'Roboto Mono'; transition: color 0.2s; }
+.title-chip:hover { border-color: #000; color: #000; background: #fafafa; }
+.title-chip.active {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+.title-chip.active .chip-deco { color: #d35400; }
+.empty-titles { font-size: 12px; color: #bbb; padding: 4px; }
 
 .standard-input {
   width: 100%; padding: 12px 16px; background: #FFFDF8;
@@ -390,7 +441,6 @@ label { display: flex; justify-content: space-between; align-items: center; font
 }
 .standard-input:focus { border-color: #000; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); outline: none; }
 
-/* Extra Content 样式 */
 .extra-section { background: #f9f9f9; border-radius: 12px; padding: 10px; border: 1px solid #eee; }
 .extra-header { cursor: pointer; user-select: none; }
 .arrow { transition: transform 0.3s; display: inline-block; font-size: 10px; margin-left: 5px; }
@@ -403,7 +453,6 @@ label { display: flex; justify-content: space-between; align-items: center; font
 }
 .error-msg { color: red; font-size: 12px; margin-top: 4px; }
 
-/* 底部按钮 */
 .footer-action { margin-top: 30px; display: flex; justify-content: flex-end; padding-bottom: 20px; }
 .save-button {
   background: #000; color: #fff; padding: 12px 40px; border-radius: 30px; border: none;

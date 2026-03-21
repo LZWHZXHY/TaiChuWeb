@@ -2,12 +2,18 @@
   <div class="uc-left" v-if="!loading || hasData">
     <div class="top-row">
       <div class="identity-info">
-        <div class="name-wrapper">
-          <h1 class="user-name">{{ displayData.username || '未命名' }}</h1>
-          <span v-if="displayData.gender" class="gender-badge">
-            {{ displayData.gender }}
-          </span>
-        </div>
+       <div class="name-wrapper">
+  <h1 class="user-name">{{ displayData.username || '未命名' }}</h1>
+  
+  <div class="uid-tag">
+    <span class="uid-label">UID</span>
+    <span class="uid-number">{{ userId || authStore.userID || '000000' }}</span>
+  </div>
+
+  <span v-if="displayData.gender" class="gender-badge">
+    {{ displayData.gender }}
+  </span>
+</div>
         <div class="signature-text">
           {{ displayData.signature || 'NO_SIGNATURE // 暂无签名' }}
         </div>
@@ -319,4 +325,50 @@ watch(() => props.userId, () => {
   z-index: -1;
   pointer-events: none;
 }
+
+/* UID 标签整体样式 */
+.uid-tag {
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.05); /* 浅灰色背景 */
+  border: 1px solid rgba(0, 0, 0, 0.1);  /* 细边框 */
+  border-radius: 4px;
+  height: 18px;
+  overflow: hidden;
+  transform: translateY(2px); /* 稍微下移，与名字对齐 */
+}
+
+/* 左侧 "UID" 字样 */
+.uid-label {
+  background-color: #2c3e50; /* 深色背景 */
+  color: #fff;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  padding: 0 4px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+/* 右侧数字部分 */
+.uid-number {
+  color: #666;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  padding: 0 6px;
+  font-weight: 500;
+}
+
+/* 鼠标悬停效果 (可选) */
+.uid-tag:hover {
+  border-color: #e67e22; /* 悬停变色，呼应 DataCard 的主色 */
+  transition: border-color 0.2s;
+}
+.uid-tag:hover .uid-label {
+  background-color: #e67e22;
+  transition: background-color 0.2s;
+}
+
 </style>

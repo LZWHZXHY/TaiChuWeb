@@ -63,6 +63,14 @@
             <div class="btn-deco-line"></div>
           </div>
 
+          <div class="tactical-btn-wrapper" @click="router.push('/lingmai')">
+            <button class="tactical-btn amethyst">
+              <span class="btn-label">灵脉空间</span>
+            </button>
+            <div class="btn-deco-line"></div>
+          </div>
+
+
           <div class="tactical-btn-wrapper" @click="router.push('/workspace')">
             <button class="tactical-btn blue">
               <span class="btn-icon">☖</span>
