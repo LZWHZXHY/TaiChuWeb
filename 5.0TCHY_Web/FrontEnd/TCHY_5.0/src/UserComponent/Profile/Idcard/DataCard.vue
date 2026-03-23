@@ -70,41 +70,46 @@ const props = defineProps({
 
 const authStore = useAuthStore()
 const loading = ref(true)
-const remoteData = ref({}) // 用于存别人的数据
+
+// 🌟 统一使用局部响应式变量，彻底解决 Pinia 响应式丢失导致页面不更新的问题
+const localData = ref({}) 
 
 // 1. 判断是否是自己
 const isMe = computed(() => {
   if (!props.userId || props.userId === 'MEE') return true
-  return String(props.userId) === String(authStore.userID)
+  return String(props.userId) === String(authStore.userID || authStore.user?.id || authStore.user?.Id)
 })
 
-// 2. 双数据源选择
+// 2. 双数据源选择：优先使用刚拉取的局部数据，其次回退到 Store 缓存
 const rawStats = computed(() => {
-  if (isMe.value) return authStore.user || {}
-  return remoteData.value
+  if (Object.keys(localData.value).length > 0) return localData.value
+  if (isMe.value && authStore.user) return authStore.user
+  return {}
 })
 
-// 3. 数据映射 (兼容大小写，加入 titleRarity)
+// 3. 数据映射 (防御性编程，兼容大小写与空值)
 const displayStats = computed(() => {
-  const s = rawStats.value
+  const s = rawStats.value || {}
   return {
-    level: s.Level || s.level || 1,
-    title: s.Title || s.title || 'Loading...',
-    titleRarity: s.TitleRarity || s.titleRarity || s.rarity || 1, // 🌟 获取稀有度，默认给1
-    reputation: s.Reputation || s.reputation || 0,
-    coins: s.Coins || s.coins || 0, 
-    currentExp: s.CurrentExp || s.currentExp || 0,
-    nextLevelExp: s.NextLevelExp || s.nextLevelExp || 100
+    level: s.level ?? s.Level ?? 1,
+    title: s.title ?? s.Title ?? '未同步',
+    titleRarity: s.titleRarity ?? s.TitleRarity ?? s.rarity ?? 1,
+    reputation: s.reputation ?? s.Reputation ?? 0,
+    // 使用 ?? 防止刚好为 0 时被当成 false
+    coins: s.coins ?? s.Coins ?? s.Points ?? s.points ?? 0, 
+    currentExp: s.currentExp ?? s.CurrentExp ?? 0,
+    nextLevelExp: s.nextLevelExp ?? s.NextLevelExp ?? 100
   }
 })
 
-// 4. 判断是否有数据
-const hasData = computed(() => !!displayStats.value.title)
+// 4. 判断是否有真实数据
+const hasData = computed(() => Object.keys(rawStats.value).length > 0)
 
 // 5. 计算经验百分比
 const expPercentage = computed(() => {
-  const { currentExp, nextLevelExp } = displayStats.value
-  if (!nextLevelExp || nextLevelExp <= 0) return 100 
+  const currentExp = Number(displayStats.value.currentExp) || 0
+  const nextLevelExp = Number(displayStats.value.nextLevelExp) || 100
+  if (nextLevelExp <= 0) return '100.0'
   let percent = (currentExp / nextLevelExp) * 100
   return Math.min(Math.max(percent, 0), 100).toFixed(1)
 })
@@ -116,41 +121,54 @@ const formatNumberWithComma = (num) => {
 }
 
 // 6. 获取数据逻辑
-// 6. 获取数据逻辑
 const fetchUserStats = async () => {
-  // 如果是看自己且 Store 有数据，先取消 loading 状态（防止页面闪烁）
-  // 但是 ！！不要 return！！ 依然去后台拉取最新数据覆盖缓存
-  if (isMe.value && authStore.user?.level) {
-    loading.value = false
+  // 如果缓存有数据，防止重复闪烁
+  if (isMe.value && authStore.user?.Level) {
+    loading.value = false 
   } else {
     loading.value = true
   }
 
   try {
-    const url = isMe.value ? '/profile/detail' : `/profile/get-id/${props.userId}`
+    const url = isMe.value ? '/profile/me' : `/profile/get-id/${props.userId}`
     const res = await apiClient.get(url)
     
-    if (res.data.success) {
-      const d = res.data.data
-      const statsMap = {
-        level: d.Level,
-        title: d.Title,
-        titleRarity: d.TitleRarity, // 🌟 接收后端的稀有度
-        coins: d.Coins || d.Points,
-        reputation: d.Reputation,
-        currentExp: d.CurrentExp,
-        nextLevelExp: d.NextLevelExp
-      }
-      
-      if (isMe.value) {
-        // 更新 store，合并最新数据（包含刚加的 titleRarity）
-        authStore.user = { ...authStore.user, ...statsMap }
+    // 兼容不同的 Axios 拦截器返回格式（有时候拦截器会直接返回 res.data）
+    const responseBody = res.data ? res.data : res;
+
+    // 适配后端的 "success": true
+    if (responseBody.success === true || responseBody.code === 200) {
+  const d = responseBody.data || {}
+  
+  // 核心修复：双向兼容后端可能出现的大小写波动
+  const statsMap = {
+    level: d.Level ?? d.level,
+    title: d.Title ?? d.title,
+    titleRarity: d.TitleRarity ?? d.titleRarity ?? d.rarity, 
+    coins: d.Coins ?? d.coins ?? d.Points ?? d.points,
+    reputation: d.Reputation ?? d.reputation,
+    currentExp: d.CurrentExp ?? d.currentExp,
+    nextLevelExp: d.NextLevelExp ?? d.nextLevelExp
+  }
+  
+  // 核心修复：确认确实拿到了数据，再去覆盖 localData
+  // 防止第二次请求如果意外返回空对象，把已有的好数据洗掉
+  if (statsMap.level !== undefined || statsMap.currentExp !== undefined) {
+    localData.value = statsMap 
+    
+    if (isMe.value && authStore) {
+      if (typeof authStore.$patch === 'function') {
+        authStore.$patch((state) => {
+          state.user = { ...(state.user || {}), ...statsMap }
+        })
       } else {
-        remoteData.value = statsMap
+        authStore.user = { ...(authStore.user || {}), ...statsMap }
       }
     }
+  }
+}
   } catch (e) { 
-    console.error(e) 
+    console.error('获取用户数据失败:', e) 
   } finally { 
     loading.value = false 
   }
@@ -158,8 +176,18 @@ const fetchUserStats = async () => {
 
 onMounted(fetchUserStats)
 
-watch(() => props.userId, () => {
-  remoteData.value = {}
+watch(() => props.userId, (newVal, oldVal) => {
+  // 核心修复：判断新旧 ID 是否都代表“当前登录用户”
+  const wasMe = !oldVal || oldVal === 'MEE' || String(oldVal) === String(authStore.userID)
+  const isMeNow = !newVal || newVal === 'MEE' || String(newVal) === String(authStore.userID)
+  
+  // 如果变化前后都是在看“自己”，直接拦截，防止二次请求
+  if (wasMe && isMeNow) {
+    return 
+  }
+
+  // 只有真正切换到“其他用户”时，才清空并重新获取
+  localData.value = {} 
   fetchUserStats()
 })
 </script>

@@ -118,4 +118,6 @@ const handleUserAction = () => {
 .footer-content a:hover {
   color: #334155;
 }
+
+
 </style>

@@ -678,7 +678,7 @@ onMounted(() => {
 /* 今天（未签到） */
 .day-cell.is-today { border-color: #0047ff; color: #0047ff; font-weight: 800; background: #f0f4ff; }
 /* 已签到 */
-.day-cell.is-checked { background: #000; border-color: #000; color: #fff; }
+.day-cell.is-checked { background: #64ce1d; border-color: #000; color: #fff; }
 /* 今天且已签到 */
 .day-cell.is-today.is-checked { background: #088908; border-color: #0047ff; color: #fff; }
 

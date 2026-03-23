@@ -105,6 +105,8 @@ const filters = [
   { key: 'likes', label: '最多收藏' }
 ]
 
+/**
+
 const fetchBlogs = async () => {
   if (!props.userId || props.userId === '') return
 
@@ -145,12 +147,15 @@ const fetchBlogs = async () => {
     isLoading.value = false
   }
 }
+ */
+
+
 
 watch(
   () => [props.userId, currentFilter.value],
   ([newId]) => {
     if (newId) {
-      fetchBlogs()
+      //fetchBlogs()
     }
   },
   { immediate: true }

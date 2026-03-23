@@ -89,8 +89,9 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import HeatmapNode from './HeatmapNode.js'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
-
-
+import { BlockId } from './BlockId'
+// 找到第 91 行，修改为：
+import BlockEmbed from './BlockEmbedNode.js' // 将 BlockEmbedNode 改为 BlockEmbed
 
 
 
@@ -128,12 +129,17 @@ const editor = useEditor({
   extensions: [
     KanbanNode,
     StarterKit, 
+    BlockId, // 🔥 必须加上，否则新块没有 ID
+    BlockEmbed, // 🔥 联动块渲染器
     HeatmapNode,
     Placeholder.configure({ placeholder: '输入 / 唤起命令，输入 [[ 建立关联...' }), 
     SlashCommand, 
     TaskList,
-    TaskItem.configure({
-      nested: true, // 支持嵌套（比如：大扫除 -> 扫地、拖地）
+    TaskItem.extend({
+      // 🔥 核心修复：覆盖默认的 'paragraph block*'，允许任意块级元素打头
+      content: 'block+', 
+    }).configure({
+      nested: true,
     }),
     Image.configure({ inline: true }), 
     Details, 
@@ -148,21 +154,148 @@ const editor = useEditor({
     FontSize, 
     Highlight.configure({ multicolor: true }), 
     BubbleMenuExtension.configure({ element: null }),
+
+
     Mention.configure({
-      HTMLAttributes: { class: 'internal-link' },
-      renderHTML({ options, node }) { return ['span', { class: 'internal-link', 'data-id': node.attrs.id, style: 'color: #0078d4; cursor: pointer; text-decoration: underline; font-weight: 500;' }, `@${node.attrs.label ?? node.attrs.id}`] },
-      suggestion: {
-        char: '[[', items: async ({ query }) => { try { const res = await apiClient.get(`/Notes/search?query=${encodeURIComponent(query || '')}`); return res.data.map(n => ({ id: n.Id, label: n.Title })) } catch (e) { return [] } },
-        render: () => {
-          let component, popup; return {
-            onStart: props => { component = new VueRenderer(SuggestionList, { props, editor: props.editor }); popup = tippy('body', { getReferenceClientRect: props.clientRect, appendTo: () => document.body, content: component.element, showOnCreate: true, interactive: true, trigger: 'manual', placement: 'bottom-start' }) },
-            onUpdate(props) { component.updateProps(props); popup[0].setProps({ getReferenceClientRect: props.clientRect }) },
-            onKeyDown(props) { if (props.event.key === 'Escape') { popup[0].hide(); return true } return component.ref?.onKeyDown(props) },
-            onExit() { popup[0].destroy(); component.destroy() }
-          }
+  HTMLAttributes: {
+    class: 'internal-link',
+  },
+  suggestion: {
+    char: '[[',
+    // 1. 数据获取逻辑
+    items: async ({ query }) => {
+      // 调试：在控制台查看 Tiptap 传过来的 query 到底是什么
+      console.log('当前 Mention Query:', query);
+
+      // 核心修复：Tiptap 的 query 不带 [[。输入 [[# 时，query 是 "#"
+      if (query && query.startsWith('#')) {
+        const blockQuery = query.substring(1); // 截取 # 之后的关键字
+        
+        try {
+          console.log('检测到块搜索标识，正在发起请求...', blockQuery);
+          // 发起请求到后端 LingMaiBlockController
+          const res = await apiClient.get(`/Blocks/search?query=${encodeURIComponent(blockQuery)}`);
+          
+          return res.data.map(b => ({
+            id: b.blockId,
+            label: b.previewText,
+            type: 'block', // 关键标识：用于 command 判断插入类型
+            noteTitle: b.noteTitle
+          }));
+        } catch (e) {
+          console.error('块搜索请求失败:', e);
+          return [];
         }
       }
-    })
+
+      // 默认逻辑：普通文档搜索
+      try {
+        const res = await apiClient.get(`/Notes/search?query=${encodeURIComponent(query || '')}`);
+        return res.data.map(n => ({
+          id: n.Id,
+          label: n.Title,
+          type: 'note'
+        }));
+      } catch (e) {
+        console.error('文档搜索请求失败:', e);
+        return [];
+      }
+    },
+
+    // 2. 插入逻辑：根据 type 决定是插入 Mention 还是 BlockEmbed
+    command: ({ editor, range, props }) => {
+      if (props.type === 'block') {
+        // 选中块：插入联动节点并自动换行
+        editor
+          .chain()
+          .focus()
+          .insertContentAt(range, [
+            {
+              type: 'blockEmbed',
+              attrs: { targetId: props.id }
+            },
+            {
+              type: 'paragraph' 
+            }
+          ])
+          .run();
+      } else {
+        // 选中页面：插入普通双链
+        editor
+          .chain()
+          .focus()
+          .replaceRangeWith(range, {
+            type: 'mention',
+            attrs: {
+              id: props.id,
+              label: props.label,
+            },
+          })
+          .insertContent(' ') 
+          .run();
+      }
+    },
+
+    // 3. 渲染逻辑：调用 SuggestionList.vue
+    render: () => {
+      let component;
+      let popup;
+
+      return {
+        onStart: props => {
+          component = new VueRenderer(SuggestionList, {
+            props,
+            editor: props.editor,
+          });
+
+          if (!props.clientRect) return;
+
+          popup = tippy('body', {
+            getReferenceClientRect: props.clientRect,
+            appendTo: () => document.body,
+            content: component.element,
+            showOnCreate: true,
+            interactive: true,
+            trigger: 'manual',
+            placement: 'bottom-start',
+          });
+        },
+
+        onUpdate(props) {
+          component.updateProps(props);
+          if (!props.clientRect) return;
+          popup[0].setProps({
+            getReferenceClientRect: props.clientRect,
+          });
+        },
+
+        onKeyDown(props) {
+          if (props.event.key === 'Escape') {
+            popup[0].hide();
+            return true;
+          }
+          return component.ref?.onKeyDown(props);
+        },
+
+        onExit() {
+          if (popup && popup[0]) popup[0].destroy();
+          if (component) component.destroy();
+        },
+      };
+    },
+  },
+})
+
+
+
+
+
+
+
+
+
+
+
   ],
   editorProps: {
     noteId: props.noteId,
@@ -190,14 +323,57 @@ const loadData = async (id) => {
 const loadBacklinks = async (id) => { try { const blRes = await apiClient.get(`/Notes/${id}/backlinks`); backlinks.value = blRes.data } catch (e) { backlinks.value = [] } }
 
 let timer = null
+let isSaving = false // 增加一个内部锁，防止请求堆积
+
 const debouncedSave = (json) => {
-  clearTimeout(timer); syncing.value = true
-  timer = setTimeout(async () => { try { await apiClient.post('/Notes/save', { id: note.id, title: note.title, contentJson: JSON.stringify(json), parentNoteId: note.parentNoteId }); note.updatedAt = new Date() } catch (e) { console.error(e) } finally { syncing.value = false } }, 2000)
+  clearTimeout(timer);
+  syncing.value = true;
+
+  timer = setTimeout(async () => {
+    // 如果当前正有一个请求在飞，我们等它结束或直接跳过本次，交由下一次防抖处理
+    if (isSaving) return; 
+
+    try {
+      isSaving = true;
+      const payload = { 
+        id: note.id, 
+        title: note.title, 
+        contentJson: JSON.stringify(json), 
+        parentNoteId: note.parentNoteId 
+      };
+
+      await apiClient.post('/Notes/save', payload);
+      
+      note.updatedAt = new Date();
+      console.log('✨ 灵脉已同步至太初数据库');
+    } catch (e) {
+      console.error('❌ 自动保存失败:', e);
+    } finally {
+      isSaving = false;
+      syncing.value = false;
+    }
+  }, 2000); // 恢复为 2000ms，兼顾性能与用户体验
 }
+
+
+
 const syncTitle = () => { if (editor.value) debouncedSave(editor.value.getJSON()) }
 
 const handleEditorClick = (event) => {
   const target = event.target.closest('.internal-link'); if (target) { emit('navigate', target.getAttribute('data-id')); return }
+
+// 2. 🔥 新增：按住 Alt 点击块，直接复制块 ID
+  if (event.altKey) {
+    const blockNode = event.target.closest('[data-block-id]');
+    if (blockNode) {
+      const bId = blockNode.getAttribute('data-block-id');
+      navigator.clipboard.writeText(bId);
+      // 这里可以加一个轻提示
+      console.log('块 ID 已复制:', bId);
+      return;
+    }
+  }
+
   if (event.target.closest('input') || event.target.closest('button')) return
   if (editor.value && !editor.value.isFocused) editor.value.chain().focus().run()
 }
@@ -297,6 +473,47 @@ onBeforeUnmount(() => {
   color: #37352f; 
   margin-top: 20px; 
   padding-bottom: 30vh; 
+
+
+  /* =======================================================
+     🟢 优化：有序列表嵌套层级样式 (1. -> a. -> i.)
+     ======================================================= */
+  ol {
+    list-style-type: decimal; /* 第一级: 1, 2, 3 */
+    padding-left: 1.5rem;     /* 保证适当的缩进距离 */
+    
+    ol {
+      list-style-type: lower-alpha; /* 第二级: a, b, c */
+      margin-top: 4px;              /* 稍微紧凑一点 */
+      
+      ol {
+        list-style-type: lower-roman; /* 第三级: i, ii, iii */
+        
+        ol {
+          list-style-type: decimal; /* 第四级以上循环回数字 */
+        }
+      }
+    }
+  }
+
+  /* 顺手优化一下无序列表的嵌套展示 (实心圆 -> 空心圆 -> 方块) */
+  ul:not([data-type="taskList"]) {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+
+    ul {
+      list-style-type: circle;
+      
+      ul {
+        list-style-type: square;
+      }
+    }
+  }
+
+
+
+
+
 
   // 1. 标题层级
   h1, h2, h3, h4, h5, h6 { scroll-margin-top: 140px; } 
