@@ -163,8 +163,33 @@ const routes = [
       title:'任务中心'
     }
   },
-  
-  
+  {
+    path:'/BlogCenter',
+    name:'博客中心',
+    component:()=>import('@/views/BlogCenter.vue'),
+    meta:{
+      requiresAuth:false,
+      title:'博客中心'
+    }
+  },
+  {
+    path:'/PostCenter',
+    name:'帖子中心',
+    component:()=>import('@/views/PostCenter.vue'),
+    meta:{
+      requiresAuth:false,
+      title:'帖子中心'
+    }
+  },
+  {
+    path:'/ChatCenter',
+    name:'太虚坛',
+    component:()=>import('@/views/ChatCenter.vue'),
+    meta:{
+      requiresAuth:true,
+      title:'太虚坛'
+    }
+  },
   {
     path:'/EntertainmentArea',
     name:'娱乐区',

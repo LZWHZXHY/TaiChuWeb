@@ -62,6 +62,7 @@
 </template>
 
 <script setup>
+
 import { ref } from 'vue';
 
 const isOpen = ref(false);
@@ -72,9 +73,13 @@ const mouseleaveHandler = () => {
 
 // 替换你的 <script setup> 中的 primaryItems 数组：
 const primaryItems = [
+    { name: 'nav.push_center', path: '/MainPush', icon: '📡', desc: '情报与动态' },
+    { name: 'nav.post_center', path: '/PostCenter', icon: '📡', desc: '帖子中心' },
+    { name: 'nav.blog_center', path: '/BlogCenter', icon: '📡', desc: '博客中心' },
+    { name: 'nav.chat_center', path: '/ChatCenter', icon: '📡', desc: '实时聊天室' },
   { name: 'nav.data_center', path: '/DataCenter', icon: '⚡', desc: '实时信号流' },
   { name: 'nav.work_center', path: '/WorkCenter', icon: '🎨', desc: '艺术数据库' },
-  { name: 'nav.push_center', path: '/MainPush', icon: '📡', desc: '情报与动态' },
+
   // 🔥 新增：影音频段
   { name: 'nav.media', path: '/media', icon: '🎬', desc: '视觉档案库' }, 
   { name: 'nav.missionCenter', path: '/MissionCenter', icon: '🎯', desc: '系统任务' },
