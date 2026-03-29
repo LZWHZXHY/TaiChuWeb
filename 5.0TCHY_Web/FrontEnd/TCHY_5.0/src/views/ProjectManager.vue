@@ -407,7 +407,7 @@ onMounted(fetchOrgs)
   --md-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   --md-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
 
-  padding-top: 72px;
+  
   min-height: 100vh;
   background-color: var(--bg-sand);
   font-family: 'JetBrains Mono', monospace;

@@ -10,13 +10,17 @@
           <span class="separator">/</span>
           <div class="view-switcher">
             <button class="view-tab" :class="{ active: currentView === 'board' }" @click="currentView = 'board'">
-              <span class="icon">⊞</span> Board
+              <span class="icon">⊞</span> 任务版
             </button>
             <button class="view-tab" :class="{ active: currentView === 'timeline' }" @click="currentView = 'timeline'">
-              <span class="icon">◤</span> Timeline
+              <span class="icon">◤</span> 时间线
             </button>
             <button class="view-tab" :class="{ active: currentView === 'reports' }" @click="currentView = 'reports'">
-              <span class="icon">📄</span> Reports
+              <span class="icon">📄</span> 报告
+            </button>
+
+            <button class="view-tab" :class="{ active: currentView === 'Resourse' }" @click="currentView = 'Resourse'">
+              <span class="icon">📄</span> 资源
             </button>
           </div>
         </div>
@@ -67,6 +71,12 @@
         :project-id="projectId" 
         :members="projectMembers"
       />
+
+      <ResourceBoard 
+        v-if="currentView === 'Resourse'" 
+        :project-id="projectId" 
+      />
+
     </div>
 
     <div v-if="showAddMemberModal" class="modal-overlay" @click.self="showAddMemberModal = false">
@@ -121,6 +131,7 @@ import UniversalAvatar from '@/GeneralComponents/UserAvatar.vue'
 import KanbanBoard from '@/ProjectComponents/KanbanBoard.vue'
 import ReportDashboard from '@/ProjectComponents/ReportDashboard.vue'
 import ProjectTimeline from '@/ProjectComponents/ProjectTimeline.vue'
+import ResourceBoard from '@/ProjectComponents/ResourceBoard.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -233,12 +244,12 @@ onMounted(() => fetchProjectData())
 <style scoped>
 /* 基础布局 */
 .linear-layout {
-  position: absolute; top: 72px; left: 0; right: 0; bottom: 0;
-  background-color: #F4F5F7; display: flex; flex-direction: column;
+  position: absolute; top: 5%; left: 0; right: 0; bottom: 0;
+  background-color: #4e7ad1; display: flex; flex-direction: column;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #172B4D;
 }
 .linear-header {
-  height: 56px; padding: 0 24px; background: #fff; border-bottom: 1px solid #EBECF0;
+  height: 7%; padding: 0 24px; background: #dededf; border-bottom: 1px solid #EBECF0;
   display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
 }
 .header-left { display: flex; align-items: center; gap: 16px; }
