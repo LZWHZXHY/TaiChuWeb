@@ -84,15 +84,7 @@ const routes = [
       allowedRoles: ['SuperAdmin', 'Admin'] 
     }
   },
-  {
-    path:'/DataCenter',
-    name:'交流中枢',
-    component:()=>import('@/views/ComCenter.vue'),
-    meta:{
-      requiresAuth:true,
-      title:'交流中枢'
-    }
-  },
+
     {
     path: '/notifications',
     name: 'NotificationCenter',

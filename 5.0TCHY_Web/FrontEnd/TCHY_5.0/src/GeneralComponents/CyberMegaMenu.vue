@@ -77,7 +77,6 @@ const primaryItems = [
     { name: 'nav.post_center', path: '/PostCenter', icon: '📡', desc: '帖子中心' },
     { name: 'nav.blog_center', path: '/BlogCenter', icon: '📡', desc: '博客中心' },
     { name: 'nav.chat_center', path: '/ChatCenter', icon: '📡', desc: '实时聊天室' },
-  { name: 'nav.data_center', path: '/DataCenter', icon: '⚡', desc: '实时信号流' },
   { name: 'nav.work_center', path: '/WorkCenter', icon: '🎨', desc: '艺术数据库' },
 
   // 🔥 新增：影音频段
