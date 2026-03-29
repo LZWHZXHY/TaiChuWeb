@@ -279,15 +279,35 @@ const startEdit = () => { viewStatus.value = 'editing'; }
 const cancelEdit = () => { viewStatus.value = 'viewing'; }
 
 const handleSave = async (editData) => {
+  // 1. 🛑 提取真正的用户对象 (参考你 isAdmin 里的写法)
+  const currentUser = authStore.user?.data || authStore.user || {};
+  
+  // 2. 🛑 兼容各种可能的字段名大小写，找到真正的 ID
+  const actualUserId = currentUser.Id || currentUser.id || authStore.userId || authStore.userID;
+
+  // 3. 🛑 打印出来看看到底拿到了什么（如果控制台打印是 undefined，说明你的 authStore 结构不对）
+  console.log("🛠️ 准备提交的 User ID:", actualUserId);
+
+  // 4. 🛑 防呆拦截：如果没有拿到 ID，直接阻止请求，防止触发后端的 400 报错
+  if (!actualUserId || isNaN(Number(actualUserId))) {
+    alert("无法获取当前用户信息，请尝试重新登录！");
+    return;
+  }
+
   try {
-    await apiClient.post('/Wiki/submit-edit', {
-      ArticleId: currentArticle.value.id,
-      CategoryId: editData.categoryId || currentArticle.value.categoryId || 1,
-      UserId: authStore.userID,
+    const payload = {
+      ArticleId: Number(currentArticle.value.id) || 0,
+      CategoryId: Number(editData.categoryId || currentArticle.value.categoryId || 1),
+      UserId: Number(actualUserId), // 👈 此时这里 100% 是个合法的纯数字了
       Title: editData.title,
       ContentMarkdown: editData.content,
       EditSummary: currentArticle.value.id === 0 ? "创建新词条" : "内容修改"
-    });
+    };
+
+    console.log("🚀 发送给后端的完整数据:", payload);
+
+    await apiClient.post('/Wiki/submit-edit', payload);
+    
     alert("提交成功，请等待审核！");
 
     if (isAdmin.value) {
@@ -295,7 +315,10 @@ const handleSave = async (editData) => {
     }
 
     fetchArticle(currentArticle.value.id || '1');
-  } catch (e) { alert("保存失败"); }
+  } catch (e) { 
+    console.error("保存失败:", e);
+    alert("保存失败，请打开控制台查看具体错误！"); 
+  }
 }
 
 const handleReviewAction = async (revisionId, isApproved) => {

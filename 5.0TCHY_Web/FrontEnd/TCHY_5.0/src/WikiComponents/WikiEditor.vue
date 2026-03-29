@@ -233,21 +233,35 @@ const insertBlogEmbed = (blog) => {
 }
 
 const triggerImageUpload = () => imageInputRef.value.click()
+
+
+
+
+
 const handleImageUpload = async (event) => {
   const file = event.target.files[0]
   if (!file) return
-  const articleId = props.article.id || 0
+  
+  // 不需要 articleId 了
   const formData = new FormData()
-  formData.append('file', file)
+  formData.append('file', file) // 这里的 'file' 对应后端 IFormFile file
+  
   try {
-    const res = await apiClient.post(`/Blog/upload-image/${articleId}`, formData)
+    // 1. 改为请求 /Wiki/upload-image 
+    // 2. 移除尾部的 /${articleId}
+    const res = await apiClient.post(`/Wiki/upload-image`, formData)
     insertFormat(`\n![图片](${res.data.url})\n`, '')
   } catch (e) { 
+    console.error(e)
     alert("图片上传失败，请检查是否已登录或后端配置") 
   } finally {
     event.target.value = ''
   }
 }
+
+
+
+
 
 const insertFormat = (prefix, suffix) => {
   const textarea = textareaRef.value

@@ -53,6 +53,7 @@ onMounted(() => {
           :avatarUrl="user.avatar"
           :userName="user.userName"
           :size="32"
+          :showLevel="false"
         />
       </div>
       
@@ -114,11 +115,11 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  /* overflow: hidden; */
   border: 1px solid #ddd;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
-  background-color: #eee;
+  background-color: #ffffff;
 }
 
 .online-avatar-wrapper:hover {

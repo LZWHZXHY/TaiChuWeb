@@ -4,7 +4,7 @@
 
     <div class="uc-center">
       <div class="avatar-box">
-        <UserAvatar :user-id="userId" />
+        <UserAvatar :user-id="userId" :show-title="true"/>
       </div>
     </div>
   </div>

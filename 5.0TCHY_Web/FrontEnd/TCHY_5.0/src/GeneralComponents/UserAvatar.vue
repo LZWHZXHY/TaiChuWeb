@@ -6,7 +6,7 @@
   >
     <div 
       class="title-badge" 
-      v-if="currentTitle" 
+      v-if="currentTitle && showTitle" 
       :class="`bg-rarity-${currentRarity}`"
     >
       {{ currentTitle }}
@@ -41,7 +41,8 @@ const props = defineProps({
   passedTitle: { type: String, default: null },
   passedTitleRarity: { type: [Number, String], default: null },
   allowLink: { type: Boolean, default: true },
-  showLevel: { type: Boolean, default: true }
+  showLevel: { type: Boolean, default: true },
+  showTitle: {type:Boolean, default: false}
 })
 
 const router = useRouter()
@@ -152,14 +153,14 @@ watch(() => props.userId, () => {
   justify-content: center; 
   flex-shrink: 0; 
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); 
-  /* 增加顶部间距，防止头衔铭牌在紧凑布局下被裁切 */
-  margin-top: 12px; 
+
+
 }
 
 .avatar-wrapper.is-clickable { cursor: pointer; }
 .avatar-wrapper.is-clickable:hover { transform: scale(1.05); z-index: 10; }
 
-.avatar-frame { width: 100%; height: 100%; border-radius: 4px; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.15); overflow: hidden; background: #f0f0f0; transform: translateZ(0); }
+.avatar-frame { box-sizing: border-box; width: 100%; height: 100%; border-radius: 4px; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.15); overflow: hidden; background: #f0f0f0; transform: translateZ(0); }
 .big-avatar { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .level-pill { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: #fff; padding: 1px 8px; border-radius: 4px; border: 2px solid #fff; display: flex; align-items: baseline; gap: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 2; white-space: nowrap; }
@@ -169,7 +170,8 @@ watch(() => props.userId, () => {
 /* --- 🌟 头衔悬浮铭牌样式 🌟 --- */
 .title-badge {
   position: absolute;
-  top: -12px; 
+  bottom: 100%;
+  margin-bottom: 4px;
   left: 50%;
   transform: translateX(-50%);
   padding: 2px 10px;
