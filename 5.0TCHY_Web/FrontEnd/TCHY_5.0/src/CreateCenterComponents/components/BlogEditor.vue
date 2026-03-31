@@ -62,16 +62,42 @@
               <input v-model="formState.title" class="input-title-pro" placeholder="请输入标题..." />
               
               <div class="editor-toolbar-pro">
-                <button class="toolbar-tool" @click="handleInsertImage">
-                  <PictureOutlined /> 插入图片
-                </button>
-                <div class="divider-v"></div>
-                <button class="toolbar-tool" @click="openWikiSelector">
-                  <BookOutlined /> 引用百科
-                </button>
-                <div class="divider-v"></div>
-                <span class="md-hint">Markdown Engine Active</span>
-              </div>
+  <button class="toolbar-tool" title="加粗" @click="applyFormat('**', '**', '粗体文本')">
+    <BoldOutlined />
+  </button>
+  <button class="toolbar-tool" title="斜体" @click="applyFormat('*', '*', '斜体文本')">
+    <ItalicOutlined />
+  </button>
+  <button class="toolbar-tool" title="删除线" @click="applyFormat('~~', '~~', '删除线')">
+    <StrikethroughOutlined />
+  </button>
+  
+  <div class="divider-v"></div>
+
+  <button class="toolbar-tool" title="标题" @click="applyFormat('\n## ', '\n', '输入标题')">
+    <FontSizeOutlined />
+  </button>
+  <button class="toolbar-tool" title="引用" @click="applyFormat('\n> ', '\n', '引用内容')">
+    <AlignLeftOutlined />
+  </button>
+  <button class="toolbar-tool" title="代码块" @click="applyFormat('\n```\n', '\n```\n', '在此输入代码')">
+    <CodeOutlined />
+  </button>
+  <button class="toolbar-tool" title="超链接" @click="applyFormat('[', '](https://)', '链接描述')">
+    <LinkOutlined />
+  </button>
+
+  <div class="divider-v"></div>
+
+  <button class="toolbar-tool" @click="handleInsertImage">
+    <PictureOutlined /> 插图
+  </button>
+  <button class="toolbar-tool" @click="openWikiSelector">
+    <BookOutlined /> 引用百科
+  </button>
+
+  <span class="md-hint">Markdown Engine Active</span>
+</div>
 
               <textarea 
                 ref="contentEditor"
@@ -151,14 +177,42 @@
 import { reactive, ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
-import apiClient from '@/utils/api';
-import CyberTagInput from '@/GeneralComponents/CyberTagInput.vue'; 
 import { 
   PlusOutlined, DeleteOutlined, HomeOutlined, 
-  SendOutlined, PictureOutlined, EyeOutlined, BookOutlined 
+  SendOutlined, PictureOutlined, EyeOutlined, BookOutlined,
+  BoldOutlined, ItalicOutlined, StrikethroughOutlined, 
+  LinkOutlined, CodeOutlined, FontSizeOutlined, AlignLeftOutlined
 } from '@ant-design/icons-vue';
+import apiClient from '@/utils/api';
+import CyberTagInput from '@/GeneralComponents/CyberTagInput.vue'; 
+
 import dayjs from 'dayjs';
 import { marked } from 'marked';
+
+
+//import { markedHighlight } from 'marked-highlight';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/atom-one-dark.css';
+
+marked.use({
+  renderer: {
+    // 这里的参数可能是 token 对象（新版），也可能是纯代码字符串（老版）
+    code(tokenOrCode, maybeLang) {
+      // 智能提取代码内容和语言（完美兼容新老版本 marked）
+      const codeText = typeof tokenOrCode === 'string' ? tokenOrCode : tokenOrCode.text;
+      const langName = typeof tokenOrCode === 'string' ? maybeLang : tokenOrCode.lang;
+
+      // 判断语言，如果没有指定则默认使用纯文本 plaintext
+      const validLang = (langName && hljs.getLanguage(langName)) ? langName : 'plaintext';
+      
+      // highlight.js 内部已经做了一次完美的安全转义
+      const highlighted = hljs.highlight(codeText, { language: validLang }).value;
+      
+      // 直接拼接成最终的 HTML，拒绝二次瞎转义！
+      return `<pre><code class="hljs language-${validLang}">${highlighted}</code></pre>`;
+    }
+  }
+});
 
 const router = useRouter();
 const contentEditor = ref(null); 
@@ -395,6 +449,39 @@ const insertTextAtCursor = (insertText) => {
   }, 0);
 };
 
+// --- 新增：智能文本格式化 ---
+const applyFormat = (prefix, suffix, defaultText = '') => {
+  const el = contentEditor.value;
+  if (!el) return;
+
+  const start = el.selectionStart;
+  const end = el.selectionEnd;
+  const selectedText = formState.content.substring(start, end);
+  
+  // 如果用户选中了文字，就包裹它；如果没有选中，就插入默认文字
+  const textToInsert = selectedText || defaultText;
+
+  formState.content = 
+    formState.content.substring(0, start) + 
+    prefix + textToInsert + suffix + 
+    formState.content.substring(end);
+
+  // 恢复焦点并设置光标位置
+  setTimeout(() => {
+    el.focus();
+    if (selectedText) {
+      // 如果之前有选中文字，处理完后将光标移到末尾
+      const cursorTarget = start + prefix.length + textToInsert.length + suffix.length;
+      el.setSelectionRange(cursorTarget, cursorTarget);
+    } else {
+      // 如果没有选中文字，高亮我们插入的“默认文字”，方便用户直接输入替换
+      el.setSelectionRange(start + prefix.length, start + prefix.length + textToInsert.length);
+    }
+  }, 0);
+};
+
+
+
 const deleteArticle = async (id) => {
   await apiClient.delete(`/Blog/articles/${id}`);
   fetchMyArticles();
@@ -556,4 +643,46 @@ onMounted(fetchMyArticles);
 }
 .btn-secondary-pro:hover:not(:disabled) { background: #f9fafb; border-color: #9ca3af; color: #111827; }
 .btn-secondary-pro:disabled { opacity: 0.6; cursor: not-allowed; }
+
+
+/* --- Markdown 预览区排版美化 (对应 .markdown-body) --- */
+.preview-container :deep(h1),
+.preview-container :deep(h2),
+.preview-container :deep(h3) {
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+/* 文字引用 (Blockquote) 的样式 */
+.preview-container :deep(blockquote) {
+  margin: 16px 0;
+  padding: 12px 20px;
+  border-left: 4px solid #3b82f6; /* 蓝色的左侧提示线 */
+  background-color: #eff6ff;     /* 浅蓝色的背景 */
+  color: #4b5563;
+  border-radius: 0 8px 8px 0;
+}
+
+/* 行内代码的样式 */
+.preview-container :deep(code:not(.hljs)) {
+  background-color: #f3f4f6;
+  color: #ef4444;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Consolas', monospace;
+  font-size: 0.9em;
+}
+
+/* 多行代码块的外层圆角和阴影 */
+.preview-container :deep(pre) {
+  background-color: #282c34; /* 配合 atom-one-dark 主题的背景色 */
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
 </style>
