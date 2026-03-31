@@ -28,7 +28,7 @@
         @close="publisherStore.close" 
       />
     </div>
-  </div>
+  </div> 
 </template>
 
 <script setup>
