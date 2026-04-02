@@ -1,5 +1,5 @@
 <template>
-  <header class="cyber-header" :class="{ 'header-compact': isScrolled }">
+  <header class="cyber-header">
     <div class="header-decoration-line"></div>
 
     <div class="nav-container">
@@ -262,8 +262,7 @@ const BASE_URL = 'https://bianyuzhou.com'
 const userCount = ref(0)
 const localUnreadCount = ref(0) 
 const showUserMenu = ref(false)
-// showNotifications 已移除
-const isScrolled = ref(false)
+
 const avatarLoadError = ref(false)
 let unreadTimer = null 
 
@@ -417,7 +416,6 @@ const handleLogout = async () => {
   router.push('/')
 }
 
-const handleScroll = () => isScrolled.value = window.scrollY > 10
 
 onMounted(() => {
   loadUserCount()
@@ -427,7 +425,7 @@ onMounted(() => {
   }
   unreadTimer = setInterval(fetchUnreadCount, 60000)
   document.addEventListener('click', closeAllMenus)
-  window.addEventListener('scroll', handleScroll)
+ 
 })
 
 onUnmounted(() => {
@@ -471,11 +469,6 @@ onUnmounted(() => {
   box-sizing: border-box;
 }
 
-.header-compact {
-  height: 60px;
-  background-color: rgba(244, 241, 234, 0.95);
-  backdrop-filter: blur(5px);
-}
 
 .header-decoration-line {
   height: 4px;
