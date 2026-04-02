@@ -224,7 +224,7 @@ const editor = useEditor({
         editor
           .chain()
           .focus()
-          .replaceRangeWith(range, {
+          .insertContentAt(range, {
             type: 'mention',
             attrs: {
               id: props.id,
@@ -416,54 +416,32 @@ onBeforeUnmount(() => {
 
 <style lang="scss">
 /* =========================================
-   1. 侧边栏大纲样式
+   1. 编辑器基础容器布局
    ========================================= */
-.toc-sidebar {
-  position: fixed; top: 200px; right: 30px; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end;
-  .toc-trigger {
-    background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); padding: 10px 16px; border-radius: 50px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: #475569; transition: all 0.3s ease;
-    .trigger-icon { font-size: 16px; }
-    .trigger-text { font-size: 14px; font-weight: 500; }
-    &:hover { border-color: #cbd5e1; background: #f8fafc; }
-  }
-  .toc-content-wrapper {
-    position: absolute; top: 0; right: 0; width: 260px; max-height: 75vh; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); padding: 16px; opacity: 0; visibility: hidden; transform: translateY(10px) scale(0.95); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; pointer-events: none;
-  }
-  &:hover {
-    .toc-trigger { opacity: 0; transform: scale(0.8); }
-    .toc-content-wrapper { opacity: 1; visibility: visible; transform: translateY(0) scale(1); pointer-events: auto; }
-  }
-  .toc-header { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
-  .toc-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 2px; &::-webkit-scrollbar { width: 4px; } &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; } }
-  .toc-item {
-    font-size: 13px; color: #64748b; cursor: pointer; padding: 6px 8px; border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: all 0.2s;
-    &:hover { background-color: #f1f5f9; color: #2563eb; }
-    &.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; }
-    &.level-1 { font-weight: 600; color: #334155; }
-    &.level-2 { padding-left: 18px; }
-    &.level-3 { padding-left: 30px; font-size: 12px; }
-  }
-}
-
-/* =========================================
-   2. Tippy & 容器样式
-   ========================================= */
-.tippy-box[data-theme~='light-border'] {
-  background-color: #fff; color: #333; border: 1px solid #eee; box-shadow: 0 4px 14px rgba(0,0,0,0.1); border-radius: 8px;
-  .tippy-content { padding: 0; }
-  .tippy-arrow { color: #fff; }
-}
-
 .editor-scroll-container { 
-  max-width: 100%; margin: 0 auto; padding: 40px 60px; min-height: 100%; background: #ffffff; position: relative; cursor: text; 
+  max-width: 100%; margin: 0 auto; padding: 40px 60px; min-height: 100%; 
+  background: #ffffff; position: relative; cursor: text; 
 }
+
 .doc-layout { position: relative; }
-.editor-header { margin-bottom: 40px; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 20px; }
-.title-field { width: 100%; font-size: 40px; font-weight: 700; border: none; outline: none; margin-bottom: 8px; color: #111; background: transparent; line-height: 1.2; &::placeholder { color: #e5e5e5; } }
-.meta-info { font-size: 12px; color: #999; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; .time-label { margin-right: 6px; opacity: 0.7; } }
+
+.editor-header { 
+  margin-bottom: 40px; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 20px; 
+}
+
+.title-field { 
+  width: 100%; font-size: 40px; font-weight: 700; border: none; outline: none; 
+  margin-bottom: 8px; color: #111; background: transparent; line-height: 1.2; 
+  &::placeholder { color: #e5e5e5; } 
+}
+
+.meta-info { 
+  font-size: 12px; color: #999; font-family: sans-serif;
+  .time-label { margin-right: 6px; opacity: 0.7; } 
+}
 
 /* =========================================
-   终极修复版：保留标题的折叠样式
+   2. Tiptap 编辑器核心渲染区 (ProseMirror)
    ========================================= */
 .ProseMirror { 
   outline: none; 
@@ -474,360 +452,255 @@ onBeforeUnmount(() => {
   margin-top: 20px; 
   padding-bottom: 30vh; 
 
-
-  /* =======================================================
-     🟢 优化：有序列表嵌套层级样式 (1. -> a. -> i.)
-     ======================================================= */
-  ol {
-    list-style-type: decimal; /* 第一级: 1, 2, 3 */
-    padding-left: 1.5rem;     /* 保证适当的缩进距离 */
-    
-    ol {
-      list-style-type: lower-alpha; /* 第二级: a, b, c */
-      margin-top: 4px;              /* 稍微紧凑一点 */
-      
-      ol {
-        list-style-type: lower-roman; /* 第三级: i, ii, iii */
-        
-        ol {
-          list-style-type: decimal; /* 第四级以上循环回数字 */
-        }
-      }
-    }
-  }
-
-  /* 顺手优化一下无序列表的嵌套展示 (实心圆 -> 空心圆 -> 方块) */
-  ul:not([data-type="taskList"]) {
-    list-style-type: disc;
-    padding-left: 1.5rem;
-
-    ul {
-      list-style-type: circle;
-      
-      ul {
-        list-style-type: square;
-      }
-    }
-  }
-
-
-
-
-
-
-  // 1. 标题层级
-  h1, h2, h3, h4, h5, h6 { scroll-margin-top: 140px; } 
-
-  // 2. 基础块元素交互 (保留你原本的悬停效果)
+  /* --- 块元素通用样式与悬停效果 --- */
   > * { 
     position: relative; 
-    transition: background-color 0.2s ease; 
+    transition: all 0.2s ease; 
     border-radius: 4px; 
     margin-left: -12px; 
     padding-left: 12px; 
     border-left: 3px solid transparent; 
   } 
+  
   > *:hover { 
     border-left-color: rgba(0, 0, 0, 0.08); 
     background-color: rgba(0, 0, 0, 0.01); 
-  } 
-
-  // 3. 选区与占位符
-  .ProseMirror-selectednode { outline: 2px solid #b4d5fe; background-color: transparent !important; } 
-  p.is-editor-empty:first-child::before { color: #9ca3af; content: attr(data-placeholder); float: left; height: 0; pointer-events: none; font-style: italic; opacity: 0.7; } 
-
-  // 4. 表格系统
-  table {
-    border-collapse: collapse; table-layout: fixed; width: 100%; margin: 0; overflow: hidden;
-    td, th { 
-      min-width: 1em; border: 2px solid #ced4da; padding: 3px 5px; vertical-align: top; box-sizing: border-box; position: relative; 
-      > * { margin-bottom: 0; } 
-    }
-    th { font-weight: bold; text-align: left; background-color: #f1f3f5; }
-    .selectedCell:after { z-index: 2; position: absolute; content: ""; left: 0; right: 0; top: 0; bottom: 0; background: rgba(200, 200, 255, 0.4); pointer-events: none; }
   }
 
-  /* =======================================================
-     🟢 核心修复：Details 节点 (折叠后保留标题)
-     ======================================================= */
-  .details-node { 
-    border: 1px solid #e2e8f0; 
-    border-radius: 6px; 
-    padding: 8px 12px; 
-    margin: 10px 0; 
-    background-color: #fbfbfa; 
-    transition: all 0.2s;
-    display: block !important;
-    user-select: text !important;
+  /* --- 选区与占位符 --- */
+  .ProseMirror-selectednode { 
+    outline: 2px solid #b4d5fe; 
+    background-color: rgba(180, 213, 254, 0.2) !important; 
+  } 
 
-    // 状态：折叠
-    &.is-closed {
-      background-color: #f8fafc;
-      
-      // 🔴 核心修复：只隐藏 summary 之后的兄弟节点
-      .details-content {
-        > *:not([data-type="summary"]) {
-          display: none !important;
+  p.is-editor-empty:first-child::before { 
+    color: #9ca3af; content: attr(data-placeholder); float: left; 
+    height: 0; pointer-events: none; font-style: italic; opacity: 0.7; 
+  }
+
+  /* --- 标题层级 --- */
+  h1, h2, h3, h4, h5, h6 { 
+    scroll-margin-top: 140px; 
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-weight: 700;
+  }
+
+  /* --- 列表嵌套布局 (1. -> a. -> i.) --- */
+  ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    ol { list-style-type: lower-alpha; 
+      ol { list-style-type: lower-roman; }
+    }
+  }
+
+  ul:not([data-type="taskList"]) {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    ul { list-style-type: circle; 
+      ul { list-style-type: square; }
+    }
+  }
+
+  /* =========================================
+     3. 任务列表 (TaskList) 专用样式
+     ========================================= */
+  ul[data-type="taskList"] {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 1rem 0 !important;
+
+    li {
+      display: flex !important;
+      align-items: flex-start !important;
+      margin-bottom: 0.5rem !important;
+      padding: 0 !important;
+      border-left: none !important;
+      background-color: transparent !important;
+
+      & > label {
+        flex: 0 0 auto !important;
+        width: 24px !important;
+        height: 28px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-right: 8px !important;
+        cursor: pointer;
+
+        input[type="checkbox"] {
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          width: 18px !important;
+          height: 18px !important;
+          border: 2px solid #cbd5e1 !important;
+          border-radius: 4px !important;
+          background-color: #fff !important;
+          cursor: pointer !important;
+          display: grid !important;
+          place-content: center !important;
+          transition: all 0.2s;
+
+          &:checked {
+            background-color: #2383e2 !important;
+            border-color: #2383e2 !important;
+            &::before {
+              content: "" !important; width: 10px; height: 10px; background-color: white;
+              clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+            }
+          }
         }
       }
-    }
 
-    // 状态：打开
-    &.is-open { 
-      background-color: #fff; 
-      border-color: #d1d5db; 
-      [data-type="summary"]::before { transform: rotate(90deg); }
-    } 
+      & > div {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        p { margin: 0 !important; line-height: 28px !important; display: block !important; }
+      }
 
-    // 标题行容器
-    [data-type="summary"] { 
-      font-weight: 600; 
-      cursor: pointer; 
-      color: #37352f; 
-      padding: 4px 0; 
-      display: flex !important;
-      align-items: center;
-      user-select: text !important;
-
-      &::before {
-        content: "▶";
-        font-size: 10px;
-        margin-right: 10px;
-        color: #9ca3af;
-        transition: transform 0.2s;
-        display: inline-block;
+      &[data-checked="true"] {
+        & > div { text-decoration: line-through !important; color: #94a3b8 !important; }
+        input[type="checkbox"] { background-color: #94a3b8 !important; border-color: #94a3b8 !important; }
       }
     }
-
-    // 内容布局缩进
-    .details-content { 
-      margin-top: 4px; 
-      > *:not([data-type="summary"]) {
-        margin-left: 14px;
-        padding-left: 14px;
-        border-left: 2px solid #f3f4f6;
-        color: #4b5563;
-      }
-    } 
   }
 
-    /* Summary 标题行渲染 */
-    .summary-node { 
-      font-weight: 600; 
-      cursor: pointer; 
-      color: #37352f; 
-      padding: 4px 0; 
-      display: flex !important;
-      align-items: center;
-      position: relative;
-      user-select: text !important;
+  /* =========================================
+     4. 高级自定义节点样式 (Details, Kanban, etc.)
+     ========================================= */
+  
+  /* 折叠详情节点 */
+  .details-node { 
+    border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; 
+    margin: 16px 0; background-color: #fbfbfa;
 
+    &.is-closed .details-content > *:not([data-type="summary"]) {
+      display: none !important;
+    }
+
+    [data-type="summary"], .summary-node { 
+      font-weight: 600; cursor: pointer; display: flex !important;
+      align-items: center; color: #37352f;
       &::before {
-        content: "▶";
-        font-size: 10px;
-        margin-right: 10px;
-        color: #9ca3af;
-        transition: transform 0.2s;
-        display: inline-block;
-        flex-shrink: 0;
+        content: "▶"; font-size: 10px; margin-right: 12px; color: #9ca3af;
+        transition: transform 0.2s; flex-shrink: 0;
       }
-
-      &:hover { color: #2383e2; &::before { color: #2383e2; } } 
+      &:hover { color: #2383e2; &::before { color: #2383e2; } }
     }
 
-    /* 旋转图标 */
-    &.is-open .summary-node::before {
-      transform: rotate(90deg);
-    }
-
-    /* 内容区域包装层 */
-    .details-content { 
-      margin-top: 8px; 
-      padding-left: 14px; 
-      border-left: 2px solid #f3f4f6; 
-      color: #4b5563; 
-      user-select: text !important;
-    } 
-  } 
-
-
-
-:deep(ul[data-type="taskList"]) {
-  list-style: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
-
-  li[data-type="taskItem"] {
-    /* 🔥 CSS Grid 布局：左侧固定 24px，右侧自适应 */
-    /* 这是最稳的布局，文字绝对不可能掉下来 */
-    display: grid !important;
-    grid-template-columns: 24px 1fr !important; 
-    gap: 0 !important;
-    align-items: start !important;
-    
-    margin-bottom: 0.5rem !important;
-    
-    /* 左侧：框 */
-    & > label {
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-      margin: 0 !important;
-      padding: 0 !important;
-      width: 100% !important;
-      height: 1.6em !important; /* 与文字行高对齐 */
-      user-select: none;
-    }
-
-    /* 右侧：字 */
-    & > div {
-      grid-column: 2 !important; 
-      min-width: 0 !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      
-      & > p {
-        margin: 0 !important;
-        padding: 0 !important;
-        line-height: 1.6 !important;
-        display: block !important;
-      }
-    }
-
-    /* 复选框 UI */
-    input[type="checkbox"] {
-      appearance: none !important;
-      -webkit-appearance: none !important;
+    &.is-open {
       background-color: #fff;
-      margin: 0 !important;
-      color: currentColor;
-      width: 1.15em !important;
-      height: 1.15em !important;
-      border: 2px solid #cbd5e1 !important;
-      border-radius: 4px;
-      display: grid;
-      place-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease-in-out;
+      [data-type="summary"]::before, .summary-node::before { transform: rotate(90deg); }
+    }
 
-      &::before {
-        content: ""; width: 0.65em; height: 0.65em;
-        transform: scale(0);
-        transition: 0.1s transform ease-in-out;
-        box-shadow: inset 1em 1em white;
-        transform-origin: center;
-        clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-      }
+    .details-content {
+      margin-top: 8px; padding-left: 14px; border-left: 2px solid #f3f4f6;
+    }
+  }
 
-      &:hover { border-color: #2383e2; background-color: #f0f9ff; }
-      &:checked { background-color: #2383e2; border-color: #2383e2; }
-      &:checked::before { transform: scale(1); }
+  /* 表格系统 */
+  table {
+    border-collapse: collapse; table-layout: fixed; width: 100%; margin: 16px 0; overflow: hidden;
+    td, th { 
+      min-width: 1em; border: 2px solid #ced4da; padding: 6px 10px; 
+      vertical-align: top; box-sizing: border-box; position: relative;
     }
-    
-    /* 完成状态 */
-    &[data-checked="true"] > div {
-      text-decoration: line-through; color: #94a3b8; transition: color 0.2s;
+    th { background-color: #f8f9fa; font-weight: bold; text-align: left; }
+    .selectedCell:after { 
+      z-index: 2; position: absolute; content: ""; left: 0; right: 0; top: 0; bottom: 0; 
+      background: rgba(200, 200, 255, 0.4); pointer-events: none; 
     }
-    &[data-checked="true"] input[type="checkbox"] {
-       opacity: 0.8; background-color: #94a3b8; border-color: #94a3b8;
-    }
+  }
+
+  /* 双链/提及样式 */
+  .internal-link {
+    background-color: rgba(35, 131, 226, 0.08);
+    color: #2383e2;
+    padding: 0 4px;
+    border-radius: 4px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(35, 131, 226, 0.2);
+    &:hover { background-color: rgba(35, 131, 226, 0.15); }
+  }
+
+  /* 图片样式 */
+  img {
+    max-width: 100%; height: auto; border-radius: 8px;
+    &.ProseMirror-selectednode { outline: 3px solid #2383e2; }
   }
 }
 
 /* =========================================
-   5. 其他页面元素
+   5. 侧边栏大纲与 UI 组件
    ========================================= */
-.backlinks-section { margin-top: 80px; border-top: 1px solid #eaeaea; padding-top: 24px; .section-title { font-size: 14px; font-weight: 600; color: #37352f; margin-bottom: 16px; text-transform: uppercase; } .backlink-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; } .backlink-card { padding: 12px 16px; border: 1px solid #eaeaea; border-radius: 6px; cursor: pointer; transition: all 0.2s; background: #fff; &:hover { border-color: #d4d4d4; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-1px); } .bl-title { font-size: 14px; color: #333; font-weight: 500; } } }
-.sync-indicator { position: fixed; bottom: 20px; right: 20px; font-size: 12px; color: #999; background: #fff; padding: 6px 12px; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); pointer-events: none; transition: all 0.3s; border: 1px solid #eee; &.is-syncing { color: #2383e2; border-color: #2383e2; } }
-.fade-in { animation: fadeIn 0.3s ease-in-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-</style>
+.toc-sidebar {
+  position: fixed; top: 200px; right: 30px; z-index: 1000;
+  display: flex; flex-direction: column; align-items: flex-end;
 
-<style>
-  /* 1. 选中容器 */
-  .ProseMirror ul[data-type="taskList"] {
-    list-style: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
+  .toc-trigger {
+    background: #fff; border: 1px solid #e2e8f0; padding: 10px 18px;
+    border-radius: 50px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    display: flex; align-items: center; gap: 8px;
+    .trigger-text { font-size: 14px; font-weight: 600; color: #475569; }
   }
 
-  /* 2. 选中 LI (不再依赖 data-type属性，直接选中子元素) */
-  .ProseMirror ul[data-type="taskList"] > li {
-    display: flex !important;       /* 核心：强制横向排列 */
-    flex-direction: row !important;
-    align-items: flex-start !important; /* 顶部对齐 */
-    margin-bottom: 8px !important;
-    position: relative !important;
+  .toc-content-wrapper {
+    position: absolute; top: 0; right: 0; width: 260px; max-height: 70vh;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 20px;
+    opacity: 0; visibility: hidden; transform: translateY(10px) scale(0.95);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex; flex-direction: column;
+
+    .toc-header { font-weight: 800; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+    .toc-list { overflow-y: auto; flex: 1; }
+    .toc-item {
+      padding: 8px; font-size: 13px; color: #64748b; cursor: pointer; border-radius: 6px;
+      &:hover { background: #f1f5f9; color: #2383e2; }
+      &.level-2 { padding-left: 20px; }
+      &.level-3 { padding-left: 35px; font-size: 12px; }
+      &.active { background: #eff6ff; color: #2383e2; font-weight: 700; }
+    }
   }
 
-  /* 3. 左侧 Label (复选框包裹层) */
-  .ProseMirror ul[data-type="taskList"] > li > label {
-    flex: 0 0 auto !important;      /* 固定宽度，不许缩放 */
-    margin-right: 8px !important;   /* 与文字的间距 */
-    user-select: none !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 20px !important;
-    height: 24px !important;        /* 高度与文字行高一致，确保垂直居中 */
-    margin-top: 2px !important;     /* 微调垂直位置 */
+  &:hover {
+    .toc-trigger { opacity: 0; pointer-events: none; }
+    .toc-content-wrapper { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
   }
+}
 
-  /* 4. 右侧文字容器 (截图里是 div > p) */
-  .ProseMirror ul[data-type="taskList"] > li > div {
-    flex: 1 1 auto !important;      /* 占满剩余空间 */
-    min-width: 0 !important;        /* 防止被撑爆 */
-    margin: 0 !important;
-    padding: 0 !important;
+/* 反向链接区域 */
+.backlinks-section {
+  margin-top: 80px; border-top: 1px solid #eaeaea; padding-top: 30px;
+  .section-title { font-size: 14px; font-weight: 700; color: #888; margin-bottom: 20px; }
+  .backlink-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .backlink-card { 
+    padding: 16px; border: 1px solid #eee; border-radius: 8px; 
+    cursor: pointer; background: #fff; transition: all 0.2s;
+    &:hover { border-color: #2383e2; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-2px); }
+    .bl-title { font-size: 14px; color: #333; font-weight: 600; }
   }
+}
 
-  /* 5. 💀 关键：杀掉 P 标签的 margin，防止错位 */
-  .ProseMirror ul[data-type="taskList"] > li > div > p {
-    margin: 0 !important;
-    padding: 0 !important;
-    line-height: 1.6 !important;
-    display: block !important;
-  }
+/* 同步状态指示器 */
+.sync-indicator {
+  position: fixed; bottom: 25px; right: 25px; font-size: 12px; 
+  padding: 8px 16px; background: #fff; border: 1px solid #eee; border-radius: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05); z-index: 100;
+  &.is-syncing { color: #2383e2; border-color: #2383e2; font-weight: 600; }
+}
 
-  /* 6. 复选框样式美化 */
-  .ProseMirror ul[data-type="taskList"] > li input[type="checkbox"] {
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    background-color: #fff !important;
-    margin: 0 !important;
-    width: 18px !important;
-    height: 18px !important;
-    border: 2px solid #cbd5e1 !important;
-    border-radius: 4px !important;
-    cursor: pointer !important;
-    display: grid !important;
-    place-content: center !important;
-  }
+/* Tippy 预览框 */
+.tippy-box[data-theme~='light-border'] {
+  background-color: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+  .tippy-content { padding: 0; }
+}
 
-  /* 勾选后的对勾 */
-  .ProseMirror ul[data-type="taskList"] > li input[type="checkbox"]::before {
-    content: "" !important;
-    width: 10px !important;
-    height: 10px !important;
-    transform: scale(0) !important;
-    transition: 0.1s transform ease-in-out !important;
-    box-shadow: inset 1em 1em white !important;
-    transform-origin: center !important;
-    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%) !important;
-  }
-
-  /* 选中状态 */
-  .ProseMirror ul[data-type="taskList"] > li input[type="checkbox"]:checked {
-    background-color: #2383e2 !important;
-    border-color: #2383e2 !important;
-  }
-  .ProseMirror ul[data-type="taskList"] > li input[type="checkbox"]:checked::before {
-    transform: scale(1) !important;
-  }
-
-  /* 7. 完成状态 (根据截图里的 data-checked="true/false") */
-  .ProseMirror ul[data-type="taskList"] > li[data-checked="true"] > div {
-    text-decoration: line-through !important;
-    color: #999 !important;
-  }
+/* 动画 */
+.fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 </style>

@@ -23,10 +23,7 @@
         </div>
       </footer>
 
-      <UniversalPublisherModal 
-        v-if="publisherStore.isOpen" 
-        @close="publisherStore.close" 
-      />
+      
     </div>
   </div> 
 </template>
@@ -37,12 +34,8 @@ import HeaderNav from './layouts/HeaderNav.vue'
 import { NAV_ITEMS } from './constants/navigation.js'
 import MobileWarning from './views/MobileWarning.vue'
 
-// ✅ 引入发布器组件与全局状态
-import UniversalPublisherModal from '@/Publisher/UniversalPublisherModal.vue'
-import { usePublisherStore } from '@/stores/publisher'
 
-// 初始化发布状态仓库
-const publisherStore = usePublisherStore()
+
 
 // 导航配置映射
 const navItems = ref(NAV_ITEMS)
