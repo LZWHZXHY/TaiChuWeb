@@ -4,8 +4,7 @@
       <HeaderNav
         :nav-items="navItems"
         :show-cta="true"
-        @nav-change="handleNavChange"
-        @user-action="handleUserAction"
+        
       />
 
       <MobileWarning />
@@ -23,7 +22,10 @@
         </div>
       </footer>
 
-      
+      <UltraPannel />   <!--新版超级终端 还在开发阶段-->
+
+
+
     </div>
   </div> 
 </template>
@@ -34,33 +36,18 @@ import HeaderNav from './layouts/HeaderNav.vue'
 import { NAV_ITEMS } from './constants/navigation.js'
 import MobileWarning from './views/MobileWarning.vue'
 
-
+import UltraPannel from './GeneralComponents/UltraPannel.vue'
 
 
 // 导航配置映射
 const navItems = ref(NAV_ITEMS)
 
-/**
- * 导航切换回调
- */
-const handleNavChange = (item) => { 
-  console.log('📡 系统信号：切换至路由 ->', item.path) 
-}
-
-/**
- * 用户交互动作回调
- */
-const handleUserAction = () => { 
-  console.log('🛡️ 拦截到用户操作指令') 
-}
 </script>
 
 <style scoped>
-/* 保持原有布局结构 */
 .BigContainer {
   width: 100%;
   height: 100vh;
-  /* 建议：正式发布时可将此绿色改为更符合深色模式的背景 */
   background-color: rgb(54, 192, 107);
   display: flex;
   flex-direction: column;
@@ -110,6 +97,21 @@ const handleUserAction = () => {
 
 .footer-content a:hover {
   color: #334155;
+}
+
+
+/* 假设手机端的阈值是 768px    在这个模式下，直接隐藏整个头部导航栏*/
+@media (max-width: 768px) {
+  /* 1. 直接选定 HeaderNav 组件对应的标签或类名进行隐藏 */
+  header, 
+  .header-nav-container { 
+    display: none !important; 
+  }
+
+  /* 2. 关键：把内容区的顶部间距清零，否则顶部会有一块 72px 的空白 */
+  .main-content {
+    margin-top: 0 !important;
+  }
 }
 
 

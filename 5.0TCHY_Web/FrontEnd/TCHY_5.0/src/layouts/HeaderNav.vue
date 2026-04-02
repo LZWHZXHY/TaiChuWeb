@@ -1,20 +1,24 @@
 <template>
   <header class="cyber-header">
-    <div class="header-decoration-line"></div>
-
+    
     <div class="nav-container">
       
-      <div class="logo-block" @click="navigateToHome">
-        <div class="logo-icon-box">
+      <div class="logo-block" @click="navigateToHome">  <!--这个地方是用来处理全页面跳转到首页的功能-->
+
+        <div class="logo-icon-box">                                 <!--logo的显示盒子-->
           <img src="/favicon.ico" class="logo-img" alt="LOGO">
         </div>
-        <div class="logo-text-group">
+
+        <div class="logo-text-group">                          <!-- logo右边的标题和子标题-->
           <span class="logo-main">太初寰宇</span>
+          
           <span class="logo-sub">社区 // {{ $t('HeaderNav.site_name') }}</span>
         </div>
+
       </div>
 
       <nav class="cyber-nav">
+        
         <template v-for="(item, index) in filteredNavItems" :key="item.path || item.name || index">
           
           <div
@@ -35,6 +39,7 @@
 
          
         </template>
+
       </nav>
 
       <div class="cyber-actions">
@@ -470,11 +475,7 @@ onUnmounted(() => {
 }
 
 
-.header-decoration-line {
-  height: 4px;
-  background: var(--ink-black);
-  width: 100%;
-}
+
 
 .header-bottom-border {
   position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: var(--ink-black);

@@ -4,6 +4,19 @@ import privacyText from './legal/privacy.en.js'
 
 
 export default {
+  UltraPannel:{
+    title:'UltraPannel',
+    home:'Home',
+    intro:'Intro',
+    workCenter:'Gallery',
+    blogCenter:'Blog',
+    postCenter:'Post',
+    mediaCenter:'Media',
+    chatCenter:'TXT',
+    feedback:'FeedBack',
+    wiki:'TC Wiki'
+
+  },
   HeaderNav: {
     login: 'Login',
     register: 'Register',

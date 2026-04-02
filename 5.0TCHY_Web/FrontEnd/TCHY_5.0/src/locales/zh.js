@@ -2,7 +2,32 @@
 import termsText from './legal/terms.zh.js'
 import privacyText from './legal/privacy.zh.js'
 
+
 export default{
+  UltraPannel:{
+    title:'超越终端面板',
+    home:'首页',
+    intro:'介绍',
+    workCenter:'展厅',
+    blogCenter:'博客',
+    postCenter:'帖子',
+    mediaCenter:'视频',
+    chatCenter:'太虚坛',
+    feedback:'反馈',
+    wiki:'寰宇百科',
+    creativeCenter:'创作中心',
+    profile:'个人中心',
+  },
+
+
+
+
+
+
+
+
+
+
     HeaderNav: {
     login: '登录',
     register: '注册',

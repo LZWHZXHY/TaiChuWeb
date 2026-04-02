@@ -853,5 +853,14 @@ onMounted(() => {
 }
 @media (max-width: 768px) {
   .project-grid { grid-template-columns: 1fr; }
+  .main-content{
+    max-width: 90%;
+  }
 }
+
+
+
+
+
+
 </style>
