@@ -50,7 +50,7 @@
             <h3>{{ currentSheetName }}</h3>
             <div class="sync-indicator" :class="{ 'warning': isLockedByOthers }">
               <span class="status-dot"></span>
-              {{ isLockedByOthers ? lockMessage : saveStatus }}
+              {{ isLockedByOthers ? '只读模式' : saveStatus }}
             </div>
           </div>
         </div>
@@ -65,25 +65,22 @@
         </div>
       </nav>
       
-      <div class="spreadsheet-container" :class="{ 'is-locked': isLockedByOthers }">
-        <div id="x-spreadsheet-demo" ref="sheetRef"></div>
-        
-        <div v-if="isLockedByOthers" class="lock-overlay">
-          <div class="lock-dialog">
-            <span class="lock-icon">🔒</span>
-            <h4>当前文档已被锁定</h4>
-            <p>{{ lockMessage }}</p>
-            <button class="btn-md-outline" @click="closeExcel">返回列表</button>
-          </div>
+      <div class="spreadsheet-container">
+        <div v-if="isLockedByOthers" class="readonly-banner">
+          <span class="banner-icon">👁️</span>
+          <p>
+            <strong>只读模式</strong> 
+            干员 {{ lockMessage.split('[')[1]?.split(']')[0] || '他人' }} 正在编辑，你目前仅拥有查看权限。
+          </p>
         </div>
+
+        <div id="x-spreadsheet-demo" ref="sheetRef"></div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// 这里保留你之前所有的脚本逻辑（fetchList, openExcel, tryAcquireLock, saveExcelData, startHeartbeat 等）
-// 逻辑一行不删，确保功能完美运行
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import Spreadsheet from 'x-data-spreadsheet'
 import 'x-data-spreadsheet/dist/xspreadsheet.css'
@@ -106,14 +103,18 @@ let lockTimer: any = null
 const fetchList = async () => {
   try {
     const res = await apiClient.get(`/projects/${props.projectId}/excels`)
-    // 🔥 关键修复：统一将后端可能的 Id 或 id 映射为前端用的 id
-    excelList.value = res.data.map((item: any) => ({
-      ...item,
-      id: item.Id || item.id,
-      name: item.Name || item.name,
-      updatedAt: item.UpdatedAt || item.updatedAt,
-      occupiedBy: item.OccupiedBy !== undefined ? item.OccupiedBy : item.occupiedBy
-    }))
+    const myUserId = parseInt(localStorage.getItem('userId') || '0') 
+    
+    excelList.value = res.data.map((item: any) => {
+      const occupiedId = item.OccupiedBy || item.occupiedBy
+      return {
+        ...item,
+        id: item.Id || item.id,
+        name: item.Name || item.name,
+        updatedAt: item.UpdatedAt || item.updatedAt,
+        occupiedBy: (occupiedId && occupiedId !== myUserId) ? occupiedId : null 
+      }
+    })
   } catch (e) { 
     console.error("获取列表失败", e) 
   }
@@ -154,38 +155,30 @@ const initSpreadsheet = () => {
 const loadExcelDetail = async () => {
   try {
     const res = await apiClient.get(`/excels/${currentExcelId.value}`)
-    console.log("从后端拿到的原始对象:", res.data)
-
-    // 🔥 关键修复：兼容后端返回的大写属性名 Id 和 Content
     const contentData = res.data.Content || res.data.content;
     
     if (contentData && contentData !== "[]") {
-      // x-spreadsheet 接收的是 Object，所以要 Parse
       const parsedData = JSON.parse(contentData);
-      console.log("解析后的 JSON 对象:", parsedData);
-      
       spreadsheetInstance.loadData(parsedData);
-      saveStatus.value = '🟢 数据同步完毕';
-    } else {
-      saveStatus.value = '🟢 这是一个新表格';
+      saveStatus.value = '已对齐最新数据';
     }
   } catch (e) { 
     console.error("加载详情失败", e);
-    saveStatus.value = '🔴 加载失败';
   }
 }
 
 const tryAcquireLock = async () => {
   try {
     await apiClient.post(`/excels/${currentExcelId.value}/lock`)
-    isLockedByOthers.value = false
-    spreadsheetInstance.setMode('edit')
+    isLockedByOthers.value = false 
+    lockMessage.value = "" 
+    if (spreadsheetInstance) spreadsheetInstance.setMode('edit')
     startHeartbeat()
   } catch (error: any) {
     if (error.response?.status === 423) {
       isLockedByOthers.value = true
-      lockMessage.value = error.response.data.message
-      spreadsheetInstance.setMode('read')
+      lockMessage.value = error.response.data.message || "他人正在编辑"
+      if (spreadsheetInstance) spreadsheetInstance.setMode('read')
     }
   }
 }
@@ -197,8 +190,8 @@ const startHeartbeat = () => {
       await apiClient.post(`/excels/${currentExcelId.value}/lock`)
     } catch (e) {
       isLockedByOthers.value = true
-      lockMessage.value = "登录已失效"
-      spreadsheetInstance.setMode('read')
+      lockMessage.value = "锁失效"
+      if (spreadsheetInstance) spreadsheetInstance.setMode('read')
       clearInterval(lockTimer)
     }
   }, 15000)
@@ -234,15 +227,14 @@ onBeforeUnmount(() => { if (lockTimer) clearInterval(lockTimer) })
 </script>
 
 <style scoped>
-/* 🌟 极简现代风格 CSS */
 .excel-manager-modern {
   height: 100%;
   background: #f8f9fa;
   color: #202124;
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
 }
 
-/* 列表头部 */
 .view-header {
   padding: 40px 60px;
   display: flex;
@@ -257,9 +249,7 @@ onBeforeUnmount(() => { if (lockTimer) clearInterval(lockTimer) })
   border-radius: 24px; font-weight: 500; cursor: pointer;
   box-shadow: 0 1px 3px rgba(60,64,67,0.3); transition: 0.2s;
 }
-.btn-md-primary:hover { box-shadow: 0 4px 8px rgba(60,64,67,0.3); background: #185abc; }
 
-/* 列表卡片 */
 .excel-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -285,7 +275,6 @@ onBeforeUnmount(() => { if (lockTimer) clearInterval(lockTimer) })
 .meta { font-size: 12px; color: #70757a; margin-top: 4px; display: flex; align-items: center; gap: 8px; }
 .status.busy { color: #d93025; font-weight: 500; }
 
-/* 编辑器 */
 .editor-nav {
   background: white; height: 64px; border-bottom: 1px solid #dadce0;
   display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
@@ -307,18 +296,38 @@ onBeforeUnmount(() => { if (lockTimer) clearInterval(lockTimer) })
   background: #1a73e8; color: white; border: none; padding: 8px 20px;
   border-radius: 4px; font-weight: 500; cursor: pointer;
 }
+.btn-md-save:disabled { background: #ccc; cursor: not-allowed; }
 
-/* 锁定状态 */
-.spreadsheet-container { position: relative; background: white; margin: 20px; border-radius: 8px; overflow: hidden; border: 1px solid #dadce0; }
-.is-locked { filter: grayscale(0.8); pointer-events: none; }
-.lock-overlay {
-  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; z-index: 100;
+/* 🌟 核心修改：只读 Banner 样式 */
+.spreadsheet-container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: white;
+  margin: 20px;
+  flex: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #dadce0;
 }
-.lock-dialog {
-  background: white; padding: 32px; border-radius: 8px; text-align: center;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15); border: 1px solid #dadce0;
+
+.readonly-banner {
+  background: #fff4e5;
+  color: #663c00;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #ffe2b3;
+  font-size: 13px;
 }
-.lock-icon { font-size: 40px; display: block; margin-bottom: 16px; }
-.btn-md-outline { border: 1px solid #dadce0; background: white; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 20px; }
+.readonly-banner strong { color: #e65100; margin-right: 4px; }
+.banner-icon { font-size: 16px; }
+
+#x-spreadsheet-demo {
+  flex: 1;
+}
+
+.empty-state { text-align: center; padding: 80px; color: #5f6368; }
+.empty-icon { font-size: 48px; margin-bottom: 16px; }
 </style>
