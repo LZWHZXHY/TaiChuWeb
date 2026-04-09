@@ -54,12 +54,14 @@
     "vue": "^3.5.22",
     "vue-i18n": "^11.2.8",
     "vue-router": "^4.6.3",
-    "vuedraggable": "^4.1.0"
+    "vuedraggable": "^4.1.0",
+    "x-data-spreadsheet": "^1.1.9"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
     "@vitejs/plugin-vue": "^6.0.1",
     "autoprefixer": "^10.4.27",
+    "less": "^4.6.4",
     "postcss": "^8.5.8",
     "sass-embedded": "^1.97.3",
     "tailwindcss": "^4.2.2",

@@ -22,6 +22,11 @@
             <button class="view-tab" :class="{ active: currentView === 'Resourse' }" @click="currentView = 'Resourse'">
               <span class="icon">📄</span> 资源
             </button>
+
+            <button class="view-tab" :class="{ active: currentView === 'excel' }" @click="currentView = 'excel'">
+              <span class="icon">📊</span> 云表格
+            </button>
+
           </div>
         </div>
       </div>
@@ -32,11 +37,25 @@
           <span>{{ stats.percentage }}% ({{ stats.done }}/{{ stats.total }})</span>
         </div>
 
-        <div class="avatar-group">
+        <div 
+          class="avatar-group" 
+          @click="showMemberManager = true" 
+          style="cursor:pointer; padding:4px; border-radius:16px; transition:0.2s;" 
+          onmouseover="this.style.background='#EBECF0'" 
+          onmouseout="this.style.background='transparent'" 
+          title="点击调度项目干员"
+        >
           <div class="avatar-ring" v-for="m in projectMembers.slice(0,5)" :key="m.userId">
             <UniversalAvatar :user-id="m.userId" :passed-avatar="m.avatar" :show-level="false" />
           </div>
+          <div class="avatar-ring" v-if="projectMembers.length > 5" style="background:#DFE1E6; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:#172B4D; z-index: 10;">
+            +{{ projectMembers.length - 5 }}
+          </div>
         </div>
+
+        <button class="icon-btn" @click="showRoleManager = true" title="角色与权限配置" style="margin-right: 12px;">
+          <span class="symbol">⚙️</span>
+        </button>
 
         <button class="icon-btn" @click="showAddMemberModal = true" title="招募项目干员" style="margin-right: 12px;">
           <span class="symbol">+👥</span>
@@ -48,7 +67,7 @@
         <button v-else-if="currentView === 'reports'" class="btn-primary" @click="triggerWriteReport">
           <span>+ 撰写汇报</span>
         </button>
-        </div>
+      </div>
     </header>
 
     <div class="main-content">
@@ -77,7 +96,27 @@
         :project-id="projectId" 
       />
 
+      <ProjectExcel 
+        v-if="currentView === 'excel'" 
+        :project-id="projectId" 
+      />
+
     </div>
+
+    <RolePermissionManager 
+      v-if="showRoleManager" 
+      :project-id="projectId"
+      @close="showRoleManager = false"
+      @roles-updated="fetchProjectRoles"
+    />
+
+    <ProjectMemberManager 
+      v-if="showMemberManager" 
+      :project-id="projectId"
+      @close="showMemberManager = false"
+      @members-updated="fetchProjectMembers"
+    />
+    
 
     <div v-if="showAddMemberModal" class="modal-overlay" @click.self="showAddMemberModal = false">
       <div class="modal-content cyber-modal">
@@ -102,11 +141,16 @@
           </div>
 
           <div class="form-group" v-if="availableOrgMembers.length > 0">
-            <label>授予项目权限</label>
-            <select v-model="selectedRole" class="cyber-select" required>
-              <option value="Admin">Admin (项目管理员)</option>
-              <option value="Member">Member (普通执行者)</option>
-              <option value="Viewer">Viewer (仅查看/观察者)</option>
+            <label>授予项目角色</label>
+            <select v-model="selectedRoleId" class="cyber-select" required>
+              <option :value="null" disabled>-- 请选择角色 --</option>
+              <option 
+                v-for="role in availableRoles" 
+                :key="role.id" 
+                :value="role.id"
+              >
+                {{ role.name }} <span v-if="role.description">({{ role.description }})</span>
+              </option>
             </select>
           </div>
 
@@ -132,28 +176,35 @@ import KanbanBoard from '@/ProjectComponents/KanbanBoard.vue'
 import ReportDashboard from '@/ProjectComponents/ReportDashboard.vue'
 import ProjectTimeline from '@/ProjectComponents/ProjectTimeline.vue'
 import ResourceBoard from '@/ProjectComponents/ResourceBoard.vue'
+// 🌟 引入我们刚刚写的权限矩阵组件
+import RolePermissionManager from '@/ProjectComponents/DetailComponents/RolePermissionManager.vue'
+import ProjectMemberManager from '@/ProjectComponents/DetailComponents/ProjectMemberManager.vue'
+
+
+import ProjectExcel from '@/ProjectComponents/ProjectExcel.vue'
 
 const route = useRoute()
 const router = useRouter()
 const projectId = route.params.id as string
-
+const showMemberManager = ref(false)
 const currentView = ref('board')
 const projectInfo = ref<any>({})
-const projectMembers = ref<any[]>([]) // 🌟 真正进入本项目的成员
-const orgMembers = ref<any[]>([])     // 🌟 整个组织的成员
+const projectMembers = ref<any[]>([]) 
+const orgMembers = ref<any[]>([])     
+const availableRoles = ref<any[]>([]) // 🌟 存放从后端拉取的自定义角色列表
 const stats = ref({ percentage: 0, done: 0, total: 0 })
 
 // 子组件引用
 const kanbanRef = ref<InstanceType<typeof KanbanBoard> | null>(null)
 const reportRef = ref<InstanceType<typeof ReportDashboard> | null>(null)
 
-// 🌟 UI 状态 (招募弹窗)
+// 🌟 UI 状态
 const showAddMemberModal = ref(false)
+const showRoleManager = ref(false) // 🌟 控制权限面板的开关
 const selectedUserId = ref<number | null>(null)
-const selectedRole = ref('Member')
+const selectedRoleId = ref<number | null>(null) // 🌟 改用 RoleId
 const isAdding = ref(false)
 
-// 🌟 计算属性：筛选出还没进这个项目的组织成员
 const availableOrgMembers = computed(() => {
   return orgMembers.value.filter(orgM => 
     !projectMembers.value.some(projM => projM.userId === orgM.userId)
@@ -166,13 +217,26 @@ const fetchProjectData = async () => {
     const res = await apiClient.get(`/projects/${projectId}`)
     projectInfo.value = { id: res.data.Id, name: res.data.Name, creatorName: res.data.CreatorName, orgId: res.data.OrganizationId }
     
-    // 🌟 分别拉取项目成员和组织成员
     fetchProjectMembers()
     fetchOrgMembers(res.data.OrganizationId)
+    fetchProjectRoles() // 🌟 初始化时拉取角色列表
   } catch (e) { console.error(e) }
 }
 
-// 🌟 获取本项目的成员 (替代原来的 fetchMembers)
+// 🌟 获取本项目的动态角色列表
+const fetchProjectRoles = async () => {
+  try {
+    const res = await apiClient.get(`/projects/${projectId}/roles`)
+    availableRoles.value = res.data
+    
+    // 默认选中 Member 角色
+    const defaultMemberRole = res.data.find((r: any) => r.name === 'Member')
+    if (defaultMemberRole) {
+      selectedRoleId.value = defaultMemberRole.id
+    }
+  } catch (e) { console.error(e) }
+}
+
 const fetchProjectMembers = async () => {
   try {
     const res = await apiClient.get(`/projects/${projectId}/members`)
@@ -185,7 +249,6 @@ const fetchProjectMembers = async () => {
   } catch (e) { console.error(e) }
 }
 
-// 🌟 获取整个组织的后备干员
 const fetchOrgMembers = async (orgId: number) => {
   try {
     const res = await apiClient.get(`/organizations/${orgId}/members`)
@@ -197,21 +260,23 @@ const fetchOrgMembers = async (orgId: number) => {
   } catch (e) { console.error(e) }
 }
 
-// 🌟 提交拉人请求
+// 🌟 提交拉人请求 (传 RoleId)
 const submitAddProjectMember = async () => {
-  if (!selectedUserId.value) return;
+  if (!selectedUserId.value || !selectedRoleId.value) return;
   isAdding.value = true;
   try {
     await apiClient.post(`/projects/${projectId}/members`, {
       UserId: selectedUserId.value,
-      RoleInProject: selectedRole.value
+      RoleId: selectedRoleId.value // 🔥 传数字 ID
     });
     
     showAddMemberModal.value = false;
     selectedUserId.value = null;
-    selectedRole.value = 'Member';
     
-    // 拉人成功后，重新刷新项目成员列表
+    // 重置默认角色
+    const defaultMemberRole = availableRoles.value.find((r: any) => r.name === 'Member')
+    selectedRoleId.value = defaultMemberRole ? defaultMemberRole.id : null;
+    
     await fetchProjectMembers();
   } catch (error: any) {
     console.error('分配失败:', error);

@@ -1,3 +1,4 @@
+<!--已整理-->
 <template>
   <div class="BigContainer">
     <div id="app">
@@ -35,7 +36,6 @@ import { ref } from 'vue'
 import HeaderNav from './layouts/HeaderNav.vue'
 import { NAV_ITEMS } from './constants/navigation.js'
 import MobileWarning from './views/MobileWarning.vue'
-
 import UltraPannel from './GeneralComponents/UltraPannel.vue'
 
 

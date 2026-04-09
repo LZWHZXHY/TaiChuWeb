@@ -32,8 +32,6 @@
 
             <span class="group-label group-margin">资源 / RESOURCE</span>
             <router-link to="/wiki" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.wiki') }}</router-link>
-
-            
             
           </nav>
         </main>
@@ -55,7 +53,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useI18n } from 'vue-i18n' 
+// import { useI18n } from 'vue-i18n' // 如果没用到 useI18n 的变量可以注释掉
 
 const isOpen = ref(false)
 const togglePanel = () => {
@@ -64,43 +62,69 @@ const togglePanel = () => {
 </script>
 
 <style scoped>
+/* --- 核心修复部分 --- */
 .ultra-wrapper {
   position: fixed;
   left: 0;
   top: 120px;
   z-index: 2000;
   font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  
+  /* 1. 关键修复：让整个包裹层不响应点击（穿透） */
+  pointer-events: none; 
 }
 
 .ultra-panel {
   display: flex;
   width: 220px; 
-  /* 调整为最小高度，随内容撑开 */
   min-height: 240px; 
-  max-height: 80vh; /* 防止面板过长超出屏幕 */
+  max-height: 80vh; 
   background: #ffffff;
   border: 1px solid #000;
   border-left: none;
-  transform: translateX(-100%);
+  /* 2. 稍微加大位移，确保连边框都彻底藏好 */
+  transform: translateX(calc(-100% - 2px)); 
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+
+  /* 3. 关键修复：面板显示时，内部需要恢复点击响应 */
+  pointer-events: auto; 
 }
 
 .open .ultra-panel {
   transform: translateX(0);
 }
 
+.trigger-handle {
+  position: absolute;
+  right: -24px;
+  top: 0;
+  width: 24px;
+  height: 60px;
+  background: #0a6e28;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+
+  /* 4. 关键修复：按钮必须恢复点击，否则点不到它 */
+  pointer-events: auto; 
+}
+
+/* --- 其余样式保持不变 --- */
 .panel-inner {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: 15px;
-  overflow-y: auto; /* 内容过多时可滚动 */
+  overflow-y: auto;
+  scrollbar-width: none; /* 火狐隐藏滚动条 */
 }
 
-/* 隐藏滚动条但保留功能 */
 .panel-inner::-webkit-scrollbar {
-  display: none;
+  display: none; /* Webkit 隐藏滚动条 */
 }
 
 .panel-header {
@@ -121,11 +145,10 @@ const togglePanel = () => {
   gap: 8px 8px;
 }
 
-/* --- 分组标题样式 --- */
 .group-label {
   grid-column: span 2;
   font-size: 9px;
-  color: #ccc; /* 极淡的颜色 */
+  color: #ccc;
   letter-spacing: 1px;
   margin-bottom: 2px;
   border-bottom: 1px solid #f5f5f5;
@@ -137,7 +160,6 @@ const togglePanel = () => {
   margin-top: 10px;
 }
 
-/* --- 导航项样式 --- */
 .nav-item {
   text-decoration: none;
   color: #000;
@@ -160,22 +182,6 @@ const togglePanel = () => {
   margin-top: 15px;
   font-size: 9px;
   color: #eee;
-}
-
-/* --- 按钮样式 --- */
-.trigger-handle {
-  position: absolute;
-  right: -24px;
-  top: 0;
-  width: 24px;
-  height: 60px;
-  background: #0a6e28;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
 }
 
 .handle-text {
