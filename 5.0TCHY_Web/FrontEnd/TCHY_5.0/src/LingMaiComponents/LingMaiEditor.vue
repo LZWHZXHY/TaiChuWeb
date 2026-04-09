@@ -89,7 +89,10 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import HeatmapNode from './HeatmapNode.js'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
+import ResizeImage from 'tiptap-extension-resize-image'
+
 import { BlockId } from './BlockId'
+
 // 找到第 91 行，修改为：
 import BlockEmbed from './BlockEmbedNode.js' // 将 BlockEmbedNode 改为 BlockEmbed
 
@@ -141,7 +144,7 @@ const editor = useEditor({
     }).configure({
       nested: true,
     }),
-    Image.configure({ inline: true }), 
+    ResizeImage.configure({ inline: false }), 
     Details, 
     Summary, 
     Table.configure({ resizable: true }),
