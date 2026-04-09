@@ -106,6 +106,7 @@ import Battlefield from '@/ArtCenter/Battlefield.vue';
 import CertificationPanel from '@/ArtCenter/CertificationPanel.vue';
 import WorldIpList from '@/ArtCenter/WorldIpList.vue';
 import OcList from '@/ArtCenter/OcList.vue';
+import ArtworkShowcase from '@/ArtCenter/ArtworkShowcase.vue';
 
 const route = useRoute();
 const router = useRouter();
