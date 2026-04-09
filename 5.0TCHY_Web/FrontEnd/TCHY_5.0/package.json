@@ -54,8 +54,7 @@
     "vue": "^3.5.22",
     "vue-i18n": "^11.2.8",
     "vue-router": "^4.6.3",
-    "vuedraggable": "^4.1.0",
-    "x-data-spreadsheet": "^1.1.9"
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",

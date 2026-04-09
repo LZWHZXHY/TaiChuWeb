@@ -16,6 +16,14 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
+    dedupe: [
+      'vue',
+      '@wendellhu/redi',
+      '@univerjs/core',
+      '@univerjs/design',
+      '@univerjs/engine-render',
+      '@univerjs/ui'
+    ]
   },
   build: {
     rollupOptions: {
