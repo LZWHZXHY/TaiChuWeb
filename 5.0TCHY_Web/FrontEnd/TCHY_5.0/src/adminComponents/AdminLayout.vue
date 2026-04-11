@@ -104,7 +104,8 @@ const items = ref([
   { id: 'updates', label: '更新日志', icon: '📝', hasTask: false },
   { id: 'rules', label: '社区规则', icon: '📜', hasTask: false },
   { id: 'feedback', label: '意见箱', icon: '📫', hasTask: false },
-  { id: 'calendar', label: '日历', icon: '📅', hasTask: false }
+  { id: 'calendar', label: '日历', icon: '📅', hasTask: false },
+  { id: 'MediaArchives', label: '作品推荐', icon:'', hasTask:false}
 ])
 
 const activeItem = computed(() => items.value.find(i => i.id === props.active))

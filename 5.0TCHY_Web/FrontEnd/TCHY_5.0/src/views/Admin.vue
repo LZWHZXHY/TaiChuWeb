@@ -74,6 +74,7 @@ import CalendarPanel from '@/adminComponents/CalendarPanel.vue'
 import MusicPanel from '@/adminComponents/MusicPanel.vue'
 import VideoReviewManager from '@/adminComponents/VideoReviewManager.vue'
 import TitleCreate from '@/adminComponents/TitleCreate.vue'
+import AdminMediaManager from '@/adminComponents/AdminMediaManager.vue'
 
 
 const activeTab = ref('review')
@@ -92,7 +93,8 @@ const map = {
   calendar: CalendarPanel,
   music:MusicPanel,
   video:VideoReviewManager,
-  title:TitleCreate
+  title:TitleCreate,
+  MediaArchives:AdminMediaManager
 }
 
 const currentComponent = computed(() => map[activeTab.value] || ReviewSocieties)

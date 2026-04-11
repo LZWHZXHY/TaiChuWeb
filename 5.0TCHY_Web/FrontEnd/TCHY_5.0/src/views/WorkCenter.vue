@@ -18,6 +18,11 @@
         <aside class="art-sidebar custom-scroll">
           <div class="sidebar-header">//频道选择</div>
           <nav class="channel-nav">
+
+            <div class="cyber-channel-btn" :class="{ active: currentChannel === 'showcase' }" @click="switchChannel('showcase')">
+              <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_00</span><span class="ch-name">精品！// SHOWCASE</span></div><div class="status-light"></div>
+            </div>
+
             <div class="cyber-channel-btn" :class="{ active: currentChannel === 'gallery' }" @click="switchChannel('gallery')">
               <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_01</span><span class="ch-name">寰宇画廊 // GALLERY</span></div><div class="status-light"></div>
             </div>
@@ -37,13 +42,16 @@
               <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_06</span><span class="ch-name">世界观收录 // WORLD</span></div><div class="status-light"></div>
             </div>
              <div class="cyber-channel-btn" :class="{ active: currentChannel === 'ocList' }" @click="switchChannel('ocList')">
-              <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_07</span><span class="ch-name">OC数据库</span></div><div class="status-light"></div>
+              <div class="btn-deco"></div><div class="btn-content"><span class="ch-code">CH_07</span><span class="ch-name">OC数据库 // OC_DB</span></div><div class="status-light"></div>
             </div>
           </nav>
 
           <div class="monitor-panel">
             <div class="panel-label"><span class="icon">▼</span> 数据统计</div>
             <div class="stat-grid">
+              <div class="stat-cell" @click="switchChannel('showcase')">
+                <div class="stat-label">精品收录</div><div class="stat-val">{{ Showcase }}</div><div class="stat-bar"><div class="fill" style="width: 20%"></div></div>
+              </div>
               <div class="stat-cell" @click="switchChannel('gallery')">
                 <div class="stat-label">艺术作品</div><div class="stat-val">{{ artAmount }}</div><div class="stat-bar"><div class="fill" style="width: 60%"></div></div>
               </div>
@@ -70,7 +78,8 @@
             
             <div class="component-renderer">
               <Transition name="glitch-fade" mode="out-in">
-                <ArtGallery v-if="currentChannel === 'gallery'" @refresh-stats="refreshGlobalStats" />
+                <ArtworkShowcase v-if="currentChannel === 'showcase'" />
+                <ArtGallery v-else-if="currentChannel === 'gallery'" @refresh-stats="refreshGlobalStats" />
                 <JointBoard v-else-if="currentChannel === 'joint'" />
                 <Battlefield v-else-if="currentChannel === 'battlefield'" />
                 <SocietyPanel v-else-if="currentChannel === 'society'" />
@@ -87,17 +96,9 @@
   </div>
 </template>
 
-
-
-
-
-
-
-
-
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'; 
-import { useRoute, useRouter } from 'vue-router'; // 🔥 引入路由钩子
+import { useRoute, useRouter } from 'vue-router'; 
 import apiClient from '@/utils/api'; 
 import ArtGallery from '@/ArtCenter/ArtGallery.vue'; 
 import JointBoard from '@/ArtCenter/UnionPanel.vue';
@@ -106,6 +107,7 @@ import Battlefield from '@/ArtCenter/Battlefield.vue';
 import CertificationPanel from '@/ArtCenter/CertificationPanel.vue';
 import WorldIpList from '@/ArtCenter/WorldIpList.vue';
 import OcList from '@/ArtCenter/OcList.vue';
+// 🔥 引入了精品组件
 import ArtworkShowcase from '@/ArtCenter/ArtworkShowcase.vue';
 
 const route = useRoute();
@@ -114,22 +116,21 @@ const router = useRouter();
 const currentTime = ref(new Date().toLocaleTimeString());
 let clockTimer = null;
 
-// 🔥 1. 初始化时优先读取 URL 参数
-const currentChannel = ref(route.query.tab || 'gallery');
+// 初始化时优先读取 URL 参数
+const currentChannel = ref(route.query.tab || 'showcase');
 
+const Showcase = ref(0); // 精品数量如果需要后端获取，也可以在此处绑定
 const artAmount = ref(0);
 const OCAmount = ref(0);
 const JointAmount = ref(0);
 const SocietyAmount = ref(0);
 const WorldAmount = ref(0);
 
-// 🔥 2. 切换频道的方法，同时更新 URL
 const switchChannel = (channelName) => {
   currentChannel.value = channelName;
   router.replace({ query: { ...route.query, tab: channelName } });
 };
 
-// 🔥 3. 监听 URL 变化（如果是通过外部链接跳转过来的，保证页面响应）
 watch(
   () => route.query.tab,
   (newTab) => {
@@ -147,6 +148,7 @@ const fetchTotalCount = async () => {
       apiClient.get('/Chai/stats/OCcount'),
       apiClient.get('/ChaiSheTuan/verified-count'),
       apiClient.get('/World/verified-count').catch(() => ({ status: 404, data: 0 }))
+      // 如果精品有数量接口，你可以在这里加一个请求给 Showcase.value 赋值
     ]);
     if (galleryRes.status === 200) artAmount.value = galleryRes.data;
     if (jointRes.status === 200) JointAmount.value = jointRes.data;
@@ -167,9 +169,9 @@ onUnmounted(() => clearInterval(clockTimer));
 </script>
 
 <style scoped>
+/* 原有的样式保持不变，没有改动 */
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
 
-/* --- 核心变量 --- */
 .art-industrial-system {
   --red: #D92323; --black: #111111; --white: #F4F1EA; --gray: #E0DDD5;
   --mono: 'JetBrains Mono', monospace; --heading: 'Anton', sans-serif;
@@ -191,13 +193,11 @@ onUnmounted(() => clearInterval(clockTimer));
 .time-display { font-weight: bold; font-size: 1.1rem; }
 .sys-id { color: #666; font-size: 0.7rem; }
 
-/* 主体区域 */
 .art-body { 
   flex: 1; 
   display: flex; 
-  overflow: hidden; /* 防止子元素撑开父级 */
-  min-height: 0;    /* Flex 溢出修复的关键 */
-
+  overflow: hidden; 
+  min-height: 0;    
 }
 
 .art-sidebar { 
@@ -211,12 +211,8 @@ onUnmounted(() => clearInterval(clockTimer));
   user-select: none;
   overflow: hidden; 
 }
-
-
   
 .sidebar-header { font-size: 0.7rem; color: #888; border-bottom: 2px dashed #ccc; margin-bottom: 15px; padding-bottom: 5px; }
-
-
 
 .channel-nav { 
   display: flex; 
@@ -240,7 +236,6 @@ onUnmounted(() => clearInterval(clockTimer));
 .status-light { width: 6px; height: 6px; border: 1px solid #999; background: #ccc; }
 .cyber-channel-btn.active .status-light { background: var(--red); border-color: var(--red); box-shadow: 0 0 5px var(--red); }
 
-
 .monitor-panel { 
   background: var(--black); 
   color: var(--white); 
@@ -248,7 +243,7 @@ onUnmounted(() => clearInterval(clockTimer));
   border: 2px solid var(--black); 
   box-shadow: 4px 4px 0 rgba(0,0,0,0.2); 
   margin-top: 15px; 
-  flex-shrink: 0; /* 🔥 禁止被压缩 */
+  flex-shrink: 0; 
 }
 
 .panel-label { font-size: 0.8rem; border-bottom: 1px dashed #555; padding-bottom: 5px; margin-bottom: 15px; color: var(--red); font-weight: bold; }
@@ -264,35 +259,31 @@ onUnmounted(() => clearInterval(clockTimer));
 .art-viewport {
   flex: 1;
   background: #fff;
-  padding: 30px; /* 如果需要内容顶格，可以调小这里 */
+  padding: 30px; 
   position: relative;
-  
-  /* 关键修改：禁止父级滚动 */
   overflow: hidden; 
   display: flex;
   flex-direction: column;
 }
 
-/* 确保中间的包装层也撑满高度，不让子组件“塌陷” */
 .view-frame {
-  flex: 1; /* 占据父级所有剩余空间 */
+  flex: 1; 
   width: 100%;
   position: relative;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* 内部继续锁定 */
-  padding-bottom: 0; /* 之前你写了 20px，建议改为 0，间距交给子组件 */
+  overflow: hidden; 
+  padding-bottom: 0; 
 }
 
 .component-renderer {
   flex: 1;
   width: 100%;
-  height: 100%; /* 确保高度继承 */
+  height: 100%; 
   display: flex;
   flex-direction: column;
 }
 
-/* 视口四角装饰 */
 .corner-tl, .corner-tr, .corner-bl, .corner-br { position: absolute; width: 20px; height: 20px; border: 4px solid var(--black); pointer-events: none; z-index: 10; }
 .corner-tl { top: -10px; left: -10px; border-right: none; border-bottom: none; }
 .corner-tr { top: -10px; right: -10px; border-left: none; border-bottom: none; }
@@ -303,35 +294,27 @@ onUnmounted(() => clearInterval(clockTimer));
 .glitch-fade-enter-active, .glitch-fade-leave-active { transition: opacity 0.3s ease, transform 0.3s ease; }
 .glitch-fade-enter-from { opacity: 0; transform: translateY(10px); }
 .glitch-fade-leave-to { opacity: 0; transform: translateY(-10px); }
+
 @media (max-height: 1080px) {
   .art-industrial-system { padding: 10px; }
-  
-  /* 增加高度利用率 */
   .art-container { height: 98vh; border-width: 3px; }
   .sys-header { height: 50px; }
-  
-  /* 侧边栏紧凑化 */
   .art-sidebar { width: 230px; padding: 10px; }
   .channel-nav { gap: 6px; }
   .cyber-channel-btn { padding: 8px 10px; }
   .ch-name { font-size: 0.8rem; }
-  
-  /* 统计面板压缩 */
   .monitor-panel { padding: 10px; }
-  .stat-grid { gap: 6px; } /* 缩小间距 */
+  .stat-grid { gap: 6px; } 
   .stat-val { font-size: 1.2rem; }
   .stat-label { font-size: 0.6rem; }
-  .sidebar-footer { display: none; } /* 空间不足时隐藏底部文字 */
-
-  /* 内容区留白减少 */
+  .sidebar-footer { display: none; } 
   .art-viewport { padding: 15px; }
-  
-  /* 四角装饰微调 */
   .corner-tl { top: -5px; left: -5px; width: 15px; height: 15px; border-width: 3px; }
   .corner-tr { top: -5px; right: -5px; width: 15px; height: 15px; border-width: 3px; }
   .corner-bl { bottom: -5px; left: -5px; width: 15px; height: 15px; border-width: 3px; }
   .corner-br { bottom: -5px; right: -5px; width: 15px; height: 15px; border-width: 3px; }
 }
+
 @media (max-width: 1024px) {
   .art-container { height: auto; min-height: 95vh; }
   .art-body { flex-direction: column; }

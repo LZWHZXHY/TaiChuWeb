@@ -70,6 +70,17 @@ const routes = [
       public: true
     }
   },
+
+  {
+    path:'/recommend',
+    name:'推荐',
+    component:()=>import('@/views/RecommendationNode.vue'),
+    meta:{
+      requiresAuth:false,
+      title:'推荐'
+    }
+  },
+
   {
     path: '/admin',
     name: '管理员页面',

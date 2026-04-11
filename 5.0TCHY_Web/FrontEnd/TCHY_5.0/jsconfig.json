@@ -2,13 +2,21 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
-    "moduleResolution": "Node",
-    "jsx": "preserve",
-    "checkJs": false,
-    "baseUrl": ".",
+
+    "moduleResolution": "Bundler", 
+
     "paths": {
       "@/*": ["./src/*"]
     },
+    
+    "jsx": "preserve",
+    "checkJs": false,
+    
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+
     "types": ["vite/client"]
   },
   "include": ["src"],

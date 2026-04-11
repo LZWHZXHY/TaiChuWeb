@@ -27,6 +27,7 @@
             <router-link to="/PostCenter" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.postCenter') }}</router-link>
             <router-link to="/ChatCenter" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.chatCenter') }}</router-link>
             <router-link to="/media" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.mediaCenter') }}</router-link>
+            <router-link to="/recommend" class="nav-item" @click="isOpen = false">推荐</router-link>
             
             <router-link to="/suggest" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.feedback') }}</router-link>
 
