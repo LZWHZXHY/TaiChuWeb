@@ -227,10 +227,15 @@ const fetchProjectData = async () => {
 const fetchProjectRoles = async () => {
   try {
     const res = await apiClient.get(`/projects/${projectId}/roles`)
-    availableRoles.value = res.data
+    // 手动映射字段，确保前端逻辑能读到 id 和 name
+    availableRoles.value = res.data.map((r: any) => ({
+      id: r.Id || r.id,
+      name: r.Name || r.name,
+      description: r.Description || r.description
+    }))
     
-    // 默认选中 Member 角色
-    const defaultMemberRole = res.data.find((r: any) => r.name === 'Member')
+    // 默认选中 Member (注意这里也要匹配大写 Name)
+    const defaultMemberRole = availableRoles.value.find((r: any) => r.name === 'Member')
     if (defaultMemberRole) {
       selectedRoleId.value = defaultMemberRole.id
     }
