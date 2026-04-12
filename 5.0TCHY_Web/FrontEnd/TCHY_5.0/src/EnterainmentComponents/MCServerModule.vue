@@ -138,7 +138,7 @@ const myMods = ref([
   {
     name: '太初寰宇难度调整模组',
     desc: '对原版的mod的一些游戏机制进行了调整',
-    cover: 'https://image2url.com/r2/default/images/1770446209300-40fe84df-c1f3-4970-8a8c-2d9b86cec491.png',
+    cover: '',
     mcbbs: 'https://www.mcmod.cn/', 
     modrinth: 'https://modrinth.com/mod/tchy_difficultyadjustment'
   }
@@ -153,7 +153,7 @@ const serverList = ref([
     ip2: '120.53.224.225:25565',
     version: 'Fabric 1.20.1',
     isOnline: true,
-    coverImage: 'https://image2url.com/r2/default/images/1768800240160-f79ab1ee-64bc-43da-9a51-7977301da6de.blob',
+    coverImage: '',
     downloadLinks: {
       modpack: { url: 'https://ug.link/TaiChuHuanYu/filemgr/share-download/?id=f98ee8ef3350405db3fd6fcb36a3a646', pwd: 'W1ST' },
       launcher: { url: 'https://ug.link/TaiChuHuanYu/filemgr/share-download/?id=5868d1b8cbde4907bc29d750fbbd3c25', pwd: 'mBT8' }
@@ -165,7 +165,7 @@ const serverList = ref([
     ip2: '',
     version: 'Forge 1.20.1',
     isOnline: true,
-    coverImage: 'https://image2url.com/r2/default/images/1769209536510-b6e46210-d3cd-4693-8adb-1d62a9450854.blob',
+    coverImage: '',
     downloadLinks: {
       modpack: { url: 'https://ug.link/TaiChuHuanYu/filemgr/share-download/?id=c7dac1dd2eb84a178416c47a2b4f7fe7', pwd: '3JY6' },
       launcher: { url: 'https://ug.link/TaiChuHuanYu/filemgr/share-download/?id=5868d1b8cbde4907bc29d750fbbd3c25', pwd: 'mBT8' }

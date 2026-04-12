@@ -3,7 +3,6 @@
   <div class="BigContainer">
     <div id="app">
       <HeaderNav
-        :nav-items="navItems"
         :show-cta="true"
         
       />
@@ -16,7 +15,7 @@
       
       <footer class="app-footer fixed-footer">
         <div class="footer-content">
-          <span>{{ $t('HeaderNav.site_name') }} © 2025</span>
+          <span>太初寰宇  © 2025</span>
           <a href="http://beian.miit.gov.cn" target="_blank" rel="noopener noreferrer">
             京ICP备2022020268号
           </a>
@@ -34,13 +33,9 @@
 <script setup>
 import { ref } from 'vue'
 import HeaderNav from './layouts/HeaderNav.vue'
-import { NAV_ITEMS } from './constants/navigation.js'
 import MobileWarning from './views/MobileWarning.vue'
 import UltraPannel from './GeneralComponents/UltraPannel.vue'
 
-
-// 导航配置映射
-const navItems = ref(NAV_ITEMS)
 
 </script>
 

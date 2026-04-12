@@ -227,7 +227,6 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import apiClient from '@/utils/api'
 import UniversalAvatar from '@/GeneralComponents/UserAvatar.vue'
 
-// 接收父组件传入的属性
 const props = defineProps<{
   projectId: string | string[],
   members: any[]
@@ -253,14 +252,34 @@ const newColumnName = ref('')
 const editingColId = ref<number | null>(null)
 const tempColName = ref('')
 
-const editingTask = reactive<any>({ assigneeIds: [] })
-const newTask = reactive({ title: '', categoryId: 1, priority: 'P2', status: '', assigneeIds: [] as number[], dueDate: '' })
+// 响应式对象统一字段
+const editingTask = reactive<any>({ 
+  id: null,
+  title: '',
+  description: '',
+  status: '',
+  priority: 'P2',
+  categoryId: 1,
+  assigneeIds: [],
+  dueDateFormatted: ''
+})
+
+const newTask = reactive({ 
+  title: '', 
+  categoryId: 1, 
+  priority: 'P2', 
+  status: '', 
+  assigneeIds: [] as number[], 
+  dueDate: '' 
+})
+
 const draggedTask = ref<any>(null)
 
-// --- 计算属性 ---
+// --- 计算属性 (修复字段读取) ---
 const boardData = computed(() => {
   const existingStatusList = columns.value.map(c => c.name);
   return columns.value.map((col, index) => {
+    // 统一读取 t.status
     const matchingTasks = rawTasks.value.filter(t => t.status === col.name);
     if (index === 0) {
       const orphanTasks = rawTasks.value.filter(t => !existingStatusList.includes(t.status));
@@ -282,97 +301,197 @@ const projectProgress = computed(() => {
   return Math.round((tasksCount.value.done / tasksCount.value.total) * 100)
 })
 
-// 监听进度变化，通知父组件 Header
 watch(projectProgress, (val) => {
   emit('update-progress', { percentage: val, count: tasksCount.value })
 }, { immediate: true })
 
-// --- API ---
+// --- API (映射全部改为小写) ---
 const fetchColumns = async () => {
   try {
     const res = await apiClient.get(`/columns/project/${props.projectId}`)
-    columns.value = res.data.map((c: any) => ({ id: c.Id, name: c.Name, isCompleted: c.IsCompleted }))
+    // 兼容 Id/id, Name/name
+    columns.value = res.data.map((c: any) => ({ 
+      id: c.id || c.Id, 
+      name: c.name || c.Name, 
+      isCompleted: c.isCompleted || c.IsCompleted 
+    }))
   } catch (e) { console.error(e) }
 }
+
 const fetchTasks = async () => {
   try {
     const res = await apiClient.get(`/projects/${props.projectId}/tasks`)
     rawTasks.value = res.data.map((t: any) => ({
-      id: t.Id, title: t.Title, description: t.Description, status: t.Status,
-      priority: t.Priority || 'P2', categoryId: t.CategoryId || 1, 
-      assigneeIds: t.AssigneeIds || [], dueDate: t.DueDate
+      id: t.id || t.Id, 
+      title: t.title || t.Title, 
+      description: t.description || t.Description, 
+      status: t.status || t.Status,
+      priority: t.priority || t.Priority || 'P2', 
+      categoryId: t.categoryId || t.CategoryId || 1, 
+      assigneeIds: t.assigneeIds || t.AssigneeIds || [], 
+      dueDate: t.dueDate || t.DueDate
     }))
   } catch (e) { console.error(e) }
 }
 
 // --- 动作 ---
-const openCreateModal = () => { newTask.status = columns.value[0]?.name || 'Todo'; showCreateTask.value = true }
-const quickAddTask = (s: string) => { newTask.status = s; showCreateTask.value = true }
+const openCreateModal = () => { 
+  newTask.status = columns.value[0]?.name || 'Todo'
+  showCreateTask.value = true 
+}
+const quickAddTask = (s: string) => { 
+  newTask.status = s
+  showCreateTask.value = true 
+}
 
 const submitCreateTask = async () => {
   if (!newTask.title.trim()) return
   isSaving.value = true
   try {
     await apiClient.post('/tasks', {
-      ProjectId: props.projectId, Title: newTask.title,
-      CategoryId: newTask.categoryId, Priority: newTask.priority,
-      Status: newTask.status, AssigneeIds: newTask.assigneeIds,
-      DueDate: newTask.dueDate ? new Date(newTask.dueDate) : null
+      projectId: props.projectId, 
+      title: newTask.title,
+      categoryId: newTask.categoryId, 
+      priority: newTask.priority,
+      status: newTask.status, 
+      assigneeIds: newTask.assigneeIds,
+      dueDate: newTask.dueDate ? new Date(newTask.dueDate) : null
     })
-    showCreateTask.value = false; newTask.title = ''; newTask.assigneeIds = []; newTask.dueDate = ''
+    showCreateTask.value = false; 
+    newTask.title = ''; 
+    newTask.assigneeIds = []; 
+    newTask.dueDate = ''
     await fetchTasks()
   } catch (e) { alert('发布失败') } finally { isSaving.value = false }
 }
 
 const saveTaskChanges = async () => {
+  if (!editingTask.id) return
   isSaving.value = true
   try {
     await apiClient.put(`/tasks/${editingTask.id}`, {
-      Title: editingTask.title, Description: editingTask.description,
-      Status: editingTask.status, Priority: editingTask.priority,
-      AssigneeIds: editingTask.assigneeIds, CategoryId: editingTask.categoryId,
-      DueDate: editingTask.dueDateFormatted ? new Date(editingTask.dueDateFormatted) : null
+      title: editingTask.title, 
+      description: editingTask.description,
+      status: editingTask.status, 
+      priority: editingTask.priority,
+      assigneeIds: editingTask.assigneeIds, 
+      categoryId: editingTask.categoryId,
+      dueDate: editingTask.dueDateFormatted ? new Date(editingTask.dueDateFormatted) : null
     })
-    await fetchTasks(); isDetailOpen.value = false
+    await fetchTasks(); 
+    isDetailOpen.value = false
   } catch(e) { alert('同步失败') } finally { isSaving.value = false }
 }
 
 const toggleAssignee = (uid: number) => { 
   if(!editingTask.assigneeIds) editingTask.assigneeIds = []
-  const idx = editingTask.assigneeIds.indexOf(uid); idx > -1 ? editingTask.assigneeIds.splice(idx,1) : editingTask.assigneeIds.push(uid) 
+  const idx = editingTask.assigneeIds.indexOf(uid); 
+  idx > -1 ? editingTask.assigneeIds.splice(idx,1) : editingTask.assigneeIds.push(uid) 
 }
+
 const toggleAssigneeInNewTask = (uid: number) => { 
-  const idx = newTask.assigneeIds.indexOf(uid); idx > -1 ? newTask.assigneeIds.splice(idx,1) : newTask.assigneeIds.push(uid) 
+  const idx = newTask.assigneeIds.indexOf(uid); 
+  idx > -1 ? newTask.assigneeIds.splice(idx,1) : newTask.assigneeIds.push(uid) 
 }
+
 const onDrop = async (e: any, status: string) => {
   if (!draggedTask.value || draggedTask.value.status === status) return
-  const old = draggedTask.value.status; draggedTask.value.status = status
-  try { await apiClient.put(`/tasks/${draggedTask.value.id}`, { Status: status }) } catch { draggedTask.value.status = old }
+  const oldStatus = draggedTask.value.status; 
+  const taskId = draggedTask.value.id;
+  
+  // 乐观更新 UI
+  draggedTask.value.status = status
+  
+  try { 
+    await apiClient.put(`/tasks/${taskId}`, { status: status }) 
+  } catch { 
+    draggedTask.value.status = oldStatus 
+  }
 }
+
 const onDragStart = (e: any, t: any) => { draggedTask.value = t }
-const editColumn = (col: any) => { editingColId.value = col.id; tempColName.value = col.name }
-const saveColumnName = async (col: any) => { await apiClient.put(`/columns/${col.id}`, { Name: tempColName.value, IsCompleted: col.isCompleted }); await fetchColumns(); editingColId.value = null }
-const toggleColumnDone = async (col: any) => { col.isCompleted = !col.isCompleted; await apiClient.put(`/columns/${col.id}`, { IsCompleted: col.isCompleted, Name: col.name }) }
-const deleteColumn = async (id: number) => { if(confirm('确定要删除这个阶段吗？')) { await apiClient.delete(`/columns/${id}`); fetchColumns() } }
-const submitNewColumn = async () => { if(!newColumnName.value) return; await apiClient.post('/columns', { ProjectId: props.projectId, Name: newColumnName.value }); newColumnName.value = ''; isAddingColumn.value = false; await fetchColumns() }
+
+const editColumn = (col: any) => { 
+  editingColId.value = col.id; 
+  tempColName.value = col.name 
+}
+
+const saveColumnName = async (col: any) => { 
+  await apiClient.put(`/columns/${col.id}`, { 
+    name: tempColName.value, 
+    isCompleted: col.isCompleted 
+  }); 
+  await fetchColumns(); 
+  editingColId.value = null 
+}
+
+const toggleColumnDone = async (col: any) => { 
+  col.isCompleted = !col.isCompleted; 
+  await apiClient.put(`/columns/${col.id}`, { 
+    isCompleted: col.isCompleted, 
+    name: col.name 
+  }) 
+}
+
+const deleteColumn = async (id: number) => { 
+  if(confirm('确定要删除这个阶段吗？')) { 
+    await apiClient.delete(`/columns/${id}`); 
+    fetchColumns() 
+  } 
+}
+
+const submitNewColumn = async () => { 
+  if(!newColumnName.value) return; 
+  await apiClient.post('/columns', { 
+    projectId: props.projectId, 
+    name: newColumnName.value 
+  }); 
+  newColumnName.value = ''; 
+  isAddingColumn.value = false; 
+  await fetchColumns() 
+}
+
 const openTaskDetail = (t: any) => { 
-  Object.assign(editingTask, JSON.parse(JSON.stringify(t))); 
-  editingTask.dueDateFormatted = t.dueDate ? t.dueDate.split('T')[0] : ''
+  // 深度克隆，防止修改时影响列表 UI
+  const clone = JSON.parse(JSON.stringify(t))
+  Object.assign(editingTask, clone); 
+  // 格式化日期给 <input type="date">
+  editingTask.dueDateFormatted = clone.dueDate ? clone.dueDate.split('T')[0] : ''
   isDetailOpen.value = true 
 }
+
 const closeDetail = () => isDetailOpen.value = false
-const deleteTask = async () => { if (confirm('确认删除此任务？该操作无法恢复。')) { await apiClient.delete(`/tasks/${editingTask.id}`); await fetchTasks(); isDetailOpen.value = false } }
+
+const deleteTask = async () => { 
+  if (confirm('确认删除此任务？该操作无法恢复。')) { 
+    await apiClient.delete(`/tasks/${editingTask.id}`); 
+    await fetchTasks(); 
+    isDetailOpen.value = false 
+  } 
+}
 
 // 格式化工具
 const getCategoryColor = (id: number) => categories.value.find(c => c.id === id)?.color || '#999'
 const getCategoryName = (id: number) => categories.value.find(c => c.id === id)?.name || 'General'
-const formatDateShort = (d: string) => { if(!d)return''; const da=new Date(d); return `${da.getMonth()+1}月${da.getDate()}日` }
-const isOverdue = (d: string) => { if(!d)return false; return new Date(d) < new Date() && new Date(d).toDateString() !== new Date().toDateString() }
+const formatDateShort = (d: string) => { 
+  if(!d) return ''; 
+  const da = new Date(d); 
+  return `${da.getMonth()+1}月${da.getDate()}日` 
+}
+const isOverdue = (d: string) => { 
+  if(!d) return false; 
+  const target = new Date(d);
+  const now = new Date();
+  return target < now && target.toDateString() !== now.toDateString() 
+}
 const vFocus = { mounted: (el: any) => el.focus() }
 
 defineExpose({ openCreateModal })
 
-onMounted(() => { fetchColumns(); fetchTasks() })
+onMounted(() => { 
+  fetchColumns(); 
+  fetchTasks() 
+})
 </script>
 
 <style scoped>

@@ -4,7 +4,7 @@
       class="node-row" 
       :style="{ paddingLeft: depth * 12 + 12 + 'px' }"
       :class="{ 
-        'is-active': activeId === item.Id,
+        'is-active': activeId === item.id,
         'is-drag-over': isDragOver 
       }"
       draggable="true"
@@ -15,26 +15,26 @@
       @dragleave="isDragOver = false"
     >
       <span class="ctrl-icon" @click.stop="toggleExpand">
-         <template v-if="item.Children && item.Children.length">
+         <template v-if="item.children && item.children.length">
            {{ isExpanded ? '▼' : '▶' }}
          </template>
          <template v-else>•</template>
       </span>
       
-      <span class="node-text" :title="item.Title">
-        {{ item.Title || '无标题页面' }}
+      <span class="node-text" :title="item.title">
+        {{ item.title || '无标题页面' }}
       </span>
       
       <div class="actions">
-        <button class="action-btn add" title="新建子页面" @click.stop="createSub(item.Id)">+</button>
-        <button class="action-btn del" title="删除页面" @click.stop="$emit('delete', item.Id)">🗑️</button>
+        <button class="action-btn add" title="新建子页面" @click.stop="createSub(item.id)">+</button>
+        <button class="action-btn del" title="删除页面" @click.stop="$emit('delete', item.id)">🗑️</button>
       </div>
     </div>
 
-    <div v-if="isExpanded && item.Children" class="node-children">
+    <div v-if="isExpanded && item.children" class="node-children">
       <SidebarItem
-        v-for="child in item.Children"
-        :key="child.Id" 
+        v-for="child in item.children"
+        :key="child.id" 
         :item="child"
         :depth="depth + 1"
         :active-id="activeId"
@@ -59,12 +59,14 @@ const emit = defineEmits(['select', 'refresh', 'delete', 'drag-start', 'drop-on'
 const isExpanded = ref(false)
 const isDragOver = ref(false)
 
-const handleNodeClick = () => { emit('select', props.item.Id) }
+// 修改：props.item.Id -> props.item.id
+const handleNodeClick = () => { emit('select', props.item.id) }
 const onChildSelect = (id) => { emit('select', id) }
 
 const onDragStart = (event) => {
   event.dataTransfer.effectAllowed = 'move'
-  event.dataTransfer.setData('text/plain', props.item.Id)
+  // 修改：props.item.Id -> props.item.id
+  event.dataTransfer.setData('text/plain', props.item.id)
   emit('drag-start', props.item)
 }
 
@@ -74,7 +76,8 @@ const onDrop = () => {
 }
 
 const toggleExpand = () => {
-  if (props.item.Children && props.item.Children.length) {
+  // 修改：props.item.Children -> props.item.children
+  if (props.item.children && props.item.children.length) {
     isExpanded.value = !isExpanded.value
   }
 }
@@ -89,6 +92,7 @@ const createSub = async (parentId) => {
 </script>
 
 <style lang="scss" scoped>
+/* 样式部分保持不变 */
 .node-row { 
   display: flex; align-items: center; padding: 6px 10px; cursor: pointer; font-size: 14px; color: #37352f; transition: background 0.1s; user-select: none; height: 32px; border-radius: 4px; margin: 1px 0;
   &:hover { background: #efefef; .actions { opacity: 1; } } 

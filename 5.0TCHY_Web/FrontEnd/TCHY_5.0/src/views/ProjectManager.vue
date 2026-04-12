@@ -222,16 +222,25 @@ import { useRouter } from 'vue-router'
 import apiClient from '@/utils/api'
 import { useAuthStore } from '@/utils/auth'
 
-// 🔥 引入你刚才创建的独立组件 (请根据你实际的路径调整)
+// 🔥 引入成员管理组件
 import OrgMemberModal from '@/ProjectComponents/OrgMemberModal.vue'
 
-// ================= 类型定义 =================
+// ================= 类型定义 (统一为小写) =================
 interface Organization {
-  id: number; name: string; slug: string; role?: string; 
+  id: number; 
+  name: string; 
+  slug: string; 
+  role?: string; 
 }
+
 interface Project {
-  id: number; name: string; description?: string; status: string; 
-  organizationId: number; type: string; progress: number; 
+  id: number; 
+  name: string; 
+  description?: string; 
+  status: string; 
+  organizationId: number; 
+  type: string; 
+  progress: number; 
 }
 
 // ================= 状态管理 =================
@@ -260,6 +269,7 @@ const inviteLoading = ref(false)
 const selectedInviteUser = ref<any>(null)
 let searchTimer: any = null
 
+// ================= 计算属性 =================
 const filteredProjects = computed(() => {
   if (!searchQuery.value) return projectList.value
   const q = searchQuery.value.toLowerCase()
@@ -272,94 +282,123 @@ const myRole = computed(() => {
 })
 
 // ================= 核心方法 =================
+
+/**
+ * 获取组织列表
+ */
 const fetchOrgs = async () => {
   loading.orgs = true
   try {
     const response = await apiClient.get<any[]>('/organizations') 
+    // 🔥 修复：完全使用小写访问后端属性
     orgList.value = response.data.map(item => ({
-      id: item.Id, 
-      name: item.Name, 
-      slug: item.Slug,
-      // 🔥 核心修复：直接读取后端的 Role (Owner/Admin/Member)，如果没有就给个保底的 Guest
-      role: item.Role || 'Guest' 
+      id: item.id, 
+      name: item.name, 
+      slug: item.slug,
+      role: item.role || 'Guest' 
     }))
 
     if (orgList.value.length > 0) {
-      const target = currentOrg.value ? orgList.value.find(o => o.id === currentOrg.value!.id) : orgList.value[0]
+      const target = currentOrg.value 
+        ? orgList.value.find(o => o.id === currentOrg.value!.id) 
+        : orgList.value[0]
       if (target) selectOrg(target)
     }
   } catch (error) { 
-    console.error('Fetch Orgs Error:', error) 
+    console.error('获取组织失败:', error) 
   } finally { 
     loading.orgs = false 
   }
 }
 
+/**
+ * 切换选中的组织
+ */
 const selectOrg = async (org: Organization) => {
   currentOrg.value = org
   await fetchProjects()
 }
 
+/**
+ * 获取当前组织下的项目列表
+ */
 const fetchProjects = async () => {
-  if (!currentOrg.value) return
+  if (!currentOrg.value || !currentOrg.value.id) return
   loading.projects = true
   try {
+    // 这里的 ID 现在一定是有效的数字，不再是 undefined
     const response = await apiClient.get<any[]>(`/organizations/${currentOrg.value.id}/projects`)
     projectList.value = response.data.map(p => ({
-      id: p.Id, name: p.Name, description: p.Description, status: p.Status || 'Active',
-      organizationId: p.OrganizationId, type: inferProjectType(p.Name),
+      id: p.id, 
+      name: p.name, 
+      description: p.description, 
+      status: p.status || 'Active',
+      organizationId: p.organizationId, 
+      type: inferProjectType(p.name),
       progress: Math.floor(Math.random() * 80) + 10 
     }))
-  } catch (error) { console.error('Fetch Projects Error:', error) } 
-  finally { loading.projects = false }
-}
-
-// 接收弹窗传来的事件：如果我在面板里给自己升降级了，实时更新外面的 UI 权限
-const handleMyRoleChanged = (newRole: string) => {
-  if (currentOrg.value) {
-    currentOrg.value.role = newRole;
+  } catch (error) { 
+    console.error('获取项目失败:', error)
+    projectList.value = [] 
+  } finally { 
+    loading.projects = false 
   }
 }
 
-// ================= 其他逻辑 =================
-const inferProjectType = (name: string) => { return 'general' }
-
+/**
+ * 创建新组织
+ */
 const createOrg = async () => {
   if (!newOrg.name || !newOrg.slug) return;
   creating.value = true;
   try {
     const response = await apiClient.post('/organizations', {
-      Name: newOrg.name, Slug: newOrg.slug
+      name: newOrg.name, 
+      slug: newOrg.slug
     });
+    // 🔥 修复：读取响应时也使用小写
     const newOrgData = {
-      id: response.data.Id, name: response.data.Name, slug: response.data.Slug, role: 'Owner'
+      id: response.data.id, 
+      name: response.data.name, 
+      slug: response.data.slug, 
+      role: 'Owner'
     };
     orgList.value.push(newOrgData);
     selectOrg(newOrgData);
     showCreateOrg.value = false;
     newOrg.name = ''; newOrg.slug = '';
-  } catch (error) {} finally { creating.value = false; }
+  } catch (error) {
+    console.error('创建组织失败', error)
+  } finally { 
+    creating.value = false; 
+  }
 };
 
+/**
+ * 初始化新项目
+ */
 const createProject = async () => {
   if (!currentOrg.value || !newProject.name) return;
   creating.value = true;
   try {
     await apiClient.post('/projects', {
-      Name: newProject.name, Description: newProject.description, OrganizationId: currentOrg.value.id 
+      name: newProject.name, 
+      description: newProject.description, 
+      organizationId: currentOrg.value.id 
     });
     await fetchProjects();
     showCreateProject.value = false;
     newProject.name = ''; newProject.description = '';
-  } catch (error) {} finally { creating.value = false; }
+  } catch (error) {
+    console.error('项目初始化失败', error)
+  } finally { 
+    creating.value = false; 
+  }
 };
 
-const openInviteModal = () => {
-  if (!currentOrg.value) return
-  inviteSearchQuery.value = ''; userSearchResults.value = []; selectedInviteUser.value = null;
-  showInviteMember.value = true
-}
-
+/**
+ * 成员搜索逻辑
+ */
 const handleSearchInput = () => {
   if (inviteSearchQuery.value.length < 2) { userSearchResults.value = []; return }
   if (searchTimer) clearTimeout(searchTimer)
@@ -368,28 +407,59 @@ const handleSearchInput = () => {
       const res = await apiClient.get<any[]>(`/organizations/${currentOrg.value?.id}/search-users`, {
         params: { query: inviteSearchQuery.value }
       })
+      // 🔥 修复：用户数据同样映射为小写
       userSearchResults.value = res.data.map(u => ({
-        id: u.Id || u.id, username: u.Username || u.username, avatar: u.Avatar || u.avatar, level: u.Level || u.level
+        id: u.id, 
+        username: u.username, 
+        avatar: u.avatar, 
+        level: u.level
       }))
-    } catch (e) {}
+    } catch (e) {
+      console.error('用户搜索失败', e)
+    }
   }, 300)
 }
 
-const selectInviteUser = (user: any) => {
-  inviteSearchQuery.value = user.username; selectedInviteUser.value = user; userSearchResults.value = []
-}
-
+/**
+ * 发送组织邀请
+ */
 const submitInvite = async () => {
   if (!currentOrg.value || !selectedInviteUser.value) return;
   inviteLoading.value = true;
   try {
     await apiClient.post(`/organizations/${currentOrg.value.id}/members`, {
-      TargetUsername: selectedInviteUser.value.username 
+      targetUsername: selectedInviteUser.value.username 
     });
-    showInviteMember.value = false; inviteSearchQuery.value = ''; selectedInviteUser.value = null;
+    showInviteMember.value = false; 
+    inviteSearchQuery.value = ''; 
+    selectedInviteUser.value = null;
+    alert('邀请发送成功');
   } catch (error: any) {
     alert(error.response?.data?.message || '邀请失败');
-  } finally { inviteLoading.value = false; }
+  } finally { 
+    inviteLoading.value = false; 
+  }
+}
+
+// ================= 辅助函数 =================
+const handleMyRoleChanged = (newRole: string) => {
+  if (currentOrg.value) currentOrg.value.role = newRole
+}
+
+const inferProjectType = (name: string) => 'general'
+
+const selectInviteUser = (user: any) => {
+  inviteSearchQuery.value = user.username
+  selectedInviteUser.value = user
+  userSearchResults.value = []
+}
+
+const openInviteModal = () => {
+  if (!currentOrg.value) return
+  inviteSearchQuery.value = ''
+  userSearchResults.value = []
+  selectedInviteUser.value = null
+  showInviteMember.value = true
 }
 
 const enterProject = (id: number) => router.push(`/projects/${id}`)

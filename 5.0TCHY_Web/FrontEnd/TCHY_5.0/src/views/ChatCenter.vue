@@ -20,7 +20,6 @@
 
         <div class="message-area" ref="messageAreaRef">
           <div class="message-list">
-            
             <template v-for="msg in messages" :key="msg.id">
               
               <div v-if="msg.type === 'system'" class="system-message">
@@ -52,7 +51,6 @@
               </div>
 
             </template>
-            
           </div>
         </div>
 
@@ -109,33 +107,31 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue'
 import apiClient from '@/utils/api.js' 
-import { useAuthStore } from '@/utils/auth.js'     // 请确保路径正确
-import { useOnlineStore } from '@/stores/online.js' // 请确保路径正确
+import { useAuthStore } from '@/utils/auth.js' 
+import { useOnlineStore } from '@/stores/online.js'
 
 const authStore = useAuthStore()
 const onlineStore = useOnlineStore()
 
-const roomId = 'taixu_inner' // 当前房间ID
+const roomId = 'taixu_inner' 
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
 const messageAreaRef = ref(null)
 const inputText = ref('')
 const messages = ref([])
 
-// 获取当前用户信息
+// ⚡ 修正：authStore 中的用户信息字段 (通常 store 中已经是小写)
 const currentUsername = computed(() => authStore.user?.username || '未知探索者')
 const currentUserAvatar = computed(() => {
-  return authStore.user?.profile?.avatarUrl || authStore.user?.avatar || defaultAvatar
+  return authStore.user?.avatar || authStore.user?.profile?.avatarUrl || defaultAvatar
 })
 
-// 时间格式化：将后端的 CreateTime 转换为 HH:mm 格式
 const formatTime = (timeStr) => {
   if (!timeStr) return ''
   const date = new Date(timeStr)
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
-// 自动滚动到底部
 const scrollToBottom = async () => {
   await nextTick()
   if (messageAreaRef.value) {
@@ -143,32 +139,32 @@ const scrollToBottom = async () => {
   }
 }
 
-// 1. 拉取历史消息 (对接 ChatMessageController)
+// 1. 拉取历史消息 (全量驼峰修正)
 const fetchHistory = async () => {
   try {
     const response = await apiClient.get('/ChatMessage/history', {
       params: { roomId }
     })
-    const payload = response.data || response
+    const payload = response.data
 
     if (payload.success && payload.data) {
       messages.value = payload.data.map((m, index) => ({
-        id: `hist_${index}`,
+        id: m.id || `hist_${index}`, // ⚡ 修正：m.id
         type: 'user', 
-        isMine: m.user?.username === currentUsername.value, // ✅ 匹配嵌套的 user.username
+        isMine: m.user?.username === currentUsername.value, // ⚡ 修正：m.user.username
         username: m.user?.username,
-        avatar: m.user?.avatar,
-        content: m.text, // ✅ 匹配后端的 text 字段
-        time: formatTime(m.time)
+        avatar: m.user?.avatar, // ⚡ 修正：m.user.avatar
+        content: m.text, // ⚡ 修正：m.text
+        time: formatTime(m.time) // ⚡ 修正：m.time
       }))
       scrollToBottom()
     }
-  } catch (error) { console.error('拉取历史记录失败:', error) }
+  } catch (error) { console.error('历史档案读取失败:', error) }
 }
 
-// 2. 配置 SignalR 监听 (对接 ChatHub)
+// 2. SignalR 实时监听 (全量驼峰修正)
 const setupSignalR = async () => {
-  // 等待连接对象就绪 (最多等待3秒)
+  // 等待连接建立
   let retry = 0;
   while (!onlineStore.chatConnection && retry < 6) {
     await new Promise(r => setTimeout(r, 500));
@@ -176,32 +172,29 @@ const setupSignalR = async () => {
   }
 
   const connection = onlineStore.chatConnection
-  if (!connection) {
-    console.warn('❌ 聊天链路未就绪')
-    return
-  }
+  if (!connection) return
 
-  // 监听入场系统广播
+  // 系统广播
   connection.on('ReceiveSystemMessage', (sysMsg) => {
     messages.value.push({ id: `sys_${Date.now()}`, type: 'system', content: sysMsg })
     scrollToBottom()
   })
 
-  // 监听实时消息
+  // 实时消息
   connection.on('ReceiveMessage', (msgObj) => {
+    // ⚡ 核心修正：msgObj 现在的属性都是小写开头
     messages.value.push({
-      id: `msg_${Date.now()}`,
+      id: msgObj.id || `msg_${Date.now()}`,
       type: 'user',
       isMine: msgObj.user?.username === currentUsername.value,
       username: msgObj.user?.username,
       avatar: msgObj.user?.avatar,
-      content: msgObj.text, // 后端广播的是 text
+      content: msgObj.text, 
       time: formatTime(msgObj.time)
     })
     scrollToBottom()
   })
 
-  // 加入房间
   if (connection.state === 'Connected') {
     await connection.invoke('JoinRoom', roomId, currentUsername.value)
   }
@@ -211,13 +204,14 @@ const sendMessage = async () => {
   const text = inputText.value.trim();
   if (!text) return;
 
-  const connection = onlineStore.chatConnection; // 👈 切换到聊天链路
+  const connection = onlineStore.chatConnection;
   if (!connection || connection.state !== 'Connected') {
-    console.error('❌ 发送失败：通讯链路未建立');
+    console.error('❌ 通讯链路中断');
     return;
   }
 
   try {
+    // 这里的参数名是传给后端的，通常不受返回驼峰影响，但建议保持一致
     await connection.invoke(
       'SendMessage', 
       roomId, 
@@ -227,24 +221,21 @@ const sendMessage = async () => {
     );
     inputText.value = '';
   } catch (error) {
-    console.error('❌ 消息发送异常:', error);
+    console.error('消息发射失败:', error);
   }
 }
 
 onMounted(async () => {
   const BASE_URL = window.location.hostname === 'localhost' ? 'https://localhost:44359' : 'https://bianyuzhou.com'
-  await onlineStore.startChatSignalR(BASE_URL) // 👈 确保聊天链路开启
+  await onlineStore.startChatSignalR(BASE_URL)
   await fetchHistory()
   setupSignalR()
 })
 
 onUnmounted(() => {
-  const connection = onlineStore.connection
+  const connection = onlineStore.chatConnection
   if (connection) {
-    // 离开房间
-    connection.invoke('LeaveRoom', roomId).catch(err => console.error(err))
-    
-    // 清理监听器防止内存泄漏
+    connection.invoke('LeaveRoom', roomId).catch(e => console.error(e))
     connection.off('ReceiveSystemMessage')
     connection.off('ReceiveMessage')
   }

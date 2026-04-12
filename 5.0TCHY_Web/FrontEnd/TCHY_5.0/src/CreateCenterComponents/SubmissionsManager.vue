@@ -117,17 +117,11 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import apiClient from '@/utils/api'
 import CyberTagInput from '@/GeneralComponents/CyberTagInput.vue'
+
+// --- 1. 基础状态 ---
 const loading = ref(false)
 const activeTab = ref('all')
 const submissions = ref([])
-
-// 🚀 编辑器状态，新增了 previewImages 数组
-const isEditing = ref(false)
-const editLoading = ref(false)
-const editForm = reactive({ 
-  id: null, type: '', title: '', content: '', desc: '', author: '', tags: '', 
-  previewImages: [] 
-})
 
 const tabs = [
   { label: '全部 // ALL', value: 'all' },
@@ -136,26 +130,43 @@ const tabs = [
   { label: '博客 // BLOG', value: 'blog' }
 ]
 
+// --- 2. 核心修复：添加漏掉的过滤逻辑 (解决 filteredList undefined 报错) ---
 const filteredList = computed(() => {
   if (activeTab.value === 'all') return submissions.value
   return submissions.value.filter(item => item.type === activeTab.value)
 })
 
+// --- 3. 编辑器状态 (全驼峰固定) ---
+const isEditing = ref(false)
+const editLoading = ref(false)
+const editForm = reactive({ 
+  id: null, 
+  type: '', 
+  title: '', 
+  content: '', 
+  desc: '', 
+  authorName: '', 
+  tags: '', 
+  previewImages: [] 
+})
+
+// --- 4. 数据转换逻辑 ---
 const normalizeData = (list, type) => {
   if (!Array.isArray(list)) return []; 
   return list.map(item => ({
-    id: item.Id || item.id, 
-    title: item.Title || item.title || item.post_title || "无标题档案",
+    id: item.id, 
+    title: item.title || "无标题档案",
     type: type,
-    status: item.Status ?? item.status ?? 0,
-    updatedAt: item.UpdateTime || item.uploadAt || item.createTime,
-    views: item.ViewCount || item.views || 0,
-    comments: item.CommentCount || 0,
-    excerpt: item.content ? item.content.substring(0, 50) + '...' : "暂无摘要", 
-    cover: item.CoverImage || item.imageUrl || item.url || (item.images && item.images.length > 0 ? item.images[0] : null)
+    status: item.status ?? 0,
+    updatedAt: item.updateTime, 
+    views: item.viewCount ?? 0,
+    comments: item.commentCount ?? 0,
+    excerpt: (item.summary || item.content || "").substring(0, 50) + (item.summary || item.content ? '...' : '暂无摘要'), 
+    cover: item.coverImage || item.url || (item.images && item.images.length > 0 ? item.images[0] : null)
   }))
 }
 
+// --- 5. API 请求逻辑 ---
 const fetchAll = async () => {
   try {
     const [postRes, artRes, blogRes] = await Promise.allSettled([
@@ -181,24 +192,20 @@ const fetchAll = async () => {
 
 const fetchSubmissions = async () => {
   loading.value = true;
-  submissions.value = [];
   try {
     if (activeTab.value === 'all') {
       await fetchAll();
       return;
     }
-
     let endpoint = '';
     switch (activeTab.value) {
       case 'post': endpoint = 'ThePost/my-posts'; break;
       case 'art': endpoint = 'Drawing/my-drawings'; break;
       case 'blog': endpoint = 'Blog/my-articles'; break;
     }
-
     const res = await apiClient.get(endpoint);
     let rawData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
     submissions.value = normalizeData(rawData, activeTab.value);
-    
   } catch (e) {
     console.error("同步分类数据失败", e);
   } finally {
@@ -210,78 +217,60 @@ watch(activeTab, () => {
   fetchSubmissions();
 });
 
+// --- 6. 辅助函数 ---
 const statusClass = (s) => ({ 0: 's-pending', 1: 's-active', 2: 's-rejected' }[s] || 's-pending')
 const formatDate = (d) => d ? String(d).substring(0, 10) : 'N/A'
 
-// =====================================
-// 🚀 核心逻辑：编辑功能
-// =====================================
-
+// --- 7. 编辑功能 ---
 const editItem = async (item) => {
   if (item.type === 'blog') {
-    alert(`// TODO: 深度博客将跳转至独立的富文本编辑页，ID: ${item.id}`)
+    alert(`// TODO: 博客跳转至独立页 ID: ${item.id}`)
     return;
   }
-
   isEditing.value = true;
   editLoading.value = true;
   editForm.id = item.id;
   editForm.type = item.type;
-  // 清理上一张图的残留
   editForm.previewImages = [];
 
   try {
-    // 拉取完整数据进行回显
     const endpoint = item.type === 'post' ? `/ThePost/${item.id}` : `/Drawing/${item.id}`;
     const res = await apiClient.get(endpoint);
     const data = res.data.data;
 
-    // 🚀 填充表单，包含图片提取逻辑
+    editForm.title = data.title;
+    editForm.tags = Array.isArray(data.tags) ? data.tags.join(',') : (data.tags || '');
+
     if (item.type === 'post') {
-      editForm.title = data.post_title || data.title;
       editForm.content = data.content;
-      editForm.tags = Array.isArray(data.tags) ? data.tags.join(',') : (data.tags || '');
-      editForm.previewImages = data.images || []; 
+      editForm.previewImages = data.images || (data.coverImage ? [data.coverImage] : []); 
     } else if (item.type === 'art') {
-      editForm.title = data.title;
       editForm.desc = data.desc;
-      editForm.author = data.userName || data.authorName;
-      editForm.tags = data.tags || '';
-      editForm.previewImages = data.url ? [data.url] : (data.imageUrl ? [data.imageUrl] : []);
+      editForm.authorName = data.authorName || data.userName;
+      editForm.previewImages = data.coverImage ? [data.coverImage] : (data.url ? [data.url] : []);
     }
   } catch (e) {
-    alert("档案拉取失败，数据可能已被清除。");
+    alert("档案拉取失败");
     isEditing.value = false;
   } finally {
     editLoading.value = false;
   }
 }
 
-// 提交编辑数据
 const submitEdit = async () => {
   try {
     const endpoint = editForm.type === 'post' ? `/ThePost/${editForm.id}` : `/Drawing/${editForm.id}`;
-    
-    // 组装 PUT 请求负载
-    const payload = {
-      Title: editForm.title,
-      Tags: editForm.tags
-    };
-
+    const payload = { title: editForm.title, tags: editForm.tags };
     if (editForm.type === 'post') {
-      payload.Content = editForm.content;
+      payload.content = editForm.content;
     } else {
-      payload.Desc = editForm.desc;
-      payload.AuthorName = editForm.author;
+      payload.desc = editForm.desc;
+      payload.authorName = editForm.authorName;
     }
-
     await apiClient.put(endpoint, payload);
-    
     alert("档案覆写成功！");
     isEditing.value = false;
-    
     fetchSubmissions();
-
   } catch (e) {
     alert(`覆写失败: ${e.response?.data?.message || '服务器拒绝连接'}`);
   }
@@ -290,30 +279,23 @@ const submitEdit = async () => {
 const toggleStatus = async (item) => {
   const newStatus = item.status === 0 ? 1 : 0; 
   try {
-    let url = '';
-    if (item.type === 'post') url = `ThePost/status/${item.id}`;
-    else if (item.type === 'art') url = `Drawing/status/${item.id}`;
-    else if (item.type === 'blog') return alert("请进入EDIT模式修改状态");
-
+    let url = item.type === 'post' ? `ThePost/status/${item.id}` : `Drawing/status/${item.id}`;
+    if (item.type === 'blog') return alert("请进入详细编辑模式");
     await apiClient.put(url, { status: newStatus });
     item.status = newStatus; 
   } catch (e) {
-    alert("状态同步指令遭到拦截");
+    alert("状态同步失败");
   }
 }
 
 const deleteItem = async (item) => {
-  if (!confirm(`警告：确定要将该 ${item.type.toUpperCase()} 记录从矩阵中永久抹除吗？此操作不可逆。`)) return;
+  if (!confirm(`警告：确定要永久抹除该记录吗？`)) return;
   try {
-    let url = '';
-    if (item.type === 'post') url = `ThePost/${item.id}`;
-    else if (item.type === 'art') url = `Drawing/${item.id}`;
-    else if (item.type === 'blog') url = `Blog/articles/${item.id}`;
-
+    let url = item.type === 'post' ? `ThePost/${item.id}` : item.type === 'art' ? `Drawing/${item.id}` : `Blog/articles/${item.id}`;
     await apiClient.delete(url);
     submissions.value = submissions.value.filter(s => s.id !== item.id);
   } catch (e) {
-    alert("数据抹除指令执行失败");
+    alert("抹除指令执行失败");
   }
 }
 

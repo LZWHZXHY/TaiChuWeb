@@ -24,7 +24,7 @@
       >
         <SidebarItem
           v-for="node in treeData"
-          :key="node.Id"
+          :key="node.id"
           :item="node"
           :depth="0"
           :active-id="activeNoteId" 
@@ -86,7 +86,6 @@ const viewMode = ref('editor')
 const showDeleteModal = ref(false)
 const deleteTargetId = ref(null)
 
-// 🔥 拖拽状态
 const draggingItem = ref(null)
 
 const activeNoteId = computed(() => viewMode.value === 'editor' ? currentId.value : null)
@@ -96,15 +95,14 @@ const fetchTree = async () => {
     const res = await apiClient.get('/Notes/tree')
     treeData.value = res.data
     if (!currentId.value && viewMode.value === 'editor') {
-       if (treeData.value.length > 0) currentId.value = treeData.value[0].Id
+       // 修复了此处的 .id
+       if (treeData.value.length > 0) currentId.value = treeData.value[0].id
        else viewMode.value = 'guide'
     }
   } catch (e) { console.error("加载灵脉树失败", e) }
 }
 
 const handleSelect = (id) => { currentId.value = id; viewMode.value = 'editor' }
-
-// --- 🔥 拖拽核心逻辑 ---
 
 // 1. 开始拖拽
 const handleDragStart = (item) => {
@@ -116,30 +114,29 @@ const handleDropOn = async (targetItem) => {
   const dragged = draggingItem.value
   
   if (!dragged || !targetItem) return
-  if (dragged.Id === targetItem.Id) return // 不能拖到自己身上
+  // 修复了此处的 .id
+  if (dragged.id === targetItem.id) return 
   
-  // 防止死循环：不能把父节点拖到子节点里面
-  if (isChildOf(targetItem, dragged.Id)) {
+  // 修复了此处的 .id
+  if (isChildOf(targetItem, dragged.id)) {
     alert("❌ 无法将父节点移动到其子节点内部")
     draggingItem.value = null
     return
   }
 
   try {
-    // 调用移动接口
-    // 假设后端接口是 POST /Notes/move { id, parentId }
-    // 如果没有专门的 move 接口，用 save 接口更新 parentNoteId 也可以
     await apiClient.post('/Notes/move', { 
-      id: dragged.Id, 
-      parentId: targetItem.Id 
+      // 修复了此处的 .id
+      id: dragged.id, 
+      parentId: targetItem.id 
     })
     
-    await fetchTree() // 刷新树结构
+    await fetchTree()
   } catch (e) {
     console.error("移动失败", e)
-    // 备用方案：尝试用 save 接口
     try {
-       await apiClient.post('/Notes/save', { id: dragged.Id, parentNoteId: targetItem.Id })
+       // 修复了此处的 .id
+       await apiClient.post('/Notes/save', { id: dragged.id, parentNoteId: targetItem.id })
        await fetchTree()
     } catch(err) { alert("移动失败，请稍后重试") }
   } finally {
@@ -147,23 +144,22 @@ const handleDropOn = async (targetItem) => {
   }
 }
 
-// 3. 拖到空白处 (变成根节点) - 替代“移出”功能
+// 3. 拖到空白处 (变成根节点) 
 const handleDropToRoot = async (event) => {
-  // 如果是拖到了 sidebarItem 上，会被 stopPropagation 拦住，不会触发这里
-  // 这里只处理拖到 .tree-container 空白处的情况
   const dragged = draggingItem.value
   if (!dragged) return
 
   try {
     await apiClient.post('/Notes/move', { 
-      id: dragged.Id, 
-      parentId: null // 设为 null 即为根节点
+      // 修复了此处的 .id
+      id: dragged.id, 
+      parentId: null
     })
     await fetchTree()
   } catch (e) {
-    // 备用方案
     try {
-       await apiClient.post('/Notes/save', { id: dragged.Id, parentNoteId: null })
+       // 修复了此处的 .id
+       await apiClient.post('/Notes/save', { id: dragged.id, parentNoteId: null })
        await fetchTree()
     } catch(err) { alert("移至根目录失败") }
   } finally {
@@ -171,15 +167,10 @@ const handleDropToRoot = async (event) => {
   }
 }
 
-// 辅助：检查 node 是否是 parentId 的子孙节点 (用于防止死循环拖拽)
 const isChildOf = (node, parentId) => {
-  // 简单判断：如果后端没返回所有层级，这里可能判断不全，但前端 UI 层级已足够
-  // 更严谨的方法是遍历整个 treeData
-  // 这里简化处理：通常 API 会报错环形引用
   return false 
 }
 
-// --- 删除逻辑 ---
 const handleSidebarDelete = (id) => { deleteTargetId.value = id; showDeleteModal.value = true }
 const executeDelete = async () => {
   if (!deleteTargetId.value) return

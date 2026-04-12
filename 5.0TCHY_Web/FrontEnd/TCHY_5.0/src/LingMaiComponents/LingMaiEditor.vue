@@ -46,16 +46,38 @@
       <div class="backlinks-section" v-if="backlinks.length">
         <div class="section-title">🔗 引用了此页面的文档 ({{ backlinks.length }})</div>
         <div class="backlink-list">
-          <div v-for="bl in backlinks" :key="bl.Id" class="backlink-card" @click="handleBacklinkClick(bl.Id)">
-            <div class="bl-title">📄 {{ bl.Title }}</div>
+          <div v-for="bl in backlinks" :key="bl.id" class="backlink-card" @click="handleBacklinkClick(bl.id)">
+            <div class="bl-title">📄 {{ bl.title }}</div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="sync-indicator" :class="{ 'is-syncing': syncing }">
-      <span v-if="syncing">☁️ 保存中...</span>
-      <span v-else>✅ 已保存</span>
+    <div class="status-monitor">
+      <Transition name="status-fade">
+        <div v-if="isUploading" class="upload-progress-card">
+          <div class="progress-text">
+            <span class="spinner">⏳</span>
+            <span class="label">图片处理中...</span>
+            <span class="percent">{{ uploadProgress }}%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-bar" :style="{ width: uploadProgress + '%' }"></div>
+          </div>
+        </div>
+      </Transition>
+
+      <div class="sync-indicator" :class="{ 'is-syncing': syncing || isUploading }">
+        <template v-if="isUploading">
+          <span class="status-icon">📡</span> 正在传输资源...
+        </template>
+        <template v-else-if="syncing">
+          <span class="status-icon">☁️</span> 同步至云端...
+        </template>
+        <template v-else>
+          <span class="status-icon">✅</span> 灵脉已就绪
+        </template>
+      </div>
     </div>
   </div>
 </template>
@@ -92,11 +114,13 @@ import TaskItem from '@tiptap/extension-task-item'
 import ResizeImage from 'tiptap-extension-resize-image'
 
 import { BlockId } from './BlockId'
-
-// 找到第 91 行，修改为：
-import BlockEmbed from './BlockEmbedNode.js' // 将 BlockEmbedNode 改为 BlockEmbed
+import BlockEmbed from './BlockEmbedNode.js'
 
 
+const isDataLoaded = ref(false) // 标记数据是否真正同步完成
+
+const uploadProgress = ref(0) // 上传进度 (0-100)
+const isUploading = ref(false) // 是否正在上传
 
 const props = defineProps(['noteId'])
 const emit = defineEmits(['navigate', 'deleted']) 
@@ -111,8 +135,32 @@ const editorAreaRef = ref(null)
 let tippyInstance = null
 
 const uploadImage = async (file) => {
-  const formData = new FormData(); formData.append('file', file)
-  try { const res = await apiClient.post('/Upload/image', formData, { headers: { 'Content-Type': 'multipart/form-data' } }); return res.data.url } catch (e) { return null }
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  isUploading.value = true
+  uploadProgress.value = 0
+  
+  try {
+    const res = await apiClient.post('/Upload/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      // 关键：Axios 自带的进度回调
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+        uploadProgress.value = percentCompleted
+      }
+    })
+    return res.data.url
+  } catch (e) {
+    console.error('图片上传失败', e)
+    return null
+  } finally {
+    // 延迟消失，让用户看清“100%”
+    setTimeout(() => {
+      isUploading.value = false
+      uploadProgress.value = 0
+    }, 1000)
+  }
 }
 
 const updateToc = (editorInstance) => {
@@ -131,20 +179,31 @@ const scrollToHeading = (pos) => {
 const editor = useEditor({
   extensions: [
     KanbanNode,
-    StarterKit, 
-    BlockId, // 🔥 必须加上，否则新块没有 ID
-    BlockEmbed, // 🔥 联动块渲染器
+    StarterKit.configure({
+      // 关键：禁用掉 StarterKit 自带的图片功能，防止它干扰 ResizeImage
+      image: false, 
+    }),
+    BlockId, 
+    BlockEmbed, 
     HeatmapNode,
     Placeholder.configure({ placeholder: '输入 / 唤起命令，输入 [[ 建立关联...' }), 
     SlashCommand, 
     TaskList,
     TaskItem.extend({
-      // 🔥 核心修复：覆盖默认的 'paragraph block*'，允许任意块级元素打头
       content: 'block+', 
     }).configure({
       nested: true,
     }),
-    ResizeImage.configure({ inline: false }), 
+    
+
+    Image.configure({ inline: true }),
+    // 后放缩放（后定义的会覆盖前面的渲染逻辑）
+    ResizeImage.extend({
+      name: 'image', // 核心操作：把插件名从 'imageResize' 改为 'image'
+    }).configure({
+      inline: true,
+      // 其他你需要的配置
+    }),
     Details, 
     Summary, 
     Table.configure({ resizable: true }),
@@ -158,182 +217,273 @@ const editor = useEditor({
     Highlight.configure({ multicolor: true }), 
     BubbleMenuExtension.configure({ element: null }),
 
-
     Mention.configure({
-  HTMLAttributes: {
-    class: 'internal-link',
-  },
-  suggestion: {
-    char: '[[',
-    // 1. 数据获取逻辑
-    items: async ({ query }) => {
-      // 调试：在控制台查看 Tiptap 传过来的 query 到底是什么
-      console.log('当前 Mention Query:', query);
+      HTMLAttributes: {
+        class: 'internal-link',
+      },
+      suggestion: {
+        char: '[[',
+        items: async ({ query }) => {
+          console.log('当前 Mention Query:', query);
 
-      // 核心修复：Tiptap 的 query 不带 [[。输入 [[# 时，query 是 "#"
-      if (query && query.startsWith('#')) {
-        const blockQuery = query.substring(1); // 截取 # 之后的关键字
-        
-        try {
-          console.log('检测到块搜索标识，正在发起请求...', blockQuery);
-          // 发起请求到后端 LingMaiBlockController
-          const res = await apiClient.get(`/Blocks/search?query=${encodeURIComponent(blockQuery)}`);
-          
-          return res.data.map(b => ({
-            id: b.blockId,
-            label: b.previewText,
-            type: 'block', // 关键标识：用于 command 判断插入类型
-            noteTitle: b.noteTitle
-          }));
-        } catch (e) {
-          console.error('块搜索请求失败:', e);
-          return [];
-        }
-      }
-
-      // 默认逻辑：普通文档搜索
-      try {
-        const res = await apiClient.get(`/Notes/search?query=${encodeURIComponent(query || '')}`);
-        return res.data.map(n => ({
-          id: n.Id,
-          label: n.Title,
-          type: 'note'
-        }));
-      } catch (e) {
-        console.error('文档搜索请求失败:', e);
-        return [];
-      }
-    },
-
-    // 2. 插入逻辑：根据 type 决定是插入 Mention 还是 BlockEmbed
-    command: ({ editor, range, props }) => {
-      if (props.type === 'block') {
-        // 选中块：插入联动节点并自动换行
-        editor
-          .chain()
-          .focus()
-          .insertContentAt(range, [
-            {
-              type: 'blockEmbed',
-              attrs: { targetId: props.id }
-            },
-            {
-              type: 'paragraph' 
+          if (query && query.startsWith('#')) {
+            const blockQuery = query.substring(1); 
+            
+            try {
+              console.log('检测到块搜索标识，正在发起请求...', blockQuery);
+              const res = await apiClient.get(`/Blocks/search?query=${encodeURIComponent(blockQuery)}`);
+              
+              return res.data.map(b => ({
+                id: b.blockId,
+                label: b.previewText,
+                type: 'block', 
+                noteTitle: b.noteTitle
+              }));
+            } catch (e) {
+              console.error('块搜索请求失败:', e);
+              return [];
             }
-          ])
-          .run();
-      } else {
-        // 选中页面：插入普通双链
-        editor
-          .chain()
-          .focus()
-          .insertContentAt(range, {
-            type: 'mention',
-            attrs: {
-              id: props.id,
-              label: props.label,
-            },
-          })
-          .insertContent(' ') 
-          .run();
-      }
-    },
-
-    // 3. 渲染逻辑：调用 SuggestionList.vue
-    render: () => {
-      let component;
-      let popup;
-
-      return {
-        onStart: props => {
-          component = new VueRenderer(SuggestionList, {
-            props,
-            editor: props.editor,
-          });
-
-          if (!props.clientRect) return;
-
-          popup = tippy('body', {
-            getReferenceClientRect: props.clientRect,
-            appendTo: () => document.body,
-            content: component.element,
-            showOnCreate: true,
-            interactive: true,
-            trigger: 'manual',
-            placement: 'bottom-start',
-          });
-        },
-
-        onUpdate(props) {
-          component.updateProps(props);
-          if (!props.clientRect) return;
-          popup[0].setProps({
-            getReferenceClientRect: props.clientRect,
-          });
-        },
-
-        onKeyDown(props) {
-          if (props.event.key === 'Escape') {
-            popup[0].hide();
-            return true;
           }
-          return component.ref?.onKeyDown(props);
+
+          try {
+            const res = await apiClient.get(`/Notes/search?query=${encodeURIComponent(query || '')}`);
+            return res.data.map(n => ({
+              // 🔥 修复：n.Id -> n.id，n.Title -> n.title
+              id: n.id,
+              label: n.title,
+              type: 'note'
+            }));
+          } catch (e) {
+            console.error('文档搜索请求失败:', e);
+            return [];
+          }
         },
 
-        onExit() {
-          if (popup && popup[0]) popup[0].destroy();
-          if (component) component.destroy();
+        command: ({ editor, range, props }) => {
+          if (props.type === 'block') {
+            editor
+              .chain()
+              .focus()
+              .insertContentAt(range, [
+                {
+                  type: 'blockEmbed',
+                  attrs: { targetId: props.id }
+                },
+                {
+                  type: 'paragraph' 
+                }
+              ])
+              .run();
+          } else {
+            editor
+              .chain()
+              .focus()
+              .insertContentAt(range, {
+                type: 'mention',
+                attrs: {
+                  id: props.id,
+                  label: props.label,
+                },
+              })
+              .insertContent(' ') 
+              .run();
+          }
         },
-      };
-    },
-  },
-})
 
+        render: () => {
+          let component;
+          let popup;
 
+          return {
+            onStart: props => {
+              component = new VueRenderer(SuggestionList, {
+                props,
+                editor: props.editor,
+              });
 
+              if (!props.clientRect) return;
 
+              popup = tippy('body', {
+                getReferenceClientRect: props.clientRect,
+                appendTo: () => document.body,
+                content: component.element,
+                showOnCreate: true,
+                interactive: true,
+                trigger: 'manual',
+                placement: 'bottom-start',
+              });
+            },
 
+            onUpdate(props) {
+              component.updateProps(props);
+              if (!props.clientRect) return;
+              popup[0].setProps({
+                getReferenceClientRect: props.clientRect,
+              });
+            },
 
+            onKeyDown(props) {
+              if (props.event.key === 'Escape') {
+                popup[0].hide();
+                return true;
+              }
+              return component.ref?.onKeyDown(props);
+            },
 
-
-
-
-
+            onExit() {
+              if (popup && popup[0]) popup[0].destroy();
+              if (component) component.destroy();
+            },
+          };
+        },
+      },
+    })
   ],
   editorProps: {
     noteId: props.noteId,
     handlePaste: (view, event) => {
-      const items = (event.clipboardData || event.originalEvent.clipboardData).items
-      for (const item of items) { if (item.type.indexOf('image') === 0) { event.preventDefault(); const file = item.getAsFile(); uploadImage(file).then(url => { if (url) { const { schema } = view.state; const node = schema.nodes.image.create({ src: url }); view.dispatch(view.state.tr.replaceSelectionWith(node)) } }); return true } } return false
-    },
+  const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+  
+  for (const item of items) {
+    if (item.type.indexOf('image') === 0) {
+      event.preventDefault();
+      const file = item.getAsFile();
+      
+      uploadImage(file).then(url => {
+        if (url) {
+          const { schema } = view.state;
+          
+          // --- 关键修改点 ---
+          // 确保使用的 node 名是 'image'（因为你已经把 Resize 插件改名为 image 了）
+          // 并且增加默认的 width 属性，否则有些缩放插件在没有宽度值时不会显示手柄
+          const node = schema.nodes.image.create({ 
+            src: url,
+            width: '100%', // 初始给个 100% 宽度，方便后续缩放
+          });
+          
+          const transaction = view.state.tr.replaceSelectionWith(node);
+          view.dispatch(transaction);
+        }
+      });
+      return true; // 表示已处理该粘贴事件
+    }
+  }
+  return false;
+},
     handleDrop: (view, event, slice, moved) => {
       if (!moved && event.dataTransfer && event.dataTransfer.files.length > 0) { const file = event.dataTransfer.files[0]; if (file.type.indexOf('image') === 0) { event.preventDefault(); const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY }); uploadImage(file).then(url => { if (url) { const { schema } = view.state; const node = schema.nodes.image.create({ src: url }); view.dispatch(view.state.tr.insert(coordinates.pos, node)) } }); return true } } return false
     }
   },
-  onUpdate: ({ editor }) => { debouncedSave(editor.getJSON()); updateToc(editor) },
+  onUpdate: ({ editor }) => { 
+  // 如果还没加载完，直接跳过，不触发保存
+  if (!isDataLoaded.value) return; 
+
+  debouncedSave(editor.getJSON()); 
+  updateToc(editor); 
+},
   onCreate: ({ editor }) => { updateToc(editor) }
 })
 
 const loadData = async (id) => {
   if (!editor.value) return
+  
+  // 1. 明确关锁，禁止任何自动保存
+  isDataLoaded.value = false 
+  
   try {
-    const res = await apiClient.get(`/Notes/detail/${id}`); note.title = res.data.Title || ''; note.updatedAt = res.data.UpdatedAt; note.parentNoteId = res.data.ParentNoteId; const content = res.data.ContentJson
-    if (content && content !== '""') { try { editor.value.commands.setContent(JSON.parse(content)); updateToc(editor.value) } catch (e) { editor.value.commands.setContent('') } } else { editor.value.commands.setContent('') }
-    loadBacklinks(id)
-  } catch (e) { note.title = "加载失败"; editor.value?.commands.setContent(`<p>无法加载笔记内容: ${e.message}</p>`) }
+    const res = await apiClient.get(`/Notes/detail/${id}`); 
+    note.title = res.data.title || ''; 
+    note.updatedAt = res.data.updatedAt; 
+    note.parentNoteId = res.data.parentNoteId; 
+    const content = res.data.contentJson;
+
+    if (content && content !== '""') { 
+      const jsonContent = JSON.parse(content);
+
+      // --- 【新增：防自杀校验逻辑】 ---
+      // 检查 JSON 中所有的节点类型，编辑器 Schema 是否全部支持
+      // 如果不支持（如缺少 Image 插件），Tiptap 会静默丢弃节点，导致数据丢失
+      const schemaNodes = editor.value.schema.nodes;
+      
+      console.log('编辑器当前支持的节点:', Object.keys(editor.value.schema.nodes));
+
+
+      // 递归检查 JSON 树中是否存在编辑器无法识别的 type
+      const checkSchemaMatch = (node) => {
+        if (node.type && !schemaNodes[node.type]) return node.type;
+        if (node.content) {
+          for (const child of node.content) {
+            const missing = checkSchemaMatch(child);
+            if (missing) return missing;
+          }
+        }
+        return null;
+      };
+
+      const missingType = checkSchemaMatch(jsonContent);
+      if (missingType) {
+        throw new Error(`编辑器配置错误：缺少 [${missingType}] 节点扩展。为防止覆盖原始数据，已拦截渲染。`);
+      }
+      // --- 【校验结束】 ---
+
+      try { 
+        // 这一步会触发 onUpdate，但因为 isDataLoaded 是 false，会被拦截
+        editor.value.commands.setContent(jsonContent); 
+        updateToc(editor.value);
+        
+        // 记录一个初始的“纯净快照”，用于后续比对内容是否真的发生了变化
+        // (需要在 script setup 顶层定义 let lastContentHash = '')
+        // lastContentHash = JSON.stringify(jsonContent); 
+
+      } catch (e) { 
+        throw new Error(`内容解析失败：${e.message}`);
+      } 
+    } else { 
+      editor.value.commands.setContent('');
+    }
+    
+    loadBacklinks(id);
+    
+    // 3. 关键：确保 Tiptap 处理完所有事务后再开锁
+    // 使用 300ms 延迟比 100ms 更稳妥，避开所有宏任务/微任务的波动
+    setTimeout(() => {
+      isDataLoaded.value = true;
+      console.log('✅ 灵脉加载完成，自动保存已就绪');
+    }, 300);
+
+  } catch (e) { 
+    note.title = "加载受阻"; 
+    // 加载失败的情况下，绝对不开启 isDataLoaded 锁！
+    isDataLoaded.value = false; 
+    
+    // 给用户显眼的报错提示，而不是空白内容
+    editor.value?.commands.setContent(`
+      <div style="border: 2px dashed #ff4d4f; padding: 20px; border-radius: 8px; color: #ff4d4f;">
+        <h3>⚠️ 数据加载异常</h3>
+        <p>${e.message}</p>
+        <p>请检查插件配置或刷新页面。当前自动保存已禁用，以保护数据库数据。</p>
+      </div>
+    `);
+  }
 }
 
-const loadBacklinks = async (id) => { try { const blRes = await apiClient.get(`/Notes/${id}/backlinks`); backlinks.value = blRes.data } catch (e) { backlinks.value = [] } }
+const loadBacklinks = async (id) => { 
+  try { 
+    const blRes = await apiClient.get(`/Notes/${id}/backlinks`); 
+    backlinks.value = blRes.data 
+  } catch (e) { 
+    backlinks.value = [] 
+  } 
+}
 
 let timer = null
-let isSaving = false // 增加一个内部锁，防止请求堆积
+let isSaving = false 
 
 const debouncedSave = (json) => {
   clearTimeout(timer);
   syncing.value = true;
 
   timer = setTimeout(async () => {
-    // 如果当前正有一个请求在飞，我们等它结束或直接跳过本次，交由下一次防抖处理
     if (isSaving) return; 
 
     try {
@@ -355,23 +505,19 @@ const debouncedSave = (json) => {
       isSaving = false;
       syncing.value = false;
     }
-  }, 2000); // 恢复为 2000ms，兼顾性能与用户体验
+  }, 2000); 
 }
-
-
 
 const syncTitle = () => { if (editor.value) debouncedSave(editor.value.getJSON()) }
 
 const handleEditorClick = (event) => {
   const target = event.target.closest('.internal-link'); if (target) { emit('navigate', target.getAttribute('data-id')); return }
 
-// 2. 🔥 新增：按住 Alt 点击块，直接复制块 ID
   if (event.altKey) {
     const blockNode = event.target.closest('[data-block-id]');
     if (blockNode) {
       const bId = blockNode.getAttribute('data-block-id');
       navigator.clipboard.writeText(bId);
-      // 这里可以加一个轻提示
       console.log('块 ID 已复制:', bId);
       return;
     }
@@ -470,10 +616,47 @@ onBeforeUnmount(() => {
     background-color: rgba(0, 0, 0, 0.01); 
   }
 
-  /* --- 选区与占位符 --- */
-  .ProseMirror-selectednode { 
-    outline: 2px solid #b4d5fe; 
-    background-color: rgba(180, 213, 254, 0.2) !important; 
+  .tiptap-image-resizer {
+    display: inline-block !important;
+    position: relative !important;
+    line-height: 0;
+    vertical-align: middle;
+    user-select: none;
+
+    /* 关键：给整个缩放容器一个高层级，确保手柄在图片上方 */
+    z-index: 10; 
+
+    /* 强行绘制四个角的小方块 */
+    /* 不同的插件类名可能叫 .handler, .resizer-handler, 或 .resize-trigger */
+    [class*="handler"], 
+    [class*="resize-trigger"],
+    .resizer {
+      display: block !important;
+      position: absolute !important;
+      width: 10px !important;  /* 宽度 */
+      height: 10px !important; /* 高度 */
+      background-color: #2383e2 !important; /* 方块颜色：蓝色 */
+      border: 1.5px solid #ffffff !important; /* 白色边框，让它更清晰 */
+      border-radius: 2px !important;
+      z-index: 100 !important;
+      cursor: nwse-resize; /* 鼠标悬停显示缩放图标 */
+      
+      /* 强制显示 */
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+
+    /* 精确控制四个角的位置（如果插件没对齐，这里可以微调） */
+    .handler-top-left { top: -5px; left: -5px; cursor: nwse-resize; }
+    .handler-top-right { top: -5px; right: -5px; cursor: nesw-resize; }
+    .handler-bottom-left { bottom: -5px; left: -5px; cursor: nesw-resize; }
+    .handler-bottom-right { bottom: -5px; right: -5px; cursor: nwse-resize; }
+  }
+
+  /* 解决蓝色边框和方块重叠导致看不清的问题 */
+  .ProseMirror-selectednode {
+    outline: 2px solid #2383e2 !important;
+    outline-offset: 2px; /* 让边框往外扩一点，露出方块 */
   } 
 
   p.is-editor-empty:first-child::before { 

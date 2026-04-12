@@ -176,11 +176,8 @@ import KanbanBoard from '@/ProjectComponents/KanbanBoard.vue'
 import ReportDashboard from '@/ProjectComponents/ReportDashboard.vue'
 import ProjectTimeline from '@/ProjectComponents/ProjectTimeline.vue'
 import ResourceBoard from '@/ProjectComponents/ResourceBoard.vue'
-// 🌟 引入我们刚刚写的权限矩阵组件
 import RolePermissionManager from '@/ProjectComponents/DetailComponents/RolePermissionManager.vue'
 import ProjectMemberManager from '@/ProjectComponents/DetailComponents/ProjectMemberManager.vue'
-
-
 import ProjectExcel from '@/ProjectComponents/ProjectExcel.vue'
 
 const route = useRoute()
@@ -191,18 +188,18 @@ const currentView = ref('board')
 const projectInfo = ref<any>({})
 const projectMembers = ref<any[]>([]) 
 const orgMembers = ref<any[]>([])     
-const availableRoles = ref<any[]>([]) // 🌟 存放从后端拉取的自定义角色列表
+const availableRoles = ref<any[]>([]) 
 const stats = ref({ percentage: 0, done: 0, total: 0 })
 
 // 子组件引用
 const kanbanRef = ref<InstanceType<typeof KanbanBoard> | null>(null)
 const reportRef = ref<InstanceType<typeof ReportDashboard> | null>(null)
 
-// 🌟 UI 状态
+// UI 状态
 const showAddMemberModal = ref(false)
-const showRoleManager = ref(false) // 🌟 控制权限面板的开关
+const showRoleManager = ref(false) 
 const selectedUserId = ref<number | null>(null)
-const selectedRoleId = ref<number | null>(null) // 🌟 改用 RoleId
+const selectedRoleId = ref<number | null>(null) 
 const isAdding = ref(false)
 
 const availableOrgMembers = computed(() => {
@@ -211,74 +208,83 @@ const availableOrgMembers = computed(() => {
   )
 })
 
-// API
+// ================= API 方法 (全部修正为小写访问) =================
+
 const fetchProjectData = async () => {
   try {
     const res = await apiClient.get(`/projects/${projectId}`)
-    projectInfo.value = { id: res.data.Id, name: res.data.Name, creatorName: res.data.CreatorName, orgId: res.data.OrganizationId }
+    // 🔥 修正：res.data.Id -> res.data.id, res.data.OrganizationId -> res.data.organizationId
+    projectInfo.value = { 
+      id: res.data.id, 
+      name: res.data.name, 
+      creatorName: res.data.creatorName, 
+      orgId: res.data.organizationId 
+    }
     
     fetchProjectMembers()
-    fetchOrgMembers(res.data.OrganizationId)
-    fetchProjectRoles() // 🌟 初始化时拉取角色列表
-  } catch (e) { console.error(e) }
+    if (projectInfo.value.orgId) {
+      fetchOrgMembers(projectInfo.value.orgId)
+    }
+    fetchProjectRoles()
+  } catch (e) { console.error('获取项目基本信息失败:', e) }
 }
 
-// 🌟 获取本项目的动态角色列表
 const fetchProjectRoles = async () => {
   try {
     const res = await apiClient.get(`/projects/${projectId}/roles`)
-    // 手动映射字段，确保前端逻辑能读到 id 和 name
+    // 🔥 修正：映射全部使用小写
     availableRoles.value = res.data.map((r: any) => ({
-      id: r.Id || r.id,
-      name: r.Name || r.name,
-      description: r.Description || r.description
+      id: r.id,
+      name: r.name,
+      description: r.description
     }))
     
-    // 默认选中 Member (注意这里也要匹配大写 Name)
     const defaultMemberRole = availableRoles.value.find((r: any) => r.name === 'Member')
     if (defaultMemberRole) {
       selectedRoleId.value = defaultMemberRole.id
     }
-  } catch (e) { console.error(e) }
+  } catch (e) { console.error('获取角色列表失败:', e) }
 }
 
 const fetchProjectMembers = async () => {
   try {
     const res = await apiClient.get(`/projects/${projectId}/members`)
+    // 🔥 修正：映射全部使用小写
     projectMembers.value = res.data.map((m: any) => ({ 
-      userId: m.UserId || m.userId, 
-      username: m.Username || m.username,
-      avatar: m.Avatar || m.avatar,
-      role: m.Role || m.role 
+      userId: m.userId, 
+      username: m.username,
+      avatar: m.avatar,
+      role: m.role 
     }))
-  } catch (e) { console.error(e) }
+  } catch (e) { console.error('获取项目成员失败:', e) }
 }
 
 const fetchOrgMembers = async (orgId: number) => {
+  if (!orgId) return
   try {
     const res = await apiClient.get(`/organizations/${orgId}/members`)
+    // 🔥 修正：映射全部使用小写
     orgMembers.value = res.data.map((m: any) => ({ 
-      userId: m.UserId || m.userId, 
-      username: m.Username || m.username,
-      avatar: m.Avatar || m.avatar
+      userId: m.userId, 
+      username: m.username,
+      avatar: m.avatar
     }))
-  } catch (e) { console.error(e) }
+  } catch (e) { console.error('获取组织成员失败:', e) }
 }
 
-// 🌟 提交拉人请求 (传 RoleId)
 const submitAddProjectMember = async () => {
   if (!selectedUserId.value || !selectedRoleId.value) return;
   isAdding.value = true;
   try {
+    // 💡 发送给后端的 Payload 也建议统一小写字段名（UserId -> userId）
     await apiClient.post(`/projects/${projectId}/members`, {
-      UserId: selectedUserId.value,
-      RoleId: selectedRoleId.value // 🔥 传数字 ID
+      userId: selectedUserId.value,
+      roleId: selectedRoleId.value
     });
     
     showAddMemberModal.value = false;
     selectedUserId.value = null;
     
-    // 重置默认角色
     const defaultMemberRole = availableRoles.value.find((r: any) => r.name === 'Member')
     selectedRoleId.value = defaultMemberRole ? defaultMemberRole.id : null;
     
@@ -291,7 +297,7 @@ const submitAddProjectMember = async () => {
   }
 }
 
-// 交互
+// 交互逻辑
 const triggerCreateTask = () => {
   kanbanRef.value?.openCreateModal()
 }

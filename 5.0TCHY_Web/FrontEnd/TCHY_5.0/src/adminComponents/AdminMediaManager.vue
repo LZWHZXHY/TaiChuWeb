@@ -24,26 +24,26 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in mediaList" :key="item.Id">
-            <td>{{ item.Id }}</td>
-            <td><img :src="item.CoverUrl" class="table-cover" alt="cover"/></td>
+          <tr v-for="item in mediaList" :key="item.id">
+            <td>{{ item.id }}</td>
+            <td><img :src="item.coverUrl" class="table-cover" alt="cover"/></td>
             <td>
-              <div class="title-text">{{ item.Title }}</div>
-              <a :href="item.TargetUrl" target="_blank" class="link-preview">▶ SOURCE_LINK</a>
+              <div class="title-text">{{ item.title }}</div>
+              <a :href="item.targetUrl" target="_blank" class="link-preview">▶ SOURCE_LINK</a>
             </td>
-            <td><span class="type-tag">{{ item.MediaType }}</span></td>
+            <td><span class="type-tag">{{ item.mediaType }}</span></td>
             <td>
-              <UniversalTags :tags="parseTags(item.Tags)" class="admin-tags-display" />
+              <UniversalTags :tags="parseTags(item.tags)" class="admin-tags-display" />
             </td>
-            <td>{{ item.Rating }}</td>
-            <td>{{ item.Weight }}</td>
+            <td>{{ item.rating }}</td>
+            <td>{{ item.weight }}</td>
             <td>
-              <span :class="['status-dot', item.Status === 0 ? 'online' : 'offline']"></span>
-              {{ item.Status === 0 ? '展示中' : '已下架' }}
+              <span :class="['status-dot', item.status === 0 ? 'online' : 'offline']"></span>
+              {{ item.status === 0 ? '展示中' : '已下架' }}
             </td>
             <td class="action-cell">
               <button class="cyber-btn small" @click="openEditModal(item)">覆写</button>
-              <button class="cyber-btn small danger" @click="deleteItem(item.Id)">抹除</button>
+              <button class="cyber-btn small danger" @click="deleteItem(item.id)">抹除</button>
             </td>
           </tr>
         </tbody>
@@ -164,7 +164,6 @@ const fileInput = ref(null)
 const isUploading = ref(false)
 const uploadProgress = ref(0) 
 
-// 前端表单统一使用小写，方便对接 DTO
 const formData = ref({
   id: null,
   title: '',
@@ -187,31 +186,32 @@ const fetchList = async () => {
   try {
     const res = await apiClient.get('/MediaRecommendation/admin/list')
     if (res.data.success) {
-      mediaList.value = res.data.data; // 后端返回的是大写 Key 对象
+      // ⚡ 这里拿到的已经是小写驼峰的对象数组
+      mediaList.value = res.data.data; 
     }
   } catch (error) { console.error('Signal Error:', error) }
 }
 
 const openAddModal = () => {
   isEdit.value = false
-  formData.value = { title: '', mediaType: 'ANIME', coverUrl: '', targetUrl: '', rating: 0, weight: 0, status: 0, tags: '', description: '' }
+  formData.value = { id: null, title: '', mediaType: 'ANIME', coverUrl: '', targetUrl: '', rating: 0, weight: 0, status: 0, tags: '', description: '' }
   showModal.value = true
 }
 
 const openEditModal = (item) => {
   isEdit.value = true
-  // 🌟 手动映射：将大写字段转为小写 formData
+  // ⚡ 修正映射逻辑：item 本身已经是小写驼峰，直接对应赋值
   formData.value = {
-    id: item.Id,
-    title: item.Title,
-    mediaType: item.MediaType,
-    coverUrl: item.CoverUrl,
-    targetUrl: item.TargetUrl,
-    rating: item.Rating,
-    weight: item.Weight,
-    status: item.Status,
-    tags: item.Tags || '',
-    description: item.Description
+    id: item.id,
+    title: item.title,
+    mediaType: item.mediaType,
+    coverUrl: item.coverUrl,
+    targetUrl: item.targetUrl,
+    rating: item.rating,
+    weight: item.weight,
+    status: item.status,
+    tags: item.tags || '',
+    description: item.description
   };
   showModal.value = true
 }
@@ -222,25 +222,26 @@ const triggerFileInput = () => { if (fileInput.value) fileInput.value.click() }
 const handleFileUpload = async (event) => {
   const file = event.target.files[0]
   if (!file) return
-
   isUploading.value = true
   uploadProgress.value = 0
 
   try {
+    // 1. 获取预签名 URL
     const signRes = await apiClient.get(`/MediaRecommendation/admin/get-upload-url`, {
       params: { fileName: file.name }
     })
-    
     if (!signRes.data.success) throw new Error('AUTH_FAILED')
     const { uploadUrl, finalUrl } = signRes.data.data
 
-    await axios.put(uploadUrl, file, {
-      headers: { 'Content-Type': file.type },
-      transformRequest: [(data, headers) => {
-        delete headers.common['Authorization'];
-        delete headers['Authorization'];
-        return data;
-      }],
+    // 2. 创建一个没有任何拦截器的干净实例
+    const cleanAxios = axios.create(); 
+
+    // 3. 直接上传，不再需要 transformRequest 里的 delete 操作
+    await cleanAxios.put(uploadUrl, file, {
+      headers: { 
+        'Content-Type': file.type 
+        // 这里千万不要写 Authorization
+      },
       onUploadProgress: (p) => {
         if (p.lengthComputable) {
           uploadProgress.value = Math.round((p.loaded * 100) / p.total)
@@ -251,7 +252,7 @@ const handleFileUpload = async (event) => {
     formData.value.coverUrl = finalUrl
   } catch (error) {
     console.error('Upload Error:', error)
-    alert('上传中断：请检查网络或腾讯云跨域配置')
+    alert('上传失败')
   } finally {
     setTimeout(() => { isUploading.value = false }, 800)
     event.target.value = ''

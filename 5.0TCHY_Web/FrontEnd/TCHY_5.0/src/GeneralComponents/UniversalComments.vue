@@ -17,7 +17,7 @@
       
       <div class="input-wrapper">
         <div v-if="replyToUser" class="reply-status-bar">
-          <span>正在回复: <b>@{{ replyToUser.Name }}</b></span>
+          <span>正在回复: <b>@{{ replyToUser.name }}</b></span>
           <button class="cancel-reply-btn" @click="cancelReply">取消回复 ×</button>
         </div>
 
@@ -48,36 +48,37 @@
         <p>暂无数据信号，抢占首层扇区...</p>
       </div>
 
-      <div v-else v-for="item in comments" :key="item.Id" class="comment-item">
+      <div v-else v-for="item in comments" :key="item.id" class="comment-item">
         
         <div class="c-avatar">
-  <UserAvatar 
-    :userId="item.User?.Id" 
-    :passedAvatar="item.User?.Avatar" 
-    
-    :passedLevel="item.User?.Level"  :showLevel="true"                :allowLink="true"
-  />
-</div>
+          <UserAvatar 
+            :userId="item.user?.id" 
+            :passedAvatar="item.user?.avatar" 
+            :passedLevel="item.user?.level" 
+            :showLevel="true" 
+            :allowLink="true"
+          />
+        </div>
 
         <div class="c-content">
           <div class="c-header">
-            <span class="c-name">{{ item.User?.Name || '未知用户' }}</span>
+            <span class="c-name">{{ item.user?.name || '未知用户' }}</span>
             
-            <span v-if="item.ReplyToUser" class="reply-indicator">
+            <span v-if="item.replyToUser" class="reply-indicator">
               <span class="arrow">▸</span> 
-              <span class="at-name">@{{ item.ReplyToUser.Name }}</span>
+              <span class="at-name">@{{ item.replyToUser.name }}</span>
             </span>
 
-            <span class="c-date">{{ formatDate(item.CreatedAt) }}</span>
+            <span class="c-date">{{ formatDate(item.createdAt) }}</span>
           </div>
           
-          <div class="c-text">{{ item.Content }}</div>
+          <div class="c-text">{{ item.content }}</div>
           
           <div class="c-actions">
             <span class="action-link reply-btn" @click="handleReply(item)">
               <span class="icon">↩</span> 回复
             </span>
-            <span class="action-link delete-btn" v-if="isMyComment(item.User?.Id)" @click="handleDelete(item.Id)">
+            <span class="action-link delete-btn" v-if="isMyComment(item.user?.id)" @click="handleDelete(item.id)">
               <span class="icon">×</span> 删除
             </span>
           </div>
@@ -91,8 +92,6 @@
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { useAuthStore } from '@/utils/auth'
 import apiClient from '@/utils/api'
-
-// ✅ 引入 UserAvatar 组件
 import UserAvatar from '@/GeneralComponents/UserAvatar.vue'
 
 const props = defineProps({
@@ -129,6 +128,7 @@ const checkLogin = () => {
 }
 
 const isMyComment = (userId) => {
+  // 核心逻辑: store中的用户id通常也是驼峰
   return authStore.isAuthenticated && authStore.user?.id === userId
 }
 
@@ -151,8 +151,9 @@ const fetchComments = async () => {
 const handleReply = (item) => {
   if (!authStore.isAuthenticated) return alert('请先登录')
   
-  replyToId.value = item.Id
-  replyToUser.value = item.User 
+  // ⚡ 修正: item.Id -> item.id, item.User -> item.user
+  replyToId.value = item.id
+  replyToUser.value = item.user 
   
   nextTick(() => {
     textareaRef.value?.focus()

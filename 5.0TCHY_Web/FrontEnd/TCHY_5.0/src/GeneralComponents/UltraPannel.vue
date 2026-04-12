@@ -4,41 +4,46 @@
       
       <div class="panel-inner">
         <header class="panel-header">
-          <span class="header-title">{{ $t('UltraPannel.title') || '系统菜单' }}</span>
+          <span class="header-title">系统菜单</span>
         </header>
         
         <main class="panel-body">
           <nav class="nav-grid">
             
-            <span class="group-label">核心 / CORE</span>
-            <router-link to="/profile/MEE" class="nav-item" @click="isOpen = false">
-              {{ $t('UltraPannel.profile') }}
-            </router-link>
-            <router-link to="/creative-center" class="nav-item" @click="isOpen = false">
-              {{ $t('UltraPannel.creativeCenter') }}
-            </router-link>
-            
+            <template v-if="isAdmin">
+              <span class="group-label">系统</span>
+              <router-link to="/admin" class="nav-item admin-link" @click="isOpen = false">管理后台</router-link>
+              <div class="admin-divider"></div>
+            </template>
 
-            <span class="group-label group-margin">社区 / COMMUNITY</span>
-            <router-link to="/" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.home') }}</router-link>
-            <router-link to="/Intro" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.intro') }}</router-link>
-            <router-link to="/WorkCenter" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.workCenter') }}</router-link>
-            <router-link to="/BlogCenter" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.blogCenter') }}</router-link>
-            <router-link to="/PostCenter" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.postCenter') }}</router-link>
-            <router-link to="/ChatCenter" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.chatCenter') }}</router-link>
-            <router-link to="/media" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.mediaCenter') }}</router-link>
+            <span class="group-label" :class="{ 'group-margin': !isAdmin }">核心</span>
+            <router-link to="/profile/MEE" class="nav-item" @click="isOpen = false">我的主页</router-link>
+            <router-link to="/creative-center" class="nav-item" @click="isOpen = false">创作中心</router-link>
+            <router-link to="/lingmai" class="nav-item" @click="isOpen = false">灵脉空间</router-link>
+            <router-link to="/workspace" class="nav-item" @click="isOpen = false">多人协作</router-link>
+            
+            <span class="group-label group-margin">社区</span>
+            <router-link to="/" class="nav-item" @click="isOpen = false">首页</router-link>
+            <router-link to="/Intro" class="nav-item" @click="isOpen = false">社区介绍</router-link>
+            <router-link to="/WorkCenter" class="nav-item" @click="isOpen = false">作品中心</router-link>
+            <router-link to="/BlogCenter" class="nav-item" @click="isOpen = false">博客中心</router-link>
+            <router-link to="/PostCenter" class="nav-item" @click="isOpen = false">动态中心</router-link>
+            <router-link to="/ChatCenter" class="nav-item" @click="isOpen = false">聊天中心</router-link>
+            <router-link to="/EntertainmentArea" class="nav-item" @click="isOpen = false">娱乐区</router-link>
+            <router-link to="/media" class="nav-item" @click="isOpen = false">媒体中心</router-link>
             <router-link to="/recommend" class="nav-item" @click="isOpen = false">推荐</router-link>
-            
-            <router-link to="/suggest" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.feedback') }}</router-link>
+            <router-link to="/suggest" class="nav-item" @click="isOpen = false">反馈区</router-link>
+            <router-link to="/ClubCenter" class="nav-item" @click="isOpen = false">社团收录</router-link>
 
-            <span class="group-label group-margin">资源 / RESOURCE</span>
-            <router-link to="/wiki" class="nav-item" @click="isOpen = false">{{ $t('UltraPannel.wiki') }}</router-link>
+            <span class="group-label group-margin">资源</span>
+            <router-link to="/wiki" class="nav-item" @click="isOpen = false">知识库</router-link>
+            <router-link to="/Market" class="nav-item" @click="isOpen = false">交易行</router-link>
             
           </nav>
         </main>
 
         <footer class="panel-footer">
-          V1.0.42
+          V1.0.44
         </footer>
       </div>
 
@@ -53,25 +58,35 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-// import { useI18n } from 'vue-i18n' // 如果没用到 useI18n 的变量可以注释掉
+import { ref, computed } from 'vue'
+import { useAuthStore } from '@/utils/auth'
 
+const authStore = useAuthStore()
 const isOpen = ref(false)
+
 const togglePanel = () => {
   isOpen.value = !isOpen.value
 }
+
+// 🚀 核心修复：使用数字 rank 进行硬判断
+// 在 UltraPannel.vue 的 <script setup> 中修改
+const isAdmin = computed(() => {
+  const u = authStore.user;
+  if (!u || !Array.isArray(u.roleCodes)) return false;
+
+  // 🚀 核心修改：检查 roleCodes 数组中是否包含指定的管理员标识
+  return u.roleCodes.includes('Admin') || u.roleCodes.includes('SuperAdmin');
+})
 </script>
 
 <style scoped>
-/* --- 核心修复部分 --- */
+/* 保持之前定义的样式 */
 .ultra-wrapper {
   position: fixed;
   left: 0;
   top: 120px;
   z-index: 2000;
   font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-  
-  /* 1. 关键修复：让整个包裹层不响应点击（穿透） */
   pointer-events: none; 
 }
 
@@ -83,17 +98,26 @@ const togglePanel = () => {
   background: #ffffff;
   border: 1px solid #000;
   border-left: none;
-  /* 2. 稍微加大位移，确保连边框都彻底藏好 */
   transform: translateX(calc(-100% - 2px)); 
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-
-  /* 3. 关键修复：面板显示时，内部需要恢复点击响应 */
   pointer-events: auto; 
 }
 
 .open .ultra-panel {
   transform: translateX(0);
+}
+
+.admin-link {
+  color: #D92323 !important; 
+  font-weight: 900 !important;
+}
+
+.admin-divider {
+  grid-column: span 2;
+  height: 1px;
+  background: #eee;
+  margin: 4px 0;
 }
 
 .trigger-handle {
@@ -109,23 +133,20 @@ const togglePanel = () => {
   align-items: center;
   justify-content: center;
   color: #fff;
-
-  /* 4. 关键修复：按钮必须恢复点击，否则点不到它 */
   pointer-events: auto; 
 }
 
-/* --- 其余样式保持不变 --- */
 .panel-inner {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: 15px;
   overflow-y: auto;
-  scrollbar-width: none; /* 火狐隐藏滚动条 */
+  scrollbar-width: none;
 }
 
 .panel-inner::-webkit-scrollbar {
-  display: none; /* Webkit 隐藏滚动条 */
+  display: none;
 }
 
 .panel-header {

@@ -176,7 +176,6 @@
 </template>
 
 <script setup>
-// Script 部分保持完全一致，无需修改
 import { ref, computed, onMounted, reactive } from 'vue'
 import apiClient from '@/utils/api'
 
@@ -192,6 +191,7 @@ const fixAvatarUrl = (url) => {
 };
 const handleImgError = (e) => { e.target.src = '/土豆.jpg'; };
 
+// --- 状态定义 (对齐模板变量名) ---
 const currentCategory = ref('static')
 const currentLevel = ref(0)
 const isLoading = ref(false)
@@ -200,13 +200,13 @@ const pendingList = ref([])
 const maxYear = new Date().getFullYear()
 const minYear = 2024
 const currentYear = ref(maxYear)
+const searchQuery = ref('') // 确保搜索变量存在
 
 const isModalOpen = ref(false)
 const isSubmitting = ref(false)
 const submitStatus = reactive({ type: '', msg: '' })
 const applyForm = reactive({ portfolioUrl: '', description: '' })
 
-// Lv.1 - Lv.7
 const levels = [
   { id: 0, name: 'ALL' }, 
   { id: 1, name: 'LV.1' }, { id: 2, name: 'LV.2' }, { id: 3, name: 'LV.3' }, 
@@ -218,40 +218,51 @@ const rulesData = {
   animation: { requirements: ['时常不低于10s', '分镜或者平面或者特效不限制,3D背景或者人物都可以', '不接受剪辑视频'], methods: ['提交视频时常不低于10s的视频链接'] }
 }
 
+// --- 计算属性 ---
 const currentRules = computed(() => rulesData[currentCategory.value])
 const sliderStyle = computed(() => currentCategory.value === 'static' ? { transform: 'translateX(0%)', background: '#111' } : { transform: 'translateX(100%)', background: '#D92323' })
+
 const filteredArtists = computed(() => {
   let list = artists.value || []
-  if (currentLevel.value !== 0) list = list.filter(a => a.level === currentLevel.value)
+  
+  // 1. 等级过滤
+  if (currentLevel.value !== 0) {
+    list = list.filter(a => a.level === currentLevel.value)
+  }
+  
+  // 2. 搜索过滤 (增加防御性处理)
+  const query = (searchQuery.value || '').trim().toLowerCase()
+  if (query) {
+    list = list.filter(a => (a.name || '').toLowerCase().includes(query))
+  }
+  
   return list
 })
 
-// --- API Calls ---
+// --- API 请求 (核心修复：对齐驼峰字段) ---
 const fetchRoster = async () => {
   isLoading.value = true
-  artists.value = []
   try {
     const categoryInt = currentCategory.value === 'static' ? 0 : 1
     const res = await apiClient.get('/ChaiArtist/roster', { 
-      params: { 
-        year: currentYear.value, 
-        category: categoryInt 
-      } 
+      params: { year: currentYear.value, category: categoryInt } 
     })
 
+    // ⚡ 这里的 item.userId, item.userName 等必须是小写开头
     if (res.data) {
       artists.value = res.data.map(item => ({
-        id: item.UserId,
-        name: item.UserName,
-        level: item.Level,
-        color: item.HexColor,
-        avatar: item.Avatar,
-        tags: (item.Tags || []).filter(t => t !== '[]' && t !== '' && t !== '""'),
+        id: item.userId || item.id,
+        name: item.userName || '未知访客',
+        level: item.level ?? 0,
+        color: item.hexColor || '#333',
+        avatar: item.avatar,
+        tags: Array.isArray(item.tags) ? item.tags : [],
         type: currentCategory.value
       }))
     }
   } catch (error) { 
     console.error("Fetch Roster Error:", error) 
+    artists.value = []
   } finally { 
     isLoading.value = false 
   }
@@ -261,24 +272,25 @@ const fetchPending = async () => {
   try {
     const res = await apiClient.get('/ChaiArtist/pending')
     if (res.data) {
+      // ⚡ 映射为全驼峰
       pendingList.value = res.data.map(item => ({
-        id: item.Id,
-        submitTime: item.SubmitTime,
-        category: item.Category,
-        portfolioUrl: item.PortfolioUrl
+        id: item.id,
+        submitTime: item.submitTime,
+        category: item.category,
+        portfolioUrl: item.portfolioUrl
       }))
     }
-  } catch (error) { console.error("Fetch Pending Error:", error) }
+  } catch (error) { 
+    console.error("Fetch Pending Error:", error) 
+    pendingList.value = []
+  }
 }
 
-const openApplyModal = () => {
-  applyForm.portfolioUrl = ''; applyForm.description = ''; submitStatus.msg = '';
-  isModalOpen.value = true
-}
-
+// --- 交互逻辑 ---
 const submitApplication = async () => {
   if (isSubmitting.value) return
-  isSubmitting.value = true; submitStatus.msg = ''
+  isSubmitting.value = true
+  submitStatus.msg = ''
   try {
     const payload = {
       applyYear: currentYear.value,
@@ -287,23 +299,45 @@ const submitApplication = async () => {
       description: applyForm.description
     }
     await apiClient.post('/ChaiArtist/apply', payload)
-    submitStatus.type = 'success'; submitStatus.msg = 'UPLOAD COMPLETE. AWAITING ASSESSMENT.'
+    submitStatus.type = 'success'
+    submitStatus.msg = 'UPLOAD COMPLETE. AWAITING ASSESSMENT.'
     fetchPending() 
     setTimeout(() => { isModalOpen.value = false }, 1500)
   } catch (error) {
-    submitStatus.type = 'error'; submitStatus.msg = error.response?.data || 'UPLOAD FAILED.'
+    submitStatus.type = 'error'
+    submitStatus.msg = error.response?.data?.message || 'UPLOAD FAILED.'
   } finally { isSubmitting.value = false }
 }
 
-const switchCategory = (cat) => { if (currentCategory.value === cat) return; currentCategory.value = cat; currentLevel.value = 0; fetchRoster() }
-const changeYear = (step) => { const newYear = currentYear.value + step; if (newYear < minYear || newYear > maxYear) return; currentYear.value = newYear; fetchRoster() }
+const switchCategory = (cat) => { 
+  if (currentCategory.value === cat) return
+  currentCategory.value = cat
+  currentLevel.value = 0
+  fetchRoster() 
+}
+
+const changeYear = (step) => { 
+  const newYear = currentYear.value + step
+  if (newYear < minYear || newYear > maxYear) return
+  currentYear.value = newYear
+  fetchRoster() 
+}
+
 const formatDate = (dateStr) => {
-  if (!dateStr) return '--/--';
+  if (!dateStr) return '--/--'
   const d = new Date(dateStr)
   return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
-onMounted(() => { fetchRoster(); fetchPending() })
+const openApplyModal = () => {
+  applyForm.portfolioUrl = ''; applyForm.description = ''; submitStatus.msg = '';
+  isModalOpen.value = true
+}
+
+onMounted(() => { 
+  fetchRoster()
+  fetchPending() 
+})
 </script>
 
 <style scoped>

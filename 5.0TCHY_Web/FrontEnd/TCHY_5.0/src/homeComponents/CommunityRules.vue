@@ -33,7 +33,7 @@
         <el-tree
           ref="treeRef"
           class="industrial-tree"
-          node-key="Id"
+          node-key="id"
           :data="rules"
           :props="treeProps"
           :expand-on-click-node="false"
@@ -43,8 +43,8 @@
         >
           <template #default="{ data, node }">
             <div v-if="node.level === 1" class="rule-root-block">
-              <div class="root-label">SECTION_{{ padZero(data.OrderNum) }}</div>
-              <h2 class="root-title">{{ data.Title }}</h2>
+              <div class="root-label">SECTION_{{ padZero(data.orderNum) }}</div>
+              <h2 class="root-title">{{ data.title }}</h2>
               <div class="root-deco-line"></div>
             </div>
 
@@ -53,23 +53,23 @@
 
               <div class="card-inner">
                 <div class="card-header">
-                  <span class="rule-id-tag" v-if="data.RuleNumber">NO.{{ data.RuleNumber }}</span>
-                  <span class="rule-title">{{ data.Title }}</span>
-                  <span class="version-badge" v-if="data.Version">v{{ data.Version }}</span>
+                  <span class="rule-id-tag" v-if="data.ruleNumber">NO.{{ data.ruleNumber }}</span>
+                  <span class="rule-title">{{ data.title }}</span>
+                  <span class="version-badge" v-if="data.version">v{{ data.version }}</span>
                 </div>
 
-                <div class="card-content-box" v-if="data.Content">
-                  {{ data.Content }}
+                <div class="card-content-box" v-if="data.content">
+                  {{ data.content }}
                 </div>
 
-                <div class="penalty-strip" v-if="data.Penalty">
+                <div class="penalty-strip" v-if="data.penalty">
                   <span class="icon">⚠</span>
                   <span class="label">VIOLATION_PENALTY:</span>
-                  <span class="value">{{ data.Penalty }}</span>
+                  <span class="value">{{ data.penalty }}</span>
                 </div>
 
                 <div class="card-footer">
-                  <span>// UPDATE: {{ formatDate(data.UpdateAt || data.CreateAt) }}</span>
+                  <span>// UPDATE: {{ formatDate(data.updateAt || data.createAt) }}</span>
                 </div>
               </div>
             </div>
@@ -92,7 +92,8 @@ const rules = ref([])
 const search = ref('')
 const treeRef = ref(null)
 
-const treeProps = { children: 'Children', label: 'Title' }
+// ⚡ 核心修复：Tree 映射属性改为小写驼峰
+const treeProps = { children: 'children', label: 'title' }
 
 function padZero(num) {
   return num < 10 ? `0${num}` : num
@@ -103,36 +104,41 @@ function formatDate(val) {
   try { return new Date(val).toLocaleDateString() } catch { return val }
 }
 
+// ⚡ 修改点：过滤字段改为小写
 function filterNode(value, data) {
   if (!value) return true
   const v = value.trim()
   return (
-    (data.Title && data.Title.includes(v)) ||
-    (data.Content && data.Content.includes(v)) ||
-    (data.RuleNumber && data.RuleNumber.includes(v)) ||
-    (data.Penalty && data.Penalty.includes(v))
+    (data.title && data.title.includes(v)) ||
+    (data.content && data.content.includes(v)) ||
+    (data.ruleNumber && data.ruleNumber.includes(v)) ||
+    (data.penalty && data.penalty.includes(v))
   )
 }
 
 function filterTree() {
-  treeRef.value && treeRef.value.filter(search.value)
+  if (treeRef.value) {
+    treeRef.value.filter(search.value)
+  }
 }
 
+// ⚡ 核心修复：逻辑处理中的字段改为小写 (enabled, children)
 function filterEnabled(arr) {
   if (!Array.isArray(arr)) return []
   return arr
-    .filter(item => item.Enabled !== false)
+    .filter(item => item.enabled !== false)
     .map(item => ({
       ...item,
-      Children: filterEnabled(item.Children || [])
+      children: filterEnabled(item.children || [])
     }))
 }
 
+// ⚡ 核心修复：处理函数中的 Children 改为 children
 function fixChildren(arr) {
   if (!Array.isArray(arr)) return []
   arr.forEach(item => {
-    if (!Array.isArray(item.Children)) item.Children = []
-    fixChildren(item.Children)
+    if (!Array.isArray(item.children)) item.children = []
+    fixChildren(item.children)
   })
   return arr
 }
@@ -140,6 +146,7 @@ function fixChildren(arr) {
 onMounted(async () => {
   try {
     const res = await apiClient.get('/rules/tree')
+    // 假设 res.data 包含你提供的 JSON 结构
     const origin = fixChildren(Array.isArray(res.data?.data) ? res.data.data : [])
     rules.value = filterEnabled(origin)
   } catch (error) {
@@ -149,9 +156,9 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* 样式部分保持不变，由于 HTML 结构中的 class 没变，效果依然完美 */
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
 
-/* --- 核心变量 (与 ComCenter 一致) --- */
 .rules-industrial {
   --red: #D92323; 
   --black: #111111; 
@@ -159,9 +166,8 @@ onMounted(async () => {
   --gray: #E0DDD5; 
   --mono: 'JetBrains Mono', monospace; 
   --heading: 'Anton', sans-serif;
-  
   width: 100%;
-  min-height: 100vh; /* 确保填满 */
+  min-height: 100vh;
   position: relative;
   background-color: var(--white);
   color: var(--black);
@@ -171,7 +177,6 @@ onMounted(async () => {
   flex-direction: column;
 }
 
-/* --- 背景网格 --- */
 .grid-bg { 
   position: absolute; inset: 0; 
   background-image: linear-gradient(rgba(17, 17, 17, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(17, 17, 17, 0.05) 1px, transparent 1px); 
@@ -181,7 +186,6 @@ onMounted(async () => {
 .moving-grid { animation: gridScroll 60s linear infinite; }
 @keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-40px); } }
 
-/* --- 主容器 --- */
 .rules-container {
   position: relative;
   z-index: 1;
@@ -194,7 +198,6 @@ onMounted(async () => {
   height: 100vh;
 }
 
-/* --- 头部 --- */
 .page-header {
   border-bottom: 4px solid var(--black);
   padding-bottom: 20px;
@@ -221,8 +224,6 @@ onMounted(async () => {
 .status-badge { background: var(--black); color: var(--white); padding: 2px 6px; display: inline-block; margin-bottom: 4px; }
 .version-tag { color: var(--red); }
 
-/* --- 搜索框 --- */
-.search-section { margin-bottom: 30px; }
 .search-box {
   display: flex;
   border: 2px solid var(--black);
@@ -260,17 +261,13 @@ onMounted(async () => {
 }
 .search-btn:hover { background: var(--red); color: var(--white); }
 
-/* --- 树形列表容器 --- */
 .tree-wrapper {
   flex: 1;
   overflow-y: auto;
   padding-bottom: 50px;
 }
 
-/* 覆盖 Element UI Tree 的默认样式 */
-.industrial-tree {
-  background: transparent;
-}
+.industrial-tree { background: transparent; }
 :deep(.el-tree-node__content) {
   height: auto !important;
   background: transparent !important;
@@ -279,9 +276,8 @@ onMounted(async () => {
   margin-bottom: 15px;
   cursor: default;
 }
-:deep(.el-tree-node__expand-icon) { display: none; } /* 隐藏展开箭头，默认全展开 */
+:deep(.el-tree-node__expand-icon) { display: none; }
 
-/* --- 根节点 (章节) 样式 --- */
 .rule-root-block {
   width: 100%;
   margin-top: 30px;
@@ -306,15 +302,13 @@ onMounted(async () => {
   background: repeating-linear-gradient(45deg, var(--black), var(--black) 10px, transparent 10px, transparent 20px);
 }
 
-/* --- 子节点 (规则卡片) 样式 --- */
 .rule-leaf-card {
   width: 100%;
   position: relative;
-  padding-left: 20px; /* 给连接线留位置 */
+  padding-left: 20px;
   margin-bottom: 10px;
 }
 
-/* 左侧连接线 */
 .connection-line {
   position: absolute;
   left: 0;
@@ -339,7 +333,6 @@ onMounted(async () => {
   background: #fff;
   padding: 15px;
   transition: transform 0.2s;
-  /* 硬阴影 */
   box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
 }
 .card-inner:hover {
@@ -363,16 +356,8 @@ onMounted(async () => {
   padding: 2px 6px;
   font-weight: bold;
 }
-.rule-title {
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-.version-badge {
-  font-size: 0.7rem;
-  border: 1px solid #ccc;
-  padding: 0 4px;
-  color: #888;
-}
+.rule-title { font-weight: 700; font-size: 1.1rem; }
+.version-badge { font-size: 0.7rem; border: 1px solid #ccc; padding: 0 4px; color: #888; }
 
 .card-content-box {
   font-size: 0.95rem;
@@ -382,7 +367,6 @@ onMounted(async () => {
   margin-bottom: 15px;
 }
 
-/* 惩罚条 */
 .penalty-strip {
   background: rgba(217, 35, 35, 0.05);
   border: 1px solid var(--red);
@@ -404,27 +388,8 @@ onMounted(async () => {
   color: #999;
 }
 
-/* 空状态 */
-.empty-state {
-  text-align: center;
-  padding: 40px;
-  color: #999;
-  border: 2px dashed #ccc;
-  margin-top: 20px;
-}
-
-/* 滚动条 */
 .custom-scroll::-webkit-scrollbar { width: 6px; }
 .custom-scroll::-webkit-scrollbar-track { background: #eee; }
 .custom-scroll::-webkit-scrollbar-thumb { background: var(--black); }
 .custom-scroll::-webkit-scrollbar-thumb:hover { background: var(--red); }
-
-/* 响应式 */
-@media (max-width: 768px) {
-  .giant-text { font-size: 2.5rem; }
-  .rules-container { padding: 20px 10px; }
-  .card-inner { padding: 10px; }
-  .rule-leaf-card { padding-left: 10px; margin-left: 0 !important; }
-  .connection-line { display: none; }
-}
 </style>

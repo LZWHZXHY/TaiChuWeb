@@ -270,7 +270,7 @@ const isSaving = ref(false)
 
 const newReport = reactive({ 
   type: 'Weekly', 
-  cycleId: 1, 
+  cycleId: 0, 
   content: '',
   taskIds: [] 
 })
@@ -327,38 +327,44 @@ const formatExactTime = (dateString: string) => {
 }
 
 // --- 核心 API 请求逻辑 ---
+
+/**
+ * 获取周期列表：确保属性全部转为小写
+ */
 const fetchCycles = async () => {
   try {
-    // 🔥 核心修改 1：加上 projectId，只获取当前项目的周期
     const res = await apiClient.get(`/Reports/project/${props.projectId}/cycles`);
-    
     reportCycles.value = res.data.map((c: any) => ({
-      id: c.Id || c.id,
-      name: c.Name || c.name,
-      startDate: c.StartDate || c.start_date, // 兼容大小写
-      endDate: c.EndDate || c.end_date,
-      type: c.Type || c.type,
-      isLocked: c.IsLocked || c.is_Locked
+      id: c.id || c.Id,
+      name: c.name || c.Name,
+      startDate: c.startDate || c.StartDate,
+      endDate: c.endDate || c.EndDate,
+      type: c.type || c.Type,
+      isLocked: c.isLocked || c.IsLocked
     }));
 
     if (reportCycles.value.length > 0) {
-      if (!currentReportCycle.value || !reportCycles.value.find(c => c.id === currentReportCycle.value.id)) {
+      // 默认选中第一个（最新）周期
+      if (!currentReportCycle.value) {
         currentReportCycle.value = reportCycles.value[0];
-        newReport.cycleId = currentReportCycle.value.id;
+      } else {
+        // 如果已经有选中的，在列表中找回它以更新状态（如锁定状态）
+        const updated = reportCycles.value.find(c => c.id === currentReportCycle.value.id);
+        if (updated) currentReportCycle.value = updated;
       }
-    } else {
-        currentReportCycle.value = null;
-        currentCycleReports.value = [];
     }
   } catch (error) {
-    console.error("获取汇报周期失败", error);
+    console.error("获取周期失败", error);
   }
 }
 
+/**
+ * 加载当前周期的汇报流和成员提交状态
+ */
 const loadCycleData = async () => {
   if (!currentReportCycle.value) return;
   
-  const pid = Number(props.projectId);
+  const pid = props.projectId;
   const cid = currentReportCycle.value.id;
 
   try {
@@ -367,27 +373,29 @@ const loadCycleData = async () => {
       apiClient.get(`/Reports/project/${pid}/cycle/${cid}/status`)
     ]);
 
+    // 映射 feed 数据
     currentCycleReports.value = feedRes.data.map((r: any) => ({
-      id: r.Id,
-      title: r.Title,
-      content: r.Content,
-      type: r.Type,
-      createdAt: r.CreatedAt,
-      updatedAt: r.UpdatedAt,
-      userId: r.UserId,
-      userName: r.UserName,
-      completedTasks: r.CompletedTasks?.map((t: any) => ({
-        taskId: t.TaskId,
-        title: t.Title
-      })) || []
+      id: r.id || r.Id,
+      title: r.title || r.Title,
+      content: r.content || r.Content,
+      type: r.type || r.Type,
+      createdAt: r.createdAt || r.CreatedAt,
+      updatedAt: r.updatedAt || r.UpdatedAt,
+      userId: r.userId || r.UserId,
+      userName: r.userName || r.UserName,
+      completedTasks: (r.completedTasks || r.CompletedTasks || []).map((t: any) => ({
+        taskId: t.taskId || t.TaskId,
+        title: t.title || t.Title
+      }))
     }));
 
+    // 映射状态列表
     memberStatusList.value = statusRes.data.map((m: any) => ({
-      userId: m.UserId,
-      username: m.Username,
-      hasSubmitted: m.HasSubmitted,
-      reportId: m.ReportId,
-      submittedAt: m.SubmittedAt
+      userId: m.userId || m.UserId,
+      username: m.username || m.Username,
+      hasSubmitted: m.hasSubmitted ?? m.HasSubmitted, // 注意布尔值处理
+      reportId: m.reportId || m.ReportId,
+      submittedAt: m.submittedAt || m.SubmittedAt
     }));
 
   } catch (error) {
@@ -395,20 +403,23 @@ const loadCycleData = async () => {
   }
 }
 
-watch(() => currentReportCycle.value?.id, (newVal, oldVal) => {
-  if (newVal && newVal !== oldVal) {
+// 监听周期切换
+watch(() => currentReportCycle.value?.id, (newVal) => {
+  if (newVal) {
     newReport.cycleId = newVal;
     loadCycleData();
   }
-})
+}, { immediate: true })
 
+/**
+ * 提交汇报
+ */
 const submitReport = async () => {
-  if (!newReport.content.trim()) return;
+  if (!newReport.content.trim() || !currentReportCycle.value) return;
   isSaving.value = true;
 
   try {
     const payload = {
-      organizationId: 1, 
       projectId: Number(props.projectId),
       cycleId: currentReportCycle.value.id,
       title: `${currentReportCycle.value.name} 工作汇报`,
@@ -423,23 +434,26 @@ const submitReport = async () => {
     newReport.content = '';
     newReport.taskIds = [];
     await loadCycleData();
-
   } catch (error: any) {
-    alert(error.response?.data || "提交失败，请重试");
+    alert(error.response?.data || "提交失败");
   } finally {
     isSaving.value = false;
   }
 }
 
+/**
+ * 保存/添加新周期
+ */
 const saveCycle = async () => {
   if (!editingCycle.name) return alert("请输入周期名称");
   try {
     const payload = {
       name: editingCycle.name,
-      start_date: editingCycle.startDate || new Date().toISOString(),
-      end_date: editingCycle.endDate || new Date().toISOString(),
+      startDate: editingCycle.startDate, // 修正：不要使用 start_date，统一小写驼峰
+      endDate: editingCycle.endDate,
+      projectId: Number(props.projectId)
     };
-    // 🔥 核心修改 2：加上 projectId，把新建的周期绑定到当前项目
+    
     await apiClient.post(`/Reports/project/${props.projectId}/cycles`, payload);
     
     editingCycle.name = ''; 
@@ -452,9 +466,10 @@ const saveCycle = async () => {
 }
 
 const deleteCycle = async (id: number) => {
-  if (!confirm("确定要删除这个周期吗？该周期内的所有汇报也将被一并删除，且不可恢复！")) return;
+  if (!confirm("确定要删除这个周期吗？该操作不可恢复！")) return;
   try {
     await apiClient.delete(`/Reports/cycles/${id}`);
+    if (currentReportCycle.value?.id === id) currentReportCycle.value = null;
     await fetchCycles();
   } catch (error: any) {
     alert("删除失败");
@@ -470,7 +485,11 @@ const toggleLock = async (cycle: any) => {
   }
 }
 
-const openWriteReportModal = () => { showWriteReport.value = true }
+const openWriteReportModal = () => { 
+  if (currentReportCycle.value?.isLocked) return;
+  showWriteReport.value = true; 
+}
+
 const viewReport = (r: any) => { viewingReport.value = r }
 
 defineExpose({ openWriteReportModal })

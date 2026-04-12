@@ -77,9 +77,10 @@ const copyIP = async (text) => {
   }
 };
 
-// 图片容错
 const handleImgError = (e) => {
-  e.target.src = 'https://via.placeholder.com/400x200?text=NO+IMAGE';
+  e.target.onerror = null;
+  // 这是一个灰色背景的纯色块 Base64，不占带宽且响应极快
+  e.target.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN8/x8AAuMB7m6SgY8AAAAASUVORK5CYII=";
 };
 </script>
 

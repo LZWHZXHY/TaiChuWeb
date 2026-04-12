@@ -67,7 +67,7 @@
 const game = {
   title: '不喝水就无法离开的房间',
   appId: '3654500',
-  cover: 'https://image2url.com/r2/default/images/1768790181750-f6563b02-fbe4-4a51-af5b-237de4e65676.png',
+  cover: '',
   steamUrl: 'https://store.steampowered.com/app/3654500/_/',
   // 新增下载链接数组
   downloads: [

@@ -96,13 +96,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, nextTick, watch } from 'vue' // 补上 watch
-import { useRoute, useRouter } from 'vue-router' // 🚀 引入路由
-// ... 其他引入保持不变
+import { ref, onMounted, computed, nextTick, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import apiClient from '@/utils/api' 
 import { useAuthStore } from '@/utils/auth'
 
-// 引入子组件
+// 引入子组件（确保路径正确）
 import GlobalHeader from '@/WikiComponents/WikiHeader.vue'
 import SidebarLeft from '@/WikiComponents/WikiSidebarLeft.vue'
 import ArticleViewer from '@/WikiComponents/WikiViewer.vue'
@@ -113,14 +112,10 @@ import CategoryModal from '@/WikiComponents/CategoryModal.vue'
 import WikiTrashBin from '@/WikiComponents/WikiTrashBin.vue'
 
 const authStore = useAuthStore()
-const route = useRoute()   // 用于获取当前 URL 上的信息
-const router = useRouter() // 用于触发页面跳转
+const route = useRoute()
+const router = useRouter()
 
-
-// --- 🎯 核心状态机 ---
-// 取值范围: 'loading', 'viewing', 'editing', 'reviewing', 'empty'
 const viewStatus = ref('loading') 
-
 const currentArticle = ref(null)
 const directoryTree = ref([]) 
 const currentToc = ref([])
@@ -132,94 +127,134 @@ const showCategoryModal = ref(false)
 const isEditCategoryMode = ref(false)
 const currentEditCategoryData = ref({})
 
-// 🛡️ 权限计算
+/**
+ * 🛡️ 权限逻辑增强：增加对大小写和空值的兼容
+ */
 const isAdmin = computed(() => {
-  const user = authStore.user?.data || authStore.user;
-  const roles = user?.RoleCodes || user?.roleCodes || []; 
-  return roles.includes('WikiAdmin') || roles.includes('SuperAdmin');
+  // 1. 获取用户对象
+  const user = authStore.user?.data || authStore.user || {};
+  
+  // 2. 检查所有可能的角色字段，且必须【有长度】才是有效的
+  // 这样如果 RoleCodes 是 []，它会跳过去看小写的 roleCodes
+  const roles = (user.RoleCodes?.length ? user.RoleCodes : null) || 
+                (user.roleCodes?.length ? user.roleCodes : null) || 
+                (user.roles?.length ? user.roles : null) || 
+                [];
+
+  const result = roles.includes('WikiAdmin') || roles.includes('SuperAdmin');
+
+  // 保持调试打印，方便观察
+  console.log("🛡️ 权限校验详情:", {
+    "原始对象": user,
+    "最终采用的角色列表": roles,
+    "判定结果": result
+  });
+
+  return result;
 });
 
 const isSuperAdmin = computed(() => {
-  const user = authStore.user?.data || authStore.user;
-  const roles = user?.RoleCodes || user?.roleCodes || []; 
+  const user = authStore.user?.data || authStore.user || {};
+  const roles = (user.RoleCodes?.length ? user.RoleCodes : null) || 
+                (user.roleCodes?.length ? user.roleCodes : null) || 
+                [];
   return roles.includes('SuperAdmin');
 });
 
 // --- 生命周期 ---
 onMounted(async () => {
+  // 先加载树
   await loadCategoryTree(); 
   
-  // 🚀 读取 URL 中的 ID，如果没有则默认加载 1 号文章
   const targetId = route.params.id || '1'; 
-  
-  // 如果是空 URL (/wiki)，我们把它重定向到带有 ID 的标准 URL (/wiki/1)，方便用户直接复制
   if (!route.params.id) {
     router.replace(`/wiki/${targetId}`);
   } else {
     await fetchArticle(targetId); 
   }
 
+  // 挂载时如果已经是管理员，主动拉取一次审核数量
   if (isAdmin.value) fetchPendingReviews(true);
 })
 
 /**
- * 🚀 极致稳健的文章加载逻辑
- * 彻底解决 nextSibling 和 shapeFlag 报错
+ * 🚀 极致的数据清洗：既解决重复 Key，又兼容原有字段名
  */
+const loadCategoryTree = async () => {
+  try {
+    const res = await apiClient.get('/Wiki/category-tree');
+    const rawData = res.data ?? res;
+
+    const sanitizeNodes = (nodes, depth = 0) => {
+      return nodes.map((node, index) => {
+        // 生成唯一 Key
+        const uniqueKey = `${node.type || 'node'}-${node.id || '0'}-${depth}-${index}`;
+        
+        const newNode = {
+          ...node,
+          // 💡 关键：同时保留大小写字段，防止子组件引用失败
+          id: node.id ?? node.Id,
+          Id: node.id ?? node.Id,
+          title: node.title ?? node.Title,
+          Title: node.title ?? node.Title,
+          type: node.type ?? node.Type,
+          Type: node.type ?? node.Type,
+          uKey: uniqueKey
+        };
+
+        const children = node.children || node.Children;
+        if (children && children.length > 0) {
+          newNode.children = sanitizeNodes(children, depth + 1);
+          newNode.Children = newNode.children;
+        } else {
+          newNode.children = [];
+          newNode.Children = [];
+        }
+        
+        return newNode;
+      });
+    };
+
+    directoryTree.value = sanitizeNodes(rawData);
+  } catch (e) {
+    console.error("加载目录树失败:", e);
+  }
+}
+
 const fetchArticle = async (id) => {
-  // 1. 立即切换到加载态，强制卸载当前所有内容组件，清空 DOM
   viewStatus.value = 'loading';
   currentToc.value = [];
-
   try {
     const res = await apiClient.get(`/Wiki/article/${id}`);
     const data = res.data;
-
-    // 2. 数据标准化映射
-    const blocks = (data.blocks || []).map((b, index) => ({
+    
+    // 标准化 Blocks
+    const blocks = (data.blocks || data.Blocks || []).map((b, index) => ({
       id: b.Id || b.id || `b-${index}`,
       content: String(b.Content || b.content || ""), 
-      lastEditor: b.LastEditor || b.lastEditor || "系统",
-      lastEditorId: b.LastEditorId || b.lastEditorId || 0, 
-      updatedAt: b.UpdatedAt || b.updatedAt || "",
-      
-      // 🚀 终极修复：把后端传来的贡献者数组安全地接住！
       contributors: b.Contributors || b.contributors || []
     }));
 
-    // 3. 准备数据对象
-    currentArticle.value = {
-      ...data,
-      id: data.id,
-      blocks: blocks
-    };
-
-    // 4. 第一步：先结束加载态，让阅读器挂载
+    currentArticle.value = { ...data, id: data.id || data.Id, blocks: blocks };
+    
     await nextTick();
     viewStatus.value = 'viewing';
-
-    // 5. 第二步：在阅读器 DOM 稳定后再生成目录，避开渲染冲突
+    
     await nextTick();
     const fullMarkdown = blocks.map(b => b.content).join('\n\n');
     generateToc(fullMarkdown);
-
   } catch (error) {
-    console.error("加载文章失败:", error);
+    console.error("加载文章失败", error);
     viewStatus.value = 'empty';
   }
 };
 
-
-
-/**
- * 🚀 字段映射修复：解决“分类显示为空”问题
- */
 const fetchPendingReviews = async (silent = false) => {
   try {
-    const res = await apiClient.get(`/Wiki/pending-reviews?adminId=${authStore.userID}`);
+    const uid = authStore.userID || authStore.userId;
+    const res = await apiClient.get(`/Wiki/pending-reviews?adminId=${uid}`);
     const rawData = res.data || res;
-    
-    pendingReviews.value = rawData.map(r => ({
+    pendingReviews.value = Array.isArray(rawData) ? rawData.map(r => ({
       id: r.Id || r.id,
       articleTitle: r.ArticleTitle || r.articleTitle,
       title: r.Title || r.title,
@@ -230,67 +265,52 @@ const fetchPendingReviews = async (silent = false) => {
       newContent: r.NewContent || r.newContent || '',
       oldCategoryName: r.OldCategoryName || r.oldCategoryName || '未分类',
       newCategoryName: r.NewCategoryName || r.newCategoryName || '未分类'
-    }));
+    })) : [];
   } catch (e) {
     console.error('拉取审核失败', e);
   }
 };
 
-// --- 其他业务逻辑 ---
+// --- 其他事件处理逻辑（保持不变） ---
 
-const loadCategoryTree = async () => {
-  try {
-    const res = await apiClient.get('/Wiki/category-tree');
-    directoryTree.value = res.data ?? res;
-  } catch (e) {}
-}
+const handleSelectArticle = (id) => { router.push(`/wiki/${id}`); };
 
-// 🚀 改造左侧点击：不再直接调接口，而是改变 URL
-const handleSelectArticle = (id) => {
-  router.push(`/wiki/${id}`);
-};
-
-// 🚀 改造内部链接跳转：计算出 ID 后，改变 URL
 const handleWikiLinkJump = (title) => {
   const findIdByTitle = (nodes, target) => {
     if (!nodes) return null;
     for (const node of nodes) {
-      if (node.Type === 'article' && node.Title === target) return node.Id;
-      if (node.Children) {
-        const found = findIdByTitle(node.Children, target);
+      if ((node.Type === 'article' || node.type === 'article') && (node.Title === target || node.title === target)) return node.Id || node.id;
+      const children = node.Children || node.children;
+      if (children) {
+        const found = findIdByTitle(children, target);
         if (found) return found;
       }
     }
     return null;
   };
-
   const targetId = findIdByTitle(directoryTree.value, title);
-  if (targetId) {
-    router.push(`/wiki/${targetId}`); // 👈 修改这里
-  } else {
-    alert(`词条《${title}》尚未创建。`);
-  }
+  if (targetId) router.push(`/wiki/${targetId}`);
+  else alert(`词条《${title}》尚未创建。`);
 };
 
-const openReviewCenter = () => { viewStatus.value = 'reviewing'; fetchPendingReviews(); }
-const exitReviewCenter = () => fetchArticle(currentArticle.value?.id || '1');
+const openReviewCenter = () => { 
+  viewStatus.value = 'reviewing'; 
+  fetchPendingReviews(); 
+}
+
+const exitReviewCenter = () => {
+  fetchArticle(currentArticle.value?.id || '1');
+}
 
 const startEdit = () => { viewStatus.value = 'editing'; }
 const cancelEdit = () => { viewStatus.value = 'viewing'; }
 
 const handleSave = async (editData) => {
-  // 1. 🛑 提取真正的用户对象 (参考你 isAdmin 里的写法)
   const currentUser = authStore.user?.data || authStore.user || {};
-  
-  // 2. 🛑 兼容各种可能的字段名大小写，找到真正的 ID
   const actualUserId = currentUser.Id || currentUser.id || authStore.userId || authStore.userID;
-
-  // 3. 🛑 打印出来看看到底拿到了什么（如果控制台打印是 undefined，说明你的 authStore 结构不对）
-  console.log("🛠️ 准备提交的 User ID:", actualUserId);
-
-  // 4. 🛑 防呆拦截：如果没有拿到 ID，直接阻止请求，防止触发后端的 400 报错
-  if (!actualUserId || isNaN(Number(actualUserId))) {
-    alert("无法获取当前用户信息，请尝试重新登录！");
+  
+  if (!actualUserId) {
+    alert("无法获取用户信息，请重试");
     return;
   }
 
@@ -298,32 +318,22 @@ const handleSave = async (editData) => {
     const payload = {
       ArticleId: Number(currentArticle.value.id) || 0,
       CategoryId: Number(editData.categoryId || currentArticle.value.categoryId || 1),
-      UserId: Number(actualUserId), // 👈 此时这里 100% 是个合法的纯数字了
+      UserId: Number(actualUserId),
       Title: editData.title,
       ContentMarkdown: editData.content,
       EditSummary: currentArticle.value.id === 0 ? "创建新词条" : "内容修改"
     };
-
-    console.log("🚀 发送给后端的完整数据:", payload);
-
     await apiClient.post('/Wiki/submit-edit', payload);
-    
     alert("提交成功，请等待审核！");
-
-    if (isAdmin.value) {
-      await fetchPendingReviews(true); 
-    }
-
+    if (isAdmin.value) await fetchPendingReviews(true); 
     fetchArticle(currentArticle.value.id || '1');
-  } catch (e) { 
-    console.error("保存失败:", e);
-    alert("保存失败，请打开控制台查看具体错误！"); 
-  }
+  } catch (e) { alert("保存失败"); }
 }
 
 const handleReviewAction = async (revisionId, isApproved) => {
   try {
-    await apiClient.post('/Wiki/review-edit', { AdminId: authStore.userID, RevisionId: revisionId, IsApproved: isApproved });
+    const uid = authStore.userID || authStore.userId;
+    await apiClient.post('/Wiki/review-edit', { AdminId: uid, RevisionId: revisionId, IsApproved: isApproved });
     await fetchPendingReviews();
     if (isApproved) await loadCategoryTree();
   } catch (e) { alert("操作失败"); }
@@ -332,7 +342,8 @@ const handleReviewAction = async (revisionId, isApproved) => {
 const handleDeleteArticle = async (id) => {
   if (!confirm("确定要删除此词条吗？")) return;
   try {
-    await apiClient.post('/Wiki/delete-article', { UserId: authStore.userID, ArticleId: id });
+    const uid = authStore.userID || authStore.userId;
+    await apiClient.post('/Wiki/delete-article', { UserId: uid, ArticleId: id });
     await loadCategoryTree();
     fetchArticle('1');
   } catch (e) {}
@@ -355,32 +366,39 @@ const generateToc = (markdown) => {
 
 const handleSubmitCategory = async (d) => {
   const url = isEditCategoryMode.value ? '/Wiki/update-category' : '/Wiki/create-category';
-  
-  // 🚀 核心修复：兼容大写和小写，防止数据丢失
+  const uid = authStore.userID || authStore.userId;
   const payload = {
-    UserId: authStore.userID,
+    UserId: uid,
     CategoryId: d.id || d.Id || d.CategoryId || 0,
     Name: d.name || d.Name,
     ParentId: d.parentId || d.ParentId || 0
   };
-
-  console.log("🚀 准备发送的分类数据:", payload); // 可以在控制台检查数据是否完整
-
   try {
     await apiClient.post(url, payload);
-    alert(isEditCategoryMode.value ? "分类修改成功！" : "分类创建成功！");
+    alert("操作成功！");
     showCategoryModal.value = false;
     await loadCategoryTree();
-  } catch (e) { 
-    console.error("分类操作失败:", e);
-    // 捕获并显示后端返回的具体错误信息（如“目录名称不能为空”）
-    alert("操作失败：" + (e.response?.data || e.message || "未知错误")); 
-  }
+  } catch (e) { alert("操作失败"); }
 };
 
 const openCreateCategoryModal = () => { isEditCategoryMode.value = false; currentEditCategoryData.value = {}; showCategoryModal.value = true; }
-const openEditCategoryModal = (n) => { isEditCategoryMode.value = true; currentEditCategoryData.value = { id: n.Id, name: n.Title, parentId: n.ParentId || 0 }; showCategoryModal.value = true; }
-const handleDeleteCategory = async (id) => { try { await apiClient.post('/Wiki/delete-category', { UserId: authStore.userID, CategoryId: id }); showCategoryModal.value = false; loadCategoryTree(); } catch (e) {} }
+const openEditCategoryModal = (n) => { 
+  isEditCategoryMode.value = true; 
+  currentEditCategoryData.value = { 
+    id: n.Id || n.id, 
+    name: n.Title || n.title, 
+    parentId: n.ParentId || n.parentId || 0 
+  }; 
+  showCategoryModal.value = true; 
+}
+const handleDeleteCategory = async (id) => { 
+  try { 
+    const uid = authStore.userID || authStore.userId;
+    await apiClient.post('/Wiki/delete-category', { UserId: uid, CategoryId: id }); 
+    showCategoryModal.value = false; 
+    loadCategoryTree(); 
+  } catch (e) {} 
+}
 
 const handleScroll = (id) => { 
   activeHeadingId.value = id; 
@@ -390,23 +408,15 @@ const handleScroll = (id) => {
 
 const handleSearch = () => { console.log("搜索中...") }
 
-
-watch(
-  () => route.params.id,
-  (newId) => {
-    // 只有在当前视图是“查看文章”或“加载中”时，才触发获取文章（防止在编辑或审核时误刷）
-    if (newId && (viewStatus.value === 'viewing' || viewStatus.value === 'loading' || viewStatus.value === 'empty')) {
-      fetchArticle(newId);
-    }
+watch(() => route.params.id, (newId) => {
+  if (newId && (viewStatus.value === 'viewing' || viewStatus.value === 'loading' || viewStatus.value === 'empty')) {
+    fetchArticle(newId);
   }
-);
-
-
-
-
+});
 </script>
 
 <style scoped>
+/* 样式保持不变... */
 .pro-wiki-app { height: 100%; display: flex; flex-direction: column; overflow: hidden; background: #fff;}
 .wiki-layout { flex: 1; display: flex; overflow: hidden; }
 .sidebar-wrapper { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; border-right: 1px solid #f0f0f0; background: #fafafa; }

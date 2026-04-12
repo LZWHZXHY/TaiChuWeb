@@ -132,10 +132,13 @@ const searchQuery = ref('')
 const selectedNode = ref(null)
 
 const evolutionSpeed = ref(2) 
-const repulsionStrength = ref(-450); // 排斥力响应式变量
+const repulsionStrength = ref(-160) // 🚀 增强初始排斥力，让整体更扩散
 let evolutionTimer = null
+let hoverNode = null
+let hoverLink = null
+let lastClickTime = 0
 
-// --- 动态色彩生成器 (哈希算法) ---
+// --- 1. 动态色彩生成 ---
 const getAutoColor = (text) => {
   if (!text) return '#888888';
   let hash = 0;
@@ -146,55 +149,52 @@ const getAutoColor = (text) => {
   return `hsl(${h}, 70%, 65%)`;
 };
 
-// --- 监听排斥力滑块变化 ---
+// --- 2. 物理引擎安全重启 ---
+const reheatSimulation = () => {
+  if (!graphInstance.value) return;
+  if (typeof graphInstance.value.d3ReheatSimulation === 'function') {
+    graphInstance.value.d3ReheatSimulation();
+  } else {
+    graphInstance.value.d3AlphaTarget(0.1);
+    graphInstance.value.d3Restart();
+    setTimeout(() => graphInstance.value?.d3AlphaTarget(0), 300);
+  }
+}
+
+// 🚀 优化：监听排斥力滑块
 watch(repulsionStrength, (newVal) => {
   if (graphInstance.value) {
-    graphInstance.value.d3Force('charge').strength(node => {
-      // 大节点排斥力增强以保持核心地位
-      return node.val > 15 ? newVal * 2.5 : newVal;
-    });
-    // 重启仿真以应用新物理参数
-    graphInstance.value.d3AlphaTarget(0.2).d3Restart();
-    setTimeout(() => graphInstance.value.d3AlphaTarget(0), 500);
+    const chargeForce = graphInstance.value.d3Force('charge');
+    if (chargeForce) {
+      chargeForce
+        .strength(node => (node.val > 15 ? newVal * 2.2 : newVal))
+        .distanceMax(300); // 🚀 扩大排斥有效半径
+    }
+    reheatSimulation();
   }
 });
 
-// --- 辅助函数 ---
-const getCleanImageUrl = (imgData) => {
-  if (!imgData) return null;
-  if (imgData.startsWith('[')) { try { return JSON.parse(imgData)[0] || null; } catch { return null; } }
-  return imgData;
-}
-const imgError = (e) => { e.target.style.display = 'none'; }
-const formatProp = (val) => {
-  if (typeof val === 'object' && val !== null) { return Object.entries(val).map(([k, v]) => `${k}:${v}`).join(' | '); }
-  return val;
-}
-
+// --- 3. 辅助计算 ---
 const calculateNodeMass = (node) => {
   let mass = 4; 
   if (node.description) mass += Math.min(node.description.length / 50, 30);
-  if (node.properties) { const propCount = Object.keys(node.properties).length; mass += Math.min(propCount * 1.5, 15); }
+  if (node.properties) mass += Math.min(Object.keys(node.properties).length * 1.5, 15);
   if (node.image) mass += 6;
   return Math.round(mass);
 }
 
-let lastClickTime = 0;
-let hoverLink = null;
-let hoverNode = null;
-
-// --- 演化逻辑 ---
+// --- 4. 演化逻辑 ---
 const startEvolution = () => {
+  if (evolutionTimer) clearInterval(evolutionTimer);
   displayedNodes.value = [];
   displayedLinks.value = [];
   currentRenderCount.value = 0;
-  if (evolutionTimer) clearInterval(evolutionTimer);
 
   const pendingNodes = JSON.parse(JSON.stringify(rawNodes.value));
   pendingNodes.sort((a, b) => {
-    const timeA = new Date(a.updated_at).getTime() || 0;
-    const timeB = new Date(b.updated_at).getTime() || 0;
-    return timeA !== timeB ? timeA - timeB : a.id - b.id;
+    const timeA = new Date(a.updatedAt || a.updateTime || 0).getTime();
+    const timeB = new Date(b.updatedAt || b.updateTime || 0).getTime();
+    return timeA - timeB || a.id - b.id;
   });
 
   const visibleNodeIds = new Set();
@@ -208,36 +208,35 @@ const startEvolution = () => {
 
     const chunk = pendingNodes.splice(0, evolutionSpeed.value);
     chunk.forEach(node => {
-      node.x = (Math.random() - 0.5) * 40; 
-      node.y = (Math.random() - 0.5) * 40;
+      node.x = (Math.random() - 0.5) * 10;
+      node.y = (Math.random() - 0.5) * 10;
       visibleNodeIds.add(String(node.id));
     });
 
     displayedNodes.value.push(...chunk);
     currentRenderCount.value = displayedNodes.value.length;
 
-    const newLinksToAdd = [];
     rawLinks.value.forEach(link => {
       const sId = String(link.source);
       const tId = String(link.target);
       const linkKey = `${sId}->${tId}`;
       if (visibleNodeIds.has(sId) && visibleNodeIds.has(tId) && !addedLinkKeys.has(linkKey)) {
-        newLinksToAdd.push({ ...link, source: sId, target: tId });
+        displayedLinks.value.push({ ...link, source: sId, target: tId });
         addedLinkKeys.add(linkKey);
       }
     });
 
-    if (newLinksToAdd.length > 0) displayedLinks.value.push(...newLinksToAdd);
-
     if (graphInstance.value) {
-      graphInstance.value.graphData({ nodes: displayedNodes.value, links: displayedLinks.value });
-      graphInstance.value.d3AlphaTarget(0.1).d3Restart();
+      graphInstance.value.graphData({
+        nodes: [...displayedNodes.value],
+        links: [...displayedLinks.value]
+      });
+      reheatSimulation();
     }
   }, 100);
 }
 
-const replayEvolution = () => startEvolution();
-
+// --- 5. 初始化图表 ---
 const initGraph = async () => {
   loading.value = true
   try {
@@ -245,51 +244,41 @@ const initGraph = async () => {
     const { nodes, edges } = res.data
 
     const validIds = new Set(nodes.map(n => String(n.id)));
-    const cleanEdges = edges.filter(link => {
-        const s = typeof link.source === 'object' ? link.source.id : link.source;
-        const t = typeof link.target === 'object' ? link.target.id : link.target;
-        return validIds.has(String(s)) && validIds.has(String(t));
-    });
-
-    let massSum = 0;
-    rawNodes.value = JSON.parse(JSON.stringify(nodes)).map(n => {
-      const mass = calculateNodeMass(n);
-      massSum += mass;
-      return { ...n, val: mass }
-    });
-    
-    rawLinks.value = JSON.parse(JSON.stringify(cleanEdges)).map(l => ({
-        ...l, source: String(l.source), target: String(l.target)
+    rawNodes.value = nodes.map(n => ({ ...n, id: String(n.id), val: calculateNodeMass(n) }));
+    rawLinks.value = edges.filter(l => {
+      const s = String(typeof l.source === 'object' ? l.source.id : l.source);
+      const t = String(typeof l.target === 'object' ? l.target.id : l.target);
+      return validIds.has(s) && validIds.has(t);
+    }).map(l => ({
+      ...l,
+      source: String(typeof l.source === 'object' ? l.source.id : l.source),
+      target: String(typeof l.target === 'object' ? l.target.id : l.target)
     }));
-    
-    totalNodeCount.value = nodes.length;
-    totalMass.value = massSum;
 
-    const elem = graphRef.value
+    totalNodeCount.value = nodes.length;
+    totalMass.value = rawNodes.value.reduce((s, n) => s + n.val, 0);
+
     const width = wrapperRef.value.offsetWidth
     const height = wrapperRef.value.offsetHeight
 
-    graphInstance.value = ForceGraph()(elem)
+    graphInstance.value = ForceGraph()(graphRef.value)
       .width(width).height(height).backgroundColor('#080808')
-      .graphData({ nodes: [], links: [] }) 
-
+      .nodeId('id')
+      .linkSource('source')
+      .linkTarget('target')
       .nodeCanvasObject((node, ctx, globalScale) => {
-        const isSelected = selectedNode.value?.id === node.id
-        const isHover = node === hoverNode
-        const query = searchQuery.value.trim().toLowerCase()
-        const isMatch = query && node.label.toLowerCase().includes(query)
-        const isDimmed = query && !isMatch && !isSelected
+        const isSelected = selectedNode.value?.id === node.id;
+        const isHover = node === hoverNode;
+        const query = (searchQuery.value || '').trim().toLowerCase();
+        const isMatch = query && node.label.toLowerCase().includes(query);
+        const isDimmed = query && !isMatch && !isSelected;
 
-        ctx.globalAlpha = isDimmed ? 0.1 : 1;
-        const r = node.val; 
+        ctx.globalAlpha = isDimmed ? 0.15 : 1;
+        const r = node.val || 5;
 
-        // 自动取色
         let baseColor = getAutoColor(node.type || 'Entity');
         if (isSelected || isMatch) baseColor = '#FFFFFF';
-        if (isHover && !isSelected) {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = baseColor;
-        }
+        if (isHover && !isSelected) { ctx.shadowBlur = 15; ctx.shadowColor = baseColor; }
 
         ctx.beginPath();
         ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
@@ -301,100 +290,114 @@ const initGraph = async () => {
           ctx.beginPath();
           ctx.arc(node.x, node.y, r + 4, 0, 2 * Math.PI, false);
           ctx.strokeStyle = '#D92323';
-          ctx.lineWidth = 2 / globalScale; 
+          ctx.lineWidth = 2.5 / globalScale;
           ctx.stroke();
         }
 
-        const showText = (r > 12 && globalScale > 0.6) || globalScale > 1.2 || isHover || isSelected;
+        const showText = globalScale > 0.8 || isHover || isSelected;
         if (showText) {
-          const fontSize = isSelected ? 16 : 12; 
+          const fontSize = isSelected ? 14 : 10;
           ctx.font = `${fontSize}px 'JetBrains Mono'`;
-          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.textAlign = 'center';
           ctx.fillStyle = isSelected ? '#D92323' : '#cccccc';
           ctx.fillText(node.label, node.x, node.y + r + fontSize + 2);
         }
         ctx.globalAlpha = 1;
       })
       .linkCanvasObject((link, ctx, globalScale) => {
-        const isStructure = link.label === '包含'; 
+        const isStructure = link.label === '包含';
         const isHoveredLink = link === hoverLink;
-        const isRelated = selectedNode.value?.id === link.source.id || selectedNode.value?.id === link.target.id || hoverNode?.id === link.source.id || hoverNode?.id === link.target.id;
+        const sId = typeof link.source === 'object' ? link.source.id : link.source;
+        const tId = typeof link.target === 'object' ? link.target.id : link.target;
+        const isRelated = selectedNode.value?.id === sId || selectedNode.value?.id === tId || 
+                          hoverNode?.id === sId || hoverNode?.id === tId;
 
-        // 连线自动取色
-        let lineColor = isStructure ? 'rgba(100, 100, 100, 0.4)' : getAutoColor(link.label);
+        let lineColor = isStructure ? 'rgba(100, 100, 100, 0.3)' : getAutoColor(link.label);
         if (isRelated || isHoveredLink) lineColor = '#FFFFFF';
 
-        ctx.lineWidth = (isHoveredLink || isRelated ? 3 : 1) / globalScale;
+        ctx.lineWidth = (isHoveredLink || isRelated ? 2.5 : 1) / globalScale;
         ctx.strokeStyle = lineColor;
 
         if (!isStructure) {
-            ctx.shadowColor = lineColor;
-            ctx.shadowBlur = (isHoveredLink || isRelated) ? 10 : 0; 
-            ctx.setLineDash([4 / globalScale, 2 / globalScale]);
-        } else ctx.setLineDash([]);
+          ctx.setLineDash([4 / globalScale, 2 / globalScale]);
+          if (isRelated || isHoveredLink) { ctx.shadowColor = lineColor; ctx.shadowBlur = 8; }
+        } else { ctx.setLineDash([]); }
 
         ctx.beginPath();
         ctx.moveTo(link.source.x, link.source.y);
         ctx.lineTo(link.target.x, link.target.y);
         ctx.stroke();
-        ctx.shadowBlur = 0; 
+        ctx.setLineDash([]); ctx.shadowBlur = 0;
 
-        if (!isStructure && (globalScale > 1.2 || isHoveredLink || isRelated)) {
-            const midX = link.source.x + (link.target.x - link.source.x) * 0.5;
-            const midY = link.source.y + (link.target.y - link.source.y) * 0.5;
-            ctx.font = `10px 'JetBrains Mono'`;
-            ctx.textAlign = 'center';
-            const label = link.label;
-            const textWidth = ctx.measureText(label).width;
-            ctx.fillStyle = '#080808'; 
-            ctx.fillRect(midX - textWidth/2 - 2, midY - 7, textWidth + 4, 14);
-            ctx.fillStyle = lineColor;
-            ctx.fillText(label, midX, midY);
+        if (!isStructure && (globalScale > 1.5 || isHoveredLink || isRelated)) {
+          const midX = link.source.x + (link.target.x - link.source.x) * 0.5;
+          const midY = link.source.y + (link.target.y - link.source.y) * 0.5;
+          ctx.font = `${9/globalScale}px 'JetBrains Mono'`;
+          const txt = link.label || '';
+          const tw = ctx.measureText(txt).width;
+          ctx.fillStyle = '#080808';
+          ctx.fillRect(midX - tw/2 - 2, midY - 6, tw + 4, 12);
+          ctx.fillStyle = lineColor;
+          ctx.fillText(txt, midX - tw/2, midY + 3);
         }
       })
-      .linkDirectionalArrowLength(link => link.label === '包含' ? 0 : 4)
-      .linkDirectionalArrowRelPos(1)
-      .onNodeHover(node => { elem.style.cursor = node ? 'pointer' : null; hoverNode = node || null })
-      .onLinkHover(link => { hoverLink = link || null })
+      .onNodeHover(node => {
+        wrapperRef.value.style.cursor = node ? 'pointer' : null;
+        hoverNode = node;
+      })
+      .onLinkHover(link => { hoverLink = link; })
       .onNodeClick(node => {
         const now = Date.now();
         if (now - lastClickTime < 300) emit('select-node', node.id);
-        else { 
-          selectedNode.value = node; 
-          graphInstance.value.centerAt(node.x, node.y, 600); 
-          graphInstance.value.zoom(2.5, 600); 
+        else {
+          selectedNode.value = node;
+          graphInstance.value.centerAt(node.x, node.y, 600);
+          graphInstance.value.zoom(2.5, 600);
         }
         lastClickTime = now;
       })
-      .onBackgroundClick(() => { selectedNode.value = null })
+      .onBackgroundClick(() => { selectedNode.value = null; });
 
-    // --- 物理引擎配置 ---
-    graphInstance.value.d3Force('charge').strength(node => 
-      node.val > 15 ? repulsionStrength.value * 2.5 : repulsionStrength.value
-    );
+    // 🚀 6. 扩散性物理调优
+    const chargeForce = graphInstance.value.d3Force('charge');
+    if (chargeForce) {
+      chargeForce
+        .strength(repulsionStrength.value)
+        .distanceMax(300); // 🚀 允许推力传递得更远
+    }
 
-    graphInstance.value.d3Force('link').distance(link => {
-        return link.label === '包含' ? 80 : 160;
-    });
+    const linkForce = graphInstance.value.d3Force('link');
+    if (linkForce) {
+      // 🚀 显著拉长连线，给簇群留出空间
+      linkForce.distance(link => link.label === '包含' ? 100 : 220); 
+    }
 
     import('d3-force').then(d3 => {
-      // 增强向心力，防止发散
-      graphInstance.value.d3Force('radial', d3.forceRadial(100, width / 2, height / 2).strength(0.08));
-      graphInstance.value.d3Force('collide', d3.forceCollide(node => node.val + 8));
-    })
+      if (graphInstance.value) {
+        // 🚀 减弱引力场强度，让点不再死磕圆心
+        graphInstance.value.d3Force('x', d3.forceX(0).strength(0.025));
+        graphInstance.value.d3Force('y', d3.forceY(0).strength(0.025));
+        graphInstance.value.d3Force('center', d3.forceCenter(0, 0));
+        graphInstance.value.d3Force('collide', d3.forceCollide(node => node.val + 15).iterations(2));
+        reheatSimulation();
+      }
+    });
+
+    graphInstance.value.d3VelocityDecay(0.35); // 🚀 降低阻尼，让扩散更丝滑
     
-    graphInstance.value.d3VelocityDecay(0.4);
     startEvolution();
 
-  } catch (e) { console.error("Graph Error:", e) } finally { loading.value = false }
+  } catch (e) { console.error("Graph Error:", e); } finally { loading.value = false }
 }
 
-const handleSearch = () => { if (graphInstance.value) graphInstance.value.d3ReheatSimulation() }
-const resetCamera = () => { if(graphInstance.value) graphInstance.value.zoomToFit(800, 80) }
+const handleSearch = () => reheatSimulation();
+const resetCamera = () => graphInstance.value?.zoomToFit(800, 50);
+const replayEvolution = () => startEvolution();
 
 let resizeObserver = null;
 const setupResize = () => {
   resizeObserver = new ResizeObserver(entries => {
+    if (!entries[0]) return;
     const { width, height } = entries[0].contentRect
     if(graphInstance.value) graphInstance.value.width(width).height(height)
   })
@@ -404,10 +407,14 @@ const setupResize = () => {
 onMounted(() => { initGraph(); setupResize(); })
 onBeforeUnmount(() => { 
   if(resizeObserver) resizeObserver.disconnect(); 
-  if(graphInstance.value) graphInstance.value._destructor();
   if(evolutionTimer) clearInterval(evolutionTimer);
+  if(graphInstance.value) graphInstance.value._destructor?.();
 })
 </script>
+
+
+
+
 
 <style scoped>
 /* 样式保持原样，仅补充滑块可能需要的微调 */

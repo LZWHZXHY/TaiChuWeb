@@ -1,35 +1,31 @@
 <template>
-  <div class="login-container">
-    <div class="login-card">
-      <div class="login-header">
-        <h1>{{$t('login.LoginAccount')}}</h1>
-        <p>{{$t('login.Welcome')}}</p>
-      </div>
+  <div class="md-login-wrapper">
+    <div class="md-login-container">
+      
+      <header class="md-header">
+        <h1>终端接入</h1>
+        <p class="md-subtitle">请输入您的操作员凭证进行身份验证。</p>
+      </header>
 
-      <!-- 测试连接按钮 -->
-      <button @click="testConnection" class="test-btn">
-        <span v-if="testingConnection" class="loading-spinner"></span>
-        <span v-else>{{$t('login.apiTest')}}</span>
-      </button>
-
-      <form @submit.prevent="handleLogin" class="login-form">
-        <div class="form-group">
-          <label for="username">{{$t('login.usernameOrEmail')}}</label>
+      <form @submit.prevent="handleLogin" class="md-form">
+        
+        <div class="md-input-group">
+          <label for="username">操作员标识</label>
           <input
             id="username"
             v-model="loginForm.username"
             type="text"
             required
-            placeholder="email or username"
+            placeholder="用户名或邮箱"
             autocomplete="username"
             :class="{ 'error': errors.username }"
             @input="clearError('username')"
           />
-          <span v-if="errors.username" class="error-text">{{ errors.username }}</span>
+          <span v-if="errors.username" class="md-error-text">{{ errors.username }}</span>
         </div>
 
-        <div class="form-group">
-          <label for="password">{{$t('login.password')}}</label>
+        <div class="md-input-group">
+          <label for="password">安全密钥</label>
           <input
             id="password"
             v-model="loginForm.password"
@@ -40,34 +36,38 @@
             :class="{ 'error': errors.password }"
             @input="clearError('password')"
           />
-          <span v-if="errors.password" class="error-text">{{ errors.password }}</span>
+          <span v-if="errors.password" class="md-error-text">{{ errors.password }}</span>
         </div>
 
-        <div class="form-options">
-          <label class="remember-me">
+        <div class="md-form-options">
+          <label class="md-checkbox">
             <input
               type="checkbox"
               v-model="loginForm.rememberMe"
               autocomplete="off"
             />
-            <span>{{$t('login.rememberMe')}}</span>
+            <span>保持连接</span>
           </label>
-          <a href="#" class="forgot-password" @click.prevent="handleForgotPassword">{{$t('login.forgetPassword')}}</a>
+          <a href="#" class="md-link" @click.prevent="handleForgotPassword">忘记密钥?</a>
         </div>
 
-        <button type="submit" class="login-btn" :disabled="isLoading">
+        <button type="submit" class="md-btn-primary" :disabled="isLoading">
           <span v-if="isLoading" class="loading-spinner"></span>
-          <span v-else>{{$t('login.logIn')}}</span>
+          <span v-else>接入系统</span>
         </button>
 
-        <div v-if="error" class="error-message">
+        <blockquote v-if="error" class="md-blockquote" :class="{ 'is-success': error.includes('✅') }">
+          <strong>System Message:</strong>
+          <br />
           {{ error }}
-        </div>
+        </blockquote>
       </form>
 
-      <div class="login-footer">
-        <p>{{$t('login.Account')}} <a href="#" @click.prevent="switchToRegister">{{$t('login.Register')}}</a></p>
-      </div>
+      <footer class="md-footer">
+        <hr />
+        <p>未注册身份? <a href="#" class="md-link" @click.prevent="switchToRegister">申请凭证</a></p>
+      </footer>
+      
     </div>
   </div>
 </template>
@@ -76,10 +76,6 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/utils/auth'
-import apiClient from '@/utils/api'
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
-
 
 const router = useRouter()
 const route = useRoute()
@@ -97,7 +93,6 @@ const errors = reactive({
 })
 
 const isLoading = ref(false)
-const testingConnection = ref(false)
 const error = ref('')
 
 // 检查是否已登录
@@ -105,7 +100,6 @@ const isLoggedIn = computed(() => authStore.isAuthenticated)
 
 // 组件挂载时检查登录状态
 onMounted(() => {
-  // 如果用户已登录，重定向到首页或目标页面
   if (isLoggedIn.value) {
     const redirect = route.query.redirect || '/'
     console.log('用户已登录，重定向到:', redirect)
@@ -115,7 +109,7 @@ onMounted(() => {
 
   // 检查是否有注册成功消息
   if (route.query.registered === 'true' || route.query.message) {
-    error.value = route.query.message || '注册成功！请登录您的账户'
+    error.value = route.query.message || '✅ 注册成功！请登录您的账户'
   }
 })
 
@@ -133,7 +127,6 @@ const clearError = (field) => {
 const validateForm = () => {
   let isValid = true
   
-  // 清空错误信息
   errors.username = ''
   errors.password = ''
   error.value = ''
@@ -154,55 +147,6 @@ const validateForm = () => {
   return isValid
 }
 
-// 测试API连接
-const testConnection = async () => {
-  testingConnection.value = true
-  error.value = ''
-  
-  try {
-    console.log('🧪 开始测试API连接...')
-    
-    // 尝试多个可能的测试端点
-    const testEndpoints = [
-      '/default/health',
-      '/default/users/count',
-      '/loginregister/health',
-      '/api/health'
-    ]
-    
-    let success = false
-    let result = null
-    let workingEndpoint = ''
-    
-    for (const endpoint of testEndpoints) {
-      try {
-        console.log(`尝试连接: ${endpoint}`)
-        const response = await apiClient.get(endpoint)
-        success = true
-        result = response.data
-        workingEndpoint = endpoint
-        console.log(`✅ ${endpoint} 连接成功:`, result)
-        break
-      } catch (err) {
-        console.log(`❌ ${endpoint} 连接失败:`, err.message)
-        continue
-      }
-    }
-    
-    if (success) {
-      error.value = `✅ API连接正常！\n端点: ${workingEndpoint}\n响应: ${JSON.stringify(result, null, 2)}`
-    } else {
-      error.value = '❌ 所有API端点连接失败，请检查后端服务状态'
-    }
-  } catch (err) {
-    console.error('❌ 连接测试失败:', err)
-    error.value = '连接测试失败: ' + err.message
-  } finally {
-    testingConnection.value = false
-  }
-}
-
-// 登录处理
 // 登录处理
 const handleLogin = async () => {
   if (!validateForm()) return
@@ -211,37 +155,20 @@ const handleLogin = async () => {
   error.value = ''
   
   try {
-    console.log('🔐 开始登录:', { 
-      username: loginForm.username,
-      password: '***' 
-    })
-    
-    // 使用authStore的login方法
     const result = await authStore.login({
       username: loginForm.username,
       password: loginForm.password
     })
     
-    console.log('登录结果:', result)
-    
     if (result.success) {
-      // 登录成功，显示成功消息
       error.value = '✅ 登录成功！正在跳转...'
-      
-      // 确保状态完全更新后再跳转
       await new Promise(resolve => setTimeout(resolve, 100))
-      
       const redirect = route.query.redirect || '/'
-      console.log('✅ 登录成功，跳转到:', redirect)
-      
-      // 直接跳转，不使用 setTimeout
       router.push(redirect)
     } else {
       error.value = result.error || '登录失败'
-      console.error('❌ 登录失败:', result.error)
     }
   } catch (err) {
-    console.error('❌ 登录异常:', err)
     error.value = '登录失败: ' + (err.message || '未知错误')
   } finally {
     isLoading.value = false
@@ -252,9 +179,7 @@ const handleLogin = async () => {
 const switchToRegister = () => {
   router.push({
     path: '/register',
-    query: { 
-      redirect: route.query.redirect 
-    }
+    query: { redirect: route.query.redirect }
   })
 }
 
@@ -267,187 +192,211 @@ const handleForgotPassword = () => {
 const unwatch = router.afterEach((to, from) => {
   if (to.name === 'Login' && from.name === 'Register') {
     if (to.query.registered === 'true' || to.query.message) {
-      error.value = to.query.message || '注册成功！请登录您的账户'
+      error.value = to.query.message || '✅ 注册成功！请登录您的账户'
     }
   }
 })
 </script>
 
 <style scoped>
-.login-container {
+/* --- Markdown 极简风格变量 --- */
+.md-login-wrapper {
+  --text-primary: #24292f;
+  --text-secondary: #57606a;
+  --border-color: #d0d7de;
+  --bg-color: #ffffff;
+  --accent-color: #0969da;
+  --error-color: #cf222e;
+  --success-color: #1a7f37;
+  --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+
   min-height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  align-items: center;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-system);
   padding: 2rem;
-}
-
-.login-card {
-  background: white;
-  padding: 3rem;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px;
-}
-
-.login-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.login-header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
-}
-
-.login-header p {
-  color: #666;
-  font-size: 1rem;
   line-height: 1.5;
 }
 
-.test-btn {
+.md-login-container {
   width: 100%;
-  background: #48bb78;
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-bottom: 1.5rem;
+  max-width: 420px;
+}
+
+/* --- 标题区域 (H1) --- */
+.md-header {
+  margin-bottom: 2rem;
+}
+
+.md-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
-  justify-content: center;
+}
+
+.md-header h1::before {
+  content: '#';
+  color: var(--border-color);
+  margin-right: 0.5rem;
+  font-weight: 400;
+}
+
+.md-subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* --- 表单区域 --- */
+.md-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.md-input-group {
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
 }
 
-.test-btn:hover:not(:disabled) {
-  background: #38a169;
-  transform: translateY(-1px);
-}
-
-.test-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-label {
-  margin-bottom: 0.5rem;
-  color: #4a5568;
-  font-weight: 500;
+.md-input-group label {
+  font-weight: 600;
   font-size: 0.9rem;
 }
 
-input {
-  padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
+.md-input-group input {
+  padding: 8px 12px;
   font-size: 1rem;
-  transition: all 0.3s ease;
-  font-family: inherit;
-  color: #4a5568;
-}
-
-input:focus {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  color: #2f855a;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
 }
 
-input.error {
-  border-color: #e53e3e;
+.md-input-group input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
 }
 
-.error-text {
-  color: #e53e3e;
+.md-input-group input.error {
+  border-color: var(--error-color);
+}
+.md-input-group input.error:focus {
+  box-shadow: 0 0 0 3px rgba(207, 34, 46, 0.3);
+}
+
+.md-error-text {
+  color: var(--error-color);
   font-size: 0.8rem;
-  margin-top: 0.25rem;
-  min-height: 1rem;
+  font-weight: 500;
 }
 
-.form-options {
+/* --- 表单选项 --- */
+.md-form-options {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 0.9rem;
 }
 
-.remember-me {
+.md-checkbox {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
-  color: #4a5568;
+  color: var(--text-primary);
 }
 
-.remember-me input {
-  margin: 0;
-  width: auto;
+.md-checkbox input {
+  cursor: pointer;
 }
 
-.forgot-password {
-  color: #667eea;
+.md-link {
+  color: var(--accent-color);
   text-decoration: none;
-  font-weight: 500;
 }
 
-.forgot-password:hover {
+.md-link:hover {
   text-decoration: underline;
 }
 
-.login-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 8px;
+/* --- 提交按钮 --- */
+.md-btn-primary {
+  background-color: #2da44e;
+  color: #ffffff;
+  border: 1px solid rgba(27, 31, 36, 0.15);
+  padding: 8px 16px;
   font-size: 1rem;
   font-weight: 600;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  height: 48px;
+  transition: 0.2s;
+  text-align: center;
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.5rem;
 }
 
-.login-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+.md-btn-primary:hover:not(:disabled) {
+  background-color: #2c974b;
 }
 
-.login-btn:disabled {
-  opacity: 0.6;
+.md-btn-primary:disabled {
+  background-color: #94d3a2;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+  color: rgba(255, 255, 255, 0.8);
 }
 
+/* --- Markdown 引用块风格提示 --- */
+.md-blockquote {
+  margin: 1rem 0 0 0;
+  padding: 0.5rem 1rem;
+  border-left: 4px solid var(--error-color);
+  color: var(--text-secondary);
+  background: #fff8f8;
+  font-size: 0.9rem;
+  border-radius: 0 6px 6px 0;
+  white-space: pre-line;
+  word-break: break-all;
+}
+
+.md-blockquote.is-success {
+  border-left-color: var(--success-color);
+  background: #f0fff4;
+}
+
+/* --- 页脚 --- */
+.md-footer {
+  margin-top: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.md-footer hr {
+  border: 0;
+  border-top: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+}
+
+/* --- Loading Spinner --- */
 .loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid transparent;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top: 2px solid currentColor;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -458,83 +407,12 @@ input.error {
   100% { transform: rotate(360deg); }
 }
 
-.error-message {
-  background: #fed7d7;
-  color: #c53030;
-  padding: 0.75rem;
-  border-radius: 6px;
-  text-align: center;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  white-space: pre-line;
-}
-
-.error-message:empty {
-  display: none;
-}
-
-.login-footer {
-  text-align: center;
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
-  color: #718096;
-}
-
-.login-footer a {
-  color: #667eea;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.login-footer a:hover {
-  text-decoration: underline;
-}
-
-.success-message {
-  background: #c6f6d5;
-  color: #2f855a;
-  padding: 0.75rem;
-  border-radius: 6px;
-  text-align: center;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-}
-
+/* --- 响应式 --- */
 @media (max-width: 480px) {
-  .login-container {
+  .md-login-wrapper {
     padding: 1rem;
-  }
-  
-  .login-card {
-    padding: 2rem;
-  }
-  
-  .login-header h1 {
-    font-size: 1.5rem;
-  }
-  
-  .form-options {
-    flex-direction: column;
-    gap: 1rem;
     align-items: flex-start;
-  }
-  
-  .forgot-password {
-    align-self: flex-end;
+    padding-top: 3rem;
   }
 }
-
-@media (max-width: 360px) {
-  .login-card {
-    padding: 1.5rem;
-  }
-  
-  .login-header h1 {
-    font-size: 1.25rem;
-  }
-}
-
-
-
 </style>

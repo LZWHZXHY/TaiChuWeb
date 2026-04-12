@@ -1,108 +1,109 @@
-<!-- src/views/Register.vue -->
 <template>
-  <div class="register-container">
-    <div class="register-card">
-      <div class="register-header">
-        <h1>{{ $t('Register.registerAccount') }}</h1>
-        <p>{{ $t('Register.createAccount') }}</p>
-      </div>
+  <div class="md-register-wrapper">
+    <div class="md-register-container">
+      
+      <header class="md-header">
+        <h1>申请凭证</h1>
+        <p class="md-subtitle">请填写以下信息以注册您的系统操作员身份。</p>
+      </header>
 
-      <form @submit.prevent="handleRegister" class="register-form">
-        <div class="form-group">
-          <label for="username">{{ $t('Register.username') }}</label>
+      <form @submit.prevent="handleRegister" class="md-form">
+        
+        <div class="md-input-group">
+          <label for="username">操作员标识 (用户名)</label>
           <input
             id="username"
             v-model="registerForm.username"
             type="text"
             name="username"
             required
-            :placeholder="$t('Register.placeholder_username')"
+            placeholder="请输入 1-20 位字符"
             autocomplete="username"
             :class="{ 'error': errors.username }"
             @input="clearError('username')"
           />
-          <span v-if="errors.username" class="error-text">{{ errors.username }}</span>
+          <span v-if="errors.username" class="md-error-text">{{ errors.username }}</span>
         </div>
 
-        <div class="form-group">
-          <label for="email">{{ $t('Register.emailAddress') }}</label>
-          <div class="email-input-group">
+        <div class="md-input-group">
+          <label for="email">通讯地址 (邮箱)</label>
+          <div class="md-flex-input">
             <input
               id="email"
               v-model="registerForm.email"
               type="email"
               name="email"
               required
-              :placeholder="$t('Register.placeholder_email')"
+              placeholder="请输入有效的邮箱地址"
               autocomplete="email"
               :class="{ 'error': errors.email }"
               @input="onEmailInput"
             />
             <button
               type="button"
-              class="send-code-btn"
+              class="md-btn-outline"
               :disabled="!canSendCode || isSendingCode"
               @click="sendVerificationCode"
             >
-              <span v-if="isSendingCode" class="loading-spinner"></span>
+              <span v-if="isSendingCode" class="loading-spinner-small"></span>
               <span v-else>
-                {{ countdown > 0 ? `${countdown}${$t('Register.resend_code')}` : $t('Register.send_code') }}
+                {{ countdown > 0 ? `${countdown}s 后重发` : '发送验证码' }}
               </span>
             </button>
           </div>
-          <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
+          <span v-if="errors.email" class="md-error-text">{{ errors.email }}</span>
         </div>
 
-        <div class="form-group">
-          <label for="verificationCode">{{ $t('Register.emailVerifyCode') }}</label>
+        <div class="md-input-group">
+          <label for="verificationCode">安全校验码</label>
           <input
             id="verificationCode"
             v-model="registerForm.verificationCode"
             type="text"
             maxlength="6"
             required
-            :placeholder="$t('Register.placeholder_code')"
+            placeholder="请输入 6 位邮箱验证码"
             autocomplete="off"
             :class="{ 'error': errors.verificationCode }"
             @input="clearError('verificationCode')"
           />
-          <span v-if="errors.verificationCode" class="error-text">{{ errors.verificationCode }}</span>
+          <span v-if="errors.verificationCode" class="md-error-text">{{ errors.verificationCode }}</span>
         </div>
 
-        <div class="form-group">
-          <label for="password">{{ $t('Register.password') }}</label>
+        <div class="md-input-group">
+          <label for="password">安全密钥 (密码)</label>
           <input
             id="password"
             v-model="registerForm.password"
             type="password"
             name="new-password"
             required
-            :placeholder="$t('Register.placeholder_password')"
+            placeholder="请输入至少 6 位密码"
             autocomplete="new-password"
             :class="{ 'error': errors.password }"
             @input="clearError('password')"
           />
-          <span v-if="errors.password" class="error-text">{{ errors.password }}</span>
+          <span v-if="errors.password" class="md-error-text">{{ errors.password }}</span>
         </div>
 
-        <div class="form-group">
-          <label for="confirmPassword">{{ $t('Register.confirmPassword') }}</label>
+        <div class="md-input-group">
+          <label for="confirmPassword">确认密钥</label>
           <input
             id="confirmPassword"
             v-model="registerForm.confirmPassword"
             type="password"
             name="new-password"
             required
-            :placeholder="$t('Register.placeholder_confirm')"
+            placeholder="请再次输入密码"
             autocomplete="new-password"
             :class="{ 'error': errors.confirmPassword }"
             @input="clearError('confirmPassword')"
           />
-          <span v-if="errors.confirmPassword" class="error-text">{{ errors.confirmPassword }}</span>
+          <span v-if="errors.confirmPassword" class="md-error-text">{{ errors.confirmPassword }}</span>
         </div>
 
-        <div class="form-options">
-          <label class="agree-terms">
+        <div class="md-form-options">
+          <label class="md-checkbox">
             <input
               type="checkbox"
               v-model="registerForm.agreeTerms"
@@ -110,44 +111,44 @@
               autocomplete="off"
             />
             <span>
-              {{ $t('Register.agree_prefix') }} 
-              <a href="#" @click.prevent="showTerms">{{ $t('Register.terms') }}</a> 
-              & 
-              <a href="#" @click.prevent="showPrivacy">{{ $t('Register.privacy') }}</a>
+              我已阅读并同意 
+              <a href="#" class="md-link" @click.prevent="showTerms">服务条款</a> 
+              与 
+              <a href="#" class="md-link" @click.prevent="showPrivacy">隐私政策</a>
             </span>
           </label>
         </div>
 
-        <button type="submit" class="register-btn" :disabled="isLoading">
+        <button type="submit" class="md-btn-primary" :disabled="isLoading">
           <span v-if="isLoading" class="loading-spinner"></span>
-          <span v-else>{{ isLoading ? $t('Register.submit_loading') : $t('Register.submit_btn') }}</span>
+          <span v-else>{{ isLoading ? '数据提交中...' : '注册并接入' }}</span>
         </button>
 
-        <div v-if="error" class="error-message">
+        <blockquote v-if="error" class="md-blockquote">
+          <strong>System Message:</strong>
+          <br />
           {{ error }}
-        </div>
+        </blockquote>
       </form>
 
-      <div class="register-footer">
-        <p>
-          {{ $t('Register.have_account') }} 
-          <a href="#" @click.prevent="switchToLogin">{{ $t('Register.login_now') }}</a>
-        </p>
-      </div>
+      <footer class="md-footer">
+        <hr />
+        <p>已有身份凭证? <a href="#" class="md-link" @click.prevent="switchToLogin">立即接入</a></p>
+      </footer>
     </div>
 
-    <Transition name="modal">
-      <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-        <div class="modal-content">
-          <div class="modal-header">
+    <Transition name="md-fade">
+      <div v-if="showModal" class="md-modal-overlay" @click.self="closeModal">
+        <div class="md-modal-content">
+          <div class="md-modal-header">
             <h3>{{ modalTitle }}</h3>
-            <button class="close-btn" @click="closeModal">&times;</button>
+            <button class="md-close-btn" @click="closeModal">&times;</button>
           </div>
-          <div class="modal-body custom-scroll">
+          <div class="md-modal-body custom-scroll">
             <p>{{ modalText }}</p>
           </div>
-          <div class="modal-footer">
-            <button class="primary-btn" @click="closeModal">{{ $t('Register.modal_close') || '关闭' }}</button>
+          <div class="md-modal-footer">
+            <button class="md-btn-outline" @click="closeModal">关闭</button>
           </div>
         </div>
       </div>
@@ -160,10 +161,10 @@
 import { ref, reactive, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/utils/auth'
-import apiClient from '@/utils/api'
-import { useI18n } from 'vue-i18n'
+// 导入外部协议文件
+import termsText from '@/locales/legal/terms.zh.js'
+import privacyText from '@/locales/legal/privacy.zh.js'
 
-const { t } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
 
@@ -190,7 +191,7 @@ const countdown = ref(0)
 const error = ref('')
 let countdownTimer = null
 
-// --- ✅ 新增：弹窗状态控制 ---
+// 弹窗状态控制
 const showModal = ref(false)
 const modalTitle = ref('')
 const modalText = ref('')
@@ -208,7 +209,7 @@ const onEmailInput = () => {
 // 发送验证码
 const sendVerificationCode = async () => {
   if (!isValidEmail(registerForm.email)) {
-    errors.email = t('Register.err_email_invalid')
+    errors.email = '邮箱格式不正确'
     return
   }
 
@@ -220,13 +221,13 @@ const sendVerificationCode = async () => {
     
     if (result.success) {
       startCountdown()
-      error.value = result.message || t('Register.msg_code_sent')
+      error.value = result.message || '✅ 验证码已发送，请查收邮箱'
     } else {
       error.value = result.error
     }
   } catch (err) {
     console.error('验证码发送错误:', err)
-    error.value = t('Register.msg_code_fail')
+    error.value = '验证码发送失败，请稍后重试'
   } finally {
     isSendingCode.value = false
   }
@@ -243,53 +244,54 @@ const startCountdown = () => {
   }, 1000)
 }
 
+// 表单验证
 const validateForm = () => {
   let isValid = true
   Object.keys(errors).forEach(key => errors[key] = '')
   error.value = ''
   
   if (!registerForm.username.trim()) {
-    errors.username = t('Register.err_username_empty')
+    errors.username = '请输入用户名'
     isValid = false
   } else if (registerForm.username.length < 1 || registerForm.username.length > 20) {
-    errors.username = t('Register.err_username_len')
+    errors.username = '用户名长度必须在 1-20 个字符之间'
     isValid = false
   }
   
   if (!registerForm.email.trim()) {
-    errors.email = t('Register.err_email_empty')
+    errors.email = '请输入邮箱'
     isValid = false
   } else if (!isValidEmail(registerForm.email)) {
-    errors.email = t('Register.err_email_invalid')
+    errors.email = '邮箱格式不正确'
     isValid = false
   }
   
   if (!registerForm.verificationCode) {
-    errors.verificationCode = t('Register.err_code_empty')
+    errors.verificationCode = '请输入验证码'
     isValid = false
   } else if (registerForm.verificationCode.length !== 6) {
-    errors.verificationCode = t('Register.err_code_len')
+    errors.verificationCode = '验证码必须是 6 位'
     isValid = false
   }
   
   if (!registerForm.password) {
-    errors.password = t('Register.err_password_empty')
+    errors.password = '请输入密码'
     isValid = false
   } else if (registerForm.password.length < 6) {
-    errors.password = t('Register.err_password_len')
+    errors.password = '密码长度至少为 6 位'
     isValid = false
   }
   
   if (!registerForm.confirmPassword) {
-    errors.confirmPassword = t('Register.err_confirm_empty')
+    errors.confirmPassword = '请确认密码'
     isValid = false
   } else if (registerForm.password !== registerForm.confirmPassword) {
-    errors.confirmPassword = t('Register.err_confirm_match')
+    errors.confirmPassword = '两次输入的密码不一致'
     isValid = false
   }
   
   if (!registerForm.agreeTerms) {
-    error.value = t('Register.err_terms')
+    error.value = '请阅读并同意服务条款与隐私政策'
     isValid = false
   }
   
@@ -306,6 +308,7 @@ const clearError = (field) => {
   error.value = ''
 }
 
+// 注册处理
 const handleRegister = async () => {
   if (!validateForm()) return
   
@@ -324,7 +327,7 @@ const handleRegister = async () => {
       router.push({ 
         path: '/login', 
         query: { 
-          message: `${t('Register.msg_reg_success')} ${result.username}`,
+          message: `✅ 注册成功！欢迎，${result.username}`,
           username: result.username 
         }
       })
@@ -332,7 +335,7 @@ const handleRegister = async () => {
       error.value = result.error
     }
   } catch (err) {
-    error.value = t('Register.msg_reg_fail')
+    error.value = '注册过程中发生未知错误，请重试'
     console.error('注册错误:', err)
   } finally {
     isLoading.value = false
@@ -343,22 +346,21 @@ const switchToLogin = () => {
   router.push('/login')
 }
 
-// --- ✅ 修改：显示条款弹窗 ---
+// 显示条款弹窗（加载 terms.zh.js 内容）
 const showTerms = () => {
-  modalTitle.value = t('Register.terms_title')
-  // 这里会自动获取你之前在 zh.js/en.js 里配置的长文本
-  modalText.value = t('Register.terms_content') 
+  modalTitle.value = '服务条款'
+  modalText.value = termsText
   showModal.value = true
 }
 
-// --- ✅ 修改：显示隐私弹窗 ---
+// 显示隐私弹窗（加载 privacy.zh.js 内容）
 const showPrivacy = () => {
-  modalTitle.value = t('Register.privacy_title')
-  modalText.value = t('Register.privacy_content')
+  modalTitle.value = '隐私保护协议'
+  modalText.value = privacyText
   showModal.value = true
 }
 
-// --- ✅ 修改：关闭弹窗 ---
+// 关闭弹窗
 const closeModal = () => {
   showModal.value = false
 }
@@ -371,91 +373,352 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 原有样式保持不变 */
-.register-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; }
-.register-card { background: white; padding: 3rem; border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); width: 100%; max-width: 450px; }
-.register-header { text-align: center; margin-bottom: 2rem; }
-.register-header h1 { font-size: 2rem; font-weight: 700; color: #2c3e50; margin-bottom: 0.5rem; }
-.register-header p { color: #666; font-size: 1rem; }
-.register-form { display: flex; flex-direction: column; gap: 1.5rem; }
-.form-group { display: flex; flex-direction: column; }
-label { margin-bottom: 0.5rem; color: #4a5568; font-weight: 500; font-size: 0.9rem; }
-input { padding: 0.75rem 1rem; border: 2px solid #757575; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s ease; color:#2d3748}
-input:focus { outline: none; border-color: #667eea; }
-input.error { border-color: #e53e3e; }
-.error-text { color: #e53e3e; font-size: 0.8rem; margin-top: 0.25rem; }
-.email-input-group { display: flex; gap: 10px; }
-.email-input-group input { flex: 1; }
-.send-code-btn { background: #667eea; color: white; border: none; padding: 0 16px; border-radius: 6px; cursor: pointer; font-size: 14px; min-width: 120px; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
-.send-code-btn:hover:not(:disabled) { background: #5a6fd8; transform: translateY(-1px); }
-.send-code-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
-.form-options { margin: 1rem 0; }
-.agree-terms { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.9rem; line-height: 1.4; }
-.agree-terms a { color: #667eea; text-decoration: none; }
-.agree-terms a:hover { text-decoration: underline; }
-.register-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 0.75rem; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; height: 48px; display: flex; align-items: center; justify-content: center; }
-.register-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
-.register-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-.loading-spinner { width: 20px; height: 20px; border: 2px solid transparent; border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite; }
+/* --- Markdown 极简风格变量 --- */
+.md-register-wrapper {
+  --text-primary: #24292f;
+  --text-secondary: #57606a;
+  --border-color: #d0d7de;
+  --bg-color: #ffffff;
+  --accent-color: #0969da;
+  --error-color: #cf222e;
+  --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-system);
+  padding: 2rem;
+  line-height: 1.5;
+}
+
+.md-register-container {
+  width: 100%;
+  max-width: 460px;
+}
+
+/* --- 标题区域 (H1) --- */
+.md-header {
+  margin-bottom: 2rem;
+}
+
+.md-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+}
+
+.md-header h1::before {
+  content: '#';
+  color: var(--border-color);
+  margin-right: 0.5rem;
+  font-weight: 400;
+}
+
+.md-subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* --- 表单区域 --- */
+.md-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.md-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.md-input-group label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.md-input-group input {
+  padding: 8px 12px;
+  font-size: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.md-input-group input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+}
+
+.md-input-group input.error {
+  border-color: var(--error-color);
+}
+.md-input-group input.error:focus {
+  box-shadow: 0 0 0 3px rgba(207, 34, 46, 0.3);
+}
+
+.md-error-text {
+  color: var(--error-color);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* 邮箱与发送按钮行内布局 */
+.md-flex-input {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.md-flex-input input {
+  flex: 1;
+}
+
+.md-btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0 12px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  min-width: 100px;
+}
+
+.md-btn-outline:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: var(--text-primary);
+  border-color: #1f2328;
+}
+
+.md-btn-outline:disabled {
+  background: #f6f8fa;
+  color: #8c959f;
+  cursor: not-allowed;
+}
+
+/* --- 表单选项 (同意条款) --- */
+.md-form-options {
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.md-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.md-checkbox input {
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.md-link {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.md-link:hover {
+  text-decoration: underline;
+}
+
+/* --- 提交按钮 --- */
+.md-btn-primary {
+  background-color: #2da44e;
+  color: #ffffff;
+  border: 1px solid rgba(27, 31, 36, 0.15);
+  padding: 8px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 0.5rem;
+  height: 40px;
+}
+
+.md-btn-primary:hover:not(:disabled) {
+  background-color: #2c974b;
+}
+
+.md-btn-primary:disabled {
+  background-color: #94d3a2;
+  cursor: not-allowed;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* --- Markdown 引用块风格报错 --- */
+.md-blockquote {
+  margin: 1rem 0 0 0;
+  padding: 0.5rem 1rem;
+  border-left: 4px solid var(--error-color);
+  color: var(--text-secondary);
+  background: #fff8f8;
+  font-size: 0.9rem;
+  border-radius: 0 6px 6px 0;
+  white-space: pre-line;
+  word-break: break-all;
+}
+
+/* --- 页脚 --- */
+.md-footer {
+  margin-top: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.md-footer hr {
+  border: 0;
+  border-top: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+}
+
+/* --- Loading Spinners --- */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.loading-spinner-small {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #d0d7de;
+  border-top: 2px solid var(--text-secondary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.error-message { background: #fed7d7; color: #c53030; padding: 0.75rem; border-radius: 6px; text-align: center; font-size: 0.9rem; }
-.register-footer { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; color: #718096; }
-.register-footer a { color: #667eea; text-decoration: none; font-weight: 500; }
-.register-footer a:hover { text-decoration: underline; }
 
-/* ✅ 新增：弹窗组件的样式 */
-.modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.5); z-index: 2000;
-  display: flex; justify-content: center; align-items: center;
-  backdrop-filter: blur(4px);
-}
-.modal-content {
-  background: white; width: 90%; max-width: 500px;
-  border-radius: 12px; overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-  display: flex; flex-direction: column;
-  max-height: 80vh; /* 限制高度，防止超出屏幕 */
-}
-.modal-header {
-  padding: 16px 20px; border-bottom: 1px solid #e2e8f0;
-  display: flex; justify-content: space-between; align-items: center;
-}
-.modal-header h3 { margin: 0; font-size: 18px; color: #2d3748; }
-.close-btn { background: none; border: none; font-size: 24px; color: #a0aec0; cursor: pointer; }
-.close-btn:hover { color: #4a5568; }
-
-.modal-body { 
-  padding: 20px; 
-  overflow-y: auto; /* 内容过长时滚动 */
-  color: #4a5568; 
-  font-size: 14px; 
-  line-height: 1.6; 
-}
-.modal-body p { 
-  white-space: pre-wrap; /* 关键：保留你文本文件里的换行和格式 */
+/* ====== MD 风格的极简弹窗 ====== */
+.md-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(27, 31, 36, 0.5);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.modal-footer {
-  padding: 16px 20px; border-top: 1px solid #e2e8f0; text-align: right; background: #f8fafc;
+.md-modal-content {
+  background: var(--bg-color);
+  width: 90%;
+  max-width: 540px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
 }
-.primary-btn {
-  background: #667eea; color: white; border: none;
-  padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 14px;
+
+.md-modal-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f6f8fa;
+  border-radius: 8px 8px 0 0;
 }
-.primary-btn:hover { background: #5a6fd8; }
 
-/* 简单的弹窗动画 */
-.modal-enter-active, .modal-leave-active { transition: opacity 0.3s ease; }
-.modal-enter-from, .modal-leave-to { opacity: 0; }
-.modal-enter-active .modal-content { animation: modalIn 0.3s ease; }
-@keyframes modalIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.md-modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
 
+.md-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.md-close-btn:hover {
+  color: var(--text-primary);
+}
+
+.md-modal-body {
+  padding: 20px 16px;
+  overflow-y: auto;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.md-modal-body p {
+  margin: 0;
+  white-space: pre-wrap; /* 保证换行生效 */
+}
+
+.md-modal-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  background: #f6f8fa;
+  border-radius: 0 0 8px 8px;
+}
+
+/* 弹窗动画 */
+.md-fade-enter-active, .md-fade-leave-active { transition: opacity 0.2s ease; }
+.md-fade-enter-from, .md-fade-leave-to { opacity: 0; }
+.md-fade-enter-active .md-modal-content { animation: mdModalIn 0.2s ease; }
+@keyframes mdModalIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* --- 响应式 --- */
 @media (max-width: 480px) {
-  .register-container { padding: 1rem; }
-  .register-card { padding: 2rem; }
-  .register-header h1 { font-size: 1.5rem; }
-  .email-input-group { flex-direction: column; }
-  .send-code-btn { min-width: auto; height: 40px; }
+  .md-register-wrapper {
+    padding: 1rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+  .md-flex-input {
+    flex-direction: column;
+  }
+  .md-btn-outline {
+    height: 38px;
+  }
 }
 </style>

@@ -28,20 +28,20 @@
       <section class="hero-section" v-if="heroPost">
         <div class="hero-card">
           <div class="hero-img-wrapper">
-            <img :src="heroPost.CoverImage || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'" :alt="heroPost.Title" class="hero-img">
+            <img :src="heroPost.coverImage || 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'" :alt="heroPost.title" class="hero-img">
             <div class="hero-badge">编辑精选</div>
           </div>
           <div class="hero-content">
             <div class="meta-info">
               <span>{{ heroPost.publishTime }}</span>
               <span class="dot"></span>
-              <span><svg class="icon-fire inline-block w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"></path></svg>{{ heroPost.ViewCount }} 次阅读</span>
+              <span><svg class="icon-fire inline-block w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"></path></svg>{{ heroPost.viewCount }} 次阅读</span>
             </div>
             <h2 class="hero-title">
-              <a :href="`/blog/${heroPost.Id}`">{{ heroPost.Title }}</a>
+              <a :href="`/blog/${heroPost.id}`">{{ heroPost.title }}</a>
             </h2>
             <p class="hero-excerpt line-clamp-3">
-              {{ heroPost.Summary }}
+              {{ heroPost.summary }}
             </p>
             <div class="author-info">
               <img :src="heroPost.authorAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" alt="Author" class="author-avatar">
@@ -55,7 +55,6 @@
       </section>
 
       <div class="main-layout">
-        
         <main class="content-area">
           <div class="section-header">
             <h3 class="section-title">最新发布</h3>
@@ -66,21 +65,21 @@
           </div>
 
           <div class="post-grid" v-else>
-            <article v-for="post in posts" :key="post.Id" class="post-card">
+            <article v-for="post in posts" :key="post.id" class="post-card">
               <div class="post-img-wrapper">
-                <img :src="post.CoverImage || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'" :alt="post.Title" class="post-img">
+                <img :src="post.coverImage || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'" :alt="post.title" class="post-img">
                 <div class="post-category-badge" v-if="post.tags && post.tags.length > 0">{{ post.tags[0] }}</div>
               </div>
               <div class="post-content">
                 <div class="meta-info">
                   <time :datetime="post.publishTime">{{ post.publishTime }}</time>
                   <span class="dot"></span>
-                  <span>{{ post.ViewCount }} 阅</span>
+                  <span>{{ post.viewCount }} 阅</span>
                 </div>
                 <h4 class="post-title line-clamp-2">
-                  <a :href="`/blog/${post.Id}`">{{ post.Title }}</a>
+                  <a :href="`/blog/${post.id}`">{{ post.title }}</a>
                 </h4>
-                <p class="post-excerpt line-clamp-3">{{ post.Summary }}</p>
+                <p class="post-excerpt line-clamp-3">{{ post.summary }}</p>
                 <div class="post-footer">
                   <img :src="post.authorAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" :alt="post.authorName" class="author-avatar-small">
                   <span class="author-name-small">{{ post.authorName }}</span>
@@ -100,7 +99,6 @@
         </main>
 
         <aside class="sidebar">
-          
           <div class="widget">
             <h3 class="widget-title">
               <svg class="icon-fire" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"></path></svg>
@@ -108,7 +106,7 @@
             </h3>
             <ul class="trending-list">
               <li v-for="(trending, index) in trendingPosts" :key="index" class="trending-item">
-                <a :href="`/article/${trending.id}`" class="trending-link">
+                <a :href="`/blog/${trending.id}`" class="trending-link">
                   <span class="trending-number">0{{ index + 1 }}</span>
                   <div class="trending-info">
                     <h4 class="trending-title line-clamp-2">{{ trending.title }}</h4>
@@ -119,18 +117,14 @@
             </ul>
           </div>
 
-          
-
           <div class="widget" v-if="allTags.length > 0">
             <h3 class="widget-title">热门标签</h3>
             <div class="tag-cloud">
               <a v-for="tag in allTags" :key="tag" href="#" class="tag-link">#{{ tag }}</a>
             </div>
           </div>
-
         </aside>
       </div>
-
     </div>
   </div>
 </template>
@@ -173,6 +167,7 @@ const fetchArticles = async (isLoadMore = false) => {
       }
     })
 
+    // ⚡ 修正数据提取逻辑
     const data = response.data || response
     const list = data.list || []
     total.value = data.total || 0
@@ -191,14 +186,14 @@ const fetchArticles = async (isLoadMore = false) => {
 
     const allLoadedPosts = [heroPost.value, ...posts.value].filter(Boolean)
 
-    // 修复了根据大写 ViewCount 排序的热榜计算逻辑
+    // ⚡ 修正: 使用驼峰命名的 viewCount 进行排序
     trendingPosts.value = [...allLoadedPosts]
-      .sort((a, b) => b.ViewCount - a.ViewCount)
+      .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
       .slice(0, 5)
       .map(p => ({
-        id: p.Id,
-        title: p.Title,
-        viewsDisplay: p.ViewCount > 1000 ? (p.ViewCount / 1000).toFixed(1) + 'k' : p.ViewCount
+        id: p.id,
+        title: p.title,
+        viewsDisplay: p.viewCount > 1000 ? (p.viewCount / 1000).toFixed(1) + 'k' : p.viewCount
       }))
 
     const tagSet = new Set(allTags.value)

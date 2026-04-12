@@ -48,11 +48,11 @@
           <div class="cell-events">
             <div 
               v-for="ev in getEventsForDate(date).slice(0, 3)" 
-              :key="ev.Id" 
+              :key="ev.id" 
               class="event-pill"
-              :style="{ backgroundColor: hexToRgba(ev.Color, 0.15), color: ev.Color, borderLeft: `3px solid ${ev.Color}` }"
+              :style="{ backgroundColor: hexToRgba(ev.color, 0.15), color: ev.color, borderLeft: `3px solid ${ev.color}` }"
             >
-              <span class="pill-text">{{ ev.Title }}</span>
+              <span class="pill-text">{{ ev.title }}</span>
             </div>
             <div v-if="getEventsForDate(date).length > 3" class="more-events">
               +{{ getEventsForDate(date).length - 3 }} 更多
@@ -81,13 +81,13 @@
             </div>
 
             <div v-else class="event-timeline">
-              <div v-for="ev in dayEvents" :key="ev.Id" class="timeline-item">
-                <div class="tl-time">{{ ev.Time }}</div>
-                <div class="tl-card" :style="{ borderLeftColor: ev.Color }">
-                  <div class="tl-title">{{ ev.Title }}</div>
-                  <div class="tl-desc" v-if="ev.Description">{{ ev.Description }}</div>
-                  <div class="tl-tag" :style="{ color: ev.Color, backgroundColor: hexToRgba(ev.Color, 0.1) }">
-                    {{ ev.Type }}
+              <div v-for="ev in dayEvents" :key="ev.id" class="timeline-item">
+                <div class="tl-time">{{ ev.time }}</div>
+                <div class="tl-card" :style="{ borderLeftColor: ev.color }">
+                  <div class="tl-title">{{ ev.title }}</div>
+                  <div class="tl-desc" v-if="ev.description">{{ ev.description }}</div>
+                  <div class="tl-tag" :style="{ color: ev.color, backgroundColor: hexToRgba(ev.color, 0.1) }">
+                    {{ ev.type }}
                   </div>
                 </div>
               </div>
@@ -109,7 +109,7 @@ const currentYear = ref(new Date().getFullYear())
 const currentMonth = ref(new Date().getMonth() + 1)
 const selectedDate = ref(new Date())
 const isPanelOpen = ref(false)
-const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'] // 改为中文更亲切
+const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
 const monthEvents = ref([]) 
 const dayEvents = ref([])   
@@ -142,8 +142,8 @@ const calendarDates = computed(() => {
 const padZero = (n) => n < 10 ? `0${n}` : n
 const getDateStr = (date) => `${date.getFullYear()}-${padZero(date.getMonth() + 1)}-${padZero(date.getDate())}`
 
-// 辅助：将 Hex 颜色转为 RGBA 以制作浅色背景
 const hexToRgba = (hex, alpha) => {
+  if (!hex) return `rgba(0,0,0,${alpha})`
   let c;
   if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
       c= hex.substring(1).split('');
@@ -153,22 +153,22 @@ const hexToRgba = (hex, alpha) => {
       c= '0x'+c.join('');
       return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+','+alpha+')';
   }
-  return hex; // fallback
+  return hex;
 }
 
 const isToday = (date) => getDateStr(date) === getDateStr(new Date())
 const isCurrentMonth = (date) => date.getMonth() + 1 === currentMonth.value
 const isSelected = (date) => getDateStr(date) === getDateStr(selectedDate.value)
 
-// 筛选数据
+// ⚡ 修改点：ev.Date -> ev.date
 const updateSelectedDayEvents = () => {
   const key = getDateStr(selectedDate.value)
-  dayEvents.value = monthEvents.value.filter(ev => ev.Date === key)
+  dayEvents.value = monthEvents.value.filter(ev => ev.date === key)
 }
 
 const getEventsForDate = (date) => {
   const key = getDateStr(date)
-  return monthEvents.value.filter(ev => ev.Date === key)
+  return monthEvents.value.filter(ev => ev.date === key)
 }
 
 // API
@@ -177,6 +177,7 @@ const fetchMonthlyEvents = async () => {
     const res = await apiClient.get('/events', {
       params: { year: currentYear.value, month: currentMonth.value }
     })
+    // 假设后端现在返回的是驼峰数组 [ { id: 1, title: '...', date: '2026-04-12', color: '#ff0000', ... }, ... ]
     monthEvents.value = res.data
     updateSelectedDayEvents()
   } catch (error) {

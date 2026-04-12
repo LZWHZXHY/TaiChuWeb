@@ -1,93 +1,92 @@
 <template>
-  <div class="cyber-dashboard">
-    <div class="grid-bg moving-grid"></div>
-
-    <div class="panel-scroll-container custom-scroll">
-      
-      <header class="main-header">
-        <div class="header-split left">
-          <h1 class="giant-text glitch-hover">
-            <div class="text-row">TC_HUB</div>
-            <div class="text-row red-fill">娱乐中心</div>
-          </h1>
+  <div class="doc-dashboard">
+    <header class="doc-header">
+      <div class="header-inner">
+        <div class="brand">
+          <div class="brand-glyph">太初</div>
+          <h1 class="brand-title">娱乐枢纽 <span class="light">// 交互终端</span></h1>
         </div>
-        <div class="info-block">
-          <h2 class="cn-title">太初终端 // {{ currentChannel.label }}</h2>
-          <div class="live-indicator"><span class="dot"></span> NODE_CONNECTED</div>
-        </div>
-        <div class="tech-lines">
-          <div class="sys-time-display">{{ currentTime }}</div>
-        </div>
-      </header>
-
-      <div class="tech-strip">
-        <div class="strip-content">
-          // SYSTEM_NOTICE: 欢迎接入太初寰宇娱乐终端 // 全局资源同步正常 // 如遇连接中断请联系管理员 // 
-        </div>
-      </div>
-
-      <div class="main-bridge">
         
-        <aside class="left-column">
-          
-          <div class="cyber-card">
-            <div class="card-label-strip"><span>// CHANNEL_SELECT</span></div>
-            <div class="nav-stack">
-              <button 
-                v-for="item in channelList" 
-                :key="item.id"
-                class="nav-btn"
-                :class="{ active: currentId === item.id }"
-                @click="switchChannel(item.id)"
-              >
-                <span class="n-icon">{{ item.icon }}</span>
-                <span class="n-text">{{ item.name }}</span>
-              </button>
-            </div>
+        <div class="header-status">
+          <div class="node-badge">
+            <span class="pulse-cyan"></span> 节点运行稳定
           </div>
-
-          <div class="cyber-card announcement-panel">
-            <div class="card-label-strip"><span>// SYS_LOG</span></div>
-            <div class="card-inner-pad log-text">
-              <p>> 核心模块已加载...</p>
-              <p>> 渲染引擎: VUE_3_CORE</p>
-            </div>
-          </div>
-
-          <div class="cyber-card comms-panel">
-            <div class="card-label-strip"><span>// COMMS_UPLINK</span></div>
-            <div class="link-stack">
-              
-              <a href="https://oopz.cn/i/iZDd74" target="_blank" class="comms-btn oopz">
-                <div class="btn-inner">
-                  <span class="c-label">OOPZ</span>
-                  <span class="c-sub">邀请通道</span>
-                </div>
-                <div class="c-icon">↗</div>
-              </a>
-
-              <a href="https://kook.vip/oAj8SQ" target="_blank" class="comms-btn kook">
-                <div class="btn-inner">
-                  <span class="c-label">KOOK</span>
-                  <span class="c-sub">邀请通道</span>
-                </div>
-                <div class="c-icon">↗</div>
-              </a>
-
-            </div>
-          </div>
-
-        </aside>
-
-        <div class="content-viewport">
-          <Transition name="cyber-fade" mode="out-in">
-            <KeepAlive>
-              <component :is="currentChannel.component" />
-            </KeepAlive>
-          </Transition>
+          <div class="clock">{{ currentTime }}</div>
         </div>
-
       </div>
+    </header>
+
+    <div class="doc-ticker">
+      <div class="ticker-content">
+        【 系统提示：欢迎接入太初娱乐终端 // 核心资源已完成全域同步 // 当前频道：{{ currentChannel.label }} 】
+      </div>
+    </div>
+
+    <div class="doc-main">
+      <aside class="doc-sidebar">
+        
+        <section class="nav-section">
+          <h3 class="section-label">频道索引</h3>
+          <nav class="nav-list">
+            <button 
+              v-for="(item, index) in channelList" 
+              :key="item.id"
+              class="nav-item" 
+              :class="{ active: currentId === item.id }"
+              @click="switchChannel(item.id)"
+            >
+              <span class="item-no">0{{ index + 1 }}</span>
+              <span class="item-name">{{ item.name }}</span>
+              <div class="active-indicator"></div>
+            </button>
+          </nav>
+        </section>
+
+        <section class="nav-section">
+          <h3 class="section-label">外部接入</h3>
+          <div class="uplink-list">
+            <a href="https://oopz.cn/i/iZDd74" target="_blank" class="uplink-card">
+              <div class="up-content">
+                <span class="up-title">群聊社区</span>
+                <span class="up-desc">加入即时讨论</span>
+              </div>
+              <span class="up-icon">跳转</span>
+            </a>
+            <a href="https://kook.vip/oAj8SQ" target="_blank" class="uplink-card">
+              <div class="up-content">
+                <span class="up-title">语音频道</span>
+                <span class="up-desc">高音质语音开黑</span>
+              </div>
+              <span class="up-icon">跳转</span>
+            </a>
+          </div>
+        </section>
+
+        <div class="sidebar-log">
+          <div class="log-line">>> 引擎版本：V3.4.2</div>
+          <div class="log-line">>> 权限级别：完全控制</div>
+        </div>
+      </aside>
+
+      <main class="doc-content">
+        <div class="canvas-area">
+          <div class="canvas-header">
+            <div class="page-info">
+              <span class="folder-icon">📂</span>
+              <span class="breadcrumb">档案库 / {{ currentChannel.label }}</span>
+            </div>
+            <div class="page-meta">页码：0{{ channelList.findIndex(c => c.id === currentId) + 1 }}</div>
+          </div>
+
+          <div class="component-mount">
+            <Transition name="doc-slide" mode="out-in">
+              <KeepAlive>
+                <component :is="currentChannel.component" :key="currentId" />
+              </KeepAlive>
+            </Transition>
+          </div>
+        </div>
+      </main>
     </div>
   </div>
 </template>
@@ -100,207 +99,154 @@ import ChannelMinecraft from '@/EnterainmentComponents/MCServerModule.vue';
 import Steam from '@/EnterainmentComponents/Steam.vue';
 import trpg from '@/EnterainmentComponents/trpg.vue';
 
-const currentTime = ref(new Date().toLocaleTimeString());
+const currentTime = ref(new Date().toLocaleTimeString('zh-CN', { hour12: false }));
 let clockTimer = null;
 
 const channelList = [
-  { 
-    id: 'mc', 
-    name: 'MINECRAFT_NODE', 
-    icon: 'MC', 
-    label: '我的世界', 
-    component: markRaw(ChannelMinecraft) 
-  },
-  { 
-    id: 'steam', 
-    name: 'STEAM_GAMES', 
-    icon: 'ST', 
-    label: '综合游戏', 
-    component: markRaw(Steam) 
-  },{
-    id:'TRPG',
-    name:'跑团区',
-    icon:'PT',
-    label:'跑团',
-    component: markRaw(trpg)
-  }
+  { id: 'mc', name: '我的世界服务器', label: '我的世界', component: markRaw(ChannelMinecraft) },
+  { id: 'steam', name: '综合游戏资源', label: '综合游戏', component: markRaw(Steam) },
+  { id: 'TRPG', name: '跑团大厅', label: '跑团', component: markRaw(trpg) }
 ];
 
 const currentId = ref('mc');
-
 const currentChannel = computed(() => {
   return channelList.find(c => c.id === currentId.value) || channelList[0];
 });
 
-const switchChannel = (id) => {
-  currentId.value = id;
-};
+const switchChannel = (id) => { currentId.value = id; };
 
 onMounted(() => {
-  clockTimer = setInterval(() => { currentTime.value = new Date().toLocaleTimeString(); }, 1000);
+  clockTimer = setInterval(() => { 
+    currentTime.value = new Date().toLocaleTimeString('zh-CN', { hour12: false }); 
+  }, 1000);
 });
-
 onUnmounted(() => clearInterval(clockTimer));
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
-
-.cyber-dashboard { 
-  --red: #D92323; --black: #111111; --off-white: #F4F1EA; --gray: #E0DDD5; 
-  --mono: 'JetBrains Mono', monospace; --heading: 'Anton', sans-serif; --body: 'Inter', sans-serif;
-  --gap: 20px;
-  width: 100%; height: 100vh; background-color: var(--off-white); 
-  display: flex; flex-direction: column; overflow: hidden; font-family: var(--body); color: var(--black);
-}
-
-.grid-bg { 
-  position: absolute; inset: 0; 
-  background-image: linear-gradient(var(--gray) 1px, transparent 1px), linear-gradient(90deg, var(--gray) 1px, transparent 1px); 
-  background-size: 50px 50px; opacity: 0.4; pointer-events: none; z-index: 0; 
-}
-.moving-grid { animation: gridScroll 30s linear infinite; }
-@keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-50px); } }
-
-.panel-scroll-container { flex: 1; overflow-y: hidden; position: relative; z-index: 1; display: flex; flex-direction: column; }
-
-/* Header Styles */
-.main-header { 
-  display: flex; align-items: stretch; height: 100px; flex-shrink: 0;
-  border-bottom: 4px solid var(--black); background: var(--off-white); position: relative; z-index: 10;
-}
-.header-split.left { 
-  background: var(--black); color: var(--off-white); 
-  width: 320px; display: flex; align-items: center; justify-content: center;
-}
-.giant-text { 
-  font-family: var(--heading); font-size: 2.8rem; line-height: 0.9; 
-  text-transform: uppercase; transform: rotate(-2deg); 
-}
-.text-row.red-fill { color: var(--red); -webkit-text-stroke: 1px var(--red); }
-
-.info-block { padding: 0 20px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
-.cn-title { font-weight: 900; margin: 0 0 5px 0; font-size: 1.4rem; }
-.live-indicator { 
-  display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); 
-  font-size: 0.8rem; color: var(--red); border: 1px solid var(--red); padding: 2px 8px; width: fit-content;
-}
-.dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: pulse 1s infinite; }
-.sys-time-display { font-family: var(--mono); font-size: 1.2rem; font-weight: bold; padding: 0 20px; line-height: 100px; }
-
-/* Marquee Strip */
-.tech-strip { 
-  background: var(--black); color: var(--off-white); 
-  height: 30px; border-bottom: 4px solid var(--black); flex-shrink: 0;
-  overflow: hidden; white-space: nowrap; font-family: var(--mono); font-size: 0.8rem; display: flex; align-items: center;
-}
-.strip-content { animation: marquee 30s linear infinite; padding-left: 100%; }
-@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-
-/* Main Layout */
-.main-bridge { display: flex; gap: var(--gap); padding: var(--gap); flex: 1; min-height: 0; }
-.left-column { flex: 0 0 260px; display: flex; flex-direction: column; gap: var(--gap); }
-.content-viewport { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; }
-
-/* General Card Styles */
-.cyber-card { 
-  background: #fff; border: 2px solid var(--black); 
-  box-shadow: 4px 4px 0 rgba(0,0,0,0.15); display: flex; flex-direction: column; 
-}
-.card-label-strip { background: var(--black); color: var(--off-white); padding: 4px 10px; font-family: var(--mono); font-size: 0.7rem; }
-
-/* Navigation Buttons */
-.nav-stack { display: flex; flex-direction: column; }
-.nav-btn {
-  width: 100%; display: flex; align-items: center; border: none; background: transparent;
-  padding: 18px 15px; cursor: pointer; border-bottom: 1px solid var(--gray); font-family: var(--mono);
-  font-size: 0.9rem; transition: all 0.2s;
-}
-.nav-btn:hover { background: rgba(0,0,0,0.05); padding-left: 20px; }
-.nav-btn.active { background: #fff; border-left: 6px solid var(--red); font-weight: 800; padding-left: 20px; }
-.n-icon { width: 24px; display: inline-block; font-weight: bold; margin-right: 10px; color: var(--red); }
-
-/* System Log */
-.log-text { padding: 15px; font-family: var(--mono); font-size: 0.75rem; line-height: 1.6; color: #666; }
-
-/* --- Comms/Social Panel Styles (NEW) --- */
-.comms-panel {
-  /* 让它自动填补空间或保持在下方，如果需要紧凑布局可去掉 margin-top: auto */
-  /* margin-top: auto; */ 
-}
-
-.link-stack {
-  padding: 15px;
+.doc-dashboard {
+  --doc-bg: #F0F4F7;
+  --doc-white: #FFFFFF;
+  --doc-accent: #0891B2;
+  --doc-accent-light: rgba(8, 145, 178, 0.05);
+  --doc-text: #1F2937;
+  --doc-border: #E5E7EB;
+  --doc-sub: #6B7280;
+  
+  width: 100%;
+  height: 100%;
+  background-color: var(--doc-bg);
+  color: var(--doc-text);
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.comms-btn {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  text-decoration: none;
-  background: var(--off-white);
-  border: 1px solid var(--black);
-  padding: 12px;
-  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  position: relative;
   overflow: hidden;
-  cursor: pointer;
+  letter-spacing: 0.01em;
 }
 
-.btn-inner {
+/* Header */
+.doc-header {
+  height: 60px;
+  background: var(--doc-white);
+  border-bottom: 1px solid var(--doc-border);
+  padding: 0 30px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  z-index: 10;
 }
 
-.c-label {
-  font-family: var(--heading);
-  font-size: 1.1rem;
-  color: var(--black);
-  line-height: 1;
+.header-inner { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-glyph { 
+  background: var(--doc-accent); color: white; 
+  padding: 4px 8px; font-weight: 900; border-radius: 4px; font-size: 0.8rem;
+}
+.brand-title { font-size: 1.1rem; font-weight: 800; }
+.brand-title .light { font-weight: 300; color: var(--doc-sub); font-size: 0.85rem; }
+
+.header-status { display: flex; gap: 24px; align-items: center; }
+.node-badge { font-size: 0.75rem; font-weight: 600; color: var(--doc-accent); display: flex; align-items: center; gap: 6px; }
+.pulse-cyan { width: 6px; height: 6px; background: var(--doc-accent); border-radius: 50%; box-shadow: 0 0 8px var(--doc-accent); }
+.clock { font-size: 0.95rem; color: var(--doc-sub); font-family: monospace; }
+
+/* 通告栏 */
+.doc-ticker {
+  height: 30px; background: #F9FAFB; border-bottom: 1px solid var(--doc-border);
+  display: flex; align-items: center; overflow: hidden;
+}
+.ticker-content { font-size: 0.75rem; color: var(--doc-sub); padding-left: 30px; }
+
+/* 主布局 */
+.doc-main { flex: 1; display: flex; overflow: hidden; padding: 20px 30px; gap: 20px; }
+
+/* 侧边栏优化：变窄至 220px */
+.doc-sidebar { width: 220px; display: flex; flex-direction: column; gap: 30px; flex-shrink: 0; }
+.section-label { font-size: 0.7rem; font-weight: 800; color: var(--doc-sub); letter-spacing: 1.5px; margin-bottom: 12px; padding-left: 10px; }
+
+.nav-list { display: flex; flex-direction: column; gap: 4px; }
+.nav-item {
+  position: relative; height: 44px; border: none; background: transparent;
+  display: flex; align-items: center; padding: 0 15px; border-radius: 6px;
+  cursor: pointer; transition: all 0.2s; color: var(--doc-sub);
+}
+.nav-item:hover { background: #E5E7EB; color: var(--doc-text); }
+.nav-item.active { background: var(--doc-white); color: var(--doc-accent); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+.item-no { font-size: 0.65rem; margin-right: 12px; opacity: 0.5; font-family: monospace; }
+.item-name { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.active-indicator {
+  position: absolute; left: 0; width: 3px; height: 16px; 
+  background: var(--doc-accent); border-radius: 0 2px 2px 0;
+  display: none;
+}
+.nav-item.active .active-indicator { display: block; }
+
+/* 外部列表优化：单列垂直排列 */
+.uplink-list { display: flex; flex-direction: column; gap: 8px; }
+.uplink-card {
+  background: var(--doc-white); border: 1px solid var(--doc-border); padding: 10px 12px;
+  border-radius: 6px; text-decoration: none; display: flex; justify-content: space-between;
+  align-items: center; transition: all 0.3s;
+}
+.uplink-card:hover { border-color: var(--doc-accent); background: var(--doc-accent-light); transform: translateX(3px); }
+.up-content { display: flex; flex-direction: column; }
+.up-title { font-size: 0.8rem; font-weight: 700; color: var(--doc-text); }
+.up-desc { font-size: 0.65rem; color: var(--doc-sub); }
+.up-icon { font-size: 0.7rem; color: var(--doc-accent); font-weight: 800; border: 1px solid var(--doc-accent); padding: 2px 6px; border-radius: 4px; }
+
+.sidebar-log { 
+  margin-top: auto; border-top: 1px dashed var(--doc-border); padding-top: 20px;
+  font-size: 0.7rem; color: #9CA3AF; line-height: 1.6; font-family: monospace;
 }
 
-.c-sub {
-  font-family: var(--mono);
-  font-size: 0.6rem;
-  color: #666;
-  margin-top: 2px;
+/* 内容视口 */
+.doc-content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.canvas-area {
+  flex: 1; background: var(--doc-white); border-radius: 8px;
+  border: 1px solid var(--doc-border); box-shadow: 0 8px 24px rgba(0,0,0,0.02);
+  position: relative; overflow: hidden; display: flex; flex-direction: column;
 }
 
-.c-icon {
-  font-family: var(--mono);
-  font-weight: bold;
-  font-size: 1.2rem;
-  color: var(--black);
+.canvas-header {
+  height: 44px; border-bottom: 1px solid #F3F4F6; padding: 0 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: #FAFAFA; flex-shrink: 0;
 }
+.page-info { display: flex; align-items: center; gap: 8px; }
+.breadcrumb { font-size: 0.75rem; font-weight: 600; color: var(--doc-sub); }
+.page-meta { font-size: 0.7rem; color: #BDC3C7; font-weight: 500; }
 
-/* Comms Button Hover Effects */
-.comms-btn:hover {
-  background: var(--black);
-  transform: translateX(4px);
-  box-shadow: -4px 4px 0 var(--red);
+.component-mount { flex: 1; overflow-y: auto; padding: 0; }
+
+/* 动画效果 */
+.doc-slide-enter-active, .doc-slide-leave-active { transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+.doc-slide-enter-from { opacity: 0; transform: translateY(10px); }
+.doc-slide-leave-to { opacity: 0; transform: translateY(-10px); }
+
+@media (max-width: 1024px) {
+  .doc-main { padding: 15px; flex-direction: column; }
+  .doc-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; }
+  .nav-section { flex: 1; min-width: 200px; }
 }
-
-.comms-btn:hover .c-label, 
-.comms-btn:hover .c-icon {
-  color: var(--off-white);
-}
-
-.comms-btn:hover .c-sub {
-  color: var(--red);
-}
-
-.comms-btn:active {
-  transform: translateX(2px) translateY(2px);
-  box-shadow: none;
-}
-
-/* Animations */
-.cyber-fade-enter-active, .cyber-fade-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
-.cyber-fade-enter-from { opacity: 0; transform: translateX(10px); }
-.cyber-fade-leave-to { opacity: 0; transform: translateX(-10px); }
-
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 </style>

@@ -149,9 +149,8 @@ import apiClient from '@/utils/api'
 // --- 状态定义 ---
 const financialData = ref([])
 const dateSort = ref('desc')
-const amountSort = ref(null) // 默认不按金额排序
+const amountSort = ref(null)
 
-// 图表 DOM
 const pieChartRef = ref(null)
 const lineChartRef = ref(null)
 let pieChartInstance = null
@@ -166,7 +165,6 @@ const totalExpense = computed(() => {
 })
 const netProfit = computed(() => totalIncome.value - totalExpense.value)
 
-// 新增功能：利润率计算
 const profitMargin = computed(() => {
   if (totalIncome.value === 0) return 0
   return ((netProfit.value / totalIncome.value) * 100).toFixed(1)
@@ -206,29 +204,33 @@ const tableRowClassName = ({ row }) => {
   return row.payReceive === 0 ? 'row-income' : 'row-expense'
 }
 
-// --- 数据获取 ---
+// --- 数据获取与映射修复 ---
 const fetchData = async () => {
   try {
     const res = await apiClient.get('/Financial/all')
+    // 关键修复：映射字段名以匹配后端 JSON (zhiChu, amount 等小写开头)
     financialData.value = res.data.map((item, idx) => ({
-      id: idx, // 虚拟ID
-      zhiChu: item.ZhiChu,
-      zhiChuXiangMu: item.ZhiChuXiangMu,
+      id: idx,
+      zhiChu: item.zhiChu,
+      zhiChuXiangMu: item.zhiChuXiangMu,
       date: item.date,
-      shouKuan: item.ShouKuan,
-      amount: Number(item.Amount) || 0,
-      payReceive: item.PayReceive
+      shouKuan: item.shouKuan,
+      amount: Number(item.amount) || 0,
+      payReceive: item.payReceive
     }))
-    nextTick(() => { initPieChart(); initLineChart() })
+    nextTick(() => { 
+      initPieChart()
+      initLineChart() 
+    })
   } catch (e) {
     console.error("Data Load Error", e)
   }
 }
 
-// --- ECharts 配置 (硬核风格) ---
+// --- ECharts 配置 ---
 const fontMono = "'JetBrains Mono', monospace"
-const colorIncome = '#239b56' // 工业绿
-const colorExpense = '#D92323' // 工业红
+const colorIncome = '#239b56'
+const colorExpense = '#D92323'
 const colorBlack = '#111111'
 
 const initPieChart = () => {
@@ -257,17 +259,8 @@ const initPieChart = () => {
     series: [{
       type: 'pie',
       radius: ['45%', '70%'],
-      itemStyle: { 
-        borderRadius: 0, 
-        borderColor: '#fff', 
-        borderWidth: 2 
-      },
-      label: { 
-        show: true, 
-        fontFamily: fontMono,
-        formatter: '{b}\n{d}%',
-        color: colorBlack
-      },
+      itemStyle: { borderRadius: 0, borderColor: '#fff', borderWidth: 2 },
+      label: { show: true, fontFamily: fontMono, formatter: '{b}\n{d}%', color: colorBlack },
       data: data.length ? data : [{name:'NO_DATA', value:0}]
     }]
   })

@@ -15,26 +15,25 @@ import OnlineNodesWidget from '@/GeneralComponents/OnlineNodesWidget.vue';
 const router = useRouter();
 
 // ==========================================
-// --- 签到系统核心逻辑 (真实 API 接入) ---
+// --- 签到系统核心逻辑 (已适配后端驼峰) ---
 // ==========================================
-const isCheckedIn = ref(false); // 今日签到状态
-const checkInStreak = ref(0); // 连续签到天数
-const checkedDays = ref<number[]>([]); // 真实本月已签到的日期数组
-const retroCardsCount = ref(0); // 补签卡数量
+const isCheckedIn = ref(false); 
+const checkInStreak = ref(0); 
+const checkedDays = ref<number[]>([]); 
+const retroCardsCount = ref(0); 
 
 const today = computed(() => {
   const now = new Date();
   const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
   return {
     day: now.getDate().toString().padStart(2, '0'),
-    rawDay: now.getDate(), // 原始数字格式，方便做大小比较
+    rawDay: now.getDate(),
     month: now.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
     year: now.getFullYear().toString(),
     weekday: days[now.getDay()]
   };
 });
 
-// 计算月历网格数据
 const calendarDays = computed(() => {
   const now = new Date();
   const year = now.getFullYear();
@@ -56,7 +55,6 @@ const calendarDays = computed(() => {
   return days;
 });
 
-// 1. 从后端获取当前签到状态
 const fetchCheckInStatus = async () => {
   try {
     const now = new Date();
@@ -65,25 +63,24 @@ const fetchCheckInStatus = async () => {
     });
 
     if (res && res.code === 200) {
+      // 适配后端：isCheckedIn, checkedDays, streak, retroCardsCount
       isCheckedIn.value = res.data.isCheckedIn;
-      checkedDays.value = res.data.checkedDays; // 覆盖为后端返回的真实签到数组
+      checkedDays.value = res.data.checkedDays; 
       checkInStreak.value = res.data.streak;
-      retroCardsCount.value = res.data.retroCardsCount; // 同步补签卡数量
+      retroCardsCount.value = res.data.retroCardsCount;
     }
   } catch (error) {
     console.error('获取签到状态失败:', error);
   }
 };
 
-// 2. 执行常规每日签到
 const handleCheckIn = async () => {
   if (isCheckedIn.value) return;
-  
   try {
     const { data: res } = await apiClient.post('/UserCheckIn/checkin');
     if (res && res.code === 200) {
       alert(`${res.message}\n获得经验: ${res.rewardedExp}, 金币: ${res.rewardedCoins}`);
-      await fetchCheckInStatus(); // 签到成功后刷新状态
+      await fetchCheckInStatus();
     } else {
       alert(res.message || '签到失败');
     }
@@ -92,30 +89,23 @@ const handleCheckIn = async () => {
   }
 };
 
-// 3. 点击日历格子执行补签
 const handleDayClick = async (item: any) => {
-  if (!item.day) return; // 空白格
-  if (item.isChecked) return; // 已经签过到了
-  if (item.day >= today.value.rawDay) return; // 今天和未来不能用补签卡补签
-
+  if (!item.day || item.isChecked || item.day >= today.value.rawDay) return;
   if (retroCardsCount.value <= 0) {
     alert('补签卡余额不足，无法修复此时空节点！');
     return;
   }
 
-  // 确认补签
   const confirmMsg = `是否消耗 1 张补签卡，修复 ${today.value.year}年${today.value.month}月${item.day}日 的签到记录？`;
   if (confirm(confirmMsg)) {
     try {
       const now = new Date();
-      // 格式化目标日期为 YYYY-MM-DD
       const targetDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(item.day).padStart(2, '0')}`;
-      
       const { data: res } = await apiClient.post('/UserCheckIn/retroactive', { targetDate });
 
       if (res && res.code === 200) {
         alert(`${res.message}\n获得经验: ${res.rewardedExp}, 金币: ${res.rewardedCoins}`);
-        await fetchCheckInStatus(); // 补签成功后刷新状态和连签天数
+        await fetchCheckInStatus();
       } else {
         alert(res.message || '补签失败');
       }
@@ -124,10 +114,8 @@ const handleDayClick = async (item: any) => {
     }
   }
 };
-// ==========================================
 
-
-// --- 类型定义 ---
+// --- 类型定义 (已适配驼峰) ---
 interface FeedItem {
   id: string | number;
   type: 'post' | 'blog' | 'art';
@@ -141,19 +129,17 @@ interface FeedItem {
 }
 
 const currentOnlineCount = ref(0);
-
 const handleUpdateCount = (count: number) => {
   currentOnlineCount.value = count;
 };
 
-// --- 状态管理 ---
 const rawFeedData = ref<FeedItem[]>([]);
-const trendingActivities = ref<ActivityItem[]>([]); // 共创企划数据
-const activeFeedbacks = ref<any[]>([]); // 真实的反馈列队数据
-const sideActivities = ref<any[]>([]); // 真实的官方日历活动数据
+const trendingActivities = ref<ActivityItem[]>([]); 
+const activeFeedbacks = ref<any[]>([]); 
+const sideActivities = ref<any[]>([]); 
 const isLoading = ref(true); 
 
-// --- 1. 获取精华数据 (门户左侧内容) ---
+// --- 1. 获取门户内容 (适配后端小驼峰字段) ---
 const fetchPortalData = async () => {
   try {
     isLoading.value = true;
@@ -162,16 +148,17 @@ const fetchPortalData = async () => {
     });
 
     if (res && res.code === 200) {
+      // 关键改动：这里的 item.Id 改为 item.id，以此类推
       rawFeedData.value = res.data.map((item: any) => ({
-        id: item.Id,
-        type: item.Type.toLowerCase(),
-        author: item.Author,
-        authorId: item.AuthorId,
-        timestamp: item.Timestamp,
-        title: item.Title,
-        content: item.Content,
-        imgUrl: item.ImgUrl,
-        stats: item.Stats || { views: 0, likes: 0, comments: 0 }
+        id: item.id,
+        type: item.type?.toLowerCase(),
+        author: item.author,
+        authorId: item.authorId,
+        timestamp: item.timestamp,
+        title: item.title,
+        content: item.content,
+        imgUrl: item.imgUrl,
+        stats: item.stats || { views: 0, likes: 0, comments: 0 }
       }));
     }
   } catch (error) {
@@ -181,7 +168,7 @@ const fetchPortalData = async () => {
   }
 };
 
-// --- 2. 获取真实共创企划活动 ---
+// --- 2. 获取共创企划 (适配 startDate/endDate) ---
 const fetchActivities = async () => {
   try {
     const { data: res } = await apiClient.get(`/Activity/list`, {
@@ -190,14 +177,15 @@ const fetchActivities = async () => {
 
     if (res && res.data) {
       const now = new Date().getTime();
-      
-      const activeProjects = res.data.filter((item: ActivityItem) => {
-        if (!item.startdate || !item.enddate) return false;
-        const startDate = new Date(item.startdate).getTime();
-        const endDate = new Date(item.enddate).getTime();
-        return now >= startDate && now <= endDate;
+      const activeProjects = res.data.filter((item: any) => {
+        // 如果后端是驼峰，这里应该是 startDate 和 endDate
+        const s = item.startDate || item.startdate;
+        const e = item.endDate || item.enddate;
+        if (!s || !e) return false;
+        const start = new Date(s).getTime();
+        const end = new Date(e).getTime();
+        return now >= start && now <= end;
       });
-
       trendingActivities.value = activeProjects.slice(0, 6);
     }
   } catch (error) {
@@ -205,11 +193,12 @@ const fetchActivities = async () => {
   }
 };
 
-// --- 3. 获取侧边栏真实反馈动态 ---
+// --- 3. 获取反馈动态 ---
 const fetchActiveFeedbacks = async () => {
   try {
     const { data: res } = await apiClient.get(`/FeedBack/active-widget`);
-    if (res && res.success) {
+    if (res && (res.success || res.code === 200)) {
+      // 确保后端返回的是 res.data (小驼峰)
       activeFeedbacks.value = res.data;
     }
   } catch (error) {
@@ -217,35 +206,32 @@ const fetchActiveFeedbacks = async () => {
   }
 };
 
-// --- 4. 获取侧边栏真实官方日历活动 ---
+// --- 4. 获取日历活动 ---
 const fetchSideActivities = async () => {
   try {
     const now = new Date();
     const { data: res } = await apiClient.get(`/events`, {
-      params: { 
-        year: now.getFullYear(), 
-        month: now.getMonth() + 1 
-      }
+      params: { year: now.getFullYear(), month: now.getMonth() + 1 }
     });
 
     const rawList = Array.isArray(res) ? res : (res?.data || []);
 
     sideActivities.value = rawList.slice(0, 4).map((item: any) => {
-      const eDate = item.Date || item.date;
-      const eTime = item.Time || item.time;
-      const eId = item.Id || item.id;
-      const eTitle = item.Title || item.title;
-      const eType = item.Type || item.type;
-      const eColor = item.Color || item.color;
+      // 统一适配小驼峰
+      const eDate = item.date;
+      const eTime = item.time;
+      const eId = item.id;
+      const eTitle = item.title;
+      const eType = item.type;
+      const eColor = item.color;
 
       const eventDateTime = new Date(`${eDate}T${eTime}`);
-      
       let statusText = '即将开始';
       let isActive = false;
       
       if (eventDateTime.getTime() < now.getTime()) {
         statusText = '已结束';
-      } else if (eventDateTime.getTime() - now.getTime() < 86400000 * 2) { 
+      } else if (eventDateTime.getTime() - now.getTime() < 172800000) { 
         statusText = '进行中';
         isActive = true;
       }
@@ -287,7 +273,7 @@ onMounted(() => {
   fetchActivities();
   fetchActiveFeedbacks(); 
   fetchSideActivities(); 
-  fetchCheckInStatus(); // 🔥 组件挂载时获取真实签到状态
+  fetchCheckInStatus(); 
 });
 </script>
 
