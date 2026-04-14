@@ -5,6 +5,11 @@
     <div class="graph-controls">
       <div class="title">🌌 灵脉 · 知识图谱</div>
       
+      <div class="scope-toggle">
+        <button :class="{ active: graphScope === 'space' }" @click="setScope('space')">当前空间</button>
+        <button :class="{ active: graphScope === 'global' }" @click="setScope('global')">全部空间</button>
+      </div>
+
       <div class="search-box">
         <input 
           v-model="searchQuery" 
@@ -37,24 +42,29 @@
 </template>
 
 <script setup>
-import { onMounted, ref, onBeforeUnmount, nextTick } from 'vue'
+import { onMounted, ref, onBeforeUnmount, nextTick, watch } from 'vue' // 🔥 新增 watch 导入
 import ForceGraph from 'force-graph'
 import apiClient from '@/utils/api'
 
+// 🔥 新增：接收 spaceId 属性
+const props = defineProps(['spaceId'])
 const emit = defineEmits(['node-click'])
 const containerRef = ref(null)
 const graphRef = ref(null)
 
 // 数据状态
-const rawData = ref({ nodes: [], links: [] }) // 原始完整数据
+const rawData = ref({ nodes: [], links: [] }) 
 const displayNodeCount = ref(0)
 const displayLinkCount = ref(0)
 
 // 搜索与动画状态
 const searchQuery = ref('')
-const searchMode = ref('highlight') // 'highlight' | 'filter'
+const searchMode = ref('highlight') 
 const spawnInterval = ref(25) 
 const growDuration = 500;
+
+// 🔥 新增：图谱范围 ('space' 或 'global')
+const graphScope = ref('space') 
 
 let myGraph = null
 let resizeObserver = null
@@ -68,20 +78,34 @@ const getColor = (group) => {
   return OBSIDIAN_COLORS[Math.abs(hash) % OBSIDIAN_COLORS.length];
 }
 
-// 🔥 核心逻辑：大爆炸生长动画
+// 🔥 新增：切换范围并重新加载
+const setScope = (scope) => {
+  if (graphScope.value === scope) return;
+  graphScope.value = scope;
+  if (myGraph) {
+    myGraph.graphData({ nodes: [], links: [] }); // 先清空屏幕
+  }
+  initGraph();
+}
+
+// 🔥 新增：监听 spaceId 变化，如果用户在外部切换了空间，刷新图谱
+watch(() => props.spaceId, (newId, oldId) => {
+  if (newId !== oldId && myGraph) {
+    initGraph()
+  }
+})
+
+// 核心逻辑：大爆炸生长动画
 const rebootAnimation = () => {
   if (!myGraph) return;
   const data = myGraph.graphData();
   const now = Date.now();
   
   data.nodes.forEach((n, idx) => {
-    // 1. 中心随机喷发
     n.x = (Math.random() - 0.5) * 40;
     n.y = (Math.random() - 0.5) * 40;
     n.vx = (Math.random() - 0.5) * 10;
     n.vy = (Math.random() - 0.5) * 10;
-    
-    // 2. 序列计时
     n.growStarted = now + (idx * spawnInterval.value);
   });
   
@@ -95,12 +119,11 @@ const rebootAnimation = () => {
   }, 600);
 }
 
-// 🔥 核心逻辑：双模式搜索处理
+// 核心逻辑：双模式搜索处理
 const handleSearch = () => {
   if (!myGraph) return;
   const query = searchQuery.value.trim().toLowerCase();
   
-  // 1. 如果搜索为空，恢复完整数据
   if (!query) {
     myGraph.graphData(rawData.value);
     displayNodeCount.value = rawData.value.nodes.length;
@@ -108,7 +131,6 @@ const handleSearch = () => {
     return;
   }
 
-  // 2. 过滤模式：重新计算子集数据
   if (searchMode.value === 'filter') {
     const matchedNodes = rawData.value.nodes.filter(node => node.name.toLowerCase().includes(query));
     const matchedNodeIds = new Set(matchedNodes.map(n => n.id));
@@ -121,7 +143,6 @@ const handleSearch = () => {
     displayNodeCount.value = matchedNodes.length;
     displayLinkCount.value = matchedLinks.length;
   } 
-  // 3. 高亮模式：结构不变，依赖 nodeCanvasObject 重绘
   else {
     myGraph.graphData(rawData.value);
     displayNodeCount.value = rawData.value.nodes.length;
@@ -134,11 +155,15 @@ const initGraph = async () => {
   if (!graphRef.value || !containerRef.value) return;
 
   try {
-    const res = await apiClient.get('/Graph/full')
+    // 🔥 根据范围请求不同的接口
+    const endpoint = graphScope.value === 'global' ? '/Graph/global' : `/Graph/space/${props.spaceId}`;
+    if (!props.spaceId && graphScope.value === 'space') return; // 容错处理
+
+    const res = await apiClient.get(endpoint);
     const data = res.data;
+
     data.nodes.forEach(n => {
       if (!n.color) n.color = getColor(n.group || 'default');
-      // 初始时让所有节点处于“未来”出生状态
       n.growStarted = Date.now() + 1000000; 
     });
 
@@ -146,87 +171,93 @@ const initGraph = async () => {
     displayNodeCount.value = data.nodes.length;
     displayLinkCount.value = data.links.length;
 
-    myGraph = ForceGraph()(graphRef.value)
-      .graphData(rawData.value)
-      .backgroundColor('#1e1e1e') 
-      .width(containerRef.value.offsetWidth)
-      .height(containerRef.value.offsetHeight)
-      .nodeRelSize(4)
-      .onNodeHover(node => {
-        hoverNode = node || null;
-        graphRef.value.style.cursor = node ? 'pointer' : null;
-      })
-      // 绘制逻辑：融合生长动画与高亮模式
-      .nodeCanvasObject((node, ctx, globalScale) => {
-        const now = Date.now();
-        if (!node.growStarted) return;
-        const elapsed = now - node.growStarted;
-        if (elapsed < 0) return;
+    if (!myGraph) {
+      myGraph = ForceGraph()(graphRef.value)
+        .backgroundColor('#1e1e1e') 
+        .width(containerRef.value.offsetWidth)
+        .height(containerRef.value.offsetHeight)
+        .nodeRelSize(4)
+        .onNodeHover(node => {
+          hoverNode = node || null;
+          graphRef.value.style.cursor = node ? 'pointer' : null;
+        })
+        .nodeCanvasObject((node, ctx, globalScale) => {
+          const now = Date.now();
+          if (!node.growStarted) return;
+          const elapsed = now - node.growStarted;
+          if (elapsed < 0) return;
 
-        const progress = Math.min(elapsed / growDuration, 1);
-        const easeProgress = 1 - Math.pow(1 - progress, 3);
-        const currentR = 3.5 * easeProgress;
+          const progress = Math.min(elapsed / growDuration, 1);
+          const easeProgress = 1 - Math.pow(1 - progress, 3);
+          const currentR = 3.5 * easeProgress;
 
-        const label = node.name;
-        const query = searchQuery.value.trim().toLowerCase();
-        const isMatch = query && label.toLowerCase().includes(query);
-        const isHover = hoverNode === node;
-        
-        // ✨ 高亮模式逻辑：未匹配的节点变极其透明
-        if (searchMode.value === 'highlight' && query && !isMatch) {
-          ctx.globalAlpha = 0.05;
-        } else {
+          const label = node.name;
+          const query = searchQuery.value.trim().toLowerCase();
+          const isMatch = query && label.toLowerCase().includes(query);
+          const isHover = hoverNode === node;
+          
+          if (searchMode.value === 'highlight' && query && !isMatch) {
+            ctx.globalAlpha = 0.05;
+          } else {
+            ctx.globalAlpha = 1;
+          }
+
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, currentR, 0, 2 * Math.PI, false);
+          ctx.fillStyle = isMatch ? '#ff4d4f' : node.color; 
+          ctx.fill();
+
+          if ((globalScale > 1.2 || isHover || isMatch) && progress > 0.6) {
+             const fontSize = 12 / globalScale;
+             ctx.font = `${fontSize < 3 ? 3 : fontSize}px "Sans-Serif"`;
+             ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+             ctx.strokeStyle = '#1e1e1e'; ctx.lineWidth = 3 / globalScale;
+             ctx.strokeText(label, node.x + currentR + 3, node.y);
+             ctx.fillStyle = isMatch ? '#ff4d4f' : '#e0e0e0'; 
+             ctx.fillText(label, node.x + currentR + 3, node.y);
+
+             // 🌟 核心修改：如果是全局模式，且带有空间名，绘制出空间名称
+             if (graphScope.value === 'global' && node.spaceName) {
+               const subFontSize = (10 / globalScale) < 2 ? 2 : (10 / globalScale);
+               ctx.font = `${subFontSize}px "Sans-Serif"`;
+               ctx.fillStyle = '#888888';
+               ctx.fillText(`[${node.spaceName}]`, node.x + currentR + 3, node.y + fontSize + 1);
+             }
+          }
           ctx.globalAlpha = 1;
-        }
+        })
+        .linkColor(link => {
+          const now = Date.now();
+          const s = link.source.growStarted || 0;
+          const t = link.target.growStarted || 0;
+          
+          if (now < s || now < t) return 'transparent';
 
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, currentR, 0, 2 * Math.PI, false);
-        ctx.fillStyle = isMatch ? '#ff4d4f' : node.color; 
-        ctx.fill();
+          const query = searchQuery.value.trim().toLowerCase();
+          if (searchMode.value === 'highlight' && query) {
+            const sMatch = link.source.name.toLowerCase().includes(query);
+            const tMatch = link.target.name.toLowerCase().includes(query);
+            return (sMatch || tMatch) ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.02)';
+          }
+          return '#4a4a4a';
+        })
+        .linkWidth(link => {
+          const query = searchQuery.value.trim().toLowerCase();
+          return (searchMode.value === 'highlight' && query && (link.source.name.toLowerCase().includes(query) || link.target.name.toLowerCase().includes(query))) ? 1 : 0.5;
+        })
+        .onNodeClick(node => emit('node-click', node.id));
 
-        // 文字 Halo (生长到一定程度才显示)
-        if ((globalScale > 1.2 || isHover || isMatch) && progress > 0.6) {
-           const fontSize = 12 / globalScale;
-           ctx.font = `${fontSize < 3 ? 3 : fontSize}px "Sans-Serif"`;
-           ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-           ctx.strokeStyle = '#1e1e1e'; ctx.lineWidth = 3 / globalScale;
-           ctx.strokeText(label, node.x + currentR + 3, node.y);
-           ctx.fillStyle = isMatch ? '#ff4d4f' : '#e0e0e0'; 
-           ctx.fillText(label, node.x + currentR + 3, node.y);
-        }
-        ctx.globalAlpha = 1;
-      })
-      .linkColor(link => {
-        const now = Date.now();
-        const s = link.source.growStarted || 0;
-        const t = link.target.growStarted || 0;
-        
-        // 动画未出生时不显示线
-        if (now < s || now < t) return 'transparent';
+      // 物理引擎配置
+      myGraph.d3Force('charge').strength(-120);
+      myGraph.d3Force('link').distance(60);
+      import('d3-force').then(d3 => {
+        myGraph.d3Force('radial', d3.forceRadial(10).strength(0.15));
+      });
+    }
 
-        // ✨ 搜索高亮逻辑
-        const query = searchQuery.value.trim().toLowerCase();
-        if (searchMode.value === 'highlight' && query) {
-          const sMatch = link.source.name.toLowerCase().includes(query);
-          const tMatch = link.target.name.toLowerCase().includes(query);
-          return (sMatch || tMatch) ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.02)';
-        }
-        return '#4a4a4a';
-      })
-      .linkWidth(link => {
-        const query = searchQuery.value.trim().toLowerCase();
-        return (searchMode.value === 'highlight' && query && (link.source.name.toLowerCase().includes(query) || link.target.name.toLowerCase().includes(query))) ? 1 : 0.5;
-      })
-      .onNodeClick(node => emit('node-click', node.id));
-
-    // 物理：球形凝聚
-    myGraph.d3Force('charge').strength(-120);
-    myGraph.d3Force('link').distance(60);
+    // 更新数据
+    myGraph.graphData(rawData.value);
     
-    import('d3-force').then(d3 => {
-      myGraph.d3Force('radial', d3.forceRadial(10).strength(0.15));
-    });
-
     // 自动触发初始爆炸
     setTimeout(() => { rebootAnimation(); }, 500);
 
@@ -259,6 +290,16 @@ onBeforeUnmount(() => { resizeObserver?.disconnect(); myGraph?._destructor(); })
   padding: 16px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
   z-index: 10; display: flex; flex-direction: column; gap: 12px; min-width: 240px; color: #e0e0e0;
 }
+
+/* 🔥 新增：范围切换按钮样式 */
+.scope-toggle {
+  display: flex; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 3px; margin-bottom: 8px;
+}
+.scope-toggle button {
+  flex: 1; border: none; background: transparent; color: #888; padding: 6px 0; font-size: 12px; cursor: pointer; border-radius: 4px; transition: all 0.2s;
+}
+.scope-toggle button:hover { color: #ccc; }
+.scope-toggle button.active { background: #444; color: #fff; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
 .search-box { display: flex; flex-direction: column; gap: 8px; }
 .search-input { width: 100%; padding: 8px 10px; background: #2a2a2a; border: 1px solid #444; border-radius: 6px; font-size: 12px; color: #fff; outline: none; }

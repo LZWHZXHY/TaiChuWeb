@@ -45,6 +45,14 @@ const getSuggestionItems = ({ query }) => {
       },
     },
     {
+  title: '日历视图',
+  description: '插入一个交互式日历，管理每日事项与双向链接',
+  icon: '📅',
+  command: ({ editor, range }) => {
+    editor.chain().focus().deleteRange(range).insertContent({ type: 'calendarBlock' }).run()
+  }
+},
+    {
       title: '折叠列表',
       icon: '▶',
       command: ({ editor, range }) => {

@@ -1,6 +1,10 @@
 <template>
   <div class="editor-scroll-container" @click="handleEditorClick">
     <div class="editor-header">
+      <div v-if="note.isShortcut" class="shortcut-banner">
+        🔗 这是一个跨空间分身。原始页面位于「{{ note.realSpaceName }}」。你在这里的修改将实时同步至真身。
+      </div>
+
       <input 
         v-model="note.title" 
         class="title-field" 
@@ -12,6 +16,34 @@
       <div class="meta-info">
         <span class="time-label">上次更新</span> 
         {{ formatDate(note.updatedAt) }}
+        
+        <span class="divider">|</span>
+        <div class="action-dropdown" @click.stop="toggleSpaceMenu">
+          <span class="action-btn">🚀 页面流转</span>
+
+          <span class="divider">|</span>
+<span class="action-btn" @click="toggleHistoryPanel">🕒 版本历史</span>
+          
+          <div class="dropdown-menu" v-if="showSpaceMenu" @click.stop>
+            <div class="menu-title">将此页面发送至...</div>
+            <select v-model="targetSpaceId" class="space-select">
+              <option disabled value="">请选择目标空间</option>
+              <option v-for="s in availableSpaces" :key="s.id" :value="s.id">
+                🌌 {{ s.name }}
+              </option>
+            </select>
+            
+            <div class="menu-actions" v-if="targetSpaceId">
+              <button class="btn-move" @click="moveToSpace" title="将此页面连根拔起，彻底移入目标空间">
+                🚚 彻底移动
+              </button>
+              <button class="btn-shortcut" @click="createShortcut" title="在目标空间创建一个指向这里的快捷方式" v-if="!note.isShortcut">
+                🔗 创建分身
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -48,9 +80,34 @@
         <div class="backlink-list">
           <div v-for="bl in backlinks" :key="bl.id" class="backlink-card" @click="handleBacklinkClick(bl.id)">
             <div class="bl-title">📄 {{ bl.title }}</div>
+            <div style="font-size: 12px; color: #888; margin-top: 4px;" v-if="bl.spaceName">🌌 {{ bl.spaceName }}</div>
           </div>
         </div>
       </div>
+
+
+      <div class="history-sidebar" :class="{ 'is-open': showHistoryPanel }">
+  <div class="sidebar-header">
+    <h3>🕒 历史版本</h3>
+    <button class="close-btn" @click="showHistoryPanel = false">×</button>
+  </div>
+  
+  <div class="sidebar-content">
+    <div v-if="isLoadingHistory" class="loading-state">加载中...</div>
+    <div v-else-if="historyList.length === 0" class="empty-state">暂无历史记录</div>
+    
+    <div v-else class="history-timeline">
+      <div v-for="h in historyList" :key="h.id" class="history-card">
+        <div class="h-time">{{ formatHistoryTime(h.savedAt) }}</div>
+        <div class="h-title">{{ h.title || '无标题' }}</div>
+        <div class="h-meta">规模: {{ h.wordCount }} 字符</div>
+        <button class="restore-btn" @click="applyHistory(h.id)">恢复此版本</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
     </div>
 
     <div class="status-monitor">
@@ -112,27 +169,90 @@ import HeatmapNode from './HeatmapNode.js'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import ResizeImage from 'tiptap-extension-resize-image'
+import { CustomTaskItem } from './CustomTaskItem.js'
+import { useNoteHistory } from './LingMaiNoteHistory.js'
+
+import CalendarBlock from './CalendarNode.js'
+
 
 import { BlockId } from './BlockId'
 import BlockEmbed from './BlockEmbedNode.js'
 
+const isDataLoaded = ref(false) 
+const uploadProgress = ref(0) 
+const isUploading = ref(false) 
 
-const isDataLoaded = ref(false) // 标记数据是否真正同步完成
-
-const uploadProgress = ref(0) // 上传进度 (0-100)
-const isUploading = ref(false) // 是否正在上传
-
-const props = defineProps(['noteId'])
+const props = defineProps(['noteId', 'spaceId'])
 const emit = defineEmits(['navigate', 'deleted']) 
 
 const tocItems = ref([])
 const activeHeadingIndex = ref(-1)
 
-const note = reactive({ id: props.noteId, title: '', updatedAt: new Date(), parentNoteId: null })
+const note = reactive({ 
+  id: props.noteId, 
+  title: '', 
+  updatedAt: new Date(), 
+  parentNoteId: null,
+  isShortcut: false, 
+  realSpaceName: '' 
+})
+
+// 🔥 跨空间流转状态
+const showSpaceMenu = ref(false)
+const availableSpaces = ref([])
+const targetSpaceId = ref('')
+
 const syncing = ref(false)
 const backlinks = ref([])
 const editorAreaRef = ref(null)
 let tippyInstance = null
+
+// 🔥 加载用户的其他空间列表
+const loadSpaces = async () => {
+  try {
+    const res = await apiClient.get('/Spaces/list')
+    // 过滤掉当前所在的空间
+    availableSpaces.value = res.data.filter(s => s.id !== props.spaceId)
+  } catch (e) { console.error("无法加载空间列表", e) }
+}
+
+const toggleSpaceMenu = () => {
+  showSpaceMenu.value = !showSpaceMenu.value
+  if (showSpaceMenu.value && availableSpaces.value.length === 0) {
+    loadSpaces()
+  }
+}
+
+// 🚀 彻底移动到其他空间
+const moveToSpace = async () => {
+  if (!targetSpaceId.value) return
+  if (confirm("确定要将此页面及其所有子页面彻底移动到新空间吗？")) {
+    try {
+      await apiClient.post('/Notes/move', {
+        id: note.id,
+        targetSpaceId: targetSpaceId.value,
+        parentId: null // 默认移动到目标空间的根目录
+      })
+      alert("移动成功！页面已流转至目标空间。")
+      showSpaceMenu.value = false
+      emit('deleted') // 通知父组件当前页面已移走，刷新左侧目录树
+    } catch (e) { alert("移动失败: " + (e.response?.data?.message || e.message)) }
+  }
+}
+
+// 🔗 在其他空间创建分身
+const createShortcut = async () => {
+  if (!targetSpaceId.value) return
+  try {
+    await apiClient.post('/Notes/create-shortcut', {
+      targetNoteId: note.id,
+      targetSpaceId: targetSpaceId.value,
+      parentId: null
+    })
+    alert("分身创建成功！你可以在目标空间看到此页面的引用。")
+    showSpaceMenu.value = false
+  } catch (e) { alert("创建分身失败: " + (e.response?.data?.message || e.message)) }
+}
 
 const uploadImage = async (file) => {
   const formData = new FormData()
@@ -144,7 +264,6 @@ const uploadImage = async (file) => {
   try {
     const res = await apiClient.post('/Upload/image', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-      // 关键：Axios 自带的进度回调
       onUploadProgress: (progressEvent) => {
         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
         uploadProgress.value = percentCompleted
@@ -152,14 +271,9 @@ const uploadImage = async (file) => {
     })
     return res.data.url
   } catch (e) {
-    console.error('图片上传失败', e)
     return null
   } finally {
-    // 延迟消失，让用户看清“100%”
-    setTimeout(() => {
-      isUploading.value = false
-      uploadProgress.value = 0
-    }, 1000)
+    setTimeout(() => { isUploading.value = false; uploadProgress.value = 0 }, 1000)
   }
 }
 
@@ -178,162 +292,92 @@ const scrollToHeading = (pos) => {
 
 const editor = useEditor({
   extensions: [
-    KanbanNode,
-    StarterKit.configure({
-      // 关键：禁用掉 StarterKit 自带的图片功能，防止它干扰 ResizeImage
-      image: false, 
-    }),
-    BlockId, 
-    BlockEmbed, 
-    HeatmapNode,
-    Placeholder.configure({ placeholder: '输入 / 唤起命令，输入 [[ 建立关联...' }), 
-    SlashCommand, 
-    TaskList,
-    TaskItem.extend({
-      content: 'block+', 
-    }).configure({
-      nested: true,
-    }),
-    
-
-    Image.configure({ inline: true }),
-    // 后放缩放（后定义的会覆盖前面的渲染逻辑）
-    ResizeImage.extend({
-      name: 'image', // 核心操作：把插件名从 'imageResize' 改为 'image'
-    }).configure({
-      inline: true,
-      // 其他你需要的配置
-    }),
-    Details, 
-    Summary, 
-    Table.configure({ resizable: true }),
-    TableRow,
-    TableHeader,
-    TableCell,
-    TextStyle, 
-    Color, 
-    Underline, 
-    FontSize, 
-    Highlight.configure({ multicolor: true }), 
-    BubbleMenuExtension.configure({ element: null }),
-
+    CalendarBlock,
+    KanbanNode, StarterKit.configure({ image: false }), BlockId, BlockEmbed, HeatmapNode,
+    Placeholder.configure({ placeholder: '输入 / 唤起命令，输入 [[ 建立关联...' }), SlashCommand, 
+    TaskList.configure({ nested: true }), TaskItem.extend({ content: 'block+' }).configure({ nested: true }),CustomTaskItem.configure({ nested: true }),
+    Image.configure({ inline: true }), ResizeImage.extend({ name: 'image' }).configure({ inline: true }),
+    Details, Summary, Table.configure({ resizable: true }), TableRow, TableHeader, TableCell,
+    TextStyle, Color, Underline, FontSize, Highlight.configure({ multicolor: true }), BubbleMenuExtension.configure({ element: null }),
     Mention.configure({
-      HTMLAttributes: {
-        class: 'internal-link',
-      },
+      HTMLAttributes: { class: 'internal-link' },
       suggestion: {
         char: '[[',
         items: async ({ query }) => {
-          console.log('当前 Mention Query:', query);
+          if (!props.spaceId) return [];
 
+          // 🔥 块级别全局搜索逻辑
           if (query && query.startsWith('#')) {
             const blockQuery = query.substring(1); 
-            
             try {
-              console.log('检测到块搜索标识，正在发起请求...', blockQuery);
-              const res = await apiClient.get(`/Blocks/search?query=${encodeURIComponent(blockQuery)}`);
+              const res = await apiClient.get(`/Notes/search/blocks/global?query=${encodeURIComponent(blockQuery)}`);
               
-              return res.data.map(b => ({
-                id: b.blockId,
-                label: b.previewText,
-                type: 'block', 
-                noteTitle: b.noteTitle
-              }));
-            } catch (e) {
-              console.error('块搜索请求失败:', e);
-              return [];
-            }
+              // 排序：当前空间的排在前面
+              const sortedData = res.data.sort((a, b) => {
+                const aIsLocal = a.spaceId === props.spaceId ? -1 : 1;
+                const bIsLocal = b.spaceId === props.spaceId ? -1 : 1;
+                return aIsLocal - bIsLocal;
+              });
+
+              return sortedData.map(b => {
+                const isLocal = b.spaceId === props.spaceId;
+                const prefix = isLocal ? '📍当前' : `🌌${b.spaceName}`;
+                return { 
+                  id: b.blockId, 
+                  label: `[${prefix}] ${b.noteTitle} - ${b.previewText}`, 
+                  type: 'block' 
+                }
+              });
+            } catch (e) { return []; }
           }
 
+          // 🔥 笔记级别全局搜索逻辑
           try {
-            const res = await apiClient.get(`/Notes/search?query=${encodeURIComponent(query || '')}`);
-            return res.data.map(n => ({
-              // 🔥 修复：n.Id -> n.id，n.Title -> n.title
-              id: n.id,
-              label: n.title,
-              type: 'note'
-            }));
-          } catch (e) {
-            console.error('文档搜索请求失败:', e);
-            return [];
-          }
-        },
+            const res = await apiClient.get(`/Notes/search/global?query=${encodeURIComponent(query || '')}`);
+            
+            // 排序：当前空间的排在前面
+            const sortedData = res.data.sort((a, b) => {
+              const aIsLocal = a.spaceId === props.spaceId ? -1 : 1;
+              const bIsLocal = b.spaceId === props.spaceId ? -1 : 1;
+              return aIsLocal - bIsLocal;
+            });
 
+            return sortedData.map(n => {
+              const isLocal = n.spaceId === props.spaceId;
+              const prefix = isLocal ? '📍当前' : `🌌${n.spaceName}`;
+              return { 
+                id: n.id, 
+                label: `[${prefix}] ${n.title}`, 
+                type: 'note' 
+              }
+            });
+          } catch (e) { return []; }
+        },
         command: ({ editor, range, props }) => {
           if (props.type === 'block') {
-            editor
-              .chain()
-              .focus()
-              .insertContentAt(range, [
-                {
-                  type: 'blockEmbed',
-                  attrs: { targetId: props.id }
-                },
-                {
-                  type: 'paragraph' 
-                }
-              ])
-              .run();
+            editor.chain().focus().insertContentAt(range, [ { type: 'blockEmbed', attrs: { targetId: props.id } }, { type: 'paragraph' } ]).run();
           } else {
-            editor
-              .chain()
-              .focus()
-              .insertContentAt(range, {
-                type: 'mention',
-                attrs: {
-                  id: props.id,
-                  label: props.label,
-                },
-              })
-              .insertContent(' ') 
-              .run();
+            editor.chain().focus().insertContentAt(range, { type: 'mention', attrs: { id: props.id, label: props.label } }).insertContent(' ').run();
           }
         },
-
         render: () => {
-          let component;
-          let popup;
-
+          let component; let popup;
           return {
-            onStart: props => {
-              component = new VueRenderer(SuggestionList, {
-                props,
-                editor: props.editor,
-              });
-
-              if (!props.clientRect) return;
-
-              popup = tippy('body', {
-                getReferenceClientRect: props.clientRect,
-                appendTo: () => document.body,
-                content: component.element,
-                showOnCreate: true,
-                interactive: true,
-                trigger: 'manual',
-                placement: 'bottom-start',
-              });
+            onStart: suggestionProps => {
+              component = new VueRenderer(SuggestionList, { props: suggestionProps, editor: suggestionProps.editor });
+              if (!suggestionProps.clientRect) return;
+              popup = tippy('body', { getReferenceClientRect: suggestionProps.clientRect, appendTo: () => document.body, content: component.element, showOnCreate: true, interactive: true, trigger: 'manual', placement: 'bottom-start' });
             },
-
-            onUpdate(props) {
-              component.updateProps(props);
-              if (!props.clientRect) return;
-              popup[0].setProps({
-                getReferenceClientRect: props.clientRect,
-              });
+            onUpdate(suggestionProps) {
+              component.updateProps(suggestionProps);
+              if (!suggestionProps.clientRect) return;
+              popup[0].setProps({ getReferenceClientRect: suggestionProps.clientRect });
             },
-
-            onKeyDown(props) {
-              if (props.event.key === 'Escape') {
-                popup[0].hide();
-                return true;
-              }
-              return component.ref?.onKeyDown(props);
+            onKeyDown(suggestionProps) {
+              if (suggestionProps.event.key === 'Escape') { popup[0].hide(); return true; }
+              return component.ref?.onKeyDown(suggestionProps);
             },
-
-            onExit() {
-              if (popup && popup[0]) popup[0].destroy();
-              if (component) component.destroy();
-            },
+            onExit() { if (popup && popup[0]) popup[0].destroy(); if (component) component.destroy(); },
           };
         },
       },
@@ -342,187 +386,112 @@ const editor = useEditor({
   editorProps: {
     noteId: props.noteId,
     handlePaste: (view, event) => {
-  const items = (event.clipboardData || event.originalEvent.clipboardData).items;
-  
-  for (const item of items) {
-    if (item.type.indexOf('image') === 0) {
-      event.preventDefault();
-      const file = item.getAsFile();
-      
-      uploadImage(file).then(url => {
-        if (url) {
-          const { schema } = view.state;
-          
-          // --- 关键修改点 ---
-          // 确保使用的 node 名是 'image'（因为你已经把 Resize 插件改名为 image 了）
-          // 并且增加默认的 width 属性，否则有些缩放插件在没有宽度值时不会显示手柄
-          const node = schema.nodes.image.create({ 
-            src: url,
-            width: '100%', // 初始给个 100% 宽度，方便后续缩放
+      const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+      for (const item of items) {
+        if (item.type.indexOf('image') === 0) {
+          event.preventDefault(); const file = item.getAsFile();
+          uploadImage(file).then(url => {
+            if (url) { const { schema } = view.state; const node = schema.nodes.image.create({ src: url, width: '100%' }); const transaction = view.state.tr.replaceSelectionWith(node); view.dispatch(transaction); }
           });
-          
-          const transaction = view.state.tr.replaceSelectionWith(node);
-          view.dispatch(transaction);
+          return true; 
         }
-      });
-      return true; // 表示已处理该粘贴事件
-    }
-  }
-  return false;
-},
+      }
+      return false;
+    },
     handleDrop: (view, event, slice, moved) => {
-      if (!moved && event.dataTransfer && event.dataTransfer.files.length > 0) { const file = event.dataTransfer.files[0]; if (file.type.indexOf('image') === 0) { event.preventDefault(); const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY }); uploadImage(file).then(url => { if (url) { const { schema } = view.state; const node = schema.nodes.image.create({ src: url }); view.dispatch(view.state.tr.insert(coordinates.pos, node)) } }); return true } } return false
+      if (!moved && event.dataTransfer && event.dataTransfer.files.length > 0) { 
+        const file = event.dataTransfer.files[0]; 
+        if (file.type.indexOf('image') === 0) { 
+          event.preventDefault(); const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY }); 
+          uploadImage(file).then(url => { 
+            if (url) { const { schema } = view.state; const node = schema.nodes.image.create({ src: url }); view.dispatch(view.state.tr.insert(coordinates.pos, node)) } 
+          }); 
+          return true 
+        } 
+      } 
+      return false
     }
   },
-  onUpdate: ({ editor }) => { 
-  // 如果还没加载完，直接跳过，不触发保存
-  if (!isDataLoaded.value) return; 
-
-  debouncedSave(editor.getJSON()); 
-  updateToc(editor); 
-},
+  onUpdate: ({ editor }) => { if (!isDataLoaded.value) return; debouncedSave(editor.getJSON()); updateToc(editor); },
   onCreate: ({ editor }) => { updateToc(editor) }
 })
 
 const loadData = async (id) => {
   if (!editor.value) return
-  
-  // 1. 明确关锁，禁止任何自动保存
   isDataLoaded.value = false 
-  
   try {
     const res = await apiClient.get(`/Notes/detail/${id}`); 
     note.title = res.data.title || ''; 
     note.updatedAt = res.data.updatedAt; 
     note.parentNoteId = res.data.parentNoteId; 
+    note.isShortcut = res.data.isShortcut;
+    note.realSpaceName = res.data.realSpaceName;
     const content = res.data.contentJson;
 
     if (content && content !== '""') { 
       const jsonContent = JSON.parse(content);
-
-      // --- 【新增：防自杀校验逻辑】 ---
-      // 检查 JSON 中所有的节点类型，编辑器 Schema 是否全部支持
-      // 如果不支持（如缺少 Image 插件），Tiptap 会静默丢弃节点，导致数据丢失
       const schemaNodes = editor.value.schema.nodes;
-      
-      console.log('编辑器当前支持的节点:', Object.keys(editor.value.schema.nodes));
-
-
-      // 递归检查 JSON 树中是否存在编辑器无法识别的 type
       const checkSchemaMatch = (node) => {
         if (node.type && !schemaNodes[node.type]) return node.type;
-        if (node.content) {
-          for (const child of node.content) {
-            const missing = checkSchemaMatch(child);
-            if (missing) return missing;
-          }
-        }
+        if (node.content) { for (const child of node.content) { const missing = checkSchemaMatch(child); if (missing) return missing; } }
         return null;
       };
 
       const missingType = checkSchemaMatch(jsonContent);
-      if (missingType) {
-        throw new Error(`编辑器配置错误：缺少 [${missingType}] 节点扩展。为防止覆盖原始数据，已拦截渲染。`);
-      }
-      // --- 【校验结束】 ---
+      if (missingType) throw new Error(`编辑器配置错误：缺少 [${missingType}] 节点扩展。`);
 
-      try { 
-        // 这一步会触发 onUpdate，但因为 isDataLoaded 是 false，会被拦截
-        editor.value.commands.setContent(jsonContent); 
-        updateToc(editor.value);
-        
-        // 记录一个初始的“纯净快照”，用于后续比对内容是否真的发生了变化
-        // (需要在 script setup 顶层定义 let lastContentHash = '')
-        // lastContentHash = JSON.stringify(jsonContent); 
-
-      } catch (e) { 
-        throw new Error(`内容解析失败：${e.message}`);
-      } 
+      try { editor.value.commands.setContent(jsonContent); updateToc(editor.value); } catch (e) { throw new Error(`内容解析失败：${e.message}`); } 
     } else { 
       editor.value.commands.setContent('');
     }
     
     loadBacklinks(id);
-    
-    // 3. 关键：确保 Tiptap 处理完所有事务后再开锁
-    // 使用 300ms 延迟比 100ms 更稳妥，避开所有宏任务/微任务的波动
-    setTimeout(() => {
-      isDataLoaded.value = true;
-      console.log('✅ 灵脉加载完成，自动保存已就绪');
-    }, 300);
-
+    setTimeout(() => { isDataLoaded.value = true; }, 300);
   } catch (e) { 
-    note.title = "加载受阻"; 
-    // 加载失败的情况下，绝对不开启 isDataLoaded 锁！
-    isDataLoaded.value = false; 
-    
-    // 给用户显眼的报错提示，而不是空白内容
+    note.title = "加载受阻"; isDataLoaded.value = false; 
     editor.value?.commands.setContent(`
       <div style="border: 2px dashed #ff4d4f; padding: 20px; border-radius: 8px; color: #ff4d4f;">
-        <h3>⚠️ 数据加载异常</h3>
-        <p>${e.message}</p>
+        <h3>⚠️ 数据加载异常</h3><p>${e.message}</p>
         <p>请检查插件配置或刷新页面。当前自动保存已禁用，以保护数据库数据。</p>
       </div>
     `);
   }
 }
 
-const loadBacklinks = async (id) => { 
-  try { 
-    const blRes = await apiClient.get(`/Notes/${id}/backlinks`); 
-    backlinks.value = blRes.data 
-  } catch (e) { 
-    backlinks.value = [] 
-  } 
-}
+const loadBacklinks = async (id) => { try { const blRes = await apiClient.get(`/Notes/${id}/backlinks`); backlinks.value = blRes.data } catch (e) { backlinks.value = [] } }
 
 let timer = null
 let isSaving = false 
 
 const debouncedSave = (json) => {
-  clearTimeout(timer);
-  syncing.value = true;
-
+  clearTimeout(timer); syncing.value = true;
   timer = setTimeout(async () => {
-    if (isSaving) return; 
-
+    if (isSaving || !props.spaceId) return; 
     try {
       isSaving = true;
-      const payload = { 
-        id: note.id, 
-        title: note.title, 
-        contentJson: JSON.stringify(json), 
-        parentNoteId: note.parentNoteId 
-      };
-
+      const payload = { id: note.id, title: note.title, contentJson: JSON.stringify(json), parentNoteId: note.parentNoteId, spaceId: props.spaceId };
       await apiClient.post('/Notes/save', payload);
-      
       note.updatedAt = new Date();
-      console.log('✨ 灵脉已同步至太初数据库');
-    } catch (e) {
-      console.error('❌ 自动保存失败:', e);
-    } finally {
-      isSaving = false;
-      syncing.value = false;
-    }
+    } catch (e) { console.error('❌ 自动保存失败:', e); } finally { isSaving = false; syncing.value = false; }
   }, 2000); 
 }
+
+const { 
+  showHistoryPanel, 
+  historyList, 
+  isLoadingHistory, 
+  toggleHistoryPanel, 
+  applyHistory, 
+  formatHistoryTime 
+} = useNoteHistory(note, editor, debouncedSave)
+
+
 
 const syncTitle = () => { if (editor.value) debouncedSave(editor.value.getJSON()) }
 
 const handleEditorClick = (event) => {
   const target = event.target.closest('.internal-link'); if (target) { emit('navigate', target.getAttribute('data-id')); return }
-
-  if (event.altKey) {
-    const blockNode = event.target.closest('[data-block-id]');
-    if (blockNode) {
-      const bId = blockNode.getAttribute('data-block-id');
-      navigator.clipboard.writeText(bId);
-      console.log('块 ID 已复制:', bId);
-      return;
-    }
-  }
-
+  if (event.altKey) { const blockNode = event.target.closest('[data-block-id]'); if (blockNode) { navigator.clipboard.writeText(blockNode.getAttribute('data-block-id')); return; } }
   if (event.target.closest('input') || event.target.closest('button')) return
   if (editor.value && !editor.value.isFocused) editor.value.chain().focus().run()
 }
@@ -531,39 +500,67 @@ const handleBacklinkClick = (targetId) => emit('navigate', targetId)
 const formatDate = (d) => d ? new Date(d).toLocaleString('zh-CN', { hour12: false }) : ''
 
 onMounted(() => {
+  document.addEventListener('click', () => { showSpaceMenu.value = false }) // 点击外部关闭菜单
   window.addEventListener('navigate-note', (e) => { emit('navigate', e.detail) })
   if (editorAreaRef.value) {
     tippyInstance = delegate(editorAreaRef.value, {
-      target: '.internal-link', 
-      content: '加载中...',
-      animation: 'shift-away',
-      interactive: true,
-      theme: 'light-border',
-      placement: 'bottom-start',
-      delay: [500, 0], 
-      allowHTML: true,
-      appendTo: () => document.body,
+      target: '.internal-link', content: '加载中...', animation: 'shift-away', interactive: true, theme: 'light-border', placement: 'bottom-start', delay: [500, 0], allowHTML: true, appendTo: () => document.body,
       onShow(instance) {
-        const targetId = instance.reference.getAttribute('data-id')
-        if (!targetId) return false;
-        const container = document.createElement('div')
-        const vnode = createVNode(LinkPreviewCard, { noteId: targetId })
-        render(vnode, container)
-        instance.setContent(container)
+        const targetId = instance.reference.getAttribute('data-id'); if (!targetId) return false;
+        const container = document.createElement('div'); const vnode = createVNode(LinkPreviewCard, { noteId: targetId }); render(vnode, container); instance.setContent(container)
       }
     })
   }
 })
 
 watch([() => props.noteId, editor], ([newId, newEditor]) => { if (newId && newEditor) { note.id = newId; loadData(newId) } }, { immediate: true })
-onBeforeUnmount(() => { 
-  if (timer) clearTimeout(timer); 
-  editor.value?.destroy();
-  if (tippyInstance) tippyInstance.destroy()
-})
+onBeforeUnmount(() => { if (timer) clearTimeout(timer); editor.value?.destroy(); if (tippyInstance) tippyInstance.destroy() })
 </script>
 
 <style lang="scss">
+
+/* 🔥 分身横幅样式 */
+.shortcut-banner {
+  background: #f0f7ff; border: 1px solid #cce3fd; border-radius: 6px;
+  padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: #005cc5;
+  display: flex; align-items: center; font-weight: 500;
+}
+
+/* 🔥 页面流转菜单样式 */
+.divider { margin: 0 10px; color: #e0e0e0; }
+.action-dropdown {
+  display: inline-block; position: relative;
+  .action-btn { 
+    cursor: pointer; color: #666; font-weight: 500; transition: color 0.2s;
+    &:hover { color: #2383e2; }
+  }
+  
+  .dropdown-menu {
+    position: absolute; top: 25px; right: 0; width: 220px;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 12px; z-index: 1000;
+    
+    .menu-title { font-size: 12px; color: #888; margin-bottom: 8px; font-weight: bold; }
+    
+    .space-select {
+      width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px;
+      margin-bottom: 12px; font-size: 13px; outline: none;
+    }
+    
+    .menu-actions {
+      display: flex; flex-direction: column; gap: 8px;
+      button {
+        width: 100%; padding: 8px; border: none; border-radius: 4px;
+        font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        &.btn-move { background: #fff0f0; color: #d32f2f; border: 1px solid #ffccc7; }
+        &.btn-move:hover { background: #ffccc7; }
+        &.btn-shortcut { background: #f0f7ff; color: #005cc5; border: 1px solid #cce3fd; }
+        &.btn-shortcut:hover { background: #cce3fd; }
+      }
+    }
+  }
+}
+
 /* =========================================
    1. 编辑器基础容器布局
    ========================================= */
@@ -622,41 +619,33 @@ onBeforeUnmount(() => {
     line-height: 0;
     vertical-align: middle;
     user-select: none;
-
-    /* 关键：给整个缩放容器一个高层级，确保手柄在图片上方 */
     z-index: 10; 
 
-    /* 强行绘制四个角的小方块 */
-    /* 不同的插件类名可能叫 .handler, .resizer-handler, 或 .resize-trigger */
     [class*="handler"], 
     [class*="resize-trigger"],
     .resizer {
       display: block !important;
       position: absolute !important;
-      width: 10px !important;  /* 宽度 */
-      height: 10px !important; /* 高度 */
-      background-color: #2383e2 !important; /* 方块颜色：蓝色 */
-      border: 1.5px solid #ffffff !important; /* 白色边框，让它更清晰 */
+      width: 10px !important; 
+      height: 10px !important;
+      background-color: #2383e2 !important; 
+      border: 1.5px solid #ffffff !important;
       border-radius: 2px !important;
       z-index: 100 !important;
-      cursor: nwse-resize; /* 鼠标悬停显示缩放图标 */
-      
-      /* 强制显示 */
+      cursor: nwse-resize; 
       visibility: visible !important;
       opacity: 1 !important;
     }
 
-    /* 精确控制四个角的位置（如果插件没对齐，这里可以微调） */
     .handler-top-left { top: -5px; left: -5px; cursor: nwse-resize; }
     .handler-top-right { top: -5px; right: -5px; cursor: nesw-resize; }
     .handler-bottom-left { bottom: -5px; left: -5px; cursor: nesw-resize; }
     .handler-bottom-right { bottom: -5px; right: -5px; cursor: nwse-resize; }
   }
 
-  /* 解决蓝色边框和方块重叠导致看不清的问题 */
   .ProseMirror-selectednode {
     outline: 2px solid #2383e2 !important;
-    outline-offset: 2px; /* 让边框往外扩一点，露出方块 */
+    outline-offset: 2px;
   } 
 
   p.is-editor-empty:first-child::before { 
@@ -672,7 +661,6 @@ onBeforeUnmount(() => {
     font-weight: 700;
   }
 
-  /* --- 列表嵌套布局 (1. -> a. -> i.) --- */
   ol {
     list-style-type: decimal;
     padding-left: 1.5rem;
@@ -692,71 +680,159 @@ onBeforeUnmount(() => {
   /* =========================================
      3. 任务列表 (TaskList) 专用样式
      ========================================= */
-  ul[data-type="taskList"] {
-    list-style: none !important;
-    padding: 0 !important;
-    margin: 1rem 0 !important;
+  /* =========================================
+   极致打磨版：多级任务列表 (Tiptap TaskList)
+   ========================================= */
+ul[data-type="taskList"] {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0.5rem 0 !important;
 
-    li {
-      display: flex !important;
-      align-items: flex-start !important;
-      margin-bottom: 0.5rem !important;
-      padding: 0 !important;
-      border-left: none !important;
-      background-color: transparent !important;
+  /* ------------------------------
+     1. 基础任务行样式 (所有层级通用)
+     ------------------------------ */
+  li {
+    display: flex !important;
+    align-items: flex-start !important;
+    margin-bottom: 2px !important;
+    padding: 4px 6px !important;
+    border-radius: 6px;
+    border-left: none !important;
+    background-color: transparent;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
 
-      & > label {
-        flex: 0 0 auto !important;
-        width: 24px !important;
-        height: 28px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin-right: 8px !important;
-        cursor: pointer;
+    /* 整行 Hover 时的微妙反馈 */
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.03) !important;
+    }
 
-        input[type="checkbox"] {
-          appearance: none !important;
-          -webkit-appearance: none !important;
-          width: 18px !important;
-          height: 18px !important;
-          border: 2px solid #cbd5e1 !important;
-          border-radius: 4px !important;
-          background-color: #fff !important;
-          cursor: pointer !important;
-          display: grid !important;
-          place-content: center !important;
-          transition: all 0.2s;
+    /* ------------------------------
+       2. 复选框核心样式
+       ------------------------------ */
+    & > label {
+      flex: 0 0 auto !important;
+      margin-right: 10px !important;
+      margin-top: 3px !important; /* 让复选框与第一行文字基线对齐 */
+      cursor: pointer;
+      display: flex;
+      align-items: center;
 
-          &:checked {
-            background-color: #2383e2 !important;
-            border-color: #2383e2 !important;
-            &::before {
-              content: "" !important; width: 10px; height: 10px; background-color: white;
-              clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-            }
-          }
+      input[type="checkbox"] {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        width: 1.15em !important;
+        height: 1.15em !important;
+        margin: 0 !important;
+        border: 1.5px solid #a1a1aa !important;
+        border-radius: 5px !important; /* 第一级：平滑的圆角矩形 */
+        background-color: transparent !important;
+        cursor: pointer !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        display: grid;
+        place-content: center;
+
+        /* 复选框 Hover 状态 */
+        &:hover {
+          border-color: #2383e2 !important;
+          background-color: rgba(35, 131, 226, 0.08) !important;
+        }
+
+        /* 勾选后的状态 & 弹出动画 */
+        &:checked {
+          background-color: #2383e2 !important;
+          border-color: #2383e2 !important;
+
+          /* 使用内联 SVG 绘制完美的对号 */
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E") !important;
+          background-size: 75% !important;
+          background-position: center !important;
+          background-repeat: no-repeat !important;
+          animation: checkmark-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
       }
+    }
 
-      & > div {
-        flex: 1 1 auto !important;
-        min-width: 0 !important;
-        p { margin: 0 !important; line-height: 28px !important; display: block !important; }
+    /* ------------------------------
+       3. 文本容器样式
+       ------------------------------ */
+    & > div {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      
+      p {
+        margin: 0 !important;
+        line-height: 1.6 !important;
+        color: #37352f;
+        transition: color 0.3s ease;
       }
+    }
 
-      &[data-checked="true"] {
-        & > div { text-decoration: line-through !important; color: #94a3b8 !important; }
-        input[type="checkbox"] { background-color: #94a3b8 !important; border-color: #94a3b8 !important; }
+    /* ------------------------------
+       4. 任务完成后的整体暗化状态
+       ------------------------------ */
+    &[data-checked="true"] {
+      & > div p {
+        color: #9ca3af !important;
+        text-decoration: line-through;
+        text-decoration-color: #cbd5e1;
       }
     }
   }
 
+  /* ------------------------------
+     5. 子任务嵌套层级 (第二级)
+     ------------------------------ */
+  ul[data-type="taskList"] {
+    margin-top: 2px !important;
+    /* 核心计算：刚好对齐父级复选框的中心，并留出内边距 */
+    margin-left: 0.55em !important; 
+    padding-left: 1.4em !important; 
+    /* 干净的实线引导线，比虚线更有现代感 */
+    border-left: 1.5px solid #e2e8f0; 
+
+    li {
+      & > label input[type="checkbox"] {
+        border-radius: 50% !important; /* 第二级：变为正圆形 */
+        width: 1.05em !important;
+        height: 1.05em !important;
+      }
+      & > div p {
+        font-size: 0.95em; /* 字体微微缩小，凸显层级 */
+        color: #475569;
+      }
+    }
+
+    /* ------------------------------
+       6. 孙任务嵌套层级 (第三级)
+       ------------------------------ */
+    ul[data-type="taskList"] {
+      border-left-color: #f1f5f9; /* 第三级引导线颜色更淡 */
+      
+      li > label input[type="checkbox"] {
+        border-radius: 3px !important; /* 第三级：硬朗的小方块 */
+        width: 0.95em !important;
+        height: 0.95em !important;
+      }
+      & > div p {
+        font-size: 0.9em;
+      }
+    }
+  }
+}
+
+/* =========================================
+   复选框弹出动画关键帧
+   ========================================= */
+@keyframes checkmark-pop {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
   /* =========================================
-     4. 高级自定义节点样式 (Details, Kanban, etc.)
+     4. 高级自定义节点样式
      ========================================= */
-  
-  /* 折叠详情节点 */
   .details-node { 
     border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; 
     margin: 16px 0; background-color: #fbfbfa;
@@ -785,7 +861,6 @@ onBeforeUnmount(() => {
     }
   }
 
-  /* 表格系统 */
   table {
     border-collapse: collapse; table-layout: fixed; width: 100%; margin: 16px 0; overflow: hidden;
     td, th { 
@@ -799,7 +874,6 @@ onBeforeUnmount(() => {
     }
   }
 
-  /* 双链/提及样式 */
   .internal-link {
     background-color: rgba(35, 131, 226, 0.08);
     color: #2383e2;
@@ -812,7 +886,6 @@ onBeforeUnmount(() => {
     &:hover { background-color: rgba(35, 131, 226, 0.15); }
   }
 
-  /* 图片样式 */
   img {
     max-width: 100%; height: auto; border-radius: 8px;
     &.ProseMirror-selectednode { outline: 3px solid #2383e2; }
@@ -858,7 +931,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* 反向链接区域 */
 .backlinks-section {
   margin-top: 80px; border-top: 1px solid #eaeaea; padding-top: 30px;
   .section-title { font-size: 14px; font-weight: 700; color: #888; margin-bottom: 20px; }
@@ -871,7 +943,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* 同步状态指示器 */
 .sync-indicator {
   position: fixed; bottom: 25px; right: 25px; font-size: 12px; 
   padding: 8px 16px; background: #fff; border: 1px solid #eee; border-radius: 30px;
@@ -879,14 +950,70 @@ onBeforeUnmount(() => {
   &.is-syncing { color: #2383e2; border-color: #2383e2; font-weight: 600; }
 }
 
-/* Tippy 预览框 */
 .tippy-box[data-theme~='light-border'] {
   background-color: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
   box-shadow: 0 12px 24px rgba(0,0,0,0.1);
   .tippy-content { padding: 0; }
 }
 
-/* 动画 */
 .fade-in { animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.history-sidebar {
+  position: fixed;
+  top: 0;
+  right: -320px;
+  width: 300px;
+  height: 100vh;
+  background: #fff;
+  box-shadow: -5px 0 25px rgba(0,0,0,0.1);
+  z-index: 2000;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+
+  &.is-open {
+    right: 0;
+  }
+
+  .sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    h3 { margin: 0; font-size: 16px; color: #333; }
+    .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #999; }
+  }
+
+  .sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background: #f9f9f9;
+  }
+
+  .history-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    transition: transform 0.2s;
+
+    &:hover { border-color: #2383e2; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+    .h-time { font-size: 12px; color: #2383e2; font-weight: 600; margin-bottom: 4px; }
+    .h-title { font-size: 14px; font-weight: 500; color: #333; margin-bottom: 8px; }
+    .h-meta { font-size: 12px; color: #888; margin-bottom: 12px; }
+    
+    .restore-btn {
+      width: 100%; padding: 6px; background: #f0f7ff; color: #005cc5; border: 1px solid #cce3fd; border-radius: 4px; cursor: pointer;
+      &:hover { background: #cce3fd; }
+    }
+  }
+}
+
+
 </style>

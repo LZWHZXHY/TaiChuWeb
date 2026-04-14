@@ -82,11 +82,11 @@
               
               <div class="avatar-holder">
                 <UserAvatar 
-                  :user-id="user.UploaderId" 
-                  :passed-avatar="user.Avatar"
-                  :size="32"
-                  :show-level="false"
-                />
+  :user-id="user.UploaderId || user.uploaderId || user.Id" 
+  :passed-avatar="user.Avatar || user.avatar"
+  :size="32"
+  :show-level="false"
+/>
               </div>
 
               <div class="info">
@@ -222,7 +222,10 @@ const handleScroll = (e) => {
 
 const fetchLeaderboard = async () => {
   const res = await apiClient.get('/Drawing/leaderboard?limit=15')
-  if (res.data.success) leaderboard.value = res.data.data
+  if (res.data.success) {
+    // 确保数据包含正确的 UploaderId 和 Avatar
+    leaderboard.value = res.data.data 
+  }
 }
 
 const goToDetail = (img) => {

@@ -51,17 +51,23 @@ const remoteData = ref({})
 const loading = ref(true) 
 const BASE_URL = 'https://bianyuzhou.com' 
 
+// UserAvatar.vue
+
 const isMe = computed(() => {
-  if (!props.userId || props.userId === 'MEE') return true
+  // 只有明确传入 'MEE' 或者 ID 确实等于当前登录 ID 时才返回 true
+  if (props.userId === 'MEE') return true
+  if (!props.userId || !authStore.userID) return false // ID 为空时，绝对不是“我”
   return String(props.userId) === String(authStore.userID)
 })
 
+// UserAvatar.vue 里的 userData 建议改为
 const userData = computed(() => {
   if (isMe.value) return authStore.user || {}
   
+  // 这里的映射要非常小心
   if (props.passedAvatar) {
     return {
-      avatar: props.passedAvatar,
+      avatar: props.passedAvatar, // 统一存入小写，方便 finalAvatarUrl 读取
       level: props.passedLevel,
       title: props.passedTitle,
       titleRarity: props.passedTitleRarity

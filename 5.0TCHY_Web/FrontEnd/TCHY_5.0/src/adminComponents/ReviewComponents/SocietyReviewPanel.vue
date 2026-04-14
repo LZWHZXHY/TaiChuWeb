@@ -1,6 +1,5 @@
 <template>
   <div class="society-review-panel">
-    <!-- 面板头部 -->
     <div class="panel-header">
       <h3>社团审核</h3>
       <div class="panel-filters">
@@ -25,7 +24,6 @@
           <option value="verify_asc">状态排序</option>
         </select>
 
-        
         <button @click="showDebugInfo" class="btn outline small">调试</button>
       </div>
     </div>
@@ -135,7 +133,6 @@
       </table>
     </div>
 
-    <!-- 分页控件 -->
     <div class="pagination" v-if="items.length > 0">
       <div class="pagination-info">
         显示 {{ items.length }} 条记录
@@ -159,7 +156,6 @@
       </div>
     </div>
 
-    <!-- 批量操作栏 -->
     <div class="bulk-actions" v-if="selectedItems.length > 0">
       <div class="bulk-info">
         已选择 {{ selectedItems.length }} 个社团
@@ -177,7 +173,6 @@
       </div>
     </div>
 
-    <!-- 详情模态框 -->
     <div v-if="selectedItem" class="modal-backdrop" @click.self="selectedItem = null">
       <div class="modal">
         <div class="modal-header">
@@ -241,7 +236,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch,  defineEmits, onMounted } from 'vue'
+import { ref, computed, watch, defineEmits, onMounted } from 'vue'
 import apiClient from '@/utils/api'
 
 const props = defineProps({
@@ -257,8 +252,8 @@ const selectedItems = ref([])
 const selectedItem = ref(null)
 const debugInfo = ref(null)
 
-// 筛选条件 - 修正为与后端API匹配
-const filterStatus = ref('0') // 默认待审核，使用数字字符串
+// 筛选条件 
+const filterStatus = ref('0') 
 const societyType = ref('')
 const sortBy = ref('id_desc')
 const page = ref(1)
@@ -301,19 +296,17 @@ function showDebugInfo() {
   alert('调试信息已输出到控制台，请按F12查看')
 }
 
-// API调用 - 修正为调用正确的端点
+// API调用
 async function fetchData() {
   loading.value = true
   debugInfo.value = null
   
   try {
-    // 构建查询参数 - 与后端API参数匹配
     const params = {
       verify: filterStatus.value ? parseInt(filterStatus.value) : undefined,
       type: societyType.value ? parseInt(societyType.value) : undefined,
       q: props.search || undefined,
       sort: sortBy.value
-      // 注意：基础列表接口不支持分页参数 page/pageSize
     }
 
     // 移除空值参数
@@ -323,18 +316,17 @@ async function fetchData() {
       }
     })
 
-    console.log('🔍 调用基础列表接口: /ChaiSheTuan/list')
+    console.log('🔍 调用后端列表接口: /AdminClub/List')
     console.log('🔍 请求参数:', params)
 
-    // 调用正确的API端点：基础列表接口
-    const response = await apiClient.get('/ChaiSheTuan/list', { params })
+    const response = await apiClient.get('/AdminClub/List', { params })
     
     console.log('✅ API响应:', response)
     console.log('📊 响应数据:', response.data)
 
     // 记录调试信息
     debugInfo.value = {
-      endpoint: '/ChaiSheTuan/list',
+      endpoint: '/AdminClub/List',
       params: params,
       status: response.status,
       count: Array.isArray(response.data) ? response.data.length : 0,
@@ -357,7 +349,7 @@ async function fetchData() {
     console.error('错误详情:', error.response?.data)
     
     debugInfo.value = {
-      endpoint: '/ChaiSheTuan/list',
+      endpoint: '/AdminClub/List',
       params: params || {},
       status: error.response?.status || '网络错误',
       count: 0,
@@ -382,16 +374,12 @@ async function fetchData() {
   }
 }
 
-// 单个操作 - 使用审核接口
+// 单个操作 - 审核通过
 async function approveItem(item) {
   if (!confirm(`确定要通过社团 "${item.name}" 吗？`)) return
   
   try {
-    // 调用审核接口
-    await apiClient.post('/ChaiSheTuan/moderation/approve', {
-      Entity: 'ChaiSheTuan',
-      Id: item.id
-    })
+    await apiClient.post(`/AdminClub/Approve/${item.id}`)
     
     await fetchData() // 重新加载数据
     alert('操作成功')
@@ -401,6 +389,7 @@ async function approveItem(item) {
   }
 }
 
+// 单个操作 - 审核拒绝
 async function rejectItem(item) {
   const reason = prompt('请输入拒绝原因（可选）')
   if (reason === null) return
@@ -408,10 +397,7 @@ async function rejectItem(item) {
   if (!confirm(`确定要拒绝社团 "${item.name}" 吗？`)) return
   
   try {
-    // 调用审核接口
-    await apiClient.post('/ChaiSheTuan/moderation/reject', {
-      Entity: 'ChaiSheTuan',
-      Id: item.id,
+    await apiClient.post(`/AdminClub/Reject/${item.id}`, {
       Note: reason
     })
     
@@ -423,7 +409,7 @@ async function rejectItem(item) {
   }
 }
 
-// 批量操作
+// 批量操作 - 审核通过
 async function bulkApprove() {
   if (selectedItems.value.length === 0) return
   
@@ -431,10 +417,7 @@ async function bulkApprove() {
   
   try {
     for (const itemId of selectedItems.value) {
-      await apiClient.post('/ChaiSheTuan/moderation/approve', {
-        Entity: 'ChaiSheTuan',
-        Id: itemId
-      })
+      await apiClient.post(`/AdminClub/Approve/${itemId}`)
     }
     
     await fetchData()
@@ -446,6 +429,7 @@ async function bulkApprove() {
   }
 }
 
+// 批量操作 - 审核拒绝
 async function bulkReject() {
   if (selectedItems.value.length === 0) return
   
@@ -456,9 +440,7 @@ async function bulkReject() {
   
   try {
     for (const itemId of selectedItems.value) {
-      await apiClient.post('/ChaiSheTuan/moderation/reject', {
-        Entity: 'ChaiSheTuan',
-        Id: itemId,
+      await apiClient.post(`/AdminClub/Reject/${itemId}`, {
         Note: reason
       })
     }
@@ -489,7 +471,7 @@ function viewDetails(item) {
   selectedItem.value = item
 }
 
-// 分页 - 基础列表接口不支持分页，暂时禁用
+// 分页处理
 function prevPage() {
   if (page.value > 1) {
     page.value--
@@ -498,7 +480,6 @@ function prevPage() {
 }
 
 function nextPage() {
-  // 基础列表接口不支持分页，暂时简单处理
   if (items.value.length === pageSize.value) {
     page.value++
     fetchData()
@@ -530,8 +511,6 @@ defineExpose({
 // 初始化
 onMounted(() => {
   console.log('🚀 初始化社团审核面板...')
-  console.log('📝 使用基础列表接口: /ChaiSheTuan/list')
-  console.log('📝 审核操作接口: /ChaiSheTuan/moderation/approve|reject')
   fetchData()
 })
 </script>
