@@ -424,13 +424,25 @@ const saveColumnName = async (col: any) => {
   await fetchColumns(); 
   editingColId.value = null 
 }
-
 const toggleColumnDone = async (col: any) => { 
-  col.isCompleted = !col.isCompleted; 
-  await apiClient.put(`/columns/${col.id}`, { 
-    isCompleted: col.isCompleted, 
-    name: col.name 
-  }) 
+  // 1. 🌟 核心修复：去源数据 columns.value 里找到真正的那个列，而不是修改拷贝！
+  const targetCol = columns.value.find(c => c.id === col.id);
+  if (!targetCol) return;
+
+  // 2. 修改源数据，触发 Vue 响应式重新渲染页面
+  targetCol.isCompleted = !targetCol.isCompleted; 
+
+  try {
+    // 3. 发送给后端
+    await apiClient.put(`/columns/${targetCol.id}`, { 
+      isCompleted: targetCol.isCompleted, 
+      name: targetCol.name 
+    });
+  } catch (error) {
+    // 如果后端报错，把状态改回来
+    targetCol.isCompleted = !targetCol.isCompleted;
+    console.error("状态同步失败", error);
+  }
 }
 
 const deleteColumn = async (id: number) => { 
@@ -563,8 +575,32 @@ onMounted(() => {
 .task-container { padding: 0 12px 12px 12px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; }
 .task-card { background: var(--bg-card); border-radius: 8px; box-shadow: var(--shadow-sm); padding: 14px; cursor: pointer; border: 1px solid var(--border-light); transition: all 0.2s ease; position: relative; }
 .task-card:hover { background: var(--bg-card-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: #B3D4FF; }
-.card-dimmed { opacity: 0.6; filter: grayscale(50%); }
+/* ================= 完成状态卡片视觉效果 ================= */
+.card-dimmed { 
+  opacity: 0.5; 
+  filter: grayscale(100%); 
+  background-color: #F8F9FA; /* 让背景稍微灰一点 */
+  border-color: transparent;
+}
 
+/* 核心：给完成状态的任务标题加上中划线 */
+.card-dimmed .card-title {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* 可选：让完成的任务卡片里的标签和头像也进一步变淡，降低视觉干扰 */
+.card-dimmed .card-badges,
+.card-dimmed .card-meta {
+  opacity: 0.7;
+}
+
+/* 可选：鼠标悬浮时不再有明显的上浮动画 */
+.card-dimmed:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+  border-color: transparent;
+}
 .card-badges { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
 .badge-priority { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; }
 .badge-priority.P0 { background: var(--danger-bg); color: var(--danger); } 

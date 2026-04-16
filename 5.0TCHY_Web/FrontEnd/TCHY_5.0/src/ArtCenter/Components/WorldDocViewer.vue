@@ -1,221 +1,169 @@
 <template>
-  <div class="cyber-doc-viewer">
-    <div class="grid-bg moving-grid"></div>
-
-    <div class="doc-paper-heavy">
-      <div class="cyber-toolbar-heavy">
-        <div class="tech-info-group">
-          <span class="deco-box">■</span>
-          <span class="node-id-label">NODE_ID: {{ node.id }}</span>
-          <span class="status-badge" :class="{ 'pending': node.status === 2 }">
-            // {{ node.status === 2 ? 'PENDING_REVIEW' : 'VERIFIED_STABLE' }}
-          </span>
-        </div>
-        <div class="tool-actions">
-          <template v-if="!isEditing">
-            <button class="cyber-btn-rect primary-red" @click="startEdit">
-              <span class="btn-text">EDIT_MODE</span>
-            </button>
-            <button class="cyber-btn-rect ghost-dark" @click="deleteNode">
-              <span class="btn-text">删除节点</span>
-            </button>
-          </template>
-          <template v-else>
-            <button class="cyber-btn-rect ghost-dark" @click="cancelEdit">
-              <span class="btn-text">退出</span>
-            </button>
-            <button class="cyber-btn-rect primary-black" @click="saveNode" :disabled="submitting">
-              <span class="btn-text">{{ submitting ? 'SYNCING...' : '提交变更' }}</span>
-            </button>
-          </template>
-        </div>
+  <div class="md-doc-viewer">
+    
+    <div class="doc-toolbar">
+      <div class="toolbar-left">
+        <span class="node-id">节点编号: {{ node.id }}</span>
+        <span class="status-chip" :class="{ 'pending': node.status === 2 }">
+          {{ node.status === 2 ? '待审核' : '已发布' }}
+        </span>
       </div>
+      <div class="toolbar-right">
+        <template v-if="!isEditing">
+          <button class="md-btn primary" @click="startEdit">编辑文档</button>
+          <button class="md-btn danger-text" @click="deleteNode">删除</button>
+        </template>
+        <template v-else>
+          <button class="md-btn text" @click="cancelEdit">取消</button>
+          <button class="md-btn primary" @click="saveNode" :disabled="submitting">
+            {{ submitting ? '保存中...' : '保存变更' }}
+          </button>
+        </template>
+      </div>
+    </div>
 
-      <div v-if="!isEditing" class="read-mode-scroll custom-scroll">
-        <div class="doc-hero-section">
-          <div class="hero-main">
-            <h1 class="giant-doc-title">{{ node.name }}</h1>
-            <div class="meta-strip">
-              <span class="meta-item"><span class="label">TYPE:</span> {{ node.type }}</span>
-              
-              <span class="meta-item author-display">
-                <span class="label">AUTH:</span> 
-                <div class="avatar-wrapper-read" v-if="node.author_id && node.author_id !== 0">
-                  <GenericAvatar 
-                    :userId="node.author_id" 
-                    :allowLink="true" 
-                    :showLevel="false"
-                  />
-                </div>
-                <div class="avatar-wrapper-read fallback" v-else></div>
-                <span class="author-name-text">{{ node.author || 'SYSTEM' }}</span>
+    <div class="doc-content-scroll md-scroll">
+      
+      <div v-if="!isEditing" class="md-card read-mode">
+        
+        <div class="doc-header">
+          <div class="header-main">
+            <h1 class="doc-title">{{ node.name }}</h1>
+            <div class="meta-row">
+              <span class="meta-item"><span class="label">类型:</span> {{ node.type }}</span>
+              <span class="meta-item author-box">
+                <span class="label">作者:</span>
+                <GenericAvatar v-if="node.author_id" :userId="node.author_id" :allowLink="true" :showLevel="false" class="tiny-avatar" />
+                <span class="author-name">{{ node.author || '系统' }}</span>
               </span>
-
-              <span class="meta-item"><span class="label">SYNC:</span> {{ formatDate(node.updateTime) }}</span>
-              <span class="meta-item" v-if="node.parentId">
-                <span class="label">PARENT_ID:</span> {{ node.parentId }}
-              </span>
+              <span class="meta-item"><span class="label">更新于:</span> {{ formatDate(node.updateTime) }}</span>
             </div>
           </div>
-          <div class="hero-portrait" v-if="displayImages.length > 0">
-            <div class="portrait-frame" @click="openLightbox(displayImages[0])">
-               <img :src="displayImages[0]" @error="handleImgError" />
-               <div class="scanline"></div>
-            </div>
+          
+          <div class="header-image" v-if="displayImages.length > 0">
+            <img :src="displayImages[0]" @click="openLightbox(displayImages[0])" @error="handleImgError" />
           </div>
         </div>
 
-        <div class="divider-tech"><span>// INTEL_DATA_STREAM //</span></div>
+        <div class="md-divider"></div>
 
-        <section class="info-block-heavy">
-          <div class="block-label">// DESCRIPTION_ARCHIVE</div>
-          <div class="text-content-industrial">{{ node.description || '>> NO_DATA_TRANSMITTED_IN_THIS_NODE.' }}</div>
+        <section class="doc-section">
+          <h3 class="section-title">文档描述</h3>
+          <p class="doc-desc">{{ node.description || '暂无详细描述...' }}</p>
         </section>
 
-        <section class="info-block-heavy" v-if="hasMetaData">
-          <div class="block-label">// ATTRIBUTE_MATRIX</div>
-          <div class="attr-matrix-inner">
+        <section class="doc-section" v-if="hasMetaData">
+          <h3 class="section-title">属性档案</h3>
+          <div class="json-wrapper">
             <JsonTreeViewer :data="parsedMeta" />
           </div>
         </section>
 
-      
-
-        <section class="info-block-heavy" v-if="displayImages.length > 0">
-          <div class="block-label">// VISUAL_DATABASE (CLICK_TO_EXPAND)</div>
-          <div class="cyber-gallery-grid">
-            <div v-for="(img, idx) in displayImages" :key="idx" class="gallery-cell" @click="openLightbox(img)">
+        <section class="doc-section" v-if="displayImages.length > 0">
+          <h3 class="section-title">影像资料</h3>
+          <div class="image-grid">
+            <div v-for="(img, idx) in displayImages" :key="idx" class="img-card" @click="openLightbox(img)">
               <img :src="img" loading="lazy" @error="handleImgError" />
-              <div class="cell-deco">IMG_{{ idx + 1 }}</div>
             </div>
           </div>
         </section>
+
       </div>
 
-      <div v-else class="edit-mode-scroll custom-scroll">
+      <div v-else class="edit-mode">
         
-        <div class="edit-card-heavy">
-          <div class="card-tag-black">BASIC_INPUT_BUFFER</div>
-          <div class="form-grid-industrial">
-            <div class="form-group-tech">
-              <label class="input-label-tech">> IDENTIFIER_NAME</label>
-              <input v-model="editForm.name" class="cyber-input-heavy" />
+        <div class="md-card">
+          <h3 class="card-title">基础信息</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>文档名称</label>
+              <input v-model="editForm.name" class="md-input" placeholder="输入名称" />
             </div>
             
-            <div class="form-group-tech">
-              <label class="input-label-tech">> NODE_CLASSIFICATION</label>
-              <input v-model="editForm.type" class="cyber-input-heavy" list="type-options" />
+            <div class="form-group">
+              <label>类型标签</label>
+              <input v-model="editForm.type" class="md-input" list="type-options" placeholder="选择或输入" />
               <datalist id="type-options">
                 <option v-for="t in existingTypes" :key="t" :value="t" />
               </datalist>
             </div>
 
-            <div class="form-group-tech">
-              <label class="input-label-tech">> PARENT_NODE_LINK</label>
-              <select v-model="editForm.parentId" class="cyber-select-heavy">
-                <option :value="null">>> [ ROOT_NODE / NO_PARENT ]</option>
+            <div class="form-group">
+              <label>隶属父节点</label>
+              <select v-model="editForm.parentId" class="md-select">
+                <option :value="null">-- 作为根节点 --</option>
                 <option v-for="p in availableParents" :key="p.id" :value="p.id">
-                  ID:{{ p.id }} | {{ p.name }}
+                  {{ p.name }} (ID:{{ p.id }})
                 </option>
               </select>
             </div>
 
-            <div class="form-group-tech author-search-group">
-              <label class="input-label-tech">> ORIGIN_AUTHOR (USER_LINK)</label>
-              
-              <div class="search-wrapper" v-if="!editForm.author">
-                <input 
-                  v-model="authorSearchQuery" 
-                  @input="handleAuthorSearch" 
-                  placeholder="输入用户名或ID检索..." 
-                  class="cyber-input-heavy" 
-                />
+            <div class="form-group search-group">
+              <label>关联作者</label>
+              <div class="search-box" v-if="!editForm.author">
+                <input v-model="authorSearchQuery" @input="handleAuthorSearch" class="md-input" placeholder="搜索用户名或ID..." />
                 
-                <ul v-if="authorSearchResults.length > 0" class="search-dropdown custom-scroll">
+                <ul v-if="authorSearchResults.length > 0" class="search-dropdown md-scroll">
                   <li v-for="user in authorSearchResults" :key="user.id" @click="selectAuthor(user)">
-                    <GenericAvatar 
-                      :userId="user.id" 
-                      :passedAvatar="user.avatar" 
-                      :showLevel="false"
-                      class="avatar-tiny-dropdown" 
-                    />
+                    <GenericAvatar :userId="user.id" :passedAvatar="user.avatar" :showLevel="false" class="tiny-avatar" />
                     <div class="user-info">
-                      <span class="user-name">{{ user.nickname || user.name }}</span>
-                      <span class="user-id">ID: {{ user.id }}</span>
+                      <span class="name">{{ user.nickname || user.name }}</span>
+                      <span class="id">ID: {{ user.id }}</span>
                     </div>
                   </li>
                 </ul>
-                <div v-else-if="isSearchingAuthor" class="search-loading">
-                  检索中...
-                </div>
+                <div v-else-if="isSearchingAuthor" class="search-loading">检索中...</div>
               </div>
-
-              <div v-else class="selected-author-tag">
-                <div class="tag-content">
-                  <GenericAvatar 
-                    :userId="editForm.author_id" 
-                    :showLevel="false"
-                    class="avatar-tiny-tag" 
-                  />
-                  <span>{{ editForm.author }}</span>
-                </div>
-                <button @click="clearAuthor" class="clear-author-btn">×</button>
+              <div v-else class="selected-author">
+                <GenericAvatar :userId="editForm.author_id" :showLevel="false" class="tiny-avatar" />
+                <span>{{ editForm.author }}</span>
+                <button @click="clearAuthor" class="clear-btn">×</button>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="edit-card-heavy">
-          <div class="card-tag-black">META_DATA_CONFIGURATION</div>
-          <div class="property-header-tech">
-            <button class="cyber-btn-sm-heavy" @click="addRootProperty">+ ADD_ENTRY</button>
+        <div class="md-card">
+          <div class="card-header-flex">
+            <h3 class="card-title">属性拓展</h3>
+            <button class="md-btn text small" @click="addRootProperty">+ 添加属性</button>
           </div>
-          <div class="props-editor-industrial">
-            <PropertyItem 
-              v-for="(item, index) in editForm.propsList" 
-              :key="index" 
-              v-model="editForm.propsList[index]" 
-              @delete="removeRootProperty(index)" 
-            />
+          <div class="props-editor">
+            <PropertyItem v-for="(item, index) in editForm.propsList" :key="index" v-model="editForm.propsList[index]" @delete="removeRootProperty(index)" />
           </div>
         </div>
 
-        <div class="edit-card-heavy">
-          <div class="card-tag-black">VISUAL_ASSET_UPLOAD</div>
-          <div class="upload-area-tech">
-            <button class="cyber-btn-rect primary-red small" @click="$refs.fileInput.click()" :disabled="uploading">
-              {{ uploading ? 'TRANSMITTING...' : 'UPLOAD_NEW_IMAGE' }}
+        <div class="md-card">
+          <h3 class="card-title">影像管理</h3>
+          <div class="upload-area">
+            <button class="md-btn outlined" @click="$refs.fileInput.click()" :disabled="uploading">
+              {{ uploading ? '上传中...' : '点击上传图片' }}
             </button>
             <input type="file" ref="fileInput" style="display:none" accept="image/*" @change="handleFileUpload" />
           </div>
-          
-          <div class="edit-gallery-previews">
-            <div v-for="(url, idx) in displayImages" :key="idx" class="preview-box">
-              <img :src="url" class="img-contain" @error="handleImgError" />
-              <div class="img-delete-overlay" @click="handleRemoveImage(url)">
-                <span class="delete-icon">×</span>
-                <span class="delete-text">PURGE</span>
-              </div>
+          <div class="preview-grid">
+            <div v-for="(url, idx) in displayImages" :key="idx" class="preview-item">
+              <img :src="url" @error="handleImgError" />
+              <button class="delete-img-btn" @click="handleRemoveImage(url)">×</button>
             </div>
           </div>
         </div>
 
-        <div class="edit-card-heavy">
+        <div class="md-card">
           <NodeRelationPanel :currentNode="node" :allNodes="allNodes" @select-node="$emit('select-node', $event)" />
         </div>
 
-        <div class="edit-card-heavy">
-          <div class="card-tag-black">DETAILED_LOG_CONTENT</div>
-          <textarea v-model="editForm.description" class="cyber-textarea-heavy" rows="12"></textarea>
+        <div class="md-card">
+          <h3 class="card-title">详细描述</h3>
+          <textarea v-model="editForm.description" class="md-textarea" rows="8" placeholder="在此输入文档正文..."></textarea>
         </div>
 
       </div>
     </div>
 
-    <div v-if="lightboxImage" class="cyber-lightbox" @click="closeLightbox">
-      <div class="lightbox-content">
+    <div v-if="lightboxImage" class="md-lightbox" @click="closeLightbox">
+      <div class="lightbox-wrapper">
         <img :src="lightboxImage" />
-        <div class="lightbox-close">CLICK_ANYWHERE_TO_CLOSE</div>
       </div>
     </div>
 
@@ -234,7 +182,6 @@ const props = defineProps({
   node: { type: Object, required: true },
   allNodes: { type: Array, default: () => [] } 
 })
-
 const emit = defineEmits(['update-node', 'delete-node', 'select-node'])
 
 const isEditing = ref(false)
@@ -292,7 +239,7 @@ const parsedMeta = computed(() => {
 const hasMetaData = computed(() => Object.keys(parsedMeta.value).length > 0)
 
 const handleImgError = (e) => e.target.src = 'https://img.bianyuzhou.com/uploads/ip_assets/default.png'
-const formatDate = (t) => t ? new Date(t).toLocaleString() : 'N/A'
+const formatDate = (t) => t ? new Date(t).toLocaleString() : '暂无'
 
 const jsonToTree = (jsonObj) => {
   if (!jsonObj || typeof jsonObj !== 'object') return []
@@ -301,7 +248,6 @@ const jsonToTree = (jsonObj) => {
     return (val && typeof val === 'object' && !Array.isArray(val)) ? { key, children: jsonToTree(val) } : { key, value: val }
   })
 }
-
 const treeToJson = (treeArr) => {
   const result = {}
   treeArr.forEach(item => { if (item.key) result[item.key] = item.children ? treeToJson(item.children) : item.value })
@@ -314,39 +260,23 @@ const closeLightbox = () => { lightboxImage.value = null }
 const handleAuthorSearch = () => {
   clearTimeout(searchTimeout)
   if (!authorSearchQuery.value.trim()) {
-    authorSearchResults.value = []
-    isSearchingAuthor.value = false
-    return
+    authorSearchResults.value = []; isSearchingAuthor.value = false; return
   }
-  
   isSearchingAuthor.value = true
   searchTimeout = setTimeout(async () => {
     try {
       const res = await apiClient.get('/userinfo/search', { params: { keyword: authorSearchQuery.value } })
-      if (res.data && res.data.success) {
-        authorSearchResults.value = res.data.data || []
-      } else {
-        authorSearchResults.value = []
-      }
-    } catch (e) {
-      console.error("用户检索失败", e)
-    } finally {
-      isSearchingAuthor.value = false
-    }
+      authorSearchResults.value = (res.data && res.data.success) ? (res.data.data || []) : []
+    } catch (e) { console.error(e) } finally { isSearchingAuthor.value = false }
   }, 400)
 }
 
 const selectAuthor = (user) => {
   editForm.author = user.nickname || user.name
   editForm.author_id = user.id
-  authorSearchQuery.value = ''
-  authorSearchResults.value = []
+  authorSearchQuery.value = ''; authorSearchResults.value = []
 }
-
-const clearAuthor = () => {
-  editForm.author = ''
-  editForm.author_id = null
-}
+const clearAuthor = () => { editForm.author = ''; editForm.author_id = null }
 
 const startEdit = () => {
   const n = props.node
@@ -365,23 +295,19 @@ const addRootProperty = () => editForm.propsList.push({ key: '', value: '' })
 const removeRootProperty = (index) => editForm.propsList.splice(index, 1)
 
 const handleFileUpload = async (e) => {
-  const file = e.target.files[0]
-  if (!file) return
+  const file = e.target.files[0]; if (!file) return;
   uploading.value = true
   try {
     const fd = new FormData(); fd.append('file', file)
     const res = await apiClient.post(`/Setting/${props.node.id}/image`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
     const responseData = res.data || res; 
-    if (responseData && responseData.allImages) {
-      localImages.value = parseGalleryData(JSON.stringify(responseData.allImages))
-    }
-    alert("TRANSMISSION_COMPLETE")
+    if (responseData && responseData.allImages) localImages.value = parseGalleryData(JSON.stringify(responseData.allImages))
     emit('select-node', props.node) 
-  } catch (e) { alert("UPLOAD_FAILED") } finally { uploading.value = false }
+  } catch (e) { alert("上传失败") } finally { uploading.value = false }
 }
 
 const handleRemoveImage = async (url) => {
-  if(!confirm("WARNING: PERMANENT DELETION?")) return
+  if(!confirm("确定要删除此图片吗？")) return
   try {
     const res = await apiClient.delete(`/Setting/${props.node.id}/image`, { params: { imageUrl: url } })
     const responseData = res.data || res; 
@@ -391,169 +317,135 @@ const handleRemoveImage = async (url) => {
        localImages.value = localImages.value.filter(u => u !== url)
     }
     emit('select-node', props.node)
-  } catch (e) { alert("FAILED") }
+  } catch (e) { alert("删除失败") }
 }
 
 const saveNode = () => {
   submitting.value = true
-  
-  // 将属性树转回 JSON 字符串
   const metaStr = JSON.stringify(treeToJson(editForm.propsList))
-  
-  // 🌟 构造显式的 payload，确保 author_id 就在里面
   const payload = { 
-    id: editForm.id,
-    name: editForm.name,
-    type: editForm.type,
-    author: editForm.author,
-    author_id: editForm.author_id, // 确认这一行存在
-    description: editForm.description,
-    parentId: editForm.parentId,
-    meta_data_json: metaStr,
-    metaStr: metaStr // 保持与你原有逻辑一致的备份字段
+    id: editForm.id, name: editForm.name, type: editForm.type, author: editForm.author, 
+    author_id: editForm.author_id, description: editForm.description, parentId: editForm.parentId, 
+    meta_data_json: metaStr, metaStr: metaStr 
   }
-
-  // 发射事件给父组件
   emit('update-node', payload, () => {
-    submitting.value = false
-    isEditing.value = false
-    localImages.value = []
+    submitting.value = false; isEditing.value = false; localImages.value = []
   })
 }
 
-const deleteNode = () => { if(confirm("TERMINATE NODE?")) emit('delete-node', props.node.id) }
+const deleteNode = () => { emit('delete-node', props.node.id) }
 
 watch(() => props.node.id, () => { isEditing.value = false; localImages.value = [] })
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
-
-/* --- 核心变量 --- */
-.cyber-doc-viewer {
-  --red: #D92323; --black: #111111; --off-white: #F4F1EA; --gray: #E0DDD5;
-  --mono: 'JetBrains Mono', monospace; --heading: 'Anton', sans-serif; --body: 'Inter', sans-serif;
-  width: 100%; height: 100%; position: relative; overflow: hidden;
-  background: var(--off-white); color: var(--black); font-family: var(--body);
+/* Material Design 风格 */
+.md-doc-viewer {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  background: #F5F7FA;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #2C3E50;
 }
 
-/* 动态网格 */
-.grid-bg { 
-  position: absolute; inset: 0; 
-  background-image: linear-gradient(var(--gray) 1px, transparent 1px), linear-gradient(90deg, var(--gray) 1px, transparent 1px); 
-  background-size: 50px 50px; opacity: 0.4; pointer-events: none; z-index: 0; 
+/* 顶部工具栏 */
+.doc-toolbar {
+  height: 56px; background: #FFF; border-bottom: 1px solid #E0E0E0;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 24px; flex-shrink: 0;
 }
-.moving-grid { animation: gridScroll 30s linear infinite; }
-@keyframes gridScroll { 0% { transform: translateY(0); } 100% { transform: translateY(-50px); } }
+.toolbar-left { display: flex; align-items: center; gap: 12px; }
+.node-id { font-size: 13px; color: #7F8C8D; font-family: monospace; }
+.status-chip { font-size: 12px; background: #E3F2FD; color: #1976D2; padding: 4px 8px; border-radius: 4px; }
+.status-chip.pending { background: #FFF3E0; color: #E65100; }
 
-/* 容器布局 */
-.doc-paper-heavy {
-  position: relative; z-index: 1; width: 100%; max-width: 1000px; height: 95%; margin: 20px auto;
-  background: #fff; border: 3px solid var(--black); box-shadow: 12px 12px 0 rgba(0,0,0,0.15); display: flex; flex-direction: column;
+.toolbar-right { display: flex; gap: 12px; }
+
+/* 按钮规范 */
+.md-btn {
+  border: none; border-radius: 4px; padding: 6px 16px; font-size: 14px; font-weight: 500; cursor: pointer; transition: 0.2s;
 }
+.md-btn.primary { background: #1976D2; color: #FFF; }
+.md-btn.primary:hover:not(:disabled) { background: #1565C0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.md-btn.primary:disabled { background: #90CAF9; cursor: not-allowed; }
+.md-btn.text { background: transparent; color: #555; }
+.md-btn.text:hover { background: rgba(0,0,0,0.04); }
+.md-btn.danger-text { background: transparent; color: #D32F2F; }
+.md-btn.danger-text:hover { background: #FFEBEE; }
+.md-btn.outlined { background: transparent; border: 1px solid #1976D2; color: #1976D2; }
+.md-btn.outlined:hover { background: #E3F2FD; }
+.md-btn.small { padding: 4px 8px; font-size: 12px; }
 
-.cyber-toolbar-heavy {
-  height: 60px; background: var(--black); color: #fff; display: flex; justify-content: space-between; align-items: center;
-  padding: 0 20px; border-bottom: 4px solid var(--red); flex-shrink: 0;
-}
-.tech-info-group { display: flex; align-items: center; gap: 15px; font-family: var(--mono); font-size: 0.85rem; }
-.deco-box { color: var(--red); }
-.status-badge { background: #222; padding: 2px 8px; color: #00ff00; }
-.status-badge.pending { color: #ffae00; }
-
-/* 按钮样式 */
-.cyber-btn-rect { border: none; padding: 8px 16px; cursor: pointer; font-family: var(--heading); font-size: 0.9rem; transition: 0.2s; position: relative; }
-.primary-red { background: var(--red); color: #fff; }
-.primary-red:hover { background: #b91d1d; transform: translate(-2px, -2px); box-shadow: 4px 4px 0 rgba(0,0,0,0.2); }
-.primary-black { background: #fff; color: var(--black); border: 1px solid var(--black); }
-.primary-black:hover { background: var(--black); color: #fff; }
-.ghost-dark { background: transparent; color: #fff; border: 1px solid #555; }
-.ghost-dark:hover { border-color: var(--red); color: var(--red); }
+/* 内容滚动区 */
+.doc-content-scroll { flex: 1; overflow-y: auto; padding: 24px; }
+.md-card { background: #FFF; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 32px; margin-bottom: 24px; max-width: 900px; margin-left: auto; margin-right: auto; }
 
 /* 阅读模式 */
-.read-mode-scroll { flex: 1; overflow-y: auto; padding: 40px; }
-.doc-hero-section { display: flex; gap: 30px; margin-bottom: 40px; }
-.hero-main { flex: 1; }
+.doc-header { display: flex; justify-content: space-between; gap: 32px; }
+.header-main { flex: 1; }
+.doc-title { font-size: 32px; font-weight: bold; margin: 0 0 16px 0; color: #111; line-height: 1.2; }
+.meta-row { display: flex; gap: 24px; flex-wrap: wrap; font-size: 13px; color: #666; }
+.meta-item { display: flex; align-items: center; gap: 6px; }
+.meta-item .label { color: #999; }
+.tiny-avatar { width: 24px; height: 24px; }
+.author-name { font-weight: 500; color: #333; }
+.header-image { width: 140px; height: 140px; border-radius: 8px; overflow: hidden; border: 1px solid #E0E0E0; cursor: pointer; }
+.header-image img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
+.header-image:hover img { transform: scale(1.05); }
 
-.giant-doc-title { font-family: var(--heading); font-size: 4rem; line-height: 0.9; text-transform: uppercase; margin: 0 0 20px 0; color: var(--black); }
+.md-divider { height: 1px; background: #E0E0E0; margin: 32px 0; }
 
-.meta-strip { display: flex; gap: 20px; flex-wrap: wrap; font-family: var(--mono); font-size: 0.8rem; color: #666; align-items: center; }
-.meta-item .label { font-weight: 800; color: var(--black); }
+.doc-section { margin-bottom: 32px; }
+.section-title { font-size: 16px; font-weight: 600; margin: 0 0 16px 0; color: #333; border-left: 4px solid #1976D2; padding-left: 12px; }
+.doc-desc { font-size: 15px; line-height: 1.8; color: #444; white-space: pre-wrap; }
+.json-wrapper { background: #FAFAFA; padding: 16px; border-radius: 6px; border: 1px solid #E0E0E0; }
 
-/* 🌟 阅读模式：作者联动展示修正 */
-.author-display { display: flex; align-items: center; gap: 8px; }
-.avatar-wrapper-read { 
-  width: 32px; height: 32px; flex-shrink: 0; 
+.image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+.img-card { border-radius: 6px; overflow: hidden; border: 1px solid #E0E0E0; cursor: pointer; aspect-ratio: 1; }
+.img-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
+.img-card:hover img { transform: scale(1.05); opacity: 0.9; }
+
+/* 编辑模式 */
+.card-title { font-size: 16px; font-weight: 600; margin: 0 0 20px 0; color: #111; }
+.card-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.card-header-flex .card-title { margin: 0; }
+
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+.form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 8px; font-weight: 500; }
+.md-input, .md-select, .md-textarea {
+  width: 100%; box-sizing: border-box; border: 1px solid #DCDFE6; border-radius: 4px; padding: 10px 12px; font-size: 14px; outline: none; transition: 0.2s; background: #FFF;
 }
-.avatar-wrapper-read.fallback { background: #ccc; border-radius: 4px; border: 1px solid var(--black); }
-.author-name-text { font-weight: 800; color: var(--black); font-family: var(--body); font-size: 0.9rem; }
+.md-input:focus, .md-select:focus, .md-textarea:focus { border-color: #1976D2; box-shadow: 0 0 0 2px rgba(25,118,210,0.1); }
 
-/* 图像画框与扫描线 */
-.hero-portrait { width: 180px; height: 180px; flex-shrink: 0; }
-.portrait-frame { width: 100%; height: 100%; border: 3px solid var(--black); position: relative; overflow: hidden; background: #111; cursor: pointer; }
-.portrait-frame img { width: 100%; height: 100%; object-fit: contain; }
-.scanline { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.5); animation: scan 3s linear infinite; pointer-events: none; }
-@keyframes scan { 0% { top: -5%; } 100% { top: 105%; } }
+/* 下拉检索 */
+.search-group { position: relative; }
+.search-dropdown { position: absolute; top: 100%; left: 0; width: 100%; background: #FFF; border: 1px solid #E0E0E0; border-radius: 4px; max-height: 200px; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.1); list-style: none; padding: 0; margin: 4px 0 0 0; }
+.search-dropdown li { display: flex; align-items: center; padding: 10px 12px; gap: 12px; cursor: pointer; border-bottom: 1px solid #F0F0F0; }
+.search-dropdown li:hover { background: #F5F7FA; }
+.search-dropdown .user-info { display: flex; flex-direction: column; }
+.search-dropdown .name { font-size: 14px; color: #333; }
+.search-dropdown .id { font-size: 12px; color: #999; }
+.search-loading { padding: 10px; font-size: 13px; color: #999; background: #FFF; border: 1px solid #E0E0E0; border-radius: 4px; margin-top: 4px; }
 
-/* 工业分隔符 */
-.divider-tech { background: var(--black); color: #fff; text-align: center; font-family: var(--mono); font-size: 0.75rem; padding: 5px; margin: 30px 0; letter-spacing: 2px; }
-.info-block-heavy { margin-bottom: 40px; }
-.block-label { background: var(--black); color: #fff; display: inline-block; padding: 4px 12px; font-family: var(--mono); font-size: 0.8rem; margin-bottom: 15px; font-weight: 700; }
-.text-content-industrial { font-size: 1.15rem; line-height: 1.8; color: #333; white-space: pre-wrap; padding-left: 15px; border-left: 4px solid var(--gray); }
+.selected-author { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #F5F7FA; border-radius: 4px; border: 1px solid #E0E0E0; }
+.clear-btn { margin-left: auto; background: none; border: none; font-size: 16px; color: #999; cursor: pointer; }
+.clear-btn:hover { color: #D32F2F; }
 
-/* 图像网格 */
-.cyber-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-.gallery-cell { border: 1px solid var(--black); position: relative; overflow: hidden; background: #111; cursor: pointer; }
-.gallery-cell img { width: 100%; height: 200px; object-fit: contain; transition: 0.3s; }
-.gallery-cell:hover img { transform: scale(1.02); opacity: 0.9; }
-.cell-deco { position: absolute; bottom: 0; right: 0; background: var(--black); color: #fff; font-family: var(--mono); font-size: 0.6rem; padding: 2px 6px; }
+/* 图像上传预览 */
+.upload-area { margin-bottom: 16px; }
+.preview-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+.preview-item { width: 100px; height: 100px; border-radius: 6px; border: 1px solid #E0E0E0; position: relative; overflow: hidden; }
+.preview-item img { width: 100%; height: 100%; object-fit: cover; }
+.delete-img-btn { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; background: rgba(0,0,0,0.6); color: #FFF; border: none; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; }
+.preview-item:hover .delete-img-btn { opacity: 1; }
+.delete-img-btn:hover { background: #D32F2F; }
 
-/* 编辑模式卡片 */
-.edit-mode-scroll { flex: 1; overflow-y: auto; padding: 30px; background: var(--off-white); }
-.edit-card-heavy { background: #fff; border: 2px solid var(--black); margin-bottom: 25px; padding: 25px; box-shadow: 6px 6px 0 rgba(0,0,0,0.1); position: relative; }
-.card-tag-black { position: absolute; top: -12px; left: 15px; background: var(--black); color: #fff; padding: 2px 10px; font-family: var(--mono); font-size: 0.7rem; }
+/* 灯箱与滚动条 */
+.md-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; justify-content: center; align-items: center; }
+.lightbox-wrapper { max-width: 90vw; max-height: 90vh; }
+.lightbox-wrapper img { max-width: 100%; max-height: 100%; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
 
-.input-label-tech { display: block; font-family: var(--mono); font-weight: 800; font-size: 0.75rem; margin-bottom: 10px; color: #555; }
-.cyber-input-heavy, .cyber-select-heavy, .cyber-textarea-heavy { width: 100%; border: 2px solid var(--black); padding: 12px; font-family: var(--mono); font-weight: 700; outline: none; background: #fff; box-sizing: border-box; }
-.cyber-input-heavy:focus, .cyber-textarea-heavy:focus, .cyber-select-heavy:focus { background: #fdfdfd; border-color: var(--red); box-shadow: 4px 4px 0 rgba(0,0,0,0.05); }
-.form-grid-industrial { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-
-/* 作者搜索与下拉样式 */
-.search-wrapper { position: relative; }
-.search-dropdown { position: absolute; top: 100%; left: 0; width: 100%; background: #fff; border: 2px solid var(--black); border-top: none; max-height: 200px; overflow-y: auto; z-index: 10; list-style: none; padding: 0; margin: 0; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
-.search-dropdown li { display: flex; align-items: center; padding: 10px; cursor: pointer; transition: 0.2s; border-bottom: 1px dashed #ccc; gap: 10px; }
-.search-dropdown li:hover { background: #f0f0f0; }
-.avatar-tiny-dropdown { width: 32px; height: 32px; flex-shrink: 0; }
-.user-info { display: flex; flex-direction: column; }
-.user-name { font-weight: bold; font-family: var(--body); font-size: 0.9rem; }
-.user-id { font-family: var(--mono); font-size: 0.7rem; color: #666; }
-.search-loading { padding: 10px; font-family: var(--mono); font-size: 0.8rem; color: #666; border: 2px solid var(--black); border-top: none; background: #f9f9f9; }
-
-/* 已选作者标签 */
-.selected-author-tag { display: flex; justify-content: space-between; align-items: center; border: 2px solid var(--black); padding: 10px 12px; background: #f9f9f9; }
-.tag-content { display: flex; align-items: center; gap: 10px; font-weight: bold; font-family: var(--mono); }
-.avatar-tiny-tag { width: 24px; height: 24px; flex-shrink: 0; }
-.clear-author-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--red); font-weight: bold; }
-
-.property-header-tech { display: flex; justify-content: flex-end; margin-bottom: 15px; }
-.cyber-btn-sm-heavy { background: var(--black); color: #fff; border: none; font-family: var(--mono); padding: 5px 15px; cursor: pointer; }
-
-/* 图像预览区 */
-.edit-gallery-previews { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
-.preview-box { width: 100px; height: 100px; border: 1px solid var(--black); background: #111; position: relative; }
-.preview-box img { width: 100%; height: 100%; object-fit: contain; }
-.img-delete-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(217, 35, 35, 0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; cursor: pointer; z-index: 10; }
-.preview-box:hover .img-delete-overlay { opacity: 1; }
-.delete-icon { color: #fff; font-size: 2rem; line-height: 1; font-family: var(--heading); }
-.delete-text { color: #fff; font-size: 0.6rem; font-family: var(--mono); margin-top: 5px; }
-
-/* 滚动条与灯箱 */
-.custom-scroll::-webkit-scrollbar { width: 6px; }
-.custom-scroll::-webkit-scrollbar-track { background: var(--off-white); }
-.custom-scroll::-webkit-scrollbar-thumb { background: var(--black); border-radius: 3px; }
-
-.cyber-lightbox { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-.lightbox-content { position: relative; max-width: 90vw; max-height: 90vh; border: 2px solid var(--red); box-shadow: 0 0 20px rgba(217,35,35,0.3); }
-.lightbox-content img { max-width: 100%; max-height: 90vh; display: block; object-fit: contain; }
-.lightbox-close { position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); color: #fff; font-family: var(--mono); font-size: 0.8rem; letter-spacing: 2px; }
+.md-scroll::-webkit-scrollbar { width: 6px; }
+.md-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+.md-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
 </style>

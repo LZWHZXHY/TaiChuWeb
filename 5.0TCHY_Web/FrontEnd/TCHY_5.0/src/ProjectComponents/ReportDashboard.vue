@@ -74,20 +74,33 @@
           </div>
           
           <div class="header-actions">
-            <button 
-              v-if="!userHasSubmitted" 
-              class="btn-primary" 
-              :disabled="currentReportCycle.isLocked === 1"
-              @click="openWriteReportModal"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-              {{ currentReportCycle.isLocked === 1 ? '提交已截止' : '写工作汇报' }}
-            </button>
-            <button v-else class="btn-success" disabled>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              本期已提交
+            <template v-if="!isViewer">
+              <button 
+                v-if="!userHasSubmitted" 
+                class="btn-primary" 
+                :disabled="currentReportCycle.isLocked === 1"
+                @click="openWriteReportModal"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                {{ currentReportCycle.isLocked === 1 ? '提交已截止' : '写工作汇报' }}
+              </button>
+              <button v-else class="btn-success" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                本期已提交
+              </button>
+            </template>
+            
+            <button v-else class="btn-ghost" disabled style="opacity: 0.6; cursor: default;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              观察者无需汇报
             </button>
           </div>
+
+
+
+
+
+
         </div>
 
         <div v-if="currentCycleReports.length === 0" class="empty-state">
@@ -290,6 +303,16 @@ const stats = computed(() => {
   }
 })
 
+const isViewer = computed(() => {
+  const me = props.members.find(m => (m.userId || m.UserId) === currentUserId.value);
+  // 注意兼容后端大小写
+  const roleName = me?.role || me?.Role || ''; 
+  return roleName === 'Viewer';
+});
+
+
+
+
 const userHasSubmitted = computed(() => {
   return memberStatusList.value.some(m => m.userId === currentUserId.value && m.hasSubmitted);
 })
@@ -373,8 +396,9 @@ const loadCycleData = async () => {
       apiClient.get(`/Reports/project/${pid}/cycle/${cid}/status`)
     ]);
 
-    // 映射 feed 数据
+    // 映射 feed 数据 (保持不变)
     currentCycleReports.value = feedRes.data.map((r: any) => ({
+      // ... 原有映射代码
       id: r.id || r.Id,
       title: r.title || r.Title,
       content: r.content || r.Content,
@@ -389,14 +413,21 @@ const loadCycleData = async () => {
       }))
     }));
 
-    // 映射状态列表
-    memberStatusList.value = statusRes.data.map((m: any) => ({
-      userId: m.userId || m.UserId,
-      username: m.username || m.Username,
-      hasSubmitted: m.hasSubmitted ?? m.HasSubmitted, // 注意布尔值处理
-      reportId: m.reportId || m.ReportId,
-      submittedAt: m.submittedAt || m.SubmittedAt
-    }));
+    // 🔥 核心修改：筛选出不是 Viewer 的成员 ID 集合
+    const requiredMemberIds = props.members
+      .filter(m => (m.role || m.Role) !== 'Viewer')
+      .map(m => m.userId || m.UserId);
+
+    // 映射状态列表 (并只保留需要提交汇报的成员)
+    memberStatusList.value = statusRes.data
+      .filter((m: any) => requiredMemberIds.includes(m.userId || m.UserId))
+      .map((m: any) => ({
+        userId: m.userId || m.UserId,
+        username: m.username || m.Username,
+        hasSubmitted: m.hasSubmitted ?? m.HasSubmitted,
+        reportId: m.reportId || m.ReportId,
+        submittedAt: m.submittedAt || m.SubmittedAt
+      }));
 
   } catch (error) {
     console.error("加载周期数据失败", error);
@@ -441,17 +472,15 @@ const submitReport = async () => {
   }
 }
 
-/**
- * 保存/添加新周期
- */
 const saveCycle = async () => {
   if (!editingCycle.name) return alert("请输入周期名称");
   try {
     const payload = {
       name: editingCycle.name,
-      startDate: editingCycle.startDate, // 修正：不要使用 start_date，统一小写驼峰
-      endDate: editingCycle.endDate,
+      start_date: editingCycle.startDate, // 必须和后端 JSON 字段完全一致
+      end_date: editingCycle.endDate,     // 必须和后端 JSON 字段完全一致
       projectId: Number(props.projectId)
+      // 注意：如果你的后端也要求 project_id，这里也需要改成 project_id: ...
     };
     
     await apiClient.post(`/Reports/project/${props.projectId}/cycles`, payload);

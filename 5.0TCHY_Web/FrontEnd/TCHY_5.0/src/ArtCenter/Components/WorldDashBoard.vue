@@ -1,45 +1,40 @@
 <template>
-  <div class="dashboard-industrial full-screen-overlay">
+  <div class="md-dashboard-container">
     
-    <header class="dashboard-header">
+    <header class="md-header">
       <div class="header-left">
-        <button class="back-btn" @click="$emit('close')">&lt; EXIT_SYSTEM</button>
+        <button class="md-btn md-btn-text" @click="$emit('close')">
+          <span class="icon">←</span> 返回系统
+        </button>
         <div class="world-info">
-          <span class="sys-icon">DOCS</span>
-          <div class="info-text">
-            <h2 class="w-name">{{ worldInfo.name || 'LOADING...' }}</h2>
-            <span class="w-sub">SEC-{{ id }} // KNOWLEDGE_BASE</span>
-          </div>
+          <h2 class="title">{{ worldInfo.name || '加载中...' }}</h2>
+          <span class="subtitle">编号: {{ id }} · 知识库</span>
         </div>
       </div>
       
-      <div class="mode-switcher">
-        <div class="mode-btn" :class="{ active: viewMode === 'docs' }" @click="viewMode = 'docs'">
-          <span class="icon">📄</span> DOCS
-        </div>
-        <div class="mode-btn" :class="{ active: viewMode === 'graph' }" @click="viewMode = 'graph'">
-          <span class="icon">🕸️</span> GRAPH
-        </div>
-        <div class="mode-btn disabled"><span class="icon">⏳</span> TIME</div>
+      <div class="md-tabs">
+        <div class="tab-item" :class="{ active: viewMode === 'docs' }" @click="viewMode = 'docs'">文档</div>
+        <div class="tab-item" :class="{ active: viewMode === 'graph' }" @click="viewMode = 'graph'">图谱</div>
+        <div class="tab-item disabled" title="开发中">时间轴</div>
       </div>
 
       <div class="header-right">
-        <button class="cyber-btn-header alert" @click="showAuditModal = true">📢 AUDIT</button>
-        <button class="cyber-btn-header" @click="showTeamModal = true">👥 TEAM</button>
-        <div class="status-indicator online">SYNCED</div>
+        <button class="md-btn md-btn-text" @click="showAuditModal = true">📢 审核</button>
+        <button class="md-btn md-btn-text" @click="showTeamModal = true">👥 团队</button>
+        <span class="status-chip">已同步</span>
       </div>
     </header>
 
-    <div class="dashboard-body">
+    <div class="md-body">
       <div v-if="viewMode === 'docs'" class="doc-layout">
-        <aside class="doc-sidebar">
+        <aside class="md-sidebar">
           <div class="sidebar-tools">
-            <input v-model="searchQuery" class="cyber-input-sm" placeholder="FILTER..." />
-            <button class="cyber-btn-sm" @click="openNodeModal('create')">+ NODE</button>
+            <input v-model="searchQuery" class="md-input-sm" placeholder="筛选节点..." />
+            <button class="md-btn-icon primary" title="新建节点" @click="openNodeModal('create')">+</button>
           </div>
           
-          <div class="doc-tree custom-scroll">
-            <div v-if="loading" class="loading-txt">LOADING_TREE...</div>
+          <div class="doc-tree md-scroll">
+            <div v-if="loading" class="empty-text">正在加载目录...</div>
             
             <div 
               v-for="item in flattenedTree" 
@@ -50,7 +45,7 @@
                 active: selectedNodeId === item.id,
                 'is-parent': item.children && item.children.length > 0 
               }"
-              :style="{ paddingLeft: (item.level * 15 + 15) + 'px' }"
+              :style="{ paddingLeft: (item.level * 16 + 16) + 'px' }"
               @click="selectNode(item)"
             >
               <span class="tree-guide" v-if="item.level > 0"></span>
@@ -59,8 +54,8 @@
               
               <button 
                 v-if="!searchQuery" 
-                class="node-move-btn" 
-                title="Reassign Parent"
+                class="node-action-btn" 
+                title="重新分配父节点"
                 @click.stop="openNodeModal('move', item)"
               >⇄</button>
 
@@ -69,7 +64,7 @@
           </div>
         </aside>
 
-        <main class="doc-main custom-scroll">
+        <main class="md-main">
           <WorldDocViewer 
             v-if="currentNode" 
             :node="currentNode" 
@@ -78,12 +73,9 @@
             @delete-node="handleDeleteNode"
             @select-node="handleSelectNode"
           />
-
           <div v-else class="empty-state">
-            <div class="empty-box">
-              <span class="big-icon">📂</span>
-              <p>SELECT_A_FILE_TO_READ</p>
-            </div>
+            <span class="big-icon">📂</span>
+            <p>请在左侧选择要阅读的文档</p>
           </div>
         </main>
       </div>
@@ -98,7 +90,6 @@
 
     <CollaboratorModal :show="showTeamModal" :ip-id="id" @close="showTeamModal = false" />
     <AuditModal :show="showAuditModal" :ip-id="id" @close="showAuditModal = false" />
-    
     <NodeManagerModal 
       :show="showNodeModal"
       :mode="nodeModalMode"
@@ -107,7 +98,6 @@
       @close="showNodeModal = false"
       @submit="handleNodeSubmit"
     />
-
   </div>
 </template>
 
@@ -116,7 +106,6 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import apiClient from '@/utils/api'
 import WorldDocViewer from './WorldDocViewer.vue'
 import WorldGraph from './WorldGraph.vue'
-// 🔥 补全之前遗漏的组件导入
 import CollaboratorModal from './CollaboratorModal.vue'
 import AuditModal from './AuditModal.vue'
 import NodeManagerModal from './NodeManagerModal.vue'
@@ -124,7 +113,6 @@ import NodeManagerModal from './NodeManagerModal.vue'
 const props = defineProps({ id: { type: [String, Number], required: true } })
 const emit = defineEmits(['close'])
 
-// --- State ---
 const viewMode = ref('docs')
 const loading = ref(false)
 const rawNodes = ref([]) 
@@ -134,12 +122,10 @@ const searchQuery = ref('')
 const showTeamModal = ref(false)
 const showAuditModal = ref(false)
 
-// --- Node Manager State ---
 const showNodeModal = ref(false)
 const nodeModalMode = ref('create')
 const nodeModalData = ref({ id: null, name: '', parentId: null })
 
-// --- Computed: Tree Logic ---
 const flattenedTree = computed(() => {
   const map = {}
   const roots = []
@@ -176,15 +162,12 @@ const flattenedTree = computed(() => {
 
 const currentNode = computed(() => rawNodes.value.find(n => n.id === selectedNodeId.value))
 
-// 🔥 补全之前遗漏的 Helper 函数
 const getNodeIcon = (type) => {
   const t = (type || '').toLowerCase()
   if (t.includes('角色') || t.includes('character')) return '👤'
   if (t.includes('星') || t.includes('planet')) return '🪐'
   return '📄'
 }
-
-// --- Actions ---
 
 const initData = async () => {
   if (!props.id) return
@@ -201,30 +184,20 @@ const initData = async () => {
 
 const selectNode = (item) => { selectedNodeId.value = item.id }
 
-// 🔥 核心跳转逻辑 (包含类型转换 + 自动滚动)
 const handleGraphSelect = async (nodeId) => {
-  // 1. 强制转为数字，解决 id 类型不匹配导致内容不显示的问题
   const targetId = parseInt(nodeId);
   selectedNodeId.value = targetId;
-  
-  // 2. 切换视图
   viewMode.value = 'docs'; 
   
-  // 3. 等待 DOM 渲染
   await nextTick();
   
-  // 4. 找到并滚动到列表项
   const element = document.getElementById(`tree-node-${targetId}`);
   if (element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
-    // 5. 闪烁高亮提示
-    element.style.transition = 'background 0.3s';
-    element.style.background = '#D92323'; 
-    element.style.color = '#fff';
+    element.style.transition = 'background 0.3s ease';
+    element.style.background = 'rgba(25, 118, 210, 0.12)'; 
     setTimeout(() => {
       element.style.background = ''; 
-      element.style.color = '';
     }, 800);
   }
 }
@@ -268,7 +241,6 @@ const handleNodeSubmit = async (data, done) => {
 
 const handleUpdateNode = async (formData, done) => {
   try {
-    // 1. 发送请求 (这里的字段名已与后端 DTO 完全对齐)
     const res = await apiClient.put(`/Setting/${formData.id}`, {
       Name: formData.name, 
       Description: formData.description,
@@ -279,31 +251,26 @@ const handleUpdateNode = async (formData, done) => {
       MetaData: formData.metaStr ? JSON.parse(formData.metaStr) : {}
     })
     
-    // 2. 检查后端返回的状态
-    // 如果是协助者，res.data.isPending 会是 true
     if (res.data && res.data.isPending) {
-      alert(">> 系统提示：变更已进入审核队列，请联系创世神通过。");
+      alert("系统提示：变更已进入审核队列，请等待通过。");
     } else {
-      // 如果是拥有者，直接刷新数据
       await initData();
-      alert(">> 同步成功：数据已即时更新。");
     }
-
     if(done) done(); 
   } catch (e) { 
     console.error("保存报错详情:", e);
-    alert("Save failed: " + (e.response?.data?.message || e.message || "未知错误"));
+    alert("保存失败: " + (e.response?.data?.message || e.message || "未知错误"));
     if(done) done(); 
   }
 }
 
 const handleDeleteNode = async (id) => {
-  if(!confirm("Confirm deletion?")) return
+  if(!confirm("确定要删除此文档吗？此操作不可逆。")) return
   try {
     await apiClient.delete(`/Setting/${id}`)
     selectedNodeId.value = null
     await initData()
-  } catch (e) { alert("Delete failed") }
+  } catch (e) { alert("删除失败") }
 }
 
 watch(() => props.id, initData)
@@ -311,63 +278,106 @@ onMounted(initData)
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
-
-.dashboard-industrial {
-  --bg-app: #E0DDD5; --bg-panel: #F4F1EA; --border-color: #111111; 
-  --text-main: #111111; --text-sub: #666666; --accent: #D92323; 
-  --mono: 'JetBrains Mono', monospace; --heading: 'Anton', sans-serif;
-  color: var(--text-main); font-family: var(--mono);
+/* 核心布局：彻底解决高度塌陷和全屏溢出问题 */
+.md-dashboard-container {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #F5F7FA;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #2C3E50;
+  overflow: hidden; /* 防止溢出 */
 }
 
-.full-screen-overlay { position: absolute; inset: 0; background: var(--bg-app); z-index: 50; display: flex; flex-direction: column; }
+/* 顶部栏 */
+.md-header {
+  height: 56px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E0E0E0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+.header-left { display: flex; align-items: center; gap: 20px; }
+.world-info { display: flex; align-items: baseline; gap: 8px; }
+.world-info .title { margin: 0; font-size: 18px; font-weight: 600; }
+.world-info .subtitle { font-size: 13px; color: #7F8C8D; }
 
-.dashboard-header { height: 55px; background: var(--bg-panel); border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 0 15px; flex-shrink: 0; }
-.header-left { display: flex; gap: 15px; align-items: center; }
-.back-btn { background: transparent; border: 2px solid var(--border-color); padding: 5px 15px; cursor: pointer; font-family: var(--mono); font-weight: bold; }
-.world-info { display: flex; align-items: center; gap: 8px; }
-.sys-icon { background: var(--border-color); color: var(--bg-panel); padding: 2px 5px; font-weight: bold; font-size: 0.8rem; }
-.w-name { margin: 0; font-size: 1.1rem; letter-spacing: 1px; font-family: var(--heading); }
+/* Tabs 标签页 */
+.md-tabs { display: flex; height: 100%; }
+.tab-item {
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #7F8C8D;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+.tab-item:hover { color: #1976D2; background: rgba(25, 118, 210, 0.04); }
+.tab-item.active { color: #1976D2; border-bottom-color: #1976D2; }
+.tab-item.disabled { cursor: not-allowed; opacity: 0.5; }
 
-.mode-switcher { display: flex; gap: -1px; }
-.mode-btn { padding: 6px 15px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: 1px solid var(--border-color); background: #eee; color: #999; display: flex; align-items: center; gap: 5px; margin-right: -1px; transition: all 0.2s ease; }
-.mode-btn.active { background: var(--text-main); color: var(--bg-panel); border-color: var(--text-main); z-index: 2; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.status-chip { font-size: 12px; background: #E8F5E9; color: #2E7D32; padding: 4px 10px; border-radius: 12px; }
 
-.header-right { display: flex; align-items: center; gap: 15px; }
-.cyber-btn-header { background: var(--text-main); color: #fff; border: none; padding: 5px 15px; font-family: var(--heading); letter-spacing: 1px; cursor: pointer; }
-.cyber-btn-header.alert { background: var(--accent); }
-.status-indicator { font-size: 0.7rem; color: var(--accent); font-weight: bold; border: 1px solid var(--accent); padding: 2px 6px; }
+/* 基础按钮 */
+.md-btn {
+  border: none; background: transparent; cursor: pointer; font-size: 14px;
+  font-weight: 500; border-radius: 4px; padding: 6px 12px; transition: 0.2s;
+}
+.md-btn-text { color: #555; }
+.md-btn-text:hover { background: rgba(0, 0, 0, 0.04); color: #000; }
 
-.dashboard-body { flex: 1; overflow: hidden; display: flex; }
-.doc-layout { display: flex; width: 100%; height: 100%; }
-.graph-layout { flex: 1; width: 100%; height: 100%; position: relative; overflow: hidden; }
+/* 主体布局 */
+.md-body { flex: 1; height: 0; display: flex; }
+.doc-layout, .graph-layout { flex: 1; display: flex; width: 100%; height: 100%; }
 
-.doc-sidebar { width: 280px; background: #EEECE6; border-right: 2px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; padding-bottom: 5%;}
-
-.sidebar-tools { padding: 10px; border-bottom: 1px solid #ccc; display: flex; gap: 5px; background: #e8e8e8; }
-.cyber-input-sm { width: 120px; flex: 1; background: #fff; border: 1px solid #999; padding: 5px; outline: none; }
-.cyber-btn-sm { background: var(--text-main); color: #fff; border: none; padding: 0 10px; font-weight: bold; cursor: pointer; }
-
-.doc-tree { flex: 1; overflow-y: auto; padding: 10px 0; }
-.tree-node { padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; border-bottom: 1px dashed #ccc; transition: 0.1s; position: relative; }
-.tree-node:hover { background: #fff; }
-.tree-node.active { background: var(--text-main); color: #fff; }
-
-.node-move-btn {
-  margin-left: auto; background: transparent; border: 1px solid #ccc; color: #999;
-  font-size: 10px; cursor: pointer; padding: 0 4px; opacity: 0; transition: 0.2s;
+/* 左侧栏 */
+.md-sidebar {
+  width: 280px;
+  background: #FAFAFA;
+  border-right: 1px solid #E0E0E0;
+  display: flex;
+  flex-direction: column;
   flex-shrink: 0;
 }
-.tree-node:hover .node-move-btn { opacity: 1; }
-.node-move-btn:hover { background: #111; color: #fff; border-color: #111; }
+.sidebar-tools { padding: 12px; border-bottom: 1px solid #E0E0E0; display: flex; gap: 8px; }
+.md-input-sm { flex: 1; border: 1px solid #DCDFE6; border-radius: 4px; padding: 6px 10px; outline: none; transition: 0.2s; }
+.md-input-sm:focus { border-color: #1976D2; }
+.md-btn-icon { background: #E0E0E0; border: none; border-radius: 4px; width: 32px; cursor: pointer; color: #333; font-weight: bold; }
+.md-btn-icon.primary { background: #1976D2; color: #fff; }
+.md-btn-icon.primary:hover { background: #1565C0; }
 
-.node-name { font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: bold; flex: 1; }
-.node-type-tag { font-size: 0.6rem; background: #ccc; color: #333; padding: 1px 4px; border-radius: 2px; }
+.doc-tree { flex: 1; overflow-y: auto; padding: 8px 0; }
+.tree-node {
+  padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+  font-size: 14px; transition: 0.1s; position: relative;
+}
+.tree-node:hover { background: rgba(0, 0, 0, 0.04); }
+.tree-node.active { background: #E3F2FD; color: #1976D2; font-weight: 500; }
+.node-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.node-type-tag { font-size: 11px; background: #E0E0E0; color: #555; padding: 2px 6px; border-radius: 4px; }
 
-.doc-main { flex: 1; background: var(--bg-app); overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-.empty-state { height: 100%; display: flex; align-items: center; justify-content: center; }
-.empty-box { text-align: center; color: #999; opacity: 0.5; }
-.loading-txt { text-align: center; padding: 20px; color: #999; font-size: 0.8rem; }
-.custom-scroll::-webkit-scrollbar { width: 6px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: #ccc; }
+.node-action-btn { background: transparent; border: none; color: #999; cursor: pointer; opacity: 0; }
+.tree-node:hover .node-action-btn { opacity: 1; }
+.node-action-btn:hover { color: #1976D2; }
+
+/* 右侧内容区 */
+.md-main { flex: 1; display: flex; flex-direction: column; position: relative; }
+.empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999; }
+.big-icon { font-size: 48px; margin-bottom: 10px; opacity: 0.5; }
+.empty-text { padding: 20px; text-align: center; color: #999; font-size: 14px; }
+
+/* 滚动条 */
+.md-scroll::-webkit-scrollbar { width: 6px; }
+.md-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+.md-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
 </style>

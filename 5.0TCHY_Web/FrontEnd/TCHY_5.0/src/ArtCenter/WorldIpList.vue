@@ -1,120 +1,137 @@
 <template>
-  <div class="world-industrial">
+  <div class="md-world-list-wrapper">
     
-    <div class="world-control-bar">
-      <div class="header-left">
-        <div class="icon-box">SECTOR</div>
-        <div class="text-info">
-          <h2 class="title">WORLD_ARCHIVES</h2>
-          <span class="sub">世界观数据库 // SECTOR_DATABASE</span>
+    <template v-if="!showGraph">
+      <header class="md-control-bar">
+        <div class="header-left">
+          <div class="icon-box">🌌</div>
+          <div class="text-info">
+            <h2 class="title">世界观档案</h2>
+            <span class="sub">知识库目录管理系统</span>
+          </div>
         </div>
-      </div>
 
-      <div class="header-right">
-        <div class="search-unit">
-          <span class="prompt">>> FILTER:</span>
-          <input v-model="searchQuery" class="cyber-input-search" placeholder="KEYWORD..." />
+        <div class="header-right">
+          <div class="search-unit">
+            <span class="search-icon">🔍</span>
+            <input v-model="searchQuery" class="md-input-search" placeholder="通过名称或简介筛选..." />
+          </div>
+          <button class="md-btn primary" @click="openCreateModal">
+            <span class="icon">＋</span> 新建档案
+          </button>
         </div>
-        <button class="cyber-btn primary" @click="openCreateModal">
-          <span class="icon">+</span> INITIATE_GENESIS
-        </button>
-      </div>
-    </div>
+      </header>
 
-    <div class="world-body">
-      <div class="world-scroll-container custom-scroll">
-        <div class="world-content-wrapper">
-          
-          <div v-if="loading" class="loading-state"><div class="spinner"></div><span>SCANNING_SECTORS...</span></div>
-          <div v-else-if="filteredList.length === 0" class="empty-state">[ NO_WORLDS_DISCOVERED ]</div>
+      <main class="md-world-body">
+        <div class="scroll-container md-scrollbar">
+          <div class="content-wrapper">
+            
+            <div v-if="loading" class="state-container">
+              <div class="md-spinner"></div>
+              <span>正在扫描档案库...</span>
+            </div>
+            <div v-else-if="filteredList.length === 0" class="state-container empty">
+              <div class="empty-icon">📭</div>
+              <span>暂无符合条件的档案节点</span>
+            </div>
 
-          <div v-else class="ip-grid">
-            <article v-for="ip in filteredList" :key="ip.id" class="ip-card">
-              <div class="card-header">
-                <span class="sector-id">SEC-{{ padZero(ip.id) }}</span>
-                <div class="status-light online"></div>
-              </div>
+            <div v-else class="md-grid">
+              <article v-for="ip in filteredList" :key="ip.id" class="md-card">
+                
+                <div class="card-cover" @click="openGraphEditor(ip)">
+                  <img :src="getImageUrl(ip.cover_url)" loading="lazy" @error="handleImgError" />
+                  <div class="cover-overlay">
+                    <span class="enter-btn">进入知识库</span>
+                  </div>
+                  <span class="sector-badge">编号-{{ padZero(ip.id) }}</span>
+                </div>
 
-              <div class="card-viewport" @click="openGraphEditor(ip)">
-                <img :src="getImageUrl(ip.cover_url)" loading="lazy" @error="handleImgError" />
-                <div class="viewport-overlay"><span class="enter-text">>>> ACCESS_NEURAL_LINK</span></div>
-              </div>
-
-              <div class="card-data">
-                <div class="data-row-title">
-                  <h3 class="ip-name" :title="ip.name">{{ ip.name }}</h3>
-                  <div class="action-icons">
-                    <button class="icon-btn edit" @click.stop="openEditModal(ip)" title="EDIT">✎</button>
-                    <button class="icon-btn del" @click.stop="deleteIp(ip.id)" title="DELETE">🗑</button>
+                <div class="card-content">
+                  <div class="content-header">
+                    <h3 class="ip-name" :title="ip.name">{{ ip.name }}</h3>
+                    <div class="action-menu">
+                      <button class="md-icon-btn" @click.stop="openEditModal(ip)" title="编辑档案">✎</button>
+                      <button class="md-icon-btn danger" @click.stop="deleteIp(ip.id)" title="删除档案">🗑</button>
+                    </div>
+                  </div>
+                  
+                  <div class="ip-tagline" v-if="ip.tagline">{{ ip.tagline }}</div>
+                  <p class="ip-summary">{{ ip.summary || '该节点尚无详细描述...' }}</p>
+                  
+                  <div class="card-footer">
+                    <span class="status-dot"></span>
+                    <span class="update-time">档案同步时间: {{ formatDate(ip.updateTime) }}</span>
                   </div>
                 </div>
-                <div class="ip-tagline" v-if="ip.tagline"><span class="quote">"</span>{{ ip.tagline }}<span class="quote">"</span></div>
-                <p class="ip-summary">{{ ip.summary || 'DATA_MISSING...' }}</p>
-                <div class="card-footer"><span class="update-time">UPDATED: {{ formatDate(ip.updateTime) }}</span></div>
-              </div>
-              <div class="corner-bl"></div>
-            </article>
-          </div>
+              </article>
+            </div>
 
+          </div>
         </div>
-      </div>
-    </div>
+      </main>
+    </template>
+
+    <template v-else>
+      <WorldGraph 
+        :id="currentGraphId" 
+        @close="closeGraphEditor" 
+        class="detail-view-mount"
+      />
+    </template>
 
     <Teleport to="body">
-      <Transition name="glitch-fade">
-        <div v-if="showModal" class="cyber-modal-overlay" @click.self="closeModal">
-          <div class="cyber-terminal form-mode">
-            <div class="term-header">
-              <span class="term-title">>> {{ isEditing ? 'UPDATE_PROTOCOL' : 'GENESIS_PROTOCOL' }}</span>
-              <button class="term-close" @click="closeModal">[ 关闭 ]</button>
+      <Transition name="md-fade">
+        <div v-if="showModal" class="md-modal-overlay" @click.self="closeModal">
+          <div class="md-modal-card">
+            <div class="modal-header">
+              <h3 class="modal-title">{{ isEditing ? '配置世界观元数据' : '初始化新档案节点' }}</h3>
+              <button class="modal-close" @click="closeModal">×</button>
             </div>
             
-            <div class="term-content custom-scroll">
-              <form @submit.prevent="submitForm" class="cyber-form">
+            <div class="modal-content md-scrollbar">
+              <form @submit.prevent="submitForm" class="md-form">
                 
                 <div class="form-group">
-                  <label>WORLD_NAME <span class="req">*</span></label>
-                  <input v-model="form.Name" class="cyber-input" required />
+                  <label>档案名称 <span class="required">*</span></label>
+                  <input v-model="form.Name" class="md-input" placeholder="输入核心项目或世界观名称" required />
                 </div>
                 
                 <div class="form-group">
-                  <label>TAGLINE</label>
-                  <input v-model="form.Tagline" class="cyber-input" placeholder="一句简短的描述..." />
+                  <label>副标题 / 简介</label>
+                  <input v-model="form.Tagline" class="md-input" placeholder="一句简洁的描述..." />
                 </div>
                 
                 <div class="form-group">
-                  <label>SUMMARY</label>
-                  <textarea v-model="form.Summary" class="cyber-textarea" rows="4"></textarea>
+                  <label>档案概述</label>
+                  <textarea v-model="form.Summary" class="md-textarea" rows="4" placeholder="关于该世界的宏观背景信息..."></textarea>
                 </div>
 
                 <div class="form-group">
-                  <label>COVER_IMAGE</label>
+                  <label>视觉封面</label>
                   
-                  <div v-if="isEditing" class="cover-upload-box">
+                  <div v-if="isEditing" class="cover-upload-section">
                     <div class="preview-frame">
                       <img :src="getImageUrl(form.CoverUrl)" @error="handleImgError" />
                     </div>
                     <div class="upload-actions">
-                       <button type="button" class="cyber-btn ghost small" @click="triggerFileSelect" :disabled="uploading">
-                         {{ uploading ? 'TRANSMITTING...' : 'UPLOAD_NEW_COVER' }}
+                       <button type="button" class="md-btn outlined" @click="triggerFileSelect" :disabled="uploading">
+                         {{ uploading ? '数据传输中...' : '更新视觉资产' }}
                        </button>
                        <input type="file" ref="coverInput" style="display:none" accept="image/*" @change="handleCoverUpload" />
-                       <span class="tip-text" v-if="!uploading">>> RECOMMENDED: 16:9 RATIO</span>
+                       <span class="tip-text" v-if="!uploading">建议 16:9 比例，支持 5MB 以内图片</span>
                     </div>
                   </div>
 
-                  <div v-else class="create-tip-box">
-                    <span class="icon">ℹ</span>
-                    <span>INITIALIZE_WORLD_FIRST_TO_UPLOAD_COVER</span>
-                    <br>
-                    <small>(请先创建世界观，创建成功后再次编辑即可上传封面)</small>
+                  <div v-else class="info-alert">
+                    <span class="icon">ℹ️</span>
+                    <span>请先完成初始化创建，随后在编辑模式中上传封面图像。</span>
                   </div>
                 </div>
 
                 <div class="form-actions">
-                  <button class="cyber-btn ghost" type="button" @click="closeModal">CANCEL</button>
-                  <button class="cyber-btn primary" type="submit" :disabled="submitting">
-                    {{ submitting ? 'PROCESSING...' : 'EXECUTE' }}
+                  <button class="md-btn text" type="button" @click="closeModal">取消</button>
+                  <button class="md-btn primary" type="submit" :disabled="submitting">
+                    {{ submitting ? '执行中...' : '提交存档' }}
                   </button>
                 </div>
               </form>
@@ -124,14 +141,6 @@
       </Transition>
     </Teleport>
 
-    <Transition name="zoom-in">
-      <WorldGraph 
-        v-if="showGraph" 
-        :id="currentGraphId" 
-        @close="closeGraphEditor" 
-      />
-    </Transition>
-
   </div>
 </template>
 
@@ -140,53 +149,72 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import apiClient from '@/utils/api'
 import WorldGraph from '@/ArtCenter/Components/WorldDashBoard.vue'
 
-// --- State ---
+// --- 核心状态 ---
 const loading = ref(false)
 const ipList = ref([])
 const searchQuery = ref('')
 
-// Graph & Modal State
+// 切换状态
 const showGraph = ref(false)
 const currentGraphId = ref(null)
+
+// 弹窗表单状态
 const showModal = ref(false)
 const isEditing = ref(false)
 const submitting = ref(false)
 const currentEditId = ref(null)
 const form = reactive({ Name: '', Tagline: '', Summary: '', CoverUrl: '' })
 
-// Upload State
+// 文件上传状态
 const uploading = ref(false)
-const coverInput = ref(null) // 绑定 input ref
+const coverInput = ref(null)
 
-// --- Helpers ---
+// --- 工具函数 ---
 const padZero = (n) => n < 10 ? `0${n}` : n
-const formatDate = (t) => t ? new Date(t).toLocaleDateString() : 'UNKNOWN'
+const formatDate = (t) => t ? new Date(t).toLocaleDateString() : '未知'
 const getImageUrl = (url) => { 
-  if (!url) return '/土豆.jpg'; 
+  if (!url) return 'https://img.bianyuzhou.com/uploads/ip_assets/default.png'; 
   if (url.startsWith('http')) return url; 
   return `https://bianyuzhou.com/${url}` 
 }
-const handleImgError = (e) => e.target.src = '/土豆.jpg'
+const handleImgError = (e) => e.target.src = 'https://img.bianyuzhou.com/uploads/ip_assets/default.png'
 
-// --- Actions ---
+// --- 业务逻辑 ---
 const fetchList = async () => {
   loading.value = true
   try {
     const res = await apiClient.get('/ip')
     ipList.value = Array.isArray(res.data) ? res.data : []
-  } catch (e) { ipList.value = [] } 
-  finally { loading.value = false }
+  } catch (e) { 
+    ipList.value = [] 
+  } finally { 
+    loading.value = false 
+  }
 }
 
 const filteredList = computed(() => {
   if (!searchQuery.value) return ipList.value
   const q = searchQuery.value.toLowerCase()
-  return ipList.value.filter(ip => (ip.name && ip.name.toLowerCase().includes(q)) || (ip.tagline && ip.tagline.toLowerCase().includes(q)))
+  return ipList.value.filter(ip => 
+    (ip.name && ip.name.toLowerCase().includes(q)) || 
+    (ip.tagline && ip.tagline.toLowerCase().includes(q))
+  )
 })
 
-const openGraphEditor = (ip) => { currentGraphId.value = ip.id; showGraph.value = true }
-const closeGraphEditor = () => { showGraph.value = false; currentGraphId.value = null; fetchList() }
+// 进入详情视图
+const openGraphEditor = (ip) => { 
+  currentGraphId.value = ip.id; 
+  showGraph.value = true 
+}
 
+// 退出详情并刷新列表
+const closeGraphEditor = () => { 
+  showGraph.value = false; 
+  currentGraphId.value = null; 
+  fetchList() 
+}
+
+// 打开弹窗逻辑
 const openCreateModal = () => { 
   isEditing.value = false; 
   currentEditId.value = null; 
@@ -203,295 +231,268 @@ const openEditModal = (ip) => {
 
 const closeModal = () => showModal.value = false
 
-// 🔥 触发文件选择的辅助函数
+// 文件选择触发
 const triggerFileSelect = () => {
-  if(coverInput.value) {
-    coverInput.value.click()
-  } else {
-    console.error("Input ref not found")
-  }
+  if(coverInput.value) coverInput.value.click()
 }
 
-// 🔥 处理封面上传
+// 封面图上传
 const handleCoverUpload = async (e) => {
   const file = e.target.files[0]
-  if (!file) return
-  if (!currentEditId.value) return 
+  if (!file || !currentEditId.value) return 
 
   uploading.value = true
   try {
     const fd = new FormData()
     fd.append('file', file)
     
-    // 调用新的后端接口
     const res = await apiClient.post(`/ip/${currentEditId.value}/image`, fd, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     
     if (res.data.success) {
       form.CoverUrl = res.data.url
-      alert("COVER_UPLOAD_COMPLETE")
-      // 刷新列表以更新背景图
-      fetchList()
+      fetchList() // 列表静默同步
     }
   } catch (err) {
     console.error(err)
-    alert("UPLOAD_FAILED")
+    alert("档案视觉同步失败，请检查网络链接")
   } finally {
     uploading.value = false
     if(e.target) e.target.value = ''
   }
 }
 
+// 提交表单
 const submitForm = async () => {
-  if (!form.Name.trim()) return alert("NAME_REQUIRED")
+  if (!form.Name.trim()) return alert("档案名称为必填项")
   submitting.value = true
   try {
     const method = isEditing.value ? 'put' : 'post'
     const url = isEditing.value ? `/ip/${currentEditId.value}` : '/ip'
     await apiClient[method](url, form)
-    alert("SUCCESS")
-    closeModal(); fetchList()
-  } catch (e) { alert("ERROR") } finally { submitting.value = false }
+    closeModal(); 
+    fetchList()
+  } catch (e) { 
+    alert("档案操作失败，请重试") 
+  } finally { 
+    submitting.value = false 
+  }
 }
 
-const deleteIp = async (id) => { if (confirm("DELETE?")) { await apiClient.delete(`/ip/${id}`); fetchList() } }
+// 删除档案
+const deleteIp = async (id) => { 
+  if (confirm("确认移除该档案节点吗？其内部所有知识数据将被冻结。")) { 
+    try {
+      await apiClient.delete(`/ip/${id}`); 
+      fetchList() 
+    } catch (e) { alert("删除失败") }
+  } 
+}
 
 onMounted(() => { fetchList() })
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap');
-
-/* --- 基础布局与变量 --- */
-.world-industrial {
-  /* 🔥 修复点：变量分行写，避免特殊字符报错 */
-  --red: #D92323;
-  --black: #111111;
-  --white: #F4F1EA;
-  --gray: #E0DDD5;
-  
-  --mono: 'JetBrains Mono', monospace;
-  --heading: 'Anton', sans-serif;
-
+/* --- MD 极简风格布局 --- */
+.md-world-list-wrapper {
+  flex: 1; 
   width: 100%; 
   height: 100%; 
   display: flex; 
   flex-direction: column;
-  
-  font-family: var(--mono); 
-  color: var(--black); 
-  
-  position: relative;
+  background-color: #F8FAFC;
   overflow: hidden;
+  position: relative;
 }
 
-/* --- 1. Header --- */
-.world-control-bar {
-  flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;
-  padding: 15px 20px; background: var(--white); border-bottom: 4px solid var(--black); gap: 20px; z-index: 10;
+/* 控制栏：采用与 WorkCenter 统一的高度和阴影 */
+.md-control-bar {
+  flex-shrink: 0; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center;
+  padding: 16px 32px; 
+  background: #FFF; 
+  border-bottom: 1px solid #E2E8F0;
+  z-index: 10;
 }
-.header-left { display: flex; align-items: center; gap: 15px; }
-.icon-box { 
-  background: var(--black); color: var(--white); font-family: var(--heading); 
-  font-size: 1.5rem; padding: 5px 10px; transform: skew(-10deg); 
-}
-.text-info h2 { font-family: var(--heading); font-size: 2rem; margin: 0; line-height: 1; }
-.text-info .sub { font-size: 0.7rem; font-weight: bold; color: #666; }
 
-.header-right { display: flex; align-items: center; gap: 20px; }
+.header-left { display: flex; align-items: center; gap: 16px; }
+.icon-box { font-size: 24px; }
+.text-info .title { font-size: 1.1rem; font-weight: 600; margin: 0; color: #0F172A; }
+.text-info .sub { font-size: 0.75rem; color: #64748B; }
+
+.header-right { display: flex; align-items: center; gap: 16px; }
 .search-unit { 
-  display: flex; align-items: center; gap: 10px; background: #eee; 
-  padding: 5px 10px; border: 2px solid var(--black); 
+  display: flex; align-items: center; gap: 8px; 
+  background: #F1F5F9; 
+  padding: 6px 12px; 
+  border-radius: 8px; 
+  border: 1px solid #E2E8F0;
+  transition: all 0.2s;
 }
-.prompt { font-weight: bold; color: var(--red); }
-.cyber-input-search { 
-  border: none; background: transparent; outline: none; 
-  font-family: var(--mono); width: 200px; font-weight: bold; 
+.search-unit:focus-within { border-color: #0284C7; background: #FFF; box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.1); }
+.search-icon { font-size: 14px; opacity: 0.5; }
+.md-input-search { border: none; background: transparent; outline: none; width: 200px; font-size: 0.85rem; color: #0F172A; }
+
+/* 基础按钮规范 */
+.md-btn { 
+  border: none; padding: 8px 18px; border-radius: 6px; 
+  font-size: 0.85rem; font-weight: 500; cursor: pointer; 
+  display: flex; align-items: center; gap: 8px; transition: 0.2s; 
+}
+.md-btn.primary { background: #0284C7; color: #FFF; }
+.md-btn.primary:hover { background: #0369A1; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2); }
+.md-btn.outlined { background: transparent; border: 1px solid #0284C7; color: #0284C7; }
+.md-btn.outlined:hover { background: rgba(2, 132, 199, 0.05); }
+.md-btn.text { background: transparent; color: #64748B; }
+.md-btn.text:hover { background: #F1F5F9; color: #0F172A; }
+
+/* 主体网格区 */
+.md-world-body { flex: 1; display: flex; overflow: hidden; }
+.scroll-container { flex: 1; overflow-y: auto; padding: 32px; }
+.content-wrapper { padding-bottom: 40px; max-width: 1600px; margin: 0 auto; }
+
+.md-grid { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+  gap: 24px; 
 }
 
-.cyber-btn { 
-  border: 2px solid var(--black); padding: 8px 20px; font-family: var(--heading); 
-  font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; 
-  transition: 0.2s; background: var(--white); 
-}
-.cyber-btn.primary { background: var(--black); color: var(--white); }
-.cyber-btn.primary:hover { 
-  background: var(--red); transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--black); 
-}
-.cyber-btn.ghost { background: transparent; }
-.cyber-btn.ghost:hover { background: #e0e0e0; }
-.cyber-btn.small { padding: 5px 10px; font-size: 0.8rem; }
-
-/* --- 2. Body --- */
-.world-body { 
-  flex: 1; display: flex; overflow: hidden; min-height: 0; 
-  position: relative; background-color: var(--gray); 
-}
-.world-scroll-container { flex: 1; overflow-y: auto; padding: 20px; }
-.world-content-wrapper { padding-bottom: 40px; }
-
-/* Grid */
-.ip-grid { 
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; 
-}
-.ip-card { 
-  background: var(--white); border: 2px solid var(--black); display: flex; flex-direction: column; 
-  box-shadow: 6px 6px 0 rgba(0,0,0,0.1); transition: all 0.2s; 
-  height: 100%; position: relative; overflow: hidden; 
-}
-.ip-card:hover { 
-  transform: translateY(-4px); box-shadow: 10px 10px 0 var(--red); border-color: var(--black); 
+/* 详情挂载层：强制铺满 */
+.detail-view-mount {
+  flex: 1;
+  width: 100%;
+  height: 100%;
 }
 
-.card-header { 
-  display: flex; justify-content: space-between; align-items: center; 
-  padding: 5px 10px; background: #eee; border-bottom: 2px solid var(--black); 
+/* 卡片 MD 风格：细腻投影与过渡 */
+.md-card { 
+  background: #FFF; 
+  border-radius: 12px;
+  display: flex; 
+  flex-direction: column; 
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+  height: 100%; 
+  overflow: hidden; 
 }
-.sector-id { font-size: 0.7rem; font-weight: bold; color: #666; }
-.status-light { width: 10px; height: 10px; border-radius: 50%; background: #ccc; border: 1px solid #999; }
-.status-light.online { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
-
-.card-viewport { 
-  height: 180px; background: #000; position: relative; overflow: hidden; 
-  border-bottom: 2px solid var(--black); cursor: pointer; 
-}
-.card-viewport img { 
-  width: 100%; height: 100%; object-fit: cover; transition: 0.4s; opacity: 0.9; 
-}
-.ip-card:hover .card-viewport img { 
-  transform: scale(1.05); opacity: 0.4; filter: grayscale(100%); 
-}
-.viewport-overlay { 
-  position: absolute; inset: 0; display: flex; justify-content: center; 
-  align-items: center; opacity: 0; transition: 0.3s; 
-}
-.ip-card:hover .viewport-overlay { opacity: 1; }
-.enter-text { 
-  color: var(--white); font-weight: bold; font-family: var(--heading); 
-  font-size: 1.2rem; border: 2px solid var(--white); 
-  padding: 5px 15px; background: rgba(0,0,0,0.5); 
+.md-card:hover { 
+  transform: translateY(-4px); 
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); 
+  border-color: #CBD5E1;
 }
 
-.card-data { padding: 15px; flex: 1; display: flex; flex-direction: column; }
-.data-row-title { 
-  display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; 
+.card-cover { 
+  height: 160px; position: relative; overflow: hidden; background: #F1F5F9; cursor: pointer; 
 }
-.ip-name { 
-  font-family: var(--heading); font-size: 1.6rem; margin: 0; line-height: 1; 
-  width: 70%; word-break: break-all; 
-}
-.action-icons { display: flex; gap: 5px; opacity: 0; transition: 0.2s; }
-.ip-card:hover .action-icons { opacity: 1; }
-.icon-btn { 
-  background: transparent; border: 1px solid #ccc; cursor: pointer; 
-  padding: 2px 6px; font-size: 0.8rem; 
-}
-.icon-btn:hover { background: var(--black); color: var(--white); border-color: var(--black); }
-.icon-btn.del:hover { background: var(--red); border-color: var(--red); }
+.card-cover img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s; }
+.md-card:hover .card-cover img { transform: scale(1.05); }
 
-.ip-tagline { font-size: 0.8rem; font-weight: bold; color: var(--red); margin-bottom: 10px; }
-.quote { opacity: 0.5; margin: 0 2px; }
+.cover-overlay { 
+  position: absolute; inset: 0; background: rgba(15, 23, 42, 0.3); 
+  display: flex; justify-content: center; align-items: center; 
+  opacity: 0; transition: opacity 0.3s; 
+}
+.md-card:hover .cover-overlay { opacity: 1; }
+.enter-btn { 
+  background: #FFF; color: #0F172A; 
+  padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 0.8rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.sector-badge {
+  position: absolute; top: 12px; left: 12px; 
+  background: rgba(15, 23, 42, 0.7); color: #FFF; 
+  font-size: 0.65rem; padding: 3px 8px; border-radius: 4px; backdrop-filter: blur(4px);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.card-content { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+.content-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.ip-name { font-size: 1rem; font-weight: 600; margin: 0; line-height: 1.4; color: #0F172A; }
+
+.action-menu { display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; }
+.md-card:hover .action-menu { opacity: 1; }
+.md-icon-btn { 
+  background: transparent; border: none; cursor: pointer; 
+  width: 28px; height: 28px; border-radius: 4px; font-size: 0.8rem; color: #64748B; 
+  display: flex; align-items: center; justify-content: center; transition: 0.2s;
+}
+.md-icon-btn:hover { background: #F1F5F9; color: #0284C7; }
+.md-icon-btn.danger:hover { color: #DC2626; background: #FEF2F2; }
+
+.ip-tagline { font-size: 0.8rem; font-weight: 500; color: #0284C7; margin-bottom: 12px; }
 .ip-summary { 
-  font-size: 0.85rem; color: #555; line-height: 1.6; margin-bottom: 15px; 
-  flex: 1; display: -webkit-box; -webkit-line-clamp: 3; 
-  -webkit-box-orient: vertical; overflow: hidden; 
+  font-size: 0.8rem; color: #475569; line-height: 1.6; margin-bottom: 16px; 
+  flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; 
 }
+
 .card-footer { 
-  border-top: 1px dashed #ccc; padding-top: 10px; margin-top: auto; 
-  font-size: 0.7rem; color: #999; font-weight: bold; text-align: right; 
+  border-top: 1px solid #F1F5F9; padding-top: 12px; margin-top: auto; 
+  display: flex; align-items: center; gap: 8px;
 }
-.corner-bl { 
-  position: absolute; bottom: 0; left: 0; width: 0; height: 0; border-style: solid; 
-  border-width: 15px 0 0 15px; border-color: transparent transparent transparent var(--black); 
-  pointer-events: none; 
-}
+.status-dot { width: 6px; height: 6px; background: #10B981; border-radius: 50%; }
+.update-time { font-size: 0.7rem; color: #94A3B8; }
 
-/* --- 3. Modal --- */
-.cyber-modal-overlay { 
-  position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; 
-  display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); 
+/* 弹窗设计 */
+.md-modal-overlay { 
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); z-index: 2000; 
+  display: flex; justify-content: center; align-items: center; backdrop-filter: blur(4px); 
 }
-.cyber-terminal { 
-  width: 600px; max-width: 95vw; background: #f4f4f4; border: 4px solid var(--black); 
-  display: flex; flex-direction: column; max-height: 85vh; 
-  box-shadow: 20px 20px 0 rgba(0,0,0,0.5); 
+.md-modal-card { 
+  width: 540px; max-width: 90vw; background: #FFF; 
+  border-radius: 12px; display: flex; flex-direction: column; max-height: 85vh; 
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); 
 }
-.term-header { 
-  background: var(--black); color: var(--white); padding: 12px 20px; 
-  display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--red); 
+.modal-header { 
+  padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; 
+  border-bottom: 1px solid #F1F5F9; 
 }
-.term-title { font-family: var(--heading); letter-spacing: 1px; font-size: 1.2rem; }
-.term-close { 
-  background: transparent; border: 1px solid #555; color: #aaa; cursor: pointer; 
-  font-family: var(--mono); font-weight: bold; padding: 4px 10px; 
-}
-.term-close:hover { border-color: var(--red); color: var(--red); }
+.modal-title { font-size: 1rem; font-weight: 600; margin: 0; color: #0F172A; }
+.modal-close { background: transparent; border: none; font-size: 1.5rem; color: #94A3B8; cursor: pointer; transition: 0.2s; }
+.modal-close:hover { color: #DC2626; }
 
-.term-content { padding: 30px; overflow-y: auto; flex: 1; }
-.cyber-form { display: flex; flex-direction: column; gap: 20px; }
-.form-group label { 
-  display: block; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px; color: var(--black); 
-}
-.req { color: var(--red); }
-.cyber-input, .cyber-textarea { 
-  width: 100%; border: 2px solid #999; padding: 10px; 
-  font-family: var(--mono); outline: none; background: #fff; box-sizing: border-box; 
-}
-.cyber-input:focus, .cyber-textarea:focus { 
-  border-color: var(--black); box-shadow: 4px 4px 0 rgba(0,0,0,0.1); color:#000 
-}
+.modal-content { padding: 24px; overflow-y: auto; flex: 1; }
+.md-form { display: flex; flex-direction: column; gap: 20px; }
+.form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: #334155; }
+.required { color: #DC2626; }
 
-/* 🔥 新增样式：封面上传区 */
-.cover-upload-box {
-  display: flex; gap: 15px; align-items: flex-start;
-  border: 1px dashed #999; padding: 10px; background: #eee;
+.md-input, .md-textarea { 
+  width: 100%; border: 1px solid #E2E8F0; padding: 10px 12px; border-radius: 6px;
+  font-size: 0.9rem; outline: none; background: #FFF; box-sizing: border-box; transition: 0.2s;
+}
+.md-input:focus, .md-textarea:focus { border-color: #0284C7; box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.1); }
+
+/* 预览图上传区 */
+.cover-upload-section {
+  display: flex; gap: 16px; align-items: flex-start;
+  border: 1px dashed #E2E8F0; padding: 16px; border-radius: 8px; background: #F8FAFC;
 }
 .preview-frame {
-  width: 120px; height: 68px; /* 16:9 ratio */
-  border: 2px solid var(--black); background: #333;
-  flex-shrink: 0;
+  width: 140px; height: 78px; border-radius: 4px; overflow: hidden; background: #E2E8F0; flex-shrink: 0; border: 1px solid #F1F5F9;
 }
-.preview-frame img {
-  width: 100%; height: 100%; object-fit: cover;
-}
-.upload-actions {
-  display: flex; flex-direction: column; gap: 5px; flex: 1;
-}
-.tip-text {
-  font-size: 0.65rem; color: #666; font-family: var(--mono);
-}
-.create-tip-box {
-  background: #fff; border: 1px solid #ccc; padding: 10px; 
-  display: flex; gap: 10px; align-items: center;
-  color: #666; font-size: 0.8rem;
-}
-.create-tip-box .icon { font-weight: bold; color: var(--red); }
+.preview-frame img { width: 100%; height: 100%; object-fit: cover; }
+.upload-actions { display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: center; }
+.tip-text { font-size: 0.7rem; color: #94A3B8; }
 
-.form-actions { 
-  display: flex; gap: 15px; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 20px; 
+.info-alert {
+  background: #F0F9FF; border: 1px solid #E0F2FE; padding: 12px 16px; 
+  border-radius: 8px; display: flex; gap: 10px; color: #0369A1; font-size: 0.8rem; line-height: 1.5;
 }
 
-/* 状态与加载 */
-.loading-state, .empty-state { 
-  text-align: center; padding: 100px 0; font-weight: bold; color: #888; 
-  display: flex; flex-direction: column; align-items: center; gap: 15px; 
-}
-.spinner { 
-  width: 30px; height: 30px; border: 4px solid #ccc; 
-  border-top-color: var(--black); border-radius: 50%; animation: spin 1s linear infinite; 
-}
+.form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 12px; padding-top: 20px; border-top: 1px solid #F1F5F9; }
+
+/* 状态组件 */
+.state-container { text-align: center; padding: 100px 0; color: #94A3B8; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.md-spinner { width: 28px; height: 28px; border: 3px solid #F1F5F9; border-top-color: #0284C7; border-radius: 50%; animation: spin 0.8s linear infinite; }
+.empty-icon { font-size: 40px; opacity: 0.5; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* 动画效果 */
-.glitch-fade-enter-active, .glitch-fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
-.glitch-fade-enter-from { opacity: 0; transform: scale(0.95); }
-
-.zoom-in-enter-active, .zoom-in-leave-active { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-.zoom-in-enter-from, .zoom-in-leave-to { opacity: 0; transform: scale(0.9); }
-
 /* 滚动条 */
-.custom-scroll::-webkit-scrollbar { width: 5px; }
-.custom-scroll::-webkit-scrollbar-thumb { background: var(--black); }
+.md-scrollbar::-webkit-scrollbar { width: 5px; }
+.md-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
 </style>

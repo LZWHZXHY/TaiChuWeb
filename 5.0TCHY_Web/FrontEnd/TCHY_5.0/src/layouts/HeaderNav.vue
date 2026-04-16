@@ -76,9 +76,8 @@
 
         <div v-if="authStore.isAuthenticated" class="user-control-panel">
           
-          <div class="tactical-btn-wrapper" @click="goToCreativeCenter">
+          <div class="tactical-btn-wrapper" @click="router.push('/creative-center')">
             <button class="tactical-btn gold">
-              <span class="btn-icon">▤</span>
               <span class="btn-label">创作中心</span>
             </button>
             <div class="btn-deco-line"></div>
